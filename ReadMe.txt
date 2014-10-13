@@ -1,0 +1,66 @@
+NeoPixelBus:
+
+This library is a modification of the Adafruit NeoPixel library.
+The Api is similiar, but it removes the overal brightness feature and adds animation support.
+
+Installing This Library:
+Create a directory in your Library folder named "NeoPixelBus"
+Clone (Git) this project into that folder.  
+It should now show up in the import list.
+
+Sample:
+	There is a sample project under the Sample sub-directory.  Just copy and change the extention to ino.
+
+Documentation:
+
+RgbColor object:
+This represents a color and exposes useful methods to manipulate colors.
+
+RgbColor(uint8_t r, uint8_t g, uint8_t b)
+	instantiates a RgbColor object with the given r, g, b values.
+
+RgbColor(uint8_t brightness)
+	instantiates a RgbColor object with the given brightness. 0 is black, 128 is grey, 255 is white.
+
+uint8_t CalculateBrightness()
+	returns the general brightness of the pixe, averaging color.
+
+void Darken(uint8_t delta)
+	this will darken the color by the given amount
+
+void Lighten(uint8_t delta)
+	this will lighten the color by the given amount
+
+static RgbColor LinearBlend(RgbColor left, RgbColor right, uint8_t progress)
+	this will return a color that is a blend between the given colors.  The amount to blend is given
+	by the value of progress, 0 will return the left value, 255 will return the right value, 
+	128 will return the value between them.
+	NOTE:  This is note an accurate "light" color blend but is fast and in most cases good enough.
+
+
+NeoPixelBus object:
+This represents a single NeoPixel Bus that is connected by a single pin.  Please see Adafruit's
+documentation for details, but the differences are documented below.
+
+void SetPixelColor(uint16_t n, RgbColor c)
+	This allows setting a pixel on the bus to a color as defined by a color object.
+	If an animation is actively running on a pixel, it will be stopped.
+
+RgbColor GetPixelColor(uint16_t n) const
+	this allows retrieving the current pixel color
+
+void LinearFadePixelColor(uint16_t time, uint16_t n, RgbColor color)
+	this will setup an animation for a pixel to linear fade between the current color and the 
+	given color over the time given.  The time is in milliseconds.
+
+void StartAnimating()
+	this method will initialize the animation state.  This should be called only if there
+	are no active animations and new animations are started.  
+
+void UpdateAnimations()
+	this method will allow the animations to processed and update the pixel color state. 
+	NOTE:  Show must still be called to push the color state to the physical NeoPixels.
+
+bool IsAnimating() const
+	this method will return the current animation state.  It will return false if there are
+	no active animations.
