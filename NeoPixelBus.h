@@ -80,6 +80,11 @@ public:
 
 private:
     void setPin(uint8_t p);
+    void UpdatePixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
+    void UpdatePixelColor(uint16_t n, RgbColor c)
+    {
+        UpdatePixelColor(n, c.R, c.G, c.B);
+    };
 
     const uint16_t    _countPixels;       // Number of RGB LEDs in strip
     const uint16_t    _sizePixels;      // Size of '_pixels' buffer below

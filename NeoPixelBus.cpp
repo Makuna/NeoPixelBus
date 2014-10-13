@@ -876,23 +876,40 @@ void NeoPixelBus::SetPixelColor(
 {
     if (n < _countPixels) 
     {
-        uint8_t *p = &_pixels[n * 3];
-#ifdef NEO_RGB
-        if ((_flagsPixels & NEO_COLMASK) == NEO_GRB) 
+        // clear any animation
+        if (_animations[n].time != 0)
         {
-#endif
-            *p++ = g;
-            *p++ = r;
-#ifdef NEO_RGB
-        } 
-        else 
-        {
-            *p++ = r;
-            *p++ = g;
+            _activeAnimations--;
+            _animations[n].time = 0;
+            _animations[n].remaining = 0;
         }
-#endif
-        *p = b;
+        UpdatePixelColor(n, r, g, b);
     }
+}
+
+// Set pixel color from separate R,G,B components:
+void NeoPixelBus::UpdatePixelColor(
+    uint16_t n, 
+    uint8_t r, 
+    uint8_t g, 
+    uint8_t b) 
+{
+    uint8_t *p = &_pixels[n * 3];
+#ifdef NEO_RGB
+    if ((_flagsPixels & NEO_COLMASK) == NEO_GRB) 
+    {
+#endif
+        *p++ = g;
+        *p++ = r;
+#ifdef NEO_RGB
+    } 
+    else 
+    {
+        *p++ = r;
+        *p++ = g;
+    }
+#endif
+    *p = b;
 }
 
 // Query color from previously-set pixel (returns packed 32-bit RGB value)
@@ -979,17 +996,14 @@ void NeoPixelBus::UpdateAnimations()
                         pAnim->target, 
                         progress);
 
-                    SetPixelColor(iAnim, color);
+                    UpdatePixelColor(iAnim, color);
                     countAnimations--;
                 }
                 else if (pAnim->remaining > 0)
                 {
+                    // specifically calling SetPixelColor so it will clear animation state
                     SetPixelColor(iAnim, pAnim->target);
-                    pAnim->remaining = 0;
-                    pAnim->time = 0;
                     countAnimations--;
-                    _activeAnimations--;
-                    Serial.print(iAnim);
                 }
             }
         }
