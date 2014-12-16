@@ -37,9 +37,7 @@ NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) :
     _pin(p), 
     _animationLastTick(0),
     _activeAnimations(0)
-#if defined(NEO_RGB) || defined(NEO_KHZ400)
     ,_flagsPixels(t)
-#endif
 {
     setPin(p);
 
@@ -128,7 +126,7 @@ void NeoPixelBus::Show(void)
     // 8 MHz(ish) AVR ---------------------------------------------------------
 #if (F_CPU >= 7400000UL) && (F_CPU <= 9500000UL)
 
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800) 
     { 
         // 800 KHz bitstream
@@ -335,7 +333,7 @@ void NeoPixelBus::Show(void)
         }    // endif PORTB
 #endif
 
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     } 
     else 
     { 
@@ -394,7 +392,7 @@ void NeoPixelBus::Show(void)
     // 12 MHz(ish) AVR --------------------------------------------------------
 #elif (F_CPU >= 11100000UL) && (F_CPU <= 14300000UL)
 
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800) 
     { 
         // 800 KHz bitstream
@@ -526,7 +524,7 @@ void NeoPixelBus::Show(void)
         }
 #endif
 
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     } 
     else 
     { 
@@ -582,7 +580,7 @@ void NeoPixelBus::Show(void)
     // 16 MHz(ish) AVR --------------------------------------------------------
 #elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000L)
 
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800) 
     { 
         // 800 KHz bitstream
@@ -633,7 +631,7 @@ void NeoPixelBus::Show(void)
             [hi]     "r" (hi),
             [lo]     "r" (lo));
 
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     } 
     else 
     { 
@@ -719,7 +717,7 @@ void NeoPixelBus::Show(void)
     ARM_DEMCR    |= ARM_DEMCR_TRCENA;
     ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
 
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800) 
     { 
 #endif
@@ -745,7 +743,7 @@ void NeoPixelBus::Show(void)
             }
         }
         while (ARM_DWT_CYCCNT - cyc < CYCLES_800);
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     } 
     else 
     { 
@@ -807,7 +805,7 @@ void NeoPixelBus::Show(void)
     pix       = *p++;
     mask      = 0x80;
 
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800) 
     { 
 #endif
@@ -815,7 +813,7 @@ void NeoPixelBus::Show(void)
         time0 = TIME_800_0;
         time1 = TIME_800_1;
         period = PERIOD_800;
-#ifdef NEO_KHZ400
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
     } 
     else 
     { 
@@ -895,20 +893,17 @@ void NeoPixelBus::UpdatePixelColor(
     uint8_t b) 
 {
     uint8_t *p = &_pixels[n * 3];
-#ifdef NEO_RGB
     if ((_flagsPixels & NEO_COLMASK) == NEO_GRB) 
     {
-#endif
         *p++ = g;
         *p++ = r;
-#ifdef NEO_RGB
     } 
     else 
     {
         *p++ = r;
         *p++ = g;
     }
-#endif
+
     *p = b;
 }
 
@@ -920,20 +915,17 @@ RgbColor NeoPixelBus::GetPixelColor(uint16_t n) const
         RgbColor c;
         uint8_t *p = &_pixels[n * 3];
 
-#ifdef NEO_RGB
         if ((_flagsPixels & NEO_COLMASK) == NEO_GRB)
         {
-#endif
             c.G = *p++;
             c.R = *p++;
-#ifdef NEO_RGB
         }
         else
         {
             c.R = *p++;
             c.G = *p++;
         }
-#endif
+
         c.B = *p;
         return c;
     }
