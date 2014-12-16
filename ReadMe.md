@@ -50,7 +50,9 @@ This represents a single NeoPixel Bus that is connected by a single pin.  Please
 instantiates a NewoPixelBus object, with n number of pixels on the bus, over the p pin, using the defined NeoPixel type.
 There are some NeoPixels that address the color values differently, so if you set the green color but it displays as red, use the NEO_RGB type flag.
 
-#### NeoPixelBus strip = NeoPixelBus(4, 8, NEO_RGB | NEO_KHZ800);
+```
+NeoPixelBus strip = NeoPixelBus(4, 8, NEO_RGB | NEO_KHZ800);
+```
 It is rare, but some older NeoPixels require a slower communications speed, to include this support you must include the following define before the NeoPixelBus library include and then include the NEO_KHZ400 type flag to enable this slower speed.
 
 ```
