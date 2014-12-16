@@ -15,7 +15,7 @@ It should now show up in the import list.
 
 Samples
 -------
-NeoPixelTest - this is simple example that sets four neopixels to red, green, blue, and then white in order; and then flashes them.  If the first pixel is not green instead of read, you need to pass the NEO_RGB flag into the NeoPixelBus constructor.
+NeoPixelTest - this is simple example that sets four neopixels to red, green, blue, and then white in order; and then flashes them.  If the first pixel is green and the second is red, you need to pass the NEO_RGB flag into the NeoPixelBus constructor.
 NeoPixelFun - this is a more complex example, that includes code for three effects, and demonstrates animations.
 
 API Documentation
