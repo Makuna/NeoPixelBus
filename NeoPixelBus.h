@@ -35,26 +35,40 @@ License along with NeoPixel.  If not, see
 #define NEO_KHZ400  0x00 // 400 KHz datastream
 #define NEO_KHZ800  0x02 // 800 KHz datastream
 #define NEO_SPDMASK 0x02
+#define NEO_DIRTY   0x80 // a change was made it _pixels that requires a show
 
 // v1 NeoPixels aren't handled by default, include the following define before the 
 // NeoPixelBus library include to support the slower bus speeds
 // #define INCLUDE_NEO_KHZ400_SUPPORT 
 
-class NeoPixelBus 
+class NeoPixelBus
 {
 public:
     // Constructor: number of LEDs, pin number, LED type
     NeoPixelBus(uint16_t n, uint8_t p = 6, uint8_t t = NEO_GRB | NEO_KHZ800);
     ~NeoPixelBus();
 
-    void Begin(void);
-    void Show(void);
+    void Begin();
+    void Show();
+
+    bool IsDirty()
+    {
+        return  (_flagsPixels & NEO_DIRTY);
+    };
+    void Dirty()
+    {
+        _flagsPixels |= NEO_DIRTY;
+    };
+    void ResetDirty()
+    {
+        _flagsPixels &= ~NEO_DIRTY;
+    }
 
     uint8_t*  Pixels() const
     {
         return _pixels;
     };
-    uint16_t  PixelCount(void) const
+    uint16_t  PixelCount() const
     {
         return _countPixels;
     };
@@ -86,8 +100,8 @@ private:
 
     const uint16_t    _countPixels;       // Number of RGB LEDs in strip
     const uint16_t    _sizePixels;      // Size of '_pixels' buffer below
-    const uint8_t _flagsPixels;          // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
-
+    
+    uint8_t _flagsPixels;          // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
     uint8_t _pin;           // Output pin number
     uint8_t* _pixels;        // Holds LED color values (3 bytes each)
     uint32_t _endTime;       // Latch timing reference

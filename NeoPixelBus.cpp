@@ -36,8 +36,8 @@ NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) :
     _sizePixels(n * 3), 
     _pin(p), 
     _animationLastTick(0),
-    _activeAnimations(0)
-    ,_flagsPixels(t)
+    _activeAnimations(0),
+    _flagsPixels(t)
 {
     setPin(p);
 
@@ -69,11 +69,15 @@ void NeoPixelBus::Begin(void)
 {
     pinMode(_pin, OUTPUT);
     digitalWrite(_pin, LOW);
+
+    Dirty();
 }
 
 void NeoPixelBus::Show(void) 
 {
     if (!_pixels) 
+        return;
+    if (!IsDirty())
         return;
 
     // Data latch = 50+ microsecond pause in the output stream.  Rather than
@@ -849,6 +853,7 @@ void NeoPixelBus::Show(void)
 #endif // end Architecture select
 
     interrupts();
+    ResetDirty();
     _endTime = micros(); // Save EOD time for latch on next call
 }
 
@@ -892,6 +897,8 @@ void NeoPixelBus::UpdatePixelColor(
     uint8_t g, 
     uint8_t b) 
 {
+    Dirty();
+
     uint8_t *p = &_pixels[n * 3];
     if ((_flagsPixels & NEO_COLMASK) == NEO_GRB) 
     {
