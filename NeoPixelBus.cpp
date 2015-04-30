@@ -73,6 +73,39 @@ void NeoPixelBus::Begin(void)
     Dirty();
 }
 
+#if defined(ESP8266)
+#pragma optimize( "", off )
+
+void  send_ws_0_800(uint8_t gpio) {
+    uint8_t i;
+    i = 4; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1 << gpio);
+    i = 9; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1 << gpio);
+}
+
+void  send_ws_1_800(uint8_t gpio) {
+    uint8_t i;
+    i = 8; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1 << gpio);
+    i = 5; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1 << gpio);
+}
+
+void send_ws_0_400(uint8_t gpio) {
+    uint8_t i;
+    i = 8; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1 << gpio);
+    i = 17; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1 << gpio);
+}
+
+void send_ws_1_400(uint8_t gpio) {
+    uint8_t i;
+    i = 16; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1 << gpio);
+    i = 9; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1 << gpio);
+}
+#pragma optimize( "", on )
+#endif
+
+
+#if defined(ESP8266)
+#pragma optimize( "", off )
+#endif
 void NeoPixelBus::Show(void) 
 {
     if (!_pixels) 
@@ -702,15 +735,67 @@ void NeoPixelBus::Show(void)
 #error "CPU SPEED NOT SUPPORTED"
 #endif
 
-#elif defined(__arm__)
+#elif defined(ESP8266)
+
+    uint8_t* p = _pixels;
+    uint8_t* end = p + _sizePixels;
+
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
+
+
+    if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800)
+    {
+#endif
+        // 800 KHz bitstream
+        while (p < end)
+        {
+            uint8_t subpix = *p++;
+            for (uint8_t mask = 0x80; mask; mask >>= 1)
+            {
+                if (subpix & mask)
+                {
+                    send_ws_1_800(_pin);
+                }
+                else
+                {
+                    send_ws_0_800(_pin);
+                }
+            }
+        }
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
+    }
+    else
+    {
+        // 400 kHz bitstream
+        while (p < end)
+        {
+            uint8_t subpix = *p++;
+            for (uint8_t mask = 0x80; mask; mask >>= 1)
+            {
+                if (subpix & mask)
+                {
+                    send_ws_1_400(_pin);
+                }
+                else
+                {
+                    send_ws_0_400(_pin);
+                }
+            }
+        }
+    }
+#endif 
+
+
+#elif defined(__arm__) 
+
 
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy 3.0 & 3.1
-#define CYCLES_800_T0H  (F_CPU / 2500000)
-#define CYCLES_800_T1H  (F_CPU / 1250000)
-#define CYCLES_800      (F_CPU /  800000)
+#define CYCLES_800_T0H  (F_CPU / 2500000) // 0.4us
+#define CYCLES_800_T1H  (F_CPU / 1250000) // 0.8us
+#define CYCLES_800      (F_CPU /  800000) // 12.5us per bit
 #define CYCLES_400_T0H  (F_CPU / 2000000)
 #define CYCLES_400_T1H  (F_CPU /  833333)
-#define CYCLES_400      (F_CPU /  400000)
+#define CYCLES_400      (F_CPU /  400000) 
 
     uint8_t          *p   = _pixels,
         *end = p + _sizePixels, pix, mask;
@@ -856,6 +941,9 @@ void NeoPixelBus::Show(void)
     ResetDirty();
     _endTime = micros(); // Save EOD time for latch on next call
 }
+#if defined(ESP8266)
+#pragma optimize( "", on )
+#endif
 
 // Set the output pin number
 void NeoPixelBus::setPin(uint8_t p) 
