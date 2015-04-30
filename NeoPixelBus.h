@@ -39,7 +39,7 @@ License along with NeoPixel.  If not, see
 
 // v1 NeoPixels aren't handled by default, include the following define before the 
 // NeoPixelBus library include to support the slower bus speeds
-// #define INCLUDE_NEO_KHZ400_SUPPORT 
+//#define INCLUDE_NEO_KHZ400_SUPPORT 
 
 class NeoPixelBus
 {
