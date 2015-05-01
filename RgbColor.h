@@ -13,16 +13,9 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------*/
+#pragma once
 
-#ifndef RGBCOLOR_H
-#define RGBCOLOR_H
-
-#if (ARDUINO >= 100)
 #include <Arduino.h>
-#else
-#include <WProgram.h>
-#include <pins_arduino.h>
-#endif
 
 // ------------------------------------------------------------------------
 // RgbColor represents a color object that is represented by Red, Green, Blue
@@ -95,5 +88,3 @@ struct RgbColor
 	uint8_t B;
 };
 
-
-#endif // RGBCOLOR_H

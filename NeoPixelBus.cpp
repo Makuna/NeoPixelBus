@@ -76,16 +76,57 @@ void NeoPixelBus::Begin(void)
 #if defined(ESP8266)
 #pragma optimize( "", off )
 
-void send_ws_0_800(uint8_t gpio) {
+void ICACHE_FLASH_ATTR send_ws_0_800(uint32_t pinRegister) {
     uint8_t i;
-    i = 4; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1 << gpio);
-    i = 6; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1 << gpio);
+
+    i = 4; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+    i = 6; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 }
 
-void send_ws_1_800(uint8_t gpio) {
+void ICACHE_FLASH_ATTR send_ws_1_800(uint32_t pinRegister) {
     uint8_t i;
-    i = 9; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1 << gpio);
-    i = 2; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1 << gpio);
+
+    i = 8; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+    i = 1; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+}
+
+//void ICACHE_FLASH_ATTR send_subpix_800(uint8_t subpix, uint8_t pin) 
+//{
+//    uint8_t mask;
+//    for (mask = 0x80; mask; mask >>= 1)
+//    {
+//        if (subpix & mask)
+//        {
+//            send_ws_1_800(pin);
+//        }
+//        else
+//        {
+//            send_ws_0_800(pin);
+//        }
+//    }
+//}
+
+void ICACHE_FLASH_ATTR send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
+{
+    uint8_t mask;
+    uint8_t subpix;
+    uint32_t pinRegister = _BV(pin);
+
+    while (pixels < end)
+    {
+        subpix = *pixels++;
+        for (mask = 0x80; mask; mask >>= 1)
+        {
+            if (subpix & mask)
+            {
+                send_ws_1_800(pinRegister);
+            }
+            else
+            {
+                send_ws_0_800(pinRegister);
+            }
+        }
+    }
 }
 
 void send_ws_0_400(uint8_t gpio) {
@@ -747,21 +788,11 @@ void NeoPixelBus::Show(void)
     {
 #endif
         // 800 KHz bitstream
-        while (p < end)
-        {
-            uint8_t subpix = *p++;
-            for (uint8_t mask = 0x80; mask; mask >>= 1)
-            {
-                if (subpix & mask)
-                {
-                    send_ws_1_800(_pin);
-                }
-                else
-                {
-                    send_ws_0_800(_pin);
-                }
-            }
-        }
+        send_pixels_800(p, end, _pin);
+        //while (p < end)
+        //{
+        //    send_subpix_800(*p++, _pin);
+        //}
 #ifdef INCLUDE_NEO_KHZ400_SUPPORT
     }
     else
@@ -769,8 +800,8 @@ void NeoPixelBus::Show(void)
         // 400 kHz bitstream
         while (p < end)
         {
-            uint8_t subpix = *p++;
-            for (uint8_t mask = 0x80; mask; mask >>= 1)
+            subpix = *p++;
+            for (mask = 0x80; mask; mask >>= 1)
             {
                 if (subpix & mask)
                 {
