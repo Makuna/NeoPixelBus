@@ -74,78 +74,114 @@ void NeoPixelBus::Begin(void)
 }
 
 #if defined(ESP8266)
-#pragma optimize( "", off )
 
-void ICACHE_FLASH_ATTR send_ws_0_800(uint32_t pinRegister) {
-    uint8_t i;
+#define CYCLES_800_T0H  (F_CPU / 2500000 - 2) // 0.4us
+#define CYCLES_800_T1H  (F_CPU / 1250000 - 2) // 0.8us
+#define CYCLES_800      (F_CPU /  800000 - 2) // 1.25us per bit
+#define CYCLES_400_T0H  (F_CPU / 2000000 - 2)
+#define CYCLES_400_T1H  (F_CPU /  833333 - 2)
+#define CYCLES_400      (F_CPU /  400000 - 2) 
 
-    i = 4; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
-    i = 6; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-}
+#define RSR_CCOUNT(r)     __asm__ __volatile__("rsr %0,234":"=a" (r))
 
-void ICACHE_FLASH_ATTR send_ws_1_800(uint32_t pinRegister) {
-    uint8_t i;
-
-    i = 8; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
-    i = 1; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-}
-
-//void ICACHE_FLASH_ATTR send_subpix_800(uint8_t subpix, uint8_t pin) 
-//{
-//    uint8_t mask;
-//    for (mask = 0x80; mask; mask >>= 1)
-//    {
-//        if (subpix & mask)
-//        {
-//            send_ws_1_800(pin);
-//        }
-//        else
-//        {
-//            send_ws_0_800(pin);
-//        }
-//    }
-//}
-
-void ICACHE_FLASH_ATTR send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
+static inline ICACHE_FLASH_ATTR uint32_t get_ccount(void)
 {
-    uint8_t mask;
-    uint8_t subpix;
-    uint32_t pinRegister = _BV(pin);
+    uint32_t ccount;
+    RSR_CCOUNT(ccount);
+    return ccount;
+}
 
+
+static inline void ICACHE_FLASH_ATTR send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
+{
+    const uint32_t pinRegister = _BV(pin);
+    uint32_t mask;  // 32 bit work is optimized for the chip
+    uint32_t subpix;  // 32 bit work is optimized for the chip
+    uint32_t cyclesStart;
+
+    cyclesStart = get_ccount() + CYCLES_800;
     while (pixels < end)
     {
         subpix = *pixels++;
         for (mask = 0x80; mask; mask >>= 1)
         {
-            if (subpix & mask)
+            uint32_t nextBit = (subpix & mask);
+            uint32_t cyclesNext = cyclesStart;
+
+            // after we have done as much work as needed for this next bit
+            // now wait for the HIGH
+            do
             {
-                send_ws_1_800(pinRegister);
+                cyclesStart = get_ccount();
+            }
+            while ((cyclesStart - cyclesNext) < CYCLES_800);
+
+
+            GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+
+            // wait for the LOW
+            if (nextBit)
+            {
+                while ((get_ccount() - cyclesStart) < CYCLES_800_T1H);
             }
             else
             {
-                send_ws_0_800(pinRegister);
+                while ((get_ccount() - cyclesStart) < CYCLES_800_T0H);
             }
+            
+            GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
         }
     }
+    while ((get_ccount() - cyclesStart) < CYCLES_800);
 }
 
-void send_ws_0_400(uint8_t gpio) {
-    uint8_t i;
-    i = 8; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1 << gpio);
-    i = 12; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1 << gpio);
+static inline void ICACHE_FLASH_ATTR send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin)
+{
+    const uint32_t pinRegister = _BV(pin);
+    uint32_t mask; // 32 bit work is optimized for the chip
+    uint32_t subpix; // 32 bit work is optimized for the chip
+    uint32_t cyclesStart;
+
+    cyclesStart = get_ccount() + CYCLES_400;
+    while (pixels < end)
+    {
+        subpix = *pixels++;
+        for (mask = 0x80; mask; mask >>= 1)
+        {
+            uint32_t nextBit = (subpix & mask);
+            uint32_t cyclesNext = cyclesStart;
+
+            // after we have done as much work as needed for this next bit
+            // now wait for the HIGH
+            do
+            {
+                cyclesStart = get_ccount();
+            } while ((cyclesStart - cyclesNext) < CYCLES_400);
+
+
+            GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+
+            // wait for the LOW
+            if (nextBit)
+            {
+                while ((get_ccount() - cyclesStart) < CYCLES_400_T1H);
+            }
+            else
+            {
+                while ((get_ccount() - cyclesStart) < CYCLES_400_T0H);
+            }
+
+            GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+        }
+    }
+    while ((get_ccount() - cyclesStart) < CYCLES_400);
 }
 
-void send_ws_1_400(uint8_t gpio) {
-    uint8_t i;
-    i = 18; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, 1 << gpio);
-    i = 4; while (i--) GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, 1 << gpio);
-}
-#pragma optimize( "", on )
 #endif
 
 
 #if defined(ESP8266)
-#pragma optimize( "", off )
+//#pragma optimize( "", off )
 #endif
 void NeoPixelBus::Show(void) 
 {
@@ -789,30 +825,13 @@ void NeoPixelBus::Show(void)
 #endif
         // 800 KHz bitstream
         send_pixels_800(p, end, _pin);
-        //while (p < end)
-        //{
-        //    send_subpix_800(*p++, _pin);
-        //}
+
 #ifdef INCLUDE_NEO_KHZ400_SUPPORT
     }
     else
     {
         // 400 kHz bitstream
-        while (p < end)
-        {
-            subpix = *p++;
-            for (mask = 0x80; mask; mask >>= 1)
-            {
-                if (subpix & mask)
-                {
-                    send_ws_1_400(_pin);
-                }
-                else
-                {
-                    send_ws_0_400(_pin);
-                }
-            }
-        }
+
     }
 #endif 
 
@@ -823,7 +842,7 @@ void NeoPixelBus::Show(void)
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy 3.0 & 3.1
 #define CYCLES_800_T0H  (F_CPU / 2500000) // 0.4us
 #define CYCLES_800_T1H  (F_CPU / 1250000) // 0.8us
-#define CYCLES_800      (F_CPU /  800000) // 12.5us per bit
+#define CYCLES_800      (F_CPU /  800000) // 1.25us per bit
 #define CYCLES_400_T0H  (F_CPU / 2000000)
 #define CYCLES_400_T1H  (F_CPU /  833333)
 #define CYCLES_400      (F_CPU /  400000) 
@@ -973,7 +992,7 @@ void NeoPixelBus::Show(void)
     _endTime = micros(); // Save EOD time for latch on next call
 }
 #if defined(ESP8266)
-#pragma optimize( "", on )
+//#pragma optimize( "", on )
 #endif
 
 // Set the output pin number
