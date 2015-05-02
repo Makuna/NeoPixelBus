@@ -15,17 +15,9 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 --------------------------------------------------------------------*/
+#pragma once
 
-#ifndef NEOPIXELBUS_H
-#define NEOPIXELBUS_H
-
-#if (ARDUINO >= 100)
 #include <Arduino.h>
-#else
-#include <WProgram.h>
-#include <pins_arduino.h>
-#endif
-
 #include "RgbColor.h"
 
 // '_flagsPixels' flags for LED _pixels (third parameter to constructor):
@@ -125,4 +117,3 @@ private:
 
 };
 
-#endif // NEOPIXELBUS_H
