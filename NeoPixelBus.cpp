@@ -76,16 +76,16 @@ void NeoPixelBus::Begin(void)
 #if defined(ESP8266)
 
 
-#define CYCLES_800_T0H  (F_CPU / 2500000 - 2) // 0.4us
-#define CYCLES_800_T1H  (F_CPU / 1250000 - 2) // 0.8us
-#define CYCLES_800      (F_CPU /  800000 - 2) // 1.25us per bit
-#define CYCLES_400_T0H  (F_CPU / 2000000 - 2)
-#define CYCLES_400_T1H  (F_CPU /  833333 - 2)
-#define CYCLES_400      (F_CPU /  400000 - 2) 
+#define CYCLES_800_T0H  (F_CPU / 2500000 - 4) // 0.4us
+#define CYCLES_800_T1H  (F_CPU / 1250000 - 4) // 0.8us
+#define CYCLES_800      (F_CPU /  800000 - 4) // 1.25us per bit
+#define CYCLES_400_T0H  (F_CPU / 2000000 - 4)
+#define CYCLES_400_T1H  (F_CPU /  833333 - 4)
+#define CYCLES_400      (F_CPU /  400000 - 4) 
 
 #define RSR_CCOUNT(r)     __asm__ __volatile__("rsr %0,234":"=a" (r))
 
-static inline ICACHE_FLASH_ATTR uint32_t get_ccount(void)
+static inline uint32_t get_ccount(void)
 {
     uint32_t ccount;
     RSR_CCOUNT(ccount);
@@ -93,12 +93,16 @@ static inline ICACHE_FLASH_ATTR uint32_t get_ccount(void)
 }
 
 
-static inline void ICACHE_FLASH_ATTR send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
+static inline void send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
 {
     const uint32_t pinRegister = _BV(pin);
-    uint32_t mask;  // 32 bit work is optimized for the chip
-    uint32_t subpix;  // 32 bit work is optimized for the chip
+    uint8_t mask;  
+    uint8_t subpix;  
     uint32_t cyclesStart;
+
+    // do not remove, this cleans up the initial bit
+    // set so that it is more stable
+    GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 
     cyclesStart = get_ccount() + CYCLES_800;
     while (pixels < end)
@@ -106,20 +110,23 @@ static inline void ICACHE_FLASH_ATTR send_pixels_800(uint8_t* pixels, uint8_t* e
         subpix = *pixels++;
         for (mask = 0x80; mask; mask >>= 1)
         {
-            uint32_t nextBit = (subpix & mask);
+            // do the check here while we are waiting on time to pass
+            bool nextBit = (subpix & mask);
             uint32_t cyclesNext = cyclesStart;
 
             // after we have done as much work as needed for this next bit
             // now wait for the HIGH
             do
             {
+                // cache and use this count so we don't incur another 
+                // instruction before we turn the bit high
                 cyclesStart = get_ccount();
             }
             while ((cyclesStart - cyclesNext) < CYCLES_800);
 
-
+            // set high
             GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
-
+            
             // wait for the LOW
             if (nextBit)
             {
@@ -130,6 +137,7 @@ static inline void ICACHE_FLASH_ATTR send_pixels_800(uint8_t* pixels, uint8_t* e
                 while ((get_ccount() - cyclesStart) < CYCLES_800_T0H);
             }
             
+            // set low
             GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
         }
     }
@@ -199,7 +207,10 @@ void NeoPixelBus::Show(void)
     // subsequent round of data until the latch time has elapsed.  This
     // allows the mainline code to start generating the next frame of data
     // rather than stalling for the latch.
-    while ((micros() - _endTime) < 50L);
+    while ((micros() - _endTime) < 50L)
+    {
+        delayMicroseconds(1);
+    }
     // _endTime is a private member (rather than global var) so that mutliple
     // instances on different pins can be quickly issued in succession (each
     // instance doesn't delay the next).
