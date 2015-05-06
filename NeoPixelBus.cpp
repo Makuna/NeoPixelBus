@@ -106,6 +106,9 @@ static inline uint32_t get_ccount(void)
 static inline uint32_t esp8266_enter_critical()
 {
     uint32_t state;
+
+    __asm__ __volatile__("dsync ; isync");
+
     RSIL(state);
     return state;
 }
