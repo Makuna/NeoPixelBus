@@ -23,7 +23,9 @@ License along with NeoPixel.  If not, see
 // '_flagsPixels' flags for LED _pixels (third parameter to constructor):
 #define NEO_RGB     0x00 // Wired for RGB data order
 #define NEO_GRB     0x01 // Wired for GRB data order
-#define NEO_COLMASK 0x01
+#define NEO_BRG     0x04
+#define NEO_COLMASK 0x05
+
 #define NEO_KHZ400  0x00 // 400 KHz datastream
 #define NEO_KHZ800  0x02 // 800 KHz datastream
 #define NEO_SPDMASK 0x02
@@ -37,11 +39,25 @@ class NeoPixelBus
 {
 public:
     // Constructor: number of LEDs, pin number, LED type
-    NeoPixelBus(uint16_t n, uint8_t p = 6, uint8_t t = NEO_GRB | NEO_KHZ800);
+    NeoPixelBus(uint16_t n, uint8_t p, uint8_t t = NEO_GRB | NEO_KHZ800);
     ~NeoPixelBus();
+
+    inline uint16_t getPixelCount()
+    {
+        return _countPixels;
+    }
 
     void Begin();
     void Show();
+    inline bool CanShow(void) 
+    { 
+        return (micros() - _endTime) >= 50L; 
+    }
+    void ClearTo(uint8_t r, uint8_t g, uint8_t b);
+    void ClearTo(RgbColor c)
+    {
+        ClearTo(c.R, c.G, c.B);
+    }
 
     bool IsDirty()
     {

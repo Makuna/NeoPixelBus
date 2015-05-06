@@ -2,6 +2,8 @@
 
 Arduino NeoPixel library
 
+NOW SUPPORTS esp8266!
+
 Clone this into your Arduino\Library folder
 
 This library is a modification of the Adafruit NeoPixel library.
