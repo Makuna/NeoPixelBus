@@ -83,50 +83,14 @@ void NeoPixelBus::Begin(void)
 #define CYCLES_400_T1H  (F_CPU /  833333 - 4)
 #define CYCLES_400      (F_CPU /  400000 - 4) 
 
-// Cycle count
-#define RSR_CCOUNT(r)     __asm__ __volatile__("rsr %0,ccount":"=a" (r))
-
-static inline uint32_t get_ccount(void)
-{
-    uint32_t ccount;
-    RSR_CCOUNT(ccount);
-    return ccount;
-}
-
-// Interrupt Enable Register Access
-#define RSR_INTENABLE(r)  __asm__ __volatile__("rsr %0,INTENABLE":"=a" (r))
-#define WSR_INTENABLE(w)  __asm__ __volatile__("wsr %0,INTENABLE ; rsync"::"a" (w): "memory")
-
-// Read Set Interrupt Level
-#define RSIL(r)  __asm__ __volatile__("rsil %0,15 ; esync":"=a" (r))
-// Write Register Processor State
-#define WSR_PS(w)  __asm__ __volatile__("wsr %0,ps ; esync"::"a" (w): "memory")
-
-
-static inline uint32_t esp8266_enter_critical()
-{
-    uint32_t state;
-
-    __asm__ __volatile__("dsync ; isync");
-
-    RSIL(state);
-    return state;
-}
-
-static inline void esp8266_leave_critical(uint32_t state)
-{
-    WSR_PS(state);
-}
-
 static inline void send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
 {
     const uint32_t pinRegister = _BV(pin);
     uint8_t mask;  
     uint8_t subpix;  
     uint32_t cyclesStart;
-    uint32_t state = esp8266_enter_critical();
 
-    cyclesStart = get_ccount() + CYCLES_800;
+    cyclesStart = ESP.getCycleCount() + CYCLES_800;
     while (pixels < end)
     {
         subpix = *pixels++;
@@ -142,7 +106,7 @@ static inline void send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
             {
                 // cache and use this count so we don't incur another 
                 // instruction before we turn the bit high
-                cyclesStart = get_ccount();
+                cyclesStart = ESP.getCycleCount();
             }
             while ((cyclesStart - cyclesNext) < CYCLES_800);
 
@@ -152,21 +116,21 @@ static inline void send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
             // wait for the LOW
             if (nextBit)
             {
-                while ((get_ccount() - cyclesStart) < CYCLES_800_T1H);
+                while ((ESP.getCycleCount() - cyclesStart) < CYCLES_800_T1H);
             }
             else
             {
-                while ((get_ccount() - cyclesStart) < CYCLES_800_T0H);
+                while ((ESP.getCycleCount() - cyclesStart) < CYCLES_800_T0H);
             }
             
             // set low
             GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
         }
     }
-    esp8266_leave_critical(state);
+
     // while accurate, this isn't needed due to the delays at the 
     // top of Show() to enforce between update timing
-    // while ((get_ccount() - cyclesStart) < CYCLES_800);
+    // while ((ESP.getCycleCount() - cyclesStart) < CYCLES_800);
 }
 
 static inline void send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin)
@@ -175,13 +139,8 @@ static inline void send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin)
     uint8_t mask;
     uint8_t subpix;
     uint32_t cyclesStart;
-    uint32_t state = esp8266_enter_critical();
 
-    // do not remove, this cleans up the initial bit
-    // set so that it is more stable
-    //GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-
-    cyclesStart = get_ccount() + CYCLES_400;
+    cyclesStart = ESP.getCycleCount() + CYCLES_400;
     while (pixels < end)
     {
         subpix = *pixels++;
@@ -194,7 +153,7 @@ static inline void send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin)
             // now wait for the HIGH
             do
             {
-                cyclesStart = get_ccount();
+                cyclesStart = ESP.getCycleCount();
             } while ((cyclesStart - cyclesNext) < CYCLES_400);
 
 
@@ -203,20 +162,20 @@ static inline void send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin)
             // wait for the LOW
             if (nextBit)
             {
-                while ((get_ccount() - cyclesStart) < CYCLES_400_T1H);
+                while ((ESP.getCycleCount() - cyclesStart) < CYCLES_400_T1H);
             }
             else
             {
-                while ((get_ccount() - cyclesStart) < CYCLES_400_T0H);
+                while ((ESP.getCycleCount() - cyclesStart) < CYCLES_400_T0H);
             }
 
             GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
         }
     }
-    esp8266_leave_critical(state);
+
     // while accurate, this isn't needed due to the delays at the 
     // top of Show() to enforce between update timing
-    // while ((get_ccount() - cyclesStart) < CYCLES_400);
+    // while ((ESP.getCycleCount() - cyclesStart) < CYCLES_400);
 }
 
 #endif
@@ -1218,6 +1177,14 @@ void NeoPixelBus::LinearFadePixelColor(uint16_t time, uint16_t n, RgbColor color
     else
     {
         SetPixelColor(n, _animations[n].target);
+    }
+}
+
+void NeoPixelBus::FadeTo(uint16_t time, RgbColor color)
+{
+    for (uint8_t n = 0; n < _countPixels; n++)
+    {
+        LinearFadePixelColor(time, n, color);
     }
 }
 

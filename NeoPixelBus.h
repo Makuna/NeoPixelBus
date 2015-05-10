@@ -98,6 +98,8 @@ public:
     }
     void LinearFadePixelColor(uint16_t time, uint16_t n, RgbColor color);
 
+    void FadeTo(uint16_t time, RgbColor color);
+
 private:
     void setPin(uint8_t p);
     void UpdatePixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
