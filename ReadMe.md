@@ -1,8 +1,12 @@
 # NeoPixelBus
 
+[![Join the chat at https://gitter.im/Makuna/NeoPixelBus](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Makuna/NeoPixelBus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Arduino NeoPixel library
 
 NOW SUPPORTS esp8266!
+
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Makuna/NeoPixelBus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 Clone this into your Arduino\Library folder
 
