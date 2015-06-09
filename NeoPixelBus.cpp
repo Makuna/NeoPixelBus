@@ -92,6 +92,7 @@ static inline void send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
 
     // this set low will help cleanup the first bit
     GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+    __asm__ __volatile__("isync");
 
     cyclesStart = ESP.getCycleCount() + CYCLES_800;
     while (pixels < end)
@@ -145,6 +146,7 @@ static inline void send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin)
 
     // this set low will help cleanup the first bit
     GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+    __asm__ __volatile__("isync");
 
     cyclesStart = ESP.getCycleCount() + CYCLES_400;
     while (pixels < end)
@@ -1166,6 +1168,11 @@ RgbColor NeoPixelBus::GetPixelColor(uint16_t n) const
 
 void NeoPixelBus::LinearFadePixelColor(uint16_t time, uint16_t n, RgbColor color)
 {
+    if (n >= _countPixels)
+    {
+        return;
+    }
+
     if (_animations[n].time != 0)
     {
         _activeAnimations--;
