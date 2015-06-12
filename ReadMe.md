@@ -5,6 +5,7 @@
 Arduino NeoPixel library
 
 NOW SUPPORTS esp8266!
+
 NEW Animation class provides more flexible animation definitions
 
 Clone this into your Arduino\Library folder
@@ -12,7 +13,7 @@ Clone this into your Arduino\Library folder
 This library is a modification of the Adafruit NeoPixel library.
 The Api is similiar, but it removes the overal brightness feature and adds animation support.
 
-## Rquirements
+## Requirements
 
 If you use this library with Boards other than the Esp8266, you will be required to also have STL present.  Currently I don't know a way to get this and make it available to library in a general way.
 
@@ -49,7 +50,7 @@ instantiates a RgbColor object with the given brightness. 0 is black, 128 is gre
 instantiates a RgbColor object by converting the HslColor into RGB.
 
 #### uint8_t CalculateBrightness()
-returns the general brightness of the pixe, averaging color.
+returns the general brightness of the pixel, averaging of the color components.
 
 #### void Darken(uint8_t delta)
 this will darken the color by the given amount
