@@ -15,8 +15,85 @@ License along with NeoPixel.  If not, see
 --------------------------------------------------------------------*/
 
 #include "RgbColor.h"
+#include "HslColor.h"
 
-uint8_t RgbColor::CalculateBrightness()
+static float _CalcColor(float p, float q, float t)
+{
+    if (t < 0.0f)
+        t += 1.0f;
+    if (t > 1.0f)
+        t -= 1.0f;
+
+    if (t < 1.0f / 6.0f)
+        return p + (q - p) * 6.0f * t;
+
+    if (t < 0.5f)
+        return q;
+
+    if (t < 2.0f / 3.0f)
+        return p + ((q - p) * (2.0f / 3.0f - t) * 6.0f);
+
+    return p;
+}
+
+RgbColor::RgbColor(HslColor color)
+{
+    //Serial.print("HSL to RGB : ");
+    //Serial.print(color.H);
+    //Serial.print(", ");
+    //Serial.print(color.S);
+    //Serial.print(", ");
+    //Serial.print(color.L);
+    //Serial.print(" => ");
+
+    float r;
+    float g;
+    float b;
+#ifdef HSL_FLOAT
+    float h = color.H;
+    float s = color.S;
+    float l = color.L;
+#else
+    float h = color.H / 255.0f;
+    float s = color.S / 255.0f;
+    float l = color.L / 255.0f;
+#endif
+
+    if (color.S == 0.0f || color.L == 0.0f)
+    {
+        r = g = b = l; // achromatic or black
+    }
+    else 
+    {
+        float q = l < 0.5f ? l * (1.0f + s) : l + s - (l * s);
+        float p = 2.0f * l - q;
+        r = _CalcColor(p, q, h + 1.0f / 3.0f);
+        g = _CalcColor(p, q, h);
+        b = _CalcColor(p, q, h - 1.0f / 3.0f);
+    }
+
+    //Serial.print(r);
+    //Serial.print(", ");
+    //Serial.print(g);
+    //Serial.print(", ");
+    //Serial.print(b);
+    //Serial.print(" = ");
+
+    R = (uint8_t)(r * 255.0f);
+    G = (uint8_t)(g * 255.0f);
+    B = (uint8_t)(b * 255.0f);
+
+    //Serial.print(R);
+    //Serial.print(", ");
+    //Serial.print(G);
+    //Serial.print(", ");
+    //Serial.print(B);
+    //Serial.println();
+}
+
+
+
+uint8_t RgbColor::CalculateBrightness() const
 {
 	return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
 }
@@ -81,9 +158,9 @@ void RgbColor::Lighten(uint8_t delta)
 	}
 }
 
-RgbColor RgbColor::LinearBlend(RgbColor left, RgbColor right, uint8_t progress)
+RgbColor RgbColor::LinearBlend(RgbColor left, RgbColor right, float progress)
 {
-	return RgbColor( left.R + ((right.R - left.R) * progress / 255),
-		left.G + ((right.G - left.G) * progress / 255),
-		left.B + ((right.B - left.B) * progress / 255));
+	return RgbColor( left.R + ((right.R - left.R) * progress),
+		left.G + ((right.G - left.G) * progress),
+		left.B + ((right.B - left.B) * progress));
 }

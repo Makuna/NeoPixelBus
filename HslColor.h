@@ -16,82 +16,67 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #include <Arduino.h>
-
-struct HslColor;
+//#define HSL_FLOAT
 
 // ------------------------------------------------------------------------
-// RgbColor represents a color object that is represented by Red, Green, Blue
+// HslColor represents a color object that is represented by Hue, Saturation, Lightness
 // component values.  It contains helpful color routines to manipulate the 
 // color.
 // ------------------------------------------------------------------------
-struct RgbColor
+struct HslColor
 {
+#ifdef HSL_FLOAT
     // ------------------------------------------------------------------------
-    // Construct a RgbColor using R, G, B values (0-255)
+    // Construct a HslColor using H, S, L values (0.0 - 1.0)
     // ------------------------------------------------------------------------
-	RgbColor(uint8_t r, uint8_t g, uint8_t b) :
-		R(r), G(g), B(b)
-	{
-	};
+    HslColor(float h, float s, float l) :
+        H(h), S(s), L(l)
+    {
+    };
+#else
+    // ------------------------------------------------------------------------
+    // Construct a HslColor using H, S, L values (0 - 255)
+    // generally, L should be limited to between (0-127)
+    // ------------------------------------------------------------------------
+    HslColor(uint8_t h, uint8_t s, uint8_t l) :
+        H(h), S(s), L(l)
+    {
+    };
+#endif
 
     // ------------------------------------------------------------------------
-    // Construct a RgbColor using a single brightness value (0-255)
-    // This works well for creating gray tone colors
-    // (0) = blakc, (255) = white, (128) = gray
+    // Construct a HslColor using RgbColor
     // ------------------------------------------------------------------------
-	RgbColor(uint8_t brightness) :
-		R(brightness), G(brightness), B(brightness)
-	{
-	};
+    HslColor(RgbColor color);
 
     // ------------------------------------------------------------------------
-    // Construct a RgbColor using HslColor
+    // Construct a HslColor that will have its values set in latter operations
+    // CAUTION:  The H,S,L members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
-    RgbColor(HslColor color);
-
-    // ------------------------------------------------------------------------
-    // Construct a RgbColor that will have its values set in latter operations
-    // CAUTION:  The R,G,B members are not initialized and may not be consistent
-    // ------------------------------------------------------------------------
-	RgbColor()
-	{
-	};
-
-    // ------------------------------------------------------------------------
-    // CalculateBrightness will calculate the overall brightness
-    // NOTE: This is a simple linear brightness
-    // ------------------------------------------------------------------------
-	uint8_t CalculateBrightness() const;
-
-    // ------------------------------------------------------------------------
-    // Darken will adjust the color by the given delta toward black
-    // NOTE: This is a simple linear change
-    // delta - (0-255) the amount to dim the color
-    // ------------------------------------------------------------------------
-	void Darken(uint8_t delta);
-
-    // ------------------------------------------------------------------------
-    // Lighten will adjust the color by the given delta toward white
-    // NOTE: This is a simple linear change
-    // delta - (0-255) the amount to lighten the color
-    // ------------------------------------------------------------------------
-	void Lighten(uint8_t delta);
+    HslColor()
+    {
+    };
 
     // ------------------------------------------------------------------------
     // LinearBlend between two colors by the amount defined by progress variable
     // left - the color to start the blend at
     // right - the color to end the blend at
-    // progress - (0.0 - 1.0) value where 0 will return left and 1.0 will return right
+    // progress - (0.0 - 1.0) value where 0.0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-	static RgbColor LinearBlend(RgbColor left, RgbColor right, float progress);
-    
+    static HslColor LinearBlend(HslColor left, HslColor right, float progress);
+
     // ------------------------------------------------------------------------
-    // Red, Green, Blue color members (0-255) where 
-    // (0,0,0) is black and (255,255,255) is white
+    // Hue, Saturation, Lightness color members 
     // ------------------------------------------------------------------------
-	uint8_t R;
-	uint8_t G;
-	uint8_t B;
+#ifdef HSL_FLOAT
+    float H;
+    float S;
+    float L;
+#else
+    uint8_t H;
+    uint8_t S;
+    uint8_t L;
+#endif
 };
 

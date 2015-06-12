@@ -35,8 +35,6 @@ NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) :
     _countPixels(n), 
     _sizePixels(n * 3), 
     _pin(p), 
-    _animationLastTick(0),
-    _activeAnimations(0),
     _flagsPixels(t)
 {
     setPin(p);
@@ -46,21 +44,12 @@ NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) :
     {
         memset(_pixels, 0, _sizePixels);
     }
-
-    uint16_t animationSize = n * sizeof(FadeAnimation);
-    _animations = (FadeAnimation*)malloc(animationSize);
-    if (_animations)
-    {
-        memset(_animations, 0, animationSize);
-    }
 }
 
 NeoPixelBus::~NeoPixelBus() 
 {
     if (_pixels) 
         free(_pixels);
-    if (_animations) 
-        free(_animations);
 
     pinMode(_pin, INPUT);
 }
@@ -76,12 +65,12 @@ void NeoPixelBus::Begin(void)
 #if defined(ESP8266)
 
 
-#define CYCLES_800_T0H  (F_CPU / 2500000 - 4) // 0.4us
-#define CYCLES_800_T1H  (F_CPU / 1250000 - 4) // 0.8us
-#define CYCLES_800      (F_CPU /  800000 - 4) // 1.25us per bit
-#define CYCLES_400_T0H  (F_CPU / 2000000 - 4)
-#define CYCLES_400_T1H  (F_CPU /  833333 - 4)
-#define CYCLES_400      (F_CPU /  400000 - 4) 
+#define CYCLES_800_T0H  (F_CPU / 2500000) // 0.4us
+#define CYCLES_800_T1H  (F_CPU / 1250000) // 0.8us
+#define CYCLES_800      (F_CPU /  800000) // 1.25us per bit
+#define CYCLES_400_T0H  (F_CPU / 2000000)
+#define CYCLES_400_T1H  (F_CPU /  833333)
+#define CYCLES_400      (F_CPU /  400000) 
 
 static inline void send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
 {
@@ -90,18 +79,15 @@ static inline void send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
     uint8_t subpix;  
     uint32_t cyclesStart;
 
-    // this set low will help cleanup the first bit
-    GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-    __asm__ __volatile__("isync");
-
-    cyclesStart = ESP.getCycleCount() + CYCLES_800;
-    while (pixels < end)
+    // trigger emediately
+    cyclesStart = ESP.getCycleCount() - CYCLES_800;
+    do
     {
         subpix = *pixels++;
-        for (mask = 0x80; mask; mask >>= 1)
+        for (mask = 0x80; mask != 0; mask >>= 1)
         {
-            // do the check here while we are waiting on time to pass
-            bool nextBit = (subpix & mask);
+            // do the checks here while we are waiting on time to pass
+            uint32_t cyclesBit = ((subpix & mask)) ? CYCLES_800_T1H : CYCLES_800_T0H;
             uint32_t cyclesNext = cyclesStart;
 
             // after we have done as much work as needed for this next bit
@@ -111,26 +97,21 @@ static inline void send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
                 // cache and use this count so we don't incur another 
                 // instruction before we turn the bit high
                 cyclesStart = ESP.getCycleCount();
-            }
-            while ((cyclesStart - cyclesNext) < CYCLES_800);
+            }  while ((cyclesStart - cyclesNext) < CYCLES_800);
 
             // set high
             GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
-            
+           
             // wait for the LOW
-            if (nextBit)
+            do
             {
-                while ((ESP.getCycleCount() - cyclesStart) < CYCLES_800_T1H);
-            }
-            else
-            {
-                while ((ESP.getCycleCount() - cyclesStart) < CYCLES_800_T0H);
-            }
+                cyclesNext = ESP.getCycleCount();
+            } while ((cyclesNext - cyclesStart) < cyclesBit);
             
             // set low
             GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
         }
-    }
+    } while (pixels < end);
 
     // while accurate, this isn't needed due to the delays at the 
     // top of Show() to enforce between update timing
@@ -144,39 +125,35 @@ static inline void send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin)
     uint8_t subpix;
     uint32_t cyclesStart;
 
-    // this set low will help cleanup the first bit
-    GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-    __asm__ __volatile__("isync");
-
-    cyclesStart = ESP.getCycleCount() + CYCLES_400;
+    // trigger emediately
+    cyclesStart = ESP.getCycleCount() - CYCLES_400;
     while (pixels < end)
     {
         subpix = *pixels++;
         for (mask = 0x80; mask; mask >>= 1)
         {
-            bool nextBit = (subpix & mask);
+            uint32_t cyclesBit = ((subpix & mask)) ? CYCLES_400_T1H : CYCLES_400_T0H;
             uint32_t cyclesNext = cyclesStart;
 
             // after we have done as much work as needed for this next bit
             // now wait for the HIGH
             do
             {
+                // cache and use this count so we don't incur another 
+                // instruction before we turn the bit high
                 cyclesStart = ESP.getCycleCount();
             } while ((cyclesStart - cyclesNext) < CYCLES_400);
 
-
+            // set high
             GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
 
             // wait for the LOW
-            if (nextBit)
+            do
             {
-                while ((ESP.getCycleCount() - cyclesStart) < CYCLES_400_T1H);
-            }
-            else
-            {
-                while ((ESP.getCycleCount() - cyclesStart) < CYCLES_400_T0H);
-            }
+                cyclesNext = ESP.getCycleCount();
+            } while ((cyclesNext - cyclesStart) < cyclesBit);
 
+            // set low
             GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
         }
     }
@@ -1111,13 +1088,6 @@ void NeoPixelBus::SetPixelColor(
 {
     if (n < _countPixels) 
     {
-        // clear any animation
-        if (_animations[n].time != 0)
-        {
-            _activeAnimations--;
-            _animations[n].time = 0;
-            _animations[n].remaining = 0;
-        }
         UpdatePixelColor(n, r, g, b);
     }
 }
@@ -1126,7 +1096,7 @@ void NeoPixelBus::ClearTo(uint8_t r, uint8_t g, uint8_t b)
 {
     for (uint8_t n = 0; n < _countPixels; n++)
     {
-        SetPixelColor(n, r, g, b);
+        UpdatePixelColor(n, r, g, b);
     }
 }
 
@@ -1195,88 +1165,3 @@ RgbColor NeoPixelBus::GetPixelColor(uint16_t n) const
 
     return RgbColor(0); // Pixel # is out of bounds
 }
-
-void NeoPixelBus::LinearFadePixelColor(uint16_t time, uint16_t n, RgbColor color)
-{
-    if (n >= _countPixels)
-    {
-        return;
-    }
-
-    if (_animations[n].time != 0)
-    {
-        _activeAnimations--;
-    }
-
-    _animations[n].time = time;
-    _animations[n].remaining = time;
-    _animations[n].target = color;
-    _animations[n].origin = GetPixelColor(n);
-
-    if (time > 0)
-    {
-        _activeAnimations++;
-    }
-    else
-    {
-        SetPixelColor(n, _animations[n].target);
-    }
-}
-
-void NeoPixelBus::FadeTo(uint16_t time, RgbColor color)
-{
-    for (uint8_t n = 0; n < _countPixels; n++)
-    {
-        LinearFadePixelColor(time, n, color);
-    }
-}
-
-void NeoPixelBus::StartAnimating()
-{
-    _animationLastTick = millis();
-}
-
-void NeoPixelBus::UpdateAnimations()
-{
-    uint32_t currentTick = millis();
-
-    if (_animationLastTick != 0)
-    {
-        uint32_t delta = currentTick - _animationLastTick;
-        if (delta > 0)
-        {
-            uint16_t countAnimations = _activeAnimations;
-
-            FadeAnimation* pAnim;
-            RgbColor color;
-
-            for (uint16_t iAnim = 0; iAnim < _countPixels && countAnimations > 0; iAnim++)
-            {
-                pAnim = &_animations[iAnim];
-
-                if (pAnim->remaining > delta)
-                {
-                    pAnim->remaining -= delta;
-
-                    uint8_t progress = (pAnim->time - pAnim->remaining) * (uint32_t)256 / pAnim->time;
-
-                    color = RgbColor::LinearBlend(pAnim->origin, 
-                        pAnim->target, 
-                        progress);
-
-                    UpdatePixelColor(iAnim, color);
-                    countAnimations--;
-                }
-                else if (pAnim->remaining > 0)
-                {
-                    // specifically calling SetPixelColor so it will clear animation state
-                    SetPixelColor(iAnim, pAnim->target);
-                    countAnimations--;
-                }
-            }
-        }
-    }
-
-    _animationLastTick = currentTick;
-}
-

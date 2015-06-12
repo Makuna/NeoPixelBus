@@ -18,7 +18,16 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #include <Arduino.h>
+
+enum ColorType
+{
+    ColorType_Rgb,
+    ColorType_Hsl
+};
+
 #include "RgbColor.h"
+#include "HslColor.h"
+#include "NeoPixelAnimator.h"
 
 // '_flagsPixels' flags for LED _pixels (third parameter to constructor):
 #define NEO_RGB     0x00 // Wired for RGB data order
@@ -49,7 +58,7 @@ public:
 
     void Begin();
     void Show();
-    inline bool CanShow(void) 
+    inline bool CanShow(void) const
     { 
         return (micros() - _endTime) >= 50L; 
     }
@@ -59,7 +68,7 @@ public:
         ClearTo(c.R, c.G, c.B);
     }
 
-    bool IsDirty()
+    bool IsDirty() const
     {
         return  (_flagsPixels & NEO_DIRTY);
     };
@@ -89,18 +98,11 @@ public:
 
     RgbColor GetPixelColor(uint16_t n) const;
 
-    void StartAnimating();
-    void UpdateAnimations();
 
-    bool IsAnimating() const
-    {
-        return _activeAnimations > 0;
-    }
-    void LinearFadePixelColor(uint16_t time, uint16_t n, RgbColor color);
-
-    void FadeTo(uint16_t time, RgbColor color);
 
 private:
+    friend NeoPixelAnimator;
+
     void setPin(uint8_t p);
     void UpdatePixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
     void UpdatePixelColor(uint16_t n, RgbColor c)
@@ -120,18 +122,6 @@ private:
     uint8_t _pinMask;       // Output PORT bitmask
 #endif
 
-    struct FadeAnimation
-    {
-        uint16_t time;
-        uint16_t remaining;
-
-        RgbColor target;
-        RgbColor origin;
-    };
-
-    uint16_t _activeAnimations;
-    FadeAnimation* _animations;
-    uint32_t _animationLastTick;
 
 };
 
