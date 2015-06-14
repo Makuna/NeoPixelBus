@@ -25,6 +25,13 @@ enum ColorType
     ColorType_Hsl
 };
 
+#if defined(ESP8266)
+#define NEOPIXEL_RAM_DECL ICACHE_RAM_ATTR
+#else
+// All other supported platforms use the default memory location
+#define NEOPIXEL_RAM_DECL
+#endif
+
 #include "RgbColor.h"
 #include "HslColor.h"
 #include "NeoPixelAnimator.h"
@@ -57,7 +64,7 @@ public:
     }
 
     void Begin();
-    void Show();
+    void NEOPIXEL_RAM_DECL Show();
     inline bool CanShow(void) const
     { 
         return (micros() - _endTime) >= 50L; 
@@ -81,11 +88,11 @@ public:
         _flagsPixels &= ~NEO_DIRTY;
     }
 
-    uint8_t*  Pixels() const
+    uint8_t* Pixels() const
     {
         return _pixels;
     };
-    uint16_t  PixelCount() const
+    uint16_t PixelCount() const
     {
         return _countPixels;
     };
@@ -97,8 +104,6 @@ public:
     };
 
     RgbColor GetPixelColor(uint16_t n) const;
-
-
 
 private:
     friend NeoPixelAnimator;

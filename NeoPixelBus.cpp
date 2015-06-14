@@ -31,6 +31,13 @@ License along with NeoPixel.  If not, see
 
 #include "NeoPixelBus.h"
 
+#if defined(ESP8266)
+// due to linker overriding the ICACHE_RAM_ATTR for cpp files, these methods are
+// moved into a C file so the attribute will be applied correctly
+extern "C" void ICACHE_RAM_ATTR send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin);
+extern "C" void ICACHE_RAM_ATTR send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin);
+#endif
+
 NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) : 
     _countPixels(n), 
     _sizePixels(n * 3), 
@@ -62,111 +69,7 @@ void NeoPixelBus::Begin(void)
     Dirty();
 }
 
-#if defined(ESP8266)
-
-
-#define CYCLES_800_T0H  (F_CPU / 2500000) // 0.4us
-#define CYCLES_800_T1H  (F_CPU / 1250000) // 0.8us
-#define CYCLES_800      (F_CPU /  800000) // 1.25us per bit
-#define CYCLES_400_T0H  (F_CPU / 2000000)
-#define CYCLES_400_T1H  (F_CPU /  833333)
-#define CYCLES_400      (F_CPU /  400000) 
-
-static inline void send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
-{
-    const uint32_t pinRegister = _BV(pin);
-    uint8_t mask;  
-    uint8_t subpix;  
-    uint32_t cyclesStart;
-
-    // trigger emediately
-    cyclesStart = ESP.getCycleCount() - CYCLES_800;
-    do
-    {
-        subpix = *pixels++;
-        for (mask = 0x80; mask != 0; mask >>= 1)
-        {
-            // do the checks here while we are waiting on time to pass
-            uint32_t cyclesBit = ((subpix & mask)) ? CYCLES_800_T1H : CYCLES_800_T0H;
-            uint32_t cyclesNext = cyclesStart;
-
-            // after we have done as much work as needed for this next bit
-            // now wait for the HIGH
-            do
-            {
-                // cache and use this count so we don't incur another 
-                // instruction before we turn the bit high
-                cyclesStart = ESP.getCycleCount();
-            }  while ((cyclesStart - cyclesNext) < CYCLES_800);
-
-            // set high
-            GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
-           
-            // wait for the LOW
-            do
-            {
-                cyclesNext = ESP.getCycleCount();
-            } while ((cyclesNext - cyclesStart) < cyclesBit);
-            
-            // set low
-            GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-        }
-    } while (pixels < end);
-
-    // while accurate, this isn't needed due to the delays at the 
-    // top of Show() to enforce between update timing
-    // while ((ESP.getCycleCount() - cyclesStart) < CYCLES_800);
-}
-
-static inline void send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin)
-{
-    const uint32_t pinRegister = _BV(pin);
-    uint8_t mask;
-    uint8_t subpix;
-    uint32_t cyclesStart;
-
-    // trigger emediately
-    cyclesStart = ESP.getCycleCount() - CYCLES_400;
-    while (pixels < end)
-    {
-        subpix = *pixels++;
-        for (mask = 0x80; mask; mask >>= 1)
-        {
-            uint32_t cyclesBit = ((subpix & mask)) ? CYCLES_400_T1H : CYCLES_400_T0H;
-            uint32_t cyclesNext = cyclesStart;
-
-            // after we have done as much work as needed for this next bit
-            // now wait for the HIGH
-            do
-            {
-                // cache and use this count so we don't incur another 
-                // instruction before we turn the bit high
-                cyclesStart = ESP.getCycleCount();
-            } while ((cyclesStart - cyclesNext) < CYCLES_400);
-
-            // set high
-            GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
-
-            // wait for the LOW
-            do
-            {
-                cyclesNext = ESP.getCycleCount();
-            } while ((cyclesNext - cyclesStart) < cyclesBit);
-
-            // set low
-            GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-        }
-    }
-
-    // while accurate, this isn't needed due to the delays at the 
-    // top of Show() to enforce between update timing
-    // while ((ESP.getCycleCount() - cyclesStart) < CYCLES_400);
-}
-
-#endif
-
-
-void NeoPixelBus::Show(void) 
+void NEOPIXEL_RAM_DECL NeoPixelBus::Show(void)
 {
     if (!_pixels) 
         return;

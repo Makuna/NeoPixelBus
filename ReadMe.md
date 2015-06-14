@@ -86,6 +86,7 @@ This represents a single NeoPixel Bus that is connected by a single pin.  Please
 
 #### NeoPixelBus(uint16_t n, uint8_t p = 6, uint8_t t = NEO_GRB | NEO_KHZ800);
 instantiates a NewoPixelBus object, with n number of pixels on the bus, over the p pin, using the defined NeoPixel type.
+For the exp8266, only pins 0-15 are supported.
 There are some NeoPixels that address the color values differently, so if you set the green color but it displays as red, use the NEO_RGB type flag.
 
 ```
