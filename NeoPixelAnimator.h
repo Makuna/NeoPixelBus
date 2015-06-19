@@ -34,6 +34,11 @@ public:
         return _activeAnimations > 0;
     }
 
+    bool IsAnimating(uint16_t n)
+    {
+        return (IsAnimating() && _animations[n].time != 0);
+    }
+
     void StartAnimation(uint16_t n, uint16_t time, AnimUpdateCallback animUpdate);
     void StopAnimation(uint16_t n);
     void UpdateAnimations();

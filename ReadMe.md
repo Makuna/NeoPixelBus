@@ -147,6 +147,9 @@ NOTE:  NeoPixelBus::Show() must still be called to push the color state to the p
 #### bool IsAnimating() const
 this method will return the current animation state.  It will return false if there are no active animations.
 
+#### bool IsAnimating(uint16_t n) const
+this method will return the current animation state for the given pixel.  It will return false if there are no active animations for the given pixel.
+
 #### void StartAnimation(uint16_t n, uint16_t time, AnimUpdateCallback animUpdate)
 this method will start an animation for the given pixel, over the given time, using the animUpdate function to provide the effect.  The animUpdate method will be called on short cyles given a progress value of zero to one that present the time progress from start to finish.
 
