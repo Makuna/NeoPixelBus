@@ -43,6 +43,17 @@ public:
     void StopAnimation(uint16_t n);
     void UpdateAnimations();
 
+    void Pause()
+    {
+        _isRunning = false;
+    }
+
+    void Resume()
+    {
+        _isRunning = true;
+        _animationLastTick = millis();
+    }
+
     void FadeTo(uint16_t time, RgbColor color);
 
 private:
@@ -65,5 +76,5 @@ private:
     AnimationContext* _animations;
     uint32_t _animationLastTick;
     uint16_t _activeAnimations;
-    bool _isAnimating;
+    bool _isRunning;
 };

@@ -93,37 +93,40 @@ void NeoPixelAnimator::FadeTo(uint16_t time, RgbColor color)
 
 void NeoPixelAnimator::UpdateAnimations()
 {
-    uint32_t currentTick = millis();
-    uint32_t delta = currentTick - _animationLastTick;
-
-    if (delta > 0)
+    if (_isRunning)
     {
-        uint16_t countAnimations = _activeAnimations;
+        uint32_t currentTick = millis();
+        uint32_t delta = currentTick - _animationLastTick;
 
-        AnimationContext* pAnim;
-
-        for (uint16_t iAnim = 0; iAnim < _bus->PixelCount() && countAnimations > 0; iAnim++)
+        if (delta > 0)
         {
-            pAnim = &_animations[iAnim];
+            uint16_t countAnimations = _activeAnimations;
 
-            if (pAnim->remaining > delta)
+            AnimationContext* pAnim;
+
+            for (uint16_t iAnim = 0; iAnim < _bus->PixelCount() && countAnimations > 0; iAnim++)
             {
-                pAnim->remaining -= delta;
+                pAnim = &_animations[iAnim];
 
-                float progress = (float)(pAnim->time - pAnim->remaining) / (float)pAnim->time;
+                if (pAnim->remaining > delta)
+                {
+                    pAnim->remaining -= delta;
 
-                pAnim->fnUpdate(progress);
-                countAnimations--;
+                    float progress = (float)(pAnim->time - pAnim->remaining) / (float)pAnim->time;
+
+                    pAnim->fnUpdate(progress);
+                    countAnimations--;
+                }
+                else if (pAnim->remaining > 0)
+                {
+                    pAnim->fnUpdate(1.0f);
+                    StopAnimation(iAnim);
+                    countAnimations--;
+                }
             }
-            else if (pAnim->remaining > 0)
-            {
-                pAnim->fnUpdate(1.0f);
-                StopAnimation(iAnim);
-                countAnimations--;
-            }
+
+            _animationLastTick = currentTick;
         }
-
-        _animationLastTick = currentTick;
     }
 }
 

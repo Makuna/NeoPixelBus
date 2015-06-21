@@ -159,6 +159,12 @@ this method will stop the current running animation on the given pixel.  The pix
 #### void UpdateAnimations()
 this method will allow the animations to be processed and update the pixel color state. It should be called often within the Loop() function.
 
+#### void Pause()
+this method will pause all animations, thus suspending the animations at their current state and no longer chaning the colors. This will not effect other state, so IsAnimating will continue to return true if there are suspended animations.
+
+#### void Resume()
+this method will resume all animations, thus continuing all animations where they were at when Pause() was called.
+
 #### void FadeTo(uint16_t time, RgbColor color)
 this will setup an animation for all pixels to linear fade between the current color and the given color over the time given.  The time is in milliseconds.
 

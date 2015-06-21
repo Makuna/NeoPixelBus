@@ -16,7 +16,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #include <Arduino.h>
-//#define HSL_FLOAT
+#define HSL_FLOAT
 
 // ------------------------------------------------------------------------
 // HslColor represents a color object that is represented by Hue, Saturation, Lightness

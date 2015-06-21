@@ -28,6 +28,7 @@ HslColor::HslColor(RgbColor color)
     //Serial.print(color.B);
     //Serial.print(" => ");
 
+    // convert colors to float between (0.0 - 1.0)
     float r = color.R / 255.0f;
     float g = color.G / 255.0f;
     float b = color.B / 255.0f;
@@ -75,6 +76,7 @@ HslColor::HslColor(RgbColor color)
     L = l;
 
 #else
+    // convert 0.0-1.0 values to 0-255
     H = (uint8_t)(h * 255);
     S = (uint8_t)(s * 255);
     L = (uint8_t)(l * 255);
