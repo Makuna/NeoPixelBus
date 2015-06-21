@@ -91,12 +91,17 @@ void NeoPixelAnimator::FadeTo(uint16_t time, RgbColor color)
     }
 }
 
-void NeoPixelAnimator::UpdateAnimations()
+void NeoPixelAnimator::UpdateAnimations(uint32_t maxDeltaMs)
 {
     if (_isRunning)
     {
         uint32_t currentTick = millis();
         uint32_t delta = currentTick - _animationLastTick;
+
+        if (delta > maxDeltaMs)
+        {
+            delta = maxDeltaMs;
+        }
 
         if (delta > 0)
         {

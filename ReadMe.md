@@ -156,8 +156,9 @@ this method will start an animation for the given pixel, over the given time, us
 #### void StopAnimation(uint16_t n)
 this method will stop the current running animation on the given pixel.  The pixel will be left in what ever state it was in last.
 
-#### void UpdateAnimations()
+#### void UpdateAnimations(uint32_t maxDeltaMs = 1000)
 this method will allow the animations to be processed and update the pixel color state. It should be called often within the Loop() function.
+The argument maxDeltaMs is used to cap the calculations for animation time to this value.  Due to other code that may take large amounts of time, it could cause an animation to jump due to the time passage.  By changing this value to a lower number like 100ms, you will guarentee no animation step will be large but the timing of the animation may no longer match real time.
 
 #### void Pause()
 this method will pause all animations, thus suspending the animations at their current state and no longer chaning the colors. This will not effect other state, so IsAnimating will continue to return true if there are suspended animations.

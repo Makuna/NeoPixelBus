@@ -41,7 +41,7 @@ public:
 
     void StartAnimation(uint16_t n, uint16_t time, AnimUpdateCallback animUpdate);
     void StopAnimation(uint16_t n);
-    void UpdateAnimations();
+    void UpdateAnimations(uint32_t maxDeltaMs = 1000);
 
     void Pause()
     {
