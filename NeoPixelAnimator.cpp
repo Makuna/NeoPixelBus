@@ -20,7 +20,8 @@ License along with NeoPixel.  If not, see
 NeoPixelAnimator::NeoPixelAnimator(NeoPixelBus* bus) :
     _bus(bus),
     _animationLastTick(0),
-    _activeAnimations(0)
+    _activeAnimations(0),
+    _isRunning(true)
 {
     _animations = new AnimationContext[_bus->PixelCount()];
 }
@@ -59,8 +60,6 @@ void NeoPixelAnimator::StartAnimation(uint16_t n, uint16_t time, AnimUpdateCallb
     _animations[n].fnUpdate = animUpdate;
 
     _activeAnimations++;
-    //Serial.print("+");
-    //Serial.println(_activeAnimations);
 }
 
 void NeoPixelAnimator::StopAnimation(uint16_t n)
@@ -71,9 +70,6 @@ void NeoPixelAnimator::StopAnimation(uint16_t n)
         _animations[n].time = 0;
         _animations[n].remaining = 0;
         _animations[n].fnUpdate = NULL;
-
-        //Serial.print("-");
-        //Serial.println(_activeAnimations);
     }
 }
 

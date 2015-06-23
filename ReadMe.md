@@ -160,8 +160,11 @@ this method will stop the current running animation on the given pixel.  The pix
 this method will allow the animations to be processed and update the pixel color state. It should be called often within the Loop() function.
 The argument maxDeltaMs is used to cap the calculations for animation time to this value.  Due to other code that may take large amounts of time, it could cause an animation to jump due to the time passage.  By changing this value to a lower number like 100ms, you will guarentee no animation step will be large but the timing of the animation may no longer match real time.
 
+#### void IsPaused()
+this method will return if the animations are paused.  See Pause() and Resume().  This state is distinct from IsAnimating().
+
 #### void Pause()
-this method will pause all animations, thus suspending the animations at their current state and no longer chaning the colors. This will not effect other state, so IsAnimating will continue to return true if there are suspended animations.
+this method will pause all animations, thus suspending the animations at their current state and no longer changing the colors. This will not effect other state, so IsAnimating will continue to return true if there are suspended animations.
 
 #### void Resume()
 this method will resume all animations, thus continuing all animations where they were at when Pause() was called.

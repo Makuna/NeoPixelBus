@@ -43,6 +43,11 @@ public:
     void StopAnimation(uint16_t n);
     void UpdateAnimations(uint32_t maxDeltaMs = 1000);
 
+    bool IsPaused()
+    {
+        return (!_isRunning);
+    }
+
     void Pause()
     {
         _isRunning = false;
