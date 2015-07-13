@@ -34,6 +34,7 @@ enum ColorType
 
 #include "RgbColor.h"
 #include "HslColor.h"
+#include "HsbColor.h"
 #include "NeoPixelAnimator.h"
 
 // '_flagsPixels' flags for LED _pixels (third parameter to constructor):

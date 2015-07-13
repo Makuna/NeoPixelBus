@@ -15,12 +15,12 @@ License along with NeoPixel.  If not, see
 --------------------------------------------------------------------*/
 
 #include "RgbColor.h"
-#include "HslColor.h"
+#include "HsbColor.h"
 
 
-HslColor::HslColor(RgbColor color)
+HsbColor::HsbColor(RgbColor color)
 {
-    //Serial.print("RGB to HSL : ");
+    //Serial.print("RGB to HSB : ");
     //Serial.print(color.R);
     //Serial.print(", ");
     //Serial.print(color.G);
@@ -36,23 +36,19 @@ HslColor::HslColor(RgbColor color)
     float max = (r > g && r > b) ? r : (g > b) ? g : b;
     float min = (r < g && r < b) ? r : (g < b) ? g : b;
 
-    float h, s, l;
-    l = (max + min) / 2.0f;
+    float d = max - min;
 
-    if (max == min) 
-    {
-        h = s = 0.0f;
-    }
-    else 
-    {
-        float d = max - min;
-        s = (l > 0.5f) ? d / (2.0f - (max + min)) : d / (max + min);
+    float h = 0.0; 
+    float v = max;
+    float s = (v == 0.0f) ? 0 : (d / v);
 
-        if (r > g && r > b)
+    if (d != 0.0f)
+    {
+        if (r == max)
         {
             h = (g - b) / d + (g < b ? 6.0f : 0.0f);
         }
-        else if (g > b)
+        else if (g == max)
         {
             h = (b - r) / d + 2.0f;
         }
@@ -67,19 +63,19 @@ HslColor::HslColor(RgbColor color)
     //Serial.print(", ");
     //Serial.print(s);
     //Serial.print(", ");
-    //Serial.print(l);
+    //Serial.print(b);
     //Serial.print(" = ");
 
-#ifdef HSL_FLOAT
+#ifdef HSB_FLOAT
     H = h;
     S = s;
-    L = l;
+    B = v;
 
 #else
     // convert 0.0-1.0 values to 0-255
     H = (uint8_t)(h * 255);
     S = (uint8_t)(s * 255);
-    L = (uint8_t)(l * 255);
+    B = (uint8_t)(v * 255);
 #endif
 
 
@@ -87,13 +83,13 @@ HslColor::HslColor(RgbColor color)
     //Serial.print(", ");
     //Serial.print(S);
     //Serial.print(", ");
-    //Serial.print(L);
+    //Serial.print(B);
     //Serial.println();
 }
 
-HslColor HslColor::LinearBlend(HslColor left, HslColor right, float progress)
+HsbColor HsbColor::LinearBlend(HsbColor left, HsbColor right, float progress)
 {
-    return HslColor(left.H + ((right.H - left.H) * progress),
+    return HsbColor(left.H + ((right.H - left.H) * progress),
         left.S + ((right.S - left.S) * progress),
-        left.L + ((right.L - left.L) * progress));
+        left.B + ((right.B - left.B) * progress));
 }
