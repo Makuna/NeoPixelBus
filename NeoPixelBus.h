@@ -20,6 +20,8 @@ License along with NeoPixel.  If not, see
 #include <Arduino.h>
 #include "RgbColor.h"
 
+#define ESPUARTWS2812 // drive neopixels by UART on GPIO2 on ESP8266 thanks to Forkineye. https://github.com/forkineye/ESPixelStick
+
 // '_flagsPixels' flags for LED _pixels (third parameter to constructor):
 #define NEO_RGB     0x00 // Wired for RGB data order
 #define NEO_GRB     0x01 // Wired for GRB data order
@@ -119,6 +121,12 @@ private:
     const volatile uint8_t* _port;         // Output PORT register
     uint8_t _pinMask;       // Output PORT bitmask
 #endif
+
+#ifdef ESPUARTWS2812
+    /* 6 bit UART lookup table, first 2 bits ignored. Start and stop bits are part of the pixel stream. */
+const char data[4] = { 0b00110111, 0b00000111, 0b00110100, 0b00000100 };
+#endif
+
 
     struct FadeAnimation
     {
