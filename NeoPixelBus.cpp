@@ -100,7 +100,25 @@ NeoPixelBus::~NeoPixelBus()
 
 #ifdef ESPUARTWS2812 
     /* Serial rate is 4x 800KHz for WS2811 */
+
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
+
+
+        if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800) 
+            { 
+                // 800 Support
+                Serial1.begin(3200000, SERIAL_6N1, SERIAL_TX_ONLY);
+            } else {
+                // 400 Support
+                Serial1.begin(1600000, SERIAL_6N1, SERIAL_TX_ONLY);
+            }
+
+#else
+
     Serial1.begin(3200000, SERIAL_6N1, SERIAL_TX_ONLY);
+
+#endif
+
     CLEAR_PERI_REG_MASK(UART_CONF0(UART), UART_INV_MASK);
     //SET_PERI_REG_MASK(UART_CONF0(UART), UART_TXD_INV);
     SET_PERI_REG_MASK(UART_CONF0(UART), (BIT(22)));
@@ -758,6 +776,7 @@ void NeoPixelBus::Show(void)
     if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800)
     {
 #endif
+
 #ifndef ESPUARTWS2812        
         // 800 KHz bitstream
         send_pixels_800(p, end, _pin);
@@ -777,16 +796,33 @@ void NeoPixelBus::Show(void)
 
     } while (p < end);
 
-
-
 #endif 
 
 #ifdef INCLUDE_NEO_KHZ400_SUPPORT
     }
     else
     {
-        // 400 kHz bitstream
+
+#ifndef ESPUARTWS2812        
+        // 800 KHz bitstream
         send_pixels_400(p, end, _pin);
+#else 
+
+    char buff[4];
+
+    do
+    {
+        uint8_t subpix = *p++;
+
+        buff[0] = data[(subpix >> 6) & 3];
+        buff[1] = data[(subpix >> 4) & 3];
+        buff[2] = data[(subpix >> 2) & 3];
+        buff[3] = data[subpix & 3];
+        Serial1.write(buff, sizeof(buff));    
+
+    } while (p < end);
+
+#endif 
     }
 #endif 
 
