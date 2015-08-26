@@ -42,11 +42,14 @@ License along with NeoPixel.  If not, see
         #define UART_INV_MASK  (0x3f<<19)
         #define UART 1
 
+        extern void ICACHE_RAM_ATTR send_pixels_UART(uint8_t* pixels, uint8_t* end);
+
     #else
         // due to linker overriding the ICACHE_RAM_ATTR for cpp files, these methods are
         // moved into a C file so the attribute will be applied correctly
         extern "C" void ICACHE_RAM_ATTR send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin);
         extern "C" void ICACHE_RAM_ATTR send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin);
+
     #endif
 
 #endif
@@ -781,6 +784,8 @@ void NeoPixelBus::Show(void)
         // 800 KHz bitstream
         send_pixels_800(p, end, _pin);
 #else 
+
+        send_pixels_UART(p, end);
 
     char buff[4];
 
