@@ -796,7 +796,7 @@ void NeoPixelBus::Show(void)
         send_pixels_800(p, end, _pin);
 #else 
 
-        send_pixels_UART(p, end,true);
+        send_pixels_UART(p, end, true);
 
     // char buff[4];
 

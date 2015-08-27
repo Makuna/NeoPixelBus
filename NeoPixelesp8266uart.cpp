@@ -29,37 +29,35 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #define UART 1
 
 
-
 const char data[4] = { 0b00110111, 0b00000111, 0b00110100, 0b00000100 };
-
 
 void ICACHE_RAM_ATTR send_pixels_UART(uint8_t* pixels, uint8_t* end, bool force)
 {
     char buff[4];
-    uint8_t count = 0; 
-    static uint8_t* position = NULL; 
+    //uint8_t count = 0; 
+   // static uint8_t* position = NULL; 
 
 
-    if (position != NULL && !force ) { 
-        pixels = position; 
-    } else if (position == NULL && !force )  {
-        return;
-    } 
+    // if (position != NULL && !force ) { 
+    //     pixels = position; 
+    // } else if (position == NULL && !force )  {
+    //     return;
+    // } 
 
     do
     {
         uint8_t subpix = *pixels++;
-        position = pixels; 
-        count++; 
+    //    position = pixels; 
+    //    count++; 
         buff[0] = data[(subpix >> 6) & 3];
         buff[1] = data[(subpix >> 4) & 3];
         buff[2] = data[(subpix >> 2) & 3];
         buff[3] = data[subpix & 3];
         Serial1.write(buff, sizeof(buff));    
 
-    } while (pixels < end || count < 156 );
+    } while (pixels < end );
 
-    if ( pixels ==  end) { position = NULL; }
+ //   if ( pixels ==  end) { position = NULL; }
 
 }
 
