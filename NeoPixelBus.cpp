@@ -997,7 +997,7 @@ void NeoPixelBus::SetPixelColor(
 
 void NeoPixelBus::ClearTo(uint8_t r, uint8_t g, uint8_t b)
 {
-    for (uint8_t n = 0; n < _countPixels; n++)
+    for (uint16_t n = 0; n < _countPixels; n++)
     {
         UpdatePixelColor(n, r, g, b);
     }
