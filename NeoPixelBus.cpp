@@ -42,7 +42,7 @@ License along with NeoPixel.  If not, see
         #define UART_INV_MASK  (0x3f<<19)
         #define UART 1
 
-        extern void ICACHE_RAM_ATTR send_pixels_UART(uint8_t* pixels, uint8_t* end);
+        extern void ICACHE_RAM_ATTR send_pixels_UART(uint8_t* pixels, uint8_t* end, bool force);
 
     #else
         // due to linker overriding the ICACHE_RAM_ATTR for cpp files, these methods are
@@ -97,6 +97,17 @@ NeoPixelBus::~NeoPixelBus()
 #endif
 
 }
+
+
+void NeoPixelBus::FillUart(void) {
+    
+    uint8_t* p = _pixels;
+    uint8_t* end = p + _sizePixels;
+
+    send_pixels_UART(p, end, false);
+
+}
+
 
  void NeoPixelBus::Begin(void) 
  {
@@ -785,21 +796,21 @@ void NeoPixelBus::Show(void)
         send_pixels_800(p, end, _pin);
 #else 
 
-        send_pixels_UART(p, end);
+        send_pixels_UART(p, end,true);
 
-    char buff[4];
+    // char buff[4];
 
-    do
-    {
-        uint8_t subpix = *p++;
+    // do
+    // {
+    //     uint8_t subpix = *p++;
 
-        buff[0] = data[(subpix >> 6) & 3];
-        buff[1] = data[(subpix >> 4) & 3];
-        buff[2] = data[(subpix >> 2) & 3];
-        buff[3] = data[subpix & 3];
-        Serial1.write(buff, sizeof(buff));    
+    //     buff[0] = data[(subpix >> 6) & 3];
+    //     buff[1] = data[(subpix >> 4) & 3];
+    //     buff[2] = data[(subpix >> 2) & 3];
+    //     buff[3] = data[subpix & 3];
+    //     Serial1.write(buff, sizeof(buff));    
 
-    } while (p < end);
+    // } while (p < end);
 
 #endif 
 

@@ -61,7 +61,7 @@ public:
     {
         ClearTo(c.R, c.G, c.B);
     }
-
+    void FillUart();
     bool IsDirty()
     {
         return  (_flagsPixels & NEO_DIRTY);
