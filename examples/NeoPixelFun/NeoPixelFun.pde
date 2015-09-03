@@ -1,8 +1,8 @@
 #include <NeoPixelBus.h>
 
-#define pixelCount 300
+#define pixelCount 4
 
-NeoPixelBus strip = NeoPixelBus(pixelCount, 2);
+NeoPixelBus strip = NeoPixelBus(pixelCount, 8);
 uint16_t effectState = 0;
 
 
@@ -13,7 +13,6 @@ void setup()
   SetRandomSeed();
 }
 
-uint32_t update_strip_time; 
 
 void loop()
 {
@@ -34,18 +33,6 @@ void loop()
     strip.Show();
     delay(31); // ~30hz change cycle
   }
-
-  if (  (millis() - update_strip_time > 30) ) {
-
-     strip.UpdateAnimations(); 
-  
-    strip.Show();  // takes 6ms with 200, take 12ms with 400 ----> so 100 takes 3ms. 
-    //  one LED takes 30uS of nointeruppts, 100 takes 3ms. 
-    update_strip_time = millis();
-  
-  } 
-  
- strip.FillUart();
  
 }
 

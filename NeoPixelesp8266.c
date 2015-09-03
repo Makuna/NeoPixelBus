@@ -36,12 +36,6 @@ inline uint32_t _getCycleCount()
 #define CYCLES_400_T1H  (F_CPU /  833333)
 #define CYCLES_400      (F_CPU /  400000) 
 
-
-#include "eagle_soc.h"
-#include "uart_register.h"
-
-
-
 void ICACHE_RAM_ATTR send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
 {
     const uint32_t pinRegister = _BV(pin);
