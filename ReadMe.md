@@ -4,7 +4,7 @@
 
 Arduino NeoPixel library
 
-NOW SUPPORTS esp8266!  I suggest you use the the NeoPixelAnimator branch for Esp8266 platform as it contains enhancements that just can't be supported on AVR platform.  Includig HslColor object and an enhanced animator manager.
+ESP8266 CUSTOMERS PLEASE READ:  While this branch does work with the esp8266, due to the latest SDK releases it will not function reliably when WiFi is being used.  Therefore I suggest you use the NeoPixelAnimator branch, which includes a solution that will work with WiFi on.  Further it contains enhancements that just can't be supported on AVR platform.  Including HslColor object and an enhanced animator manager.
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Makuna/NeoPixelBus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
