@@ -37,6 +37,8 @@ enum ColorType
 #include "HsbColor.h"
 #include "NeoPixelAnimator.h"
 
+#define ESPUARTWS2812 // drive neopixels by UART on GPIO2 on ESP8266 thanks to Forkineye. https://github.com/forkineye/ESPixelStick
+
 // '_flagsPixels' flags for LED _pixels (third parameter to constructor):
 #define NEO_RGB     0x00 // Wired for RGB data order
 #define NEO_GRB     0x01 // Wired for GRB data order
@@ -128,6 +130,25 @@ private:
     uint8_t _pinMask;       // Output PORT bitmask
 #endif
 
+
+#ifdef ESPUARTWS2812
+    /* 6 bit UART lookup table, first 2 bits ignored. Start and stop bits are part of the pixel stream. */
+const char data[4] = { 0b00110111, 0b00000111, 0b00110100, 0b00000100 };
+#endif
+
+
+    struct FadeAnimation
+    {
+        uint16_t time;
+        uint16_t remaining;
+
+        RgbColor target;
+        RgbColor origin;
+    };
+
+    uint16_t _activeAnimations;
+    FadeAnimation* _animations;
+    uint32_t _animationLastTick;
 
 };
 

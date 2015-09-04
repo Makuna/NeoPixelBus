@@ -32,11 +32,26 @@ License along with NeoPixel.  If not, see
 #include "NeoPixelBus.h"
 
 #if defined(ESP8266)
-// due to linker overriding the ICACHE_RAM_ATTR for cpp files, these methods are
-// moved into a C file so the attribute will be applied correctly
-extern "C" void ICACHE_RAM_ATTR send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin);
-extern "C" void ICACHE_RAM_ATTR send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin);
+
+
+    #ifdef ESPUARTWS2812
+        extern "C" {
+        #include "eagle_soc.h"
+        #include "uart_register.h"
+        #include <Arduino.h>
+        }
+        #define UART_INV_MASK  (0x3f<<19)
+        #define UART 1
+
+    #else
+        // due to linker overriding the ICACHE_RAM_ATTR for cpp files, these methods are
+        // moved into a C file so the attribute will be applied correctly
+        extern "C" void ICACHE_RAM_ATTR send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin);
+        extern "C" void ICACHE_RAM_ATTR send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin);
+    #endif
+
 #endif
+
 
 NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) : 
     _countPixels(n), 
@@ -44,7 +59,11 @@ NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) :
     _pin(p), 
     _flagsPixels(t)
 {
+
+#ifndef ESPUARTWS2812
     setPin(p);
+#endif
+
 
     _pixels = (uint8_t *)malloc(_sizePixels);
     if (_pixels) 
@@ -58,18 +77,48 @@ NeoPixelBus::~NeoPixelBus()
     if (_pixels) 
         free(_pixels);
 
+#ifndef ESPUARTWS2812
     pinMode(_pin, INPUT);
+#endif
+
 }
 
-void NeoPixelBus::Begin(void) 
-{
-    pinMode(_pin, OUTPUT);
-    digitalWrite(_pin, LOW);
+ void NeoPixelBus::Begin(void) 
+ {
 
-    Dirty();
-}
+#ifdef ESPUARTWS2812 
+    /* Serial rate is 4x 800KHz for WS2811 */
 
-void NEOPIXEL_RAM_DECL NeoPixelBus::Show(void)
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
+
+
+        if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800) 
+            { 
+                // 800 Support
+                Serial1.begin(3200000, SERIAL_6N1, SERIAL_TX_ONLY);
+            } else {
+                // 400 Support
+                Serial1.begin(1600000, SERIAL_6N1, SERIAL_TX_ONLY);
+            }
+
+#else
+
+    Serial1.begin(3200000, SERIAL_6N1, SERIAL_TX_ONLY);
+
+#endif
+
+    CLEAR_PERI_REG_MASK(UART_CONF0(UART), UART_INV_MASK);
+    //SET_PERI_REG_MASK(UART_CONF0(UART), UART_TXD_INV);
+    SET_PERI_REG_MASK(UART_CONF0(UART), (BIT(22)));
+#else  
+     pinMode(_pin, OUTPUT);
+     digitalWrite(_pin, LOW);
+#endif
+     Dirty();
+ }
+
+
+void NeoPixelBus::Show(void) 
 {
     if (!_pixels) 
         return;
@@ -100,7 +149,9 @@ void NEOPIXEL_RAM_DECL NeoPixelBus::Show(void)
     // state, computes 'pin high' and 'pin low' values, and writes these back
     // to the PORT register as needed.
 
+#ifndef ESPUARTWS2812
     noInterrupts(); // Need 100% focus on instruction timing
+#endif 
 
 #ifdef __AVR__
 
@@ -703,7 +754,6 @@ void NEOPIXEL_RAM_DECL NeoPixelBus::Show(void)
 #endif
 
 #elif defined(ESP8266)
-
     
     uint8_t* p = _pixels;
     uint8_t* end = p + _sizePixels;
@@ -714,15 +764,53 @@ void NEOPIXEL_RAM_DECL NeoPixelBus::Show(void)
     if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ800)
     {
 #endif
+
+#ifndef ESPUARTWS2812        
         // 800 KHz bitstream
         send_pixels_800(p, end, _pin);
+#else 
+
+    char buff[4];
+
+    do
+    {
+        uint8_t subpix = *p++;
+
+        buff[0] = data[(subpix >> 6) & 3];
+        buff[1] = data[(subpix >> 4) & 3];
+        buff[2] = data[(subpix >> 2) & 3];
+        buff[3] = data[subpix & 3];
+        Serial1.write(buff, sizeof(buff));    
+
+    } while (p < end);
+
+#endif 
 
 #ifdef INCLUDE_NEO_KHZ400_SUPPORT
     }
     else
     {
-        // 400 kHz bitstream
+
+#ifndef ESPUARTWS2812        
+        // 800 KHz bitstream
         send_pixels_400(p, end, _pin);
+#else 
+
+    char buff[4];
+
+    do
+    {
+        uint8_t subpix = *p++;
+
+        buff[0] = data[(subpix >> 6) & 3];
+        buff[1] = data[(subpix >> 4) & 3];
+        buff[2] = data[(subpix >> 2) & 3];
+        buff[3] = data[subpix & 3];
+        Serial1.write(buff, sizeof(buff));    
+
+    } while (p < end);
+
+#endif 
     }
 #endif 
 
@@ -963,7 +1051,10 @@ void NEOPIXEL_RAM_DECL NeoPixelBus::Show(void)
 
 #endif // end Architecture select
 
+#ifndef ESPUARTWS2812
     interrupts();
+#endif
+
     ResetDirty();
     _endTime = micros(); // Save EOD time for latch on next call
 }

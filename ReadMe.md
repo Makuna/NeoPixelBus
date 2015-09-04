@@ -4,7 +4,7 @@
 
 Arduino NeoPixel library
 
-NOW SUPPORTS esp8266!
+NOW SUPPORTS esp8266!  I suggest you use the the NeoPixelAnimator branch for Esp8266 platform as it contains enhancements that just can't be supported on AVR platform.  Includig HslColor object and an enhanced animator manager.
 
 NEW Animation class provides more flexible animation definitions
 
