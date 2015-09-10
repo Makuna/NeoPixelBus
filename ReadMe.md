@@ -4,7 +4,9 @@
 
 Arduino NeoPixel library
 
-NOW SUPPORTS esp8266!
+NOW SUPPORTS esp8266! 
+This branch (UartDriven) only supports esp8266, and uses the hardware UART to send the data.  This model is required today if you want to use WiFi due to SDK changes that will cause the bitbang model to crash the SDK WiFi code.  Currently it is unknown if they will fix the SDK so that the bitbang model can ever be used. 
+Thanks to stiliface and forkineye for this work.
 
 NEW Animation class provides more flexible animation definitions
 
@@ -84,9 +86,9 @@ this will return a color that is a blend between the given colors.  The amount t
 ### NeoPixelBus object
 This represents a single NeoPixel Bus that is connected by a single pin.  Please see Adafruit's documentation for details, but the differences are documented below.
 
-#### NeoPixelBus(uint16_t n, uint8_t p = 6, uint8_t t = NEO_GRB | NEO_KHZ800);
+#### NeoPixelBus(uint16_t n, uint8_t p, uint8_t t = NEO_GRB | NEO_KHZ800);
 instantiates a NewoPixelBus object, with n number of pixels on the bus, over the p pin, using the defined NeoPixel type.
-For the exp8266, only pins 0-15 are supported.
+For the exp8266, only the TXD1 pin is supported due to the hardware uart restriction and this argument is ignored.
 There are some NeoPixels that address the color values differently, so if you set the green color but it displays as red, use the NEO_RGB type flag.
 
 ```

@@ -25,13 +25,6 @@ enum ColorType
     ColorType_Hsl
 };
 
-#if defined(ESP8266)
-#define NEOPIXEL_RAM_DECL ICACHE_RAM_ATTR
-#else
-// All other supported platforms use the default memory location
-#define NEOPIXEL_RAM_DECL
-#endif
-
 #include "RgbColor.h"
 #include "HslColor.h"
 #include "HsbColor.h"
@@ -56,6 +49,8 @@ class NeoPixelBus
 {
 public:
     // Constructor: number of LEDs, pin number, LED type
+    // NOTE:  Pin Number is ignored in this version due to use of hardware UART
+    // but it is left in the argument list for easy switching between versions of the library
     NeoPixelBus(uint16_t n, uint8_t p, uint8_t t = NEO_GRB | NEO_KHZ800);
     ~NeoPixelBus();
 
@@ -65,7 +60,7 @@ public:
     }
 
     void Begin();
-    void NEOPIXEL_RAM_DECL Show();
+    void Show();
     inline bool CanShow(void) const
     { 
         return (micros() - _endTime) >= 50L; 
@@ -109,25 +104,19 @@ public:
 private:
     friend NeoPixelAnimator;
 
-    void setPin(uint8_t p);
     void UpdatePixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
     void UpdatePixelColor(uint16_t n, RgbColor c)
     {
         UpdatePixelColor(n, c.R, c.G, c.B);
     };
 
-    const uint16_t    _countPixels;       // Number of RGB LEDs in strip
+    const uint16_t    _countPixels;     // Number of RGB LEDs in strip
     const uint16_t    _sizePixels;      // Size of '_pixels' buffer below
     
-    uint8_t _flagsPixels;          // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
-    uint8_t _pin;           // Output pin number
+    uint8_t _flagsPixels;    // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
     uint8_t* _pixels;        // Holds LED color values (3 bytes each)
     uint32_t _endTime;       // Latch timing reference
-#ifdef __AVR__
-    const volatile uint8_t* _port;         // Output PORT register
-    uint8_t _pinMask;       // Output PORT bitmask
-#endif
 
-
+    const char _uartData[4] = { 0b00110111, 0b00000111, 0b00110100, 0b00000100 };
 };
 
