@@ -17,6 +17,7 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 #define HSL_FLOAT
+#define FLOAT_DELTA 0.005
 
 // ------------------------------------------------------------------------
 // HslColor represents a color object that is represented by Hue, Saturation, Lightness
@@ -65,6 +66,31 @@ struct HslColor
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
     static HslColor LinearBlend(HslColor left, HslColor right, float progress);
+
+    // ------------------------------------------------------------------------
+    //  Comparison Operators for HslColourspace.. 
+    //
+    // ------------------------------------------------------------------------
+
+    bool operator==(const HslColor& c2) const {
+        const HslColor& c1=(*this);
+
+#ifdef HSL_FLOAT        
+        return abs(c1.H - c2.H) <= FLOAT_DELTA && abs(c1.S - c2.S) <= FLOAT_DELTA && abs(c1.L - c2.L) <= FLOAT_DELTA;
+#else
+        return c1.H == c2.H && c1.S == c2.S && c1.L == c2.L;
+#endif
+        };
+
+    bool operator!=(const HslColor& c2) const {
+        const HslColor& c1=(*this);
+
+#ifdef HSL_FLOAT         
+        return abs(c1.H - c2.H) > FLOAT_DELTA || abs(c1.S - c2.S) > FLOAT_DELTA || abs(c1.L - c2.L) > FLOAT_DELTA;  
+#else
+        return c1.H != c2.H || c1.S != c2.S || c1.L != c2.L;   
+#endif
+        };
 
     // ------------------------------------------------------------------------
     // Hue, Saturation, Lightness color members 
