@@ -17,7 +17,7 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 #define HSB_FLOAT
-#define FLOAT_DELTA 0.005
+#define FLT_EPSILON 0.005
 
 // ------------------------------------------------------------------------
 // HsbColor represents a color object that is represented by Hue, Saturation, Brightness
@@ -73,20 +73,18 @@ struct HsbColor
     // ------------------------------------------------------------------------
 
      bool operator==(const HsbColor& c2) const {
-        const HsbColor& c1=(*this);
 #ifdef HSB_FLOAT
-        return abs(c1.H - c2.H) <= FLOAT_DELTA && abs(c1.S - c2.S) <= FLOAT_DELTA && abs(c1.B - c2.B) <= FLOAT_DELTA;
+        return abs(this->H - c2.H) <= FLT_EPSILON && abs(this->S - c2.S) <= FLT_EPSILON && abs(this->B - c2.B) <= FLT_EPSILON;
 #else
-        return c1.H == c2.H && c1.S == c2.S && c1.B == c2.B;
+        return this->H == c2.H && this->S == c2.S && this->B == c2.B;
 #endif
         };
 
      bool operator!=(const HsbColor& c2) const {
-        const HsbColor& c1=(*this);
 #ifdef HSB_FLOAT
-        return abs(c1.H - c2.H) > FLOAT_DELTA || abs(c1.S - c2.S) > FLOAT_DELTA || abs(c1.B - c2.B) > FLOAT_DELTA;      
+        return abs(this->H - c2.H) > FLT_EPSILON || abs(this->S - c2.S) > FLT_EPSILON || abs(this->B - c2.B) > FLT_EPSILON;      
 #else
-        return c1.H != c2.H || c1.S != c2.S || c1.B != c2.B;
+        return this->H != c2.H || this->S != c2.S || this->B != c2.B;
 #endif   
         };
 

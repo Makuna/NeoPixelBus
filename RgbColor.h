@@ -98,13 +98,11 @@ struct RgbColor
     // ------------------------------------------------------------------------
 
     bool operator==(const RgbColor& c2) const {
-        const RgbColor& c1=(*this);
-        return c1.R == c2.R && c1.G == c2.G && c1.B == c2.B;
+        return this->R == c2.R && this->G == c2.G && this->B == c2.B;
         };
 
     bool operator!=(const RgbColor& c2) const {
-        const RgbColor& c1=(*this);
-        return c1.R != c2.R || c1.G != c2.G || c1.B != c2.B;
+        return this->R != c2.R || this->G != c2.G || this->B != c2.B;
         };
     
     // ------------------------------------------------------------------------
