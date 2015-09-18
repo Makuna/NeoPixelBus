@@ -17,10 +17,10 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+#if defined(ESP8266)
+
 #include <Arduino.h>
 #include <eagle_soc.h>
-
-#if defined(ESP8266)
 
 inline uint32_t _getCycleCount()
 {
