@@ -8,6 +8,9 @@ NOW SUPPORTS esp8266!
 This branch (UartDriven) only supports esp8266, and uses the hardware UART to send the data.  This model is required today if you want to use WiFi due to SDK changes that will cause the bitbang model to crash the SDK WiFi code.  Currently it is unknown if they will fix the SDK so that the bitbang model can ever be used. 
 Thanks to stiliface and forkineye for this work.
 
+There is a known issue with this branch that the esp8266 speed must be set to 160mhz to be able to use more than about 50 leds.  There seems to be a pipeline issue where the cpu can't maintain consistent data at 80mhz beyound about 50 pixels.
+
+
 NEW Animation class provides more flexible animation definitions
 
 Clone this into your Arduino\Library folder
