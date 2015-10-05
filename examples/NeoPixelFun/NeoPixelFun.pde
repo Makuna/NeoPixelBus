@@ -4,6 +4,7 @@
 #define pixelCount 16 // make sure to set this to the number of pixels in your strip
 #define pixelPin 8  // make sure to set this to the correct pin
 
+//NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin, NEO_RGB | NEO_KHZ800);
 NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin);
 
 NeoPixelAnimator animations(&strip); // NeoPixel animation management object
