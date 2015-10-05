@@ -7,10 +7,13 @@
 
 NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin);
 // NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin, NEO_RGB);
+// NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin, NEO_RGB | NEO_KHZ800);
 //
 // some pixels require the color components to be in a different order
 // using the flag NEO_GRB will use the order; green, red, then blue.
 //
+// some pixels also require an alternatice speed
+// using the flag NEO_KHZ800 or NEO_KHZ400 will set the speed
 
 
 RgbColor red = RgbColor(colorSaturation, 0, 0);
