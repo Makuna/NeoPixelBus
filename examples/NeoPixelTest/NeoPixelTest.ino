@@ -1,7 +1,7 @@
 #include <NeoPixelBus.h>
 
 #define pixelCount 4 // this example assumes 4 pixels, making it smaller will cause a failure
-#define pixelPin 8  // make sure to set this to the correct pin
+#define pixelPin 2  // make sure to set this to the correct pin
 
 #define colorSaturation 128
 
