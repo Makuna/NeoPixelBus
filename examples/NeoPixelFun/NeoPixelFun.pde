@@ -2,7 +2,7 @@
 #include <functional>
 
 #define pixelCount 16 // make sure to set this to the number of pixels in your strip
-#define pixelPin 8  // make sure to set this to the correct pin
+#define pixelPin 2  // make sure to set this to the correct pin
 
 //NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin, NEO_RGB | NEO_KHZ800);
 NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin);
