@@ -39,6 +39,8 @@ enum ColorType
 #define NEO_KHZ400  0x00 // 400 KHz datastream
 #define NEO_KHZ800  0x02 // 800 KHz datastream
 #define NEO_SPDMASK 0x02
+#define NEO_DIRECT  0x08 // directly access UART registers for xfer instead of using library routines that might yield
+#define NEO_DNOINTS 0x18 // directly access and disable interrupts
 #define NEO_DIRTY   0x80 // a change was made it _pixels that requires a show
 
 // v1 NeoPixels aren't handled by default, include the following define before the 
@@ -71,6 +73,14 @@ public:
         ClearTo(c.R, c.G, c.B);
     }
 
+    bool isDirectNoInts() const
+    {
+        return (_flagsPixels & NEO_DNOINTS) == NEO_DNOINTS;
+    };
+    bool isDirect() const
+    {
+        return  (_flagsPixels & NEO_DIRECT);
+    };
     bool IsDirty() const
     {
         return  (_flagsPixels & NEO_DIRTY);
@@ -104,6 +114,7 @@ public:
 private:
     friend NeoPixelAnimator;
 
+    void SendByte(uint8_t data);
     void UpdatePixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
     void UpdatePixelColor(uint16_t n, RgbColor c)
     {

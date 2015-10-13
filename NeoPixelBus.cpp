@@ -85,6 +85,18 @@ void NeoPixelBus::Begin(void)
     Dirty();
 }
 
+void NeoPixelBus::SendByte(uint8_t data)
+{
+    // directly write the byte to transfer into the UART1 FIFO register
+    U1F = data;
+
+    // now wait till this the FIFO buffer is emtpy
+    while(((U1S >> USTXC) & 0xff) != 0x00)
+    {
+        // do nothing, just wait
+    }
+}
+
 void NeoPixelBus::Show(void)
 {
     if (!_pixels) 
@@ -111,7 +123,11 @@ void NeoPixelBus::Show(void)
     uint8_t* p = _pixels;
     uint8_t* end = p + _sizePixels;
 
-
+    if(isDirectNoInts())
+    {
+        noInterrupts();
+    }
+    
     do
     {
         uint8_t subpix = *p++;
@@ -120,10 +136,26 @@ void NeoPixelBus::Show(void)
         buff[1] = _uartData[(subpix >> 4) & 3];
         buff[2] = _uartData[(subpix >> 2) & 3];
         buff[3] = _uartData[subpix & 3];
-        Serial1.write(buff, sizeof(buff));
 
+        // if configured, directly access UART
+        if(isDirect())
+        {
+            for(int pos = 0; pos < 4; pos++)
+            {
+                SendByte(buff[pos]);
+            }
+        }
+        else
+        {
+            Serial1.write(buff, sizeof(buff));
+        }
     } while (p < end);
-
+    
+    if(isDirectNoInts())
+    {
+        interrupts();
+    }
+    
     ResetDirty();
     _endTime = micros(); // Save EOD time for latch on next call
 }
