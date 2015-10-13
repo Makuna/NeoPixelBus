@@ -85,6 +85,18 @@ void NeoPixelBus::Begin(void)
     Dirty();
 }
 
+void NeoPixelBus::SendByte(uint8_t data)
+{
+    // directly write the byte to transfer into the UART1 FIFO register
+    U1F = data;
+
+    // now wait till this the FIFO buffer is emtpy
+    while(((U1S >> USTXC) & 0xff) != 0x00)
+    {
+        // do nothing, just wait
+    }
+}
+
 void NeoPixelBus::Show(void)
 {
     if (!_pixels) 
@@ -111,7 +123,11 @@ void NeoPixelBus::Show(void)
     uint8_t* p = _pixels;
     uint8_t* end = p + _sizePixels;
 
-    noInterrupts();
+    // in case of blocking transfers, make sure no other interrupt is causing jitter
+    if(IsBlocking())
+    {
+        noInterrupts();
+    }
     
     do
     {
@@ -122,14 +138,26 @@ void NeoPixelBus::Show(void)
         buff[2] = _uartData[(subpix >> 2) & 3];
         buff[3] = _uartData[subpix & 3];
 
-        U1F = buff[0]; while(((U1S >> USTXC) & 0xff));
-        U1F = buff[1]; while(((U1S >> USTXC) & 0xff));
-        U1F = buff[2]; while(((U1S >> USTXC) & 0xff));
-        U1F = buff[3]; while(((U1S >> USTXC) & 0xff));
-
+        // for blocking transfers, directly access UART, else use library
+        if(IsBlocking())
+        {
+            for(int pos = 0; pos < 4; pos++)
+            {
+                SendByte(buff[pos]);
+            }
+        }
+        else
+        {
+            Serial1.write(buff, sizeof(buff));
+        }
     } while (p < end);
 
-    interrupts();
+    // recover interrupt state
+    if(IsBlocking())
+    {
+        interrupts();
+    }
+    
     ResetDirty();
     _endTime = micros(); // Save EOD time for latch on next call
 }
