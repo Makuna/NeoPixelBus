@@ -123,12 +123,6 @@ void NeoPixelBus::Show(void)
     uint8_t* p = _pixels;
     uint8_t* end = p + _sizePixels;
 
-    // in case of blocking transfers, make sure no other interrupt is causing jitter
-    if(IsBlocking())
-    {
-        noInterrupts();
-    }
-    
     do
     {
         uint8_t subpix = *p++;
@@ -138,8 +132,8 @@ void NeoPixelBus::Show(void)
         buff[2] = _uartData[(subpix >> 2) & 3];
         buff[3] = _uartData[subpix & 3];
 
-        // for blocking transfers, directly access UART, else use library
-        if(IsBlocking())
+        // if configured, directly access UART
+        if(isDirect())
         {
             for(int pos = 0; pos < 4; pos++)
             {
@@ -151,12 +145,6 @@ void NeoPixelBus::Show(void)
             Serial1.write(buff, sizeof(buff));
         }
     } while (p < end);
-
-    // recover interrupt state
-    if(IsBlocking())
-    {
-        interrupts();
-    }
     
     ResetDirty();
     _endTime = micros(); // Save EOD time for latch on next call

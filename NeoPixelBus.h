@@ -39,7 +39,7 @@ enum ColorType
 #define NEO_KHZ400  0x00 // 400 KHz datastream
 #define NEO_KHZ800  0x02 // 800 KHz datastream
 #define NEO_SPDMASK 0x02
-#define NEO_BLOCK   0x08 // use blocking transfer to reduce impact of WiFi interrupts
+#define NEO_DIRECT   0x08 // use blocking transfer to reduce impact of WiFi interrupts
 #define NEO_DIRTY   0x80 // a change was made it _pixels that requires a show
 
 // v1 NeoPixels aren't handled by default, include the following define before the 
@@ -72,9 +72,9 @@ public:
         ClearTo(c.R, c.G, c.B);
     }
 
-    bool IsBlocking() const
+    bool isDirect() const
     {
-        return  (_flagsPixels & NEO_BLOCK);
+        return  (_flagsPixels & NEO_DIRECT);
     };
     bool IsDirty() const
     {
