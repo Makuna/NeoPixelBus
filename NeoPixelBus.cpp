@@ -123,6 +123,11 @@ void NeoPixelBus::Show(void)
     uint8_t* p = _pixels;
     uint8_t* end = p + _sizePixels;
 
+    if(isDirectNoInts())
+    {
+        noInterrupts();
+    }
+    
     do
     {
         uint8_t subpix = *p++;
@@ -145,6 +150,11 @@ void NeoPixelBus::Show(void)
             Serial1.write(buff, sizeof(buff));
         }
     } while (p < end);
+    
+    if(isDirectNoInts())
+    {
+        interrupts();
+    }
     
     ResetDirty();
     _endTime = micros(); // Save EOD time for latch on next call
