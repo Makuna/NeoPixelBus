@@ -1,14 +1,11 @@
 {
   "name": "NeoPixelBus",
-  "description": "Adafruit enhanced NeoPixel support library",
-  "keywords": "WS2811,WS2812,ESP8266",
-  "frameworks": "*",
+  "description": "Adafruit enhanced NeoPixel support library (WS2811, WS2812)",
+  "keywords": "led, strip",
+  "frameworks": "arduino",
   "platforms": "*",
   "repository": {
     "type": "git",
     "url": "https://github.com/Makuna/NeoPixelBus.git"
-  },
-  "examples": [
-    "examples/*/*.pde"
-  ]
+  }
 }
