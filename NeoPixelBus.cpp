@@ -71,7 +71,7 @@ void NeoPixelBus::Begin(void)
     if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ400)
     {
         // 400 Support
-        buad = 1600000;
+        baud = 1600000;
     }
 
 #endif
@@ -107,7 +107,7 @@ void NeoPixelBus::Show(void)
     // instance doesn't delay the next).
 
     // esp hardware uart sending of data
-    char buff[4];
+    char buff;
     uint8_t* p = _pixels;
     uint8_t* end = p + _sizePixels;
 
@@ -116,12 +116,18 @@ void NeoPixelBus::Show(void)
     {
         uint8_t subpix = *p++;
 
-        buff[0] = _uartData[(subpix >> 6) & 3];
-        buff[1] = _uartData[(subpix >> 4) & 3];
-        buff[2] = _uartData[(subpix >> 2) & 3];
-        buff[3] = _uartData[subpix & 3];
-        Serial1.write(buff, sizeof(buff));
+        buff = _uartData[(subpix >> 6) & 3];
+        UartSendByte(buff);
 
+        buff = _uartData[(subpix >> 4) & 3];
+        UartSendByte(buff);
+
+        buff = _uartData[(subpix >> 2) & 3];
+        UartSendByte(buff);
+
+        buff = _uartData[subpix & 3];
+        UartSendByte(buff);
+        
     } while (p < end);
 
     ResetDirty();

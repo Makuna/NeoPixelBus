@@ -2,9 +2,24 @@
 #include <functional>
 
 #define pixelCount 16 // make sure to set this to the number of pixels in your strip
-#define pixelPin 8  // make sure to set this to the correct pin
+#define pixelPin 2  // make sure to set this to the correct pin, ignored for UartDriven branch
 
 NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin);
+// NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin, NEO_RGB);
+//
+// some pixels require the color components to be in a different order
+// using the flag NEO_GRB will use the order; green, red, then blue.
+// NEO_RGB, NEO_GRB. and NEO_BRG are supported
+//
+
+// NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin, NEO_KHZ400);
+//
+// some pixels require an alternate speed, mostly first generation leds only
+// using the flag NEO_KHZ400 send out the data slower to support these; but you must also
+// define the flag to turn on this extra support
+//#define INCLUDE_NEO_KHZ400_SUPPORT 
+//
+
 NeoPixelAnimator animations(&strip); // NeoPixel animation management object
 
 uint16_t effectState = 0;  // general purpose varible used to store effect state
@@ -114,7 +129,7 @@ void LoopAround(uint8_t peak, uint16_t speed)
 
 
     // apply an animations to current pixel and previous 5 pixels
-    for (uint16_t offset = 5; offset >= 0; offset--)
+    for (int8_t offset = 5; offset >= 0; offset--)
     {
         uint16_t pixel = (effectState + (pixelCount - offset)) % pixelCount;
         RgbColor originalColor = strip.GetPixelColor(pixel);

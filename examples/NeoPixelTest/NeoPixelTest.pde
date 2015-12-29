@@ -1,7 +1,7 @@
 #include <NeoPixelBus.h>
 
 #define pixelCount 4 // this example assumes 4 pixels, making it smaller will cause a failure
-#define pixelPin 8  // make sure to set this to the correct pin
+#define pixelPin 2  // make sure to set this to the correct pin, ignored for UartDriven branch
 
 #define colorSaturation 128
 
@@ -10,8 +10,16 @@ NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin);
 //
 // some pixels require the color components to be in a different order
 // using the flag NEO_GRB will use the order; green, red, then blue.
+// NEO_RGB, NEO_GRB. and NEO_BRG are supported
 //
 
+// NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin, NEO_KHZ400);
+//
+// some pixels require an alternate speed, mostly first generation leds only
+// using the flag NEO_KHZ400 send out the data slower to support these; but you must also
+// define the flag to turn on this extra support
+//#define INCLUDE_NEO_KHZ400_SUPPORT 
+//
 
 RgbColor red = RgbColor(colorSaturation, 0, 0);
 RgbColor green = RgbColor(0, colorSaturation, 0);
@@ -56,7 +64,7 @@ void loop()
     strip.SetPixelColor(3, black);
     strip.Show();
     
-        delay(1000);
+    delay(1000);
 
     // set the colors, 
     // if they don't match in order, you may need to use NEO_GRB flag
