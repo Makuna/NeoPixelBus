@@ -91,6 +91,19 @@ struct RgbColor
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
 	static RgbColor LinearBlend(RgbColor left, RgbColor right, float progress);
+
+    // ------------------------------------------------------------------------
+    //  Comparison Operators for RgbColourspace.. 
+    //
+    // ------------------------------------------------------------------------
+
+    bool operator==(const RgbColor& c2) const {
+        return this->R == c2.R && this->G == c2.G && this->B == c2.B;
+        };
+
+    bool operator!=(const RgbColor& c2) const {
+        return this->R != c2.R || this->G != c2.G || this->B != c2.B;
+        };
     
     // ------------------------------------------------------------------------
     // Red, Green, Blue color members (0-255) where 

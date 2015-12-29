@@ -17,6 +17,7 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 #define HSB_FLOAT
+#define FLT_EPSILON 0.005
 
 // ------------------------------------------------------------------------
 // HsbColor represents a color object that is represented by Hue, Saturation, Brightness
@@ -65,6 +66,28 @@ struct HsbColor
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
     static HsbColor LinearBlend(HsbColor left, HsbColor right, float progress);
+
+    // ------------------------------------------------------------------------
+    //  Comparison Operators for HsbColourspace.. 
+    //
+    // ------------------------------------------------------------------------
+
+     bool operator==(const HsbColor& c2) const {
+#ifdef HSB_FLOAT
+        return abs(this->H - c2.H) <= FLT_EPSILON && abs(this->S - c2.S) <= FLT_EPSILON && abs(this->B - c2.B) <= FLT_EPSILON;
+#else
+        return this->H == c2.H && this->S == c2.S && this->B == c2.B;
+#endif
+        };
+
+     bool operator!=(const HsbColor& c2) const {
+#ifdef HSB_FLOAT
+        return abs(this->H - c2.H) > FLT_EPSILON || abs(this->S - c2.S) > FLT_EPSILON || abs(this->B - c2.B) > FLT_EPSILON;      
+#else
+        return this->H != c2.H || this->S != c2.S || this->B != c2.B;
+#endif   
+        };
+
 
     // ------------------------------------------------------------------------
     // Hue, Saturation, Lightness color members 
