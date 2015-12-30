@@ -32,13 +32,17 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+#include "NeoPixelBus.h"
+
 extern "C" 
 {
 #include "eagle_soc.h"
 #include "uart_register.h"
 }
 
-#include "NeoPixelBus.h"
+// due to linker overriding ICACHE_RAM_ATTR for cpp files, this function was
+// moved into a NeoPixelEsp8266.c file.
+extern "C" void ICACHE_RAM_ATTR esp8266_uart1_send_pixels(uint8_t* pixels, uint8_t* end);
 
 #define UART_INV_MASK  (0x3f<<19)  
 #define UART 1
@@ -107,28 +111,7 @@ void NeoPixelBus::Show(void)
     // instance doesn't delay the next).
 
     // esp hardware uart sending of data
-    char buff;
-    uint8_t* p = _pixels;
-    uint8_t* end = p + _sizePixels;
-
-
-    do
-    {
-        uint8_t subpix = *p++;
-
-        buff = _uartData[(subpix >> 6) & 3];
-        UartSendByte(buff);
-
-        buff = _uartData[(subpix >> 4) & 3];
-        UartSendByte(buff);
-
-        buff = _uartData[(subpix >> 2) & 3];
-        UartSendByte(buff);
-
-        buff = _uartData[subpix & 3];
-        UartSendByte(buff);
-        
-    } while (p < end);
+    esp8266_uart1_send_pixels(_pixels, _pixels + _sizePixels);
 
     ResetDirty();
     _endTime = micros(); // Save EOD time for latch on next call

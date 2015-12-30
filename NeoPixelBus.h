@@ -109,17 +109,6 @@ private:
     {
         UpdatePixelColor(n, c.R, c.G, c.B);
     };
-    inline void UartSendByte(uint8_t data)
-    {
-        // directly write the byte to transfer into the UART1 FIFO register
-        U1F = data;
-
-        // now wait till this the FIFO buffer is emtpy
-        while (((U1S >> USTXC) & 0xff) != 0x00)
-        {
-            // do nothing, just wait
-        }
-    }
 
     const uint16_t    _countPixels;     // Number of RGB LEDs in strip
     const uint16_t    _sizePixels;      // Size of '_pixels' buffer below
@@ -127,7 +116,5 @@ private:
     uint8_t _flagsPixels;    // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
     uint8_t* _pixels;        // Holds LED color values (3 bytes each)
     uint32_t _endTime;       // Latch timing reference
-
-    const char _uartData[4] = { 0b00110111, 0b00000111, 0b00110100, 0b00000100 };
 };
 
