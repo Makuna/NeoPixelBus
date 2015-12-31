@@ -42,7 +42,7 @@ extern "C"
 
 // due to linker overriding ICACHE_RAM_ATTR for cpp files, this function was
 // moved into a NeoPixelEsp8266.c file.
-extern "C" void ICACHE_RAM_ATTR esp8266_uart1_send_pixels(uint8_t* pixels, uint8_t* end);
+extern "C" void ICACHE_RAM_ATTR esp8266_uart1_send_pixels(uint8_t* pixels, uint8_t* end, bool isIrqLocking);
 
 #define UART_INV_MASK  (0x3f<<19)  
 #define UART 1
@@ -110,11 +110,24 @@ void NeoPixelBus::Show(void)
     // instances on different pins can be quickly issued in succession (each
     // instance doesn't delay the next).
 
+    // since uart is async buffer send, we have to calc the endtime that it will take
+    // to correctly manage the data latch in the above code
+    uint32_t usPixelTime = _usPixelTime800mhz;
+
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
+    if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ400)
+    {
+        usPixelTime = _usPixelTime400mhz;
+    }
+#endif
+    // add the calculated time to the current time 
+    _endTime = micros() + (usPixelTime * _countPixels);
+    
+
     // esp hardware uart sending of data
-    esp8266_uart1_send_pixels(_pixels, _pixels + _sizePixels);
+    esp8266_uart1_send_pixels(_pixels, _pixels + _sizePixels, IsIrqLocking());
 
     ResetDirty();
-    _endTime = micros(); // Save EOD time for latch on next call
 }
 
 
