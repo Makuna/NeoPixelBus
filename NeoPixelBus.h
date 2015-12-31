@@ -39,6 +39,7 @@ enum ColorType
 #define NEO_KHZ400  0x00 // 400 KHz datastream
 #define NEO_KHZ800  0x02 // 800 KHz datastream
 #define NEO_SPDMASK 0x02
+#define NEO_IRQLOCK 0x40 // IRQs will be locked on uart fifo writing
 #define NEO_DIRTY   0x80 // a change was made it _pixels that requires a show
 
 // v1 NeoPixels aren't handled by default, include the following define before the 
@@ -63,7 +64,16 @@ public:
     void Show();
     inline bool CanShow(void) const
     { 
-        return (micros() - _endTime) >= 50L; 
+        uint32_t delta = micros() - _endTime;
+        uint32_t usPixelTime = _usPixelTime800mhz;
+
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
+        if ((_flagsPixels & NEO_SPDMASK) == NEO_KHZ400)
+        {
+            usPixelTime = _usPixelTime400mhz;
+        }
+#endif
+        return (delta >= 50L && delta <= (4294967296L - (usPixelTime * _countPixels)));
     }
     void ClearTo(uint8_t r, uint8_t g, uint8_t b);
     void ClearTo(RgbColor c)
@@ -84,6 +94,10 @@ public:
         _flagsPixels &= ~NEO_DIRTY;
     }
 
+    bool IsIrqLocking() const
+    {
+        return  (_flagsPixels & NEO_IRQLOCK);
+    };
     uint8_t* Pixels() const
     {
         return _pixels;
@@ -110,6 +124,10 @@ private:
         UpdatePixelColor(n, c.R, c.G, c.B);
     };
 
+    const uint32_t _usPixelTime800mhz = 30; // us it takes to send a single pixel at 800mhz speed
+#ifdef INCLUDE_NEO_KHZ400_SUPPORT
+    const uint32_t _usPixelTime400mhz = 60; // us it takes to send a single pixel at 800mhz speed
+#endif
     const uint16_t    _countPixels;     // Number of RGB LEDs in strip
     const uint16_t    _sizePixels;      // Size of '_pixels' buffer below
     
