@@ -39,19 +39,29 @@ enum ColorType
 #define NEO_KHZ400  0x00 // 400 KHz datastream
 #define NEO_KHZ800  0x02 // 800 KHz datastream
 #define NEO_SPDMASK 0x02
-#define NEO_IRQLOCK 0x40 // IRQs will be locked on uart fifo writing
+#define NEO_SYNC    0x40 // wait for vsync before updating buffers
 #define NEO_DIRTY   0x80 // a change was made it _pixels that requires a show
 
-// v1 NeoPixels aren't handled by default, include the following define before the 
-// NeoPixelBus library include to support the slower bus speeds
-//#define INCLUDE_NEO_KHZ400_SUPPORT 
+
+struct slc_queue_item {
+  uint32  blocksize:12;
+  uint32  datalen:12;
+  uint32  unused:5;
+  uint32  sub_sof:1;
+  uint32  eof:1;
+  uint32  owner:1;
+  uint32  buf_ptr;
+  uint32  next_link_ptr;
+};
 
 class NeoPixelBus
 {
 public:
     // Constructor: number of LEDs, pin number, LED type
-    // NOTE:  Pin Number is ignored in this version due to use of hardware UART
+    // NOTE:  Pin Number is ignored in this version due to use of hardware I2S. hardwired to GPIO3 due to hardware restrictions.
     // but it is left in the argument list for easy switching between versions of the library
+    
+    NeoPixelBus(uint16_t n, uint8_t p, uint8_t t, uint8_t *pixelBuf, uint8_t *bitBuf);
     NeoPixelBus(uint16_t n, uint8_t p, uint8_t t = NEO_GRB | NEO_KHZ800);
     ~NeoPixelBus();
 
@@ -81,6 +91,10 @@ public:
         ClearTo(c.R, c.G, c.B);
     }
 
+    bool IsStarted() const
+    {
+        return started;
+    };
     bool IsDirty() const
     {
         return  (_flagsPixels & NEO_DIRTY);
@@ -94,10 +108,6 @@ public:
         _flagsPixels &= ~NEO_DIRTY;
     }
 
-    bool IsIrqLocking() const
-    {
-        return  (_flagsPixels & NEO_IRQLOCK);
-    };
     uint8_t* Pixels() const
     {
         return _pixels;
@@ -114,8 +124,18 @@ public:
     };
 
     RgbColor GetPixelColor(uint16_t n) const;
+    void SyncWait(void);
+    void FillBuffers(void);
 
 private:
+
+    struct slc_queue_item i2sBufDescOut;
+    struct slc_queue_item i2sBufDescZeroes;
+
+    uint32_t bitBufferSize;
+    uint8_t i2sZeroes[64];
+    uint8_t *i2sBlock;
+
     friend NeoPixelAnimator;
 
     void UpdatePixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
@@ -134,5 +154,6 @@ private:
     uint8_t _flagsPixels;    // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
     uint8_t* _pixels;        // Holds LED color values (3 bytes each)
     uint32_t _endTime;       // Latch timing reference
+    bool started = false;
 };
 
