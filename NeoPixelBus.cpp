@@ -197,29 +197,8 @@ void NeoPixelBus::Begin(void)
 	/* Enable DMA in i2s subsystem */
 	SET_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN);
 
-	/* autodetect best settings */
-    uint32_t reqBitRate = (_flagsPixels & NEO_KHZ800) ? 800000 : 400000;
-    uint32_t reqFreq = (reqBitRate * 4);
-	uint32_t bestClkmDiv = 0;
-    uint32_t bestBckDiv = 0;
-    uint32_t bestFreq = 0;
-    
-    /* try with lowest CLKM_DIV */
-    for (int clkmDiv = 5; clkmDiv < 128; clkmDiv++)
-    {
-        /* find lowest BCK_DIV */
-        for (int bckDiv = 2; bckDiv < 128; bckDiv++)
-        {
-            int testFreq = F_CPU / (bckDiv*clkmDiv);
-            
-            if (ABS(reqFreq-testFreq) < ABS(reqFreq-bestFreq))
-            {
-                bestFreq = testFreq;
-                bestClkmDiv = clkmDiv;
-                bestBckDiv = bckDiv;
-            }
-		}
-	}
+	uint32_t bestClkmDiv = (_flagsPixels & NEO_KHZ800) ? 4 : 8;
+    uint32_t bestBckDiv = 17;
     
     /* configure the rates */
 	CLEAR_PERI_REG_MASK(I2SCONF, I2S_TRANS_SLAVE_MOD|
