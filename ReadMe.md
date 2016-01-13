@@ -5,8 +5,8 @@
 Arduino NeoPixel library
 
 NOW SUPPORTS esp8266! 
-This branch (UartDriven) only supports esp8266, and uses the hardware UART to send the data.  This model is required today if you want to use WiFi due to SDK changes that will cause the bitbang model to crash the SDK WiFi code.  Currently it is unknown if they will fix the SDK so that the bitbang model can ever be used. 
-Thanks to stiliface and forkineye for this work.
+This branch (DmaDriven) only supports esp8266, and uses the hardware I2C to send the data.  This model will work with WiFi features without problems that the bitbang model has. 
+Thanks to Georg Hofstetter for porting this work.
 
 NEW Animation class provides more flexible animation definitions
 
@@ -17,11 +17,7 @@ The Api is similiar, but it removes the overal brightness feature and adds anima
 
 ## Requirements
 
-If you use this library with Boards other than the Esp8266, you will be required to also have STL present.  Currently I don't know a way to get this and make it available to library in a general way.
-
-While an attempt is being made with this project, the version is out of date for C++ 11 support that Arduino IDE now supports.
-
-https://github.com/maniacbug/StandardCplusplus
+Only the RDX0/GPIO3 pin is supported due to hardware restrictions. 
 
 
 ## Installing This Library
@@ -55,10 +51,10 @@ instantiates a RgbColor object by converting the HslColor into RGB.
 returns the general brightness of the pixel, averaging of the color components.
 
 #### void Darken(uint8_t delta)
-this will darken the color by the given amount
+this will darken the color by the given amount, blending toward black.  This method is destructive in that you can't expect to then call lighten and return to the original color.
 
 #### void Lighten(uint8_t delta)
-this will lighten the color by the given amount
+this will lighten the color by the given amount, blending toward white.  This method is destructive in that you can't expect to then call darken and return to the original color.
 
 #### static RgbColor LinearBlend(RgbColor left, RgbColor right, float progress)
 this will return a color that is a blend between the given colors.  The amount to blend is given by the value of progress, 0.0 will return the left value, 1.0 will return the right value, 0.5 will return the value between them.
@@ -88,7 +84,7 @@ This represents a single NeoPixel Bus that is connected by a single pin.  Please
 
 #### NeoPixelBus(uint16_t n, uint8_t p, uint8_t t = NEO_GRB | NEO_KHZ800);
 instantiates a NewoPixelBus object, with n number of pixels on the bus, over the p pin, using the defined NeoPixel type.
-For the exp8266, only the TXD1 pin is supported due to the hardware uart restriction and this argument is ignored.
+For the exp8266, only the RDX0/GPIO3 pin is supported due to the hardware I2C restriction and this argument is ignored.
 There are some NeoPixels that address the color values differently, so if you set the green color but it displays as red, use the NEO_RGB type flag.
 
 ```

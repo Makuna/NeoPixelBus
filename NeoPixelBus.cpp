@@ -74,22 +74,21 @@ extern "C"
 }
 #endif
 
-/* TODO: constructor if you dont want to use malloc but a static buffer. dont delete this object as it would call free */
-NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t, uint8_t *pixelBuf, uint8_t *bitBuf) : 
+// used when an externally sized and managed memory for the buffers is used
+NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t, uint8_t* pixelBuf, uint8_t* bitBuf) : 
     _countPixels(n), 
     _sizePixels(n * 3), 
-    _flagsPixels(t)
+    _flagsPixels(t),
+    _pixels(pixelBuf),
+    _i2sBlock(bitBuf)
 {
-    /* 24 bit per LED, 3 I2S bits per databit, and of that the byte count */
-    bitBufferSize = (_countPixels * 24 * 4 + 7) / 8;
+    _bitBufferSize = NeoPixelBus::CalculateI2sBufferSize(_countPixels);
     
-    _pixels = pixelBuf;
-    i2sBlock = bitBuf;
-    
-    if(_pixels)
+    if (_pixels)
     {
         memset(_pixels, 0, _sizePixels);
     }
+    ExternalMemory();
 }
 
 NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) : 
@@ -97,13 +96,12 @@ NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) :
     _sizePixels(n * 3), 
     _flagsPixels(t)
 {
-    /* 24 bit per LED, 3 I2S bits per databit, and of that the byte count */
-    bitBufferSize = (_countPixels * 24 * 4 + 7) / 8;
-    
+    _bitBufferSize = NeoPixelBus::CalculateI2sBufferSize(_countPixels);
+
     _pixels = (uint8_t *)malloc(_sizePixels);
-    i2sBlock = (uint8_t *)malloc(bitBufferSize);
+    _i2sBlock = (uint8_t *)malloc(_bitBufferSize);
     
-    if(_pixels)
+    if (_pixels)
     {
         memset(_pixels, 0, _sizePixels);
     }
@@ -111,21 +109,24 @@ NeoPixelBus::NeoPixelBus(uint16_t n, uint8_t p, uint8_t t) :
 
 NeoPixelBus::~NeoPixelBus() 
 {
-    if (_pixels) 
-        free(_pixels);
-    if (i2sBlock) 
-        free(i2sBlock);
+    if (!IsExternalMemory())
+    {
+        if (_pixels)
+            free(_pixels);
+        if (_i2sBlock)
+            free(_i2sBlock);
+    }
 }
 
 void NeoPixelBus::Begin(void) 
 {
-    if(!_pixels || !i2sBlock)
+    if (!_pixels || !_i2sBlock)
     {
         return;
     }
     
-    memset(i2sZeroes, 0x00, sizeof(i2sZeroes));
-    memset(i2sBlock, 0x00, bitBufferSize);
+    memset(_i2sZeroes, 0x00, sizeof(_i2sZeroes));
+    memset(_i2sBlock, 0x00, _bitBufferSize);
     
     /* first populate bit buffers with data */
     FillBuffers();
@@ -144,30 +145,30 @@ void NeoPixelBus::Begin(void)
 	CLEAR_PERI_REG_MASK(SLC_RX_DSCR_CONF, SLC_RX_FILL_EN|SLC_RX_EOF_MODE | SLC_RX_FILL_MODE);
 
     /* prepare linked DMA descriptors, having EOF set for all */
-	i2sBufDescOut.owner = 1;
-	i2sBufDescOut.eof = 1;
-	i2sBufDescOut.sub_sof = 0;
-	i2sBufDescOut.datalen = bitBufferSize;
-	i2sBufDescOut.blocksize = bitBufferSize;
-	i2sBufDescOut.buf_ptr = (uint32_t)i2sBlock;
-	i2sBufDescOut.unused = 0;
-	i2sBufDescOut.next_link_ptr = (uint32_t)&i2sBufDescZeroes;
+	_i2sBufDescOut.owner = 1;
+	_i2sBufDescOut.eof = 1;
+	_i2sBufDescOut.sub_sof = 0;
+	_i2sBufDescOut.datalen = _bitBufferSize;
+	_i2sBufDescOut.blocksize = _bitBufferSize;
+	_i2sBufDescOut.buf_ptr = (uint32_t)_i2sBlock;
+	_i2sBufDescOut.unused = 0;
+	_i2sBufDescOut.next_link_ptr = (uint32_t)&_i2sBufDescLatch;
 
-    /* this zero-buffer block implements the reset signal */
-	i2sBufDescZeroes.owner = 1;
-	i2sBufDescZeroes.eof = 1;
-	i2sBufDescZeroes.sub_sof = 0;
-	i2sBufDescZeroes.datalen = sizeof(i2sZeroes);
-	i2sBufDescZeroes.blocksize = sizeof(i2sZeroes);
-	i2sBufDescZeroes.buf_ptr = (uint32_t)i2sZeroes;
-	i2sBufDescZeroes.unused = 0;
-	i2sBufDescZeroes.next_link_ptr = (uint32_t)&i2sBufDescOut;
+    /* this zero-buffer block implements the latch/reset signal */
+	_i2sBufDescLatch.owner = 1;
+	_i2sBufDescLatch.eof = 1;
+	_i2sBufDescLatch.sub_sof = 0;
+	_i2sBufDescLatch.datalen = sizeof(_i2sZeroes);
+	_i2sBufDescLatch.blocksize = sizeof(_i2sZeroes);
+	_i2sBufDescLatch.buf_ptr = (uint32_t)_i2sZeroes;
+	_i2sBufDescLatch.unused = 0;
+	_i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescOut;
     
     /* configure the first descriptor. TX_LINK isnt used, but has to be configured */
 	CLEAR_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_DESCADDR_MASK);
 	CLEAR_PERI_REG_MASK(SLC_TX_LINK, SLC_TXLINK_DESCADDR_MASK);
-	SET_PERI_REG_MASK(SLC_RX_LINK, ((uint32)&i2sBufDescOut) & SLC_RXLINK_DESCADDR_MASK);
-	SET_PERI_REG_MASK(SLC_TX_LINK, ((uint32)&i2sBufDescOut) & SLC_TXLINK_DESCADDR_MASK);
+	SET_PERI_REG_MASK(SLC_RX_LINK, ((uint32)&_i2sBufDescOut) & SLC_RXLINK_DESCADDR_MASK);
+	SET_PERI_REG_MASK(SLC_TX_LINK, ((uint32)&_i2sBufDescOut) & SLC_TXLINK_DESCADDR_MASK);
 
     /* we dont need interrupts */
     ETS_SLC_INTR_DISABLE();
@@ -197,7 +198,7 @@ void NeoPixelBus::Begin(void)
 	/* Enable DMA in i2s subsystem */
 	SET_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN);
 
-	uint32_t bestClkmDiv = (_flagsPixels & NEO_KHZ800) ? 4 : 8;
+    uint32_t bestClkmDiv = Is400mhzPixels() ? 8 : 4;
     uint32_t bestBckDiv = 17;
     
     /* configure the rates */
@@ -217,14 +218,14 @@ void NeoPixelBus::Begin(void)
 	SET_PERI_REG_MASK(I2SCONF, I2S_I2S_TX_START);
     
     /* set internal flag so we know that DMA is up and running */
-    started = true;
+    Started();
     
     Dirty();
 }
 
 void NeoPixelBus::SyncWait(void)
 {
-    if(!started)
+    if (!IsStarted())
     {
         return;
     }
@@ -232,7 +233,7 @@ void NeoPixelBus::SyncWait(void)
     /* poll for SLC_RX_EOF_DES_ADDR getting set to the buffer with pixel data */
     WRITE_PERI_REG(SLC_RX_EOF_DES_ADDR, 0);
     
-	while(READ_PERI_REG(SLC_RX_EOF_DES_ADDR) != (uint32_t)&i2sBufDescOut)
+	while (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) != (uint32_t)&_i2sBufDescOut)
     {
     }
     
@@ -249,19 +250,19 @@ void NeoPixelBus::FillBuffers(void)
         0b1110111010001000, 0b1110111010001110, 0b1110111011101000, 0b1110111011101110,
     };
 
-    if (!_pixels || !i2sBlock)
+    if (!_pixels || !_i2sBlock)
     {
         return;
     }
     
     /* only wait for a done transmission before updating, if user configured it */
-    if(_flagsPixels & NEO_SYNC)
+    if (IsSyncWithOutput())
     {
         SyncWait();
     }
     
     /* now it is transferring blank area, so it is safe to update buffers */
-	uint16_t *ptr = (uint16_t*)i2sBlock;
+	uint16_t *ptr = (uint16_t*)_i2sBlock;
 
 	for (int pixel = 0; pixel < _sizePixels; pixel++ )
 	{
@@ -276,25 +277,14 @@ void NeoPixelBus::Show(void)
     if (!IsDirty())
         return;
 
-    // Data latch = 50+ microsecond pause in the output stream.  Rather than
-    // put a delay at the end of the function, the ending time is noted and
-    // the function will simply hold off (if needed) on issuing the
-    // subsequent round of data until the latch time has elapsed.  This
-    // allows the mainline code to start generating the next frame of data
-    // rather than stalling for the latch.
-    while (!CanShow())
-    {
-        delay(0); // allows for system yield if needed
-    }
-    // _endTime is a private member (rather than global var) so that mutliple
-    // instances on different pins can be quickly issued in succession (each
-    // instance doesn't delay the next).
+    // Data latch = 50+ microsecond pause in the output stream. 
+    // Due to this i2s model is always outputing there is no need to throttle the updating here
+    // but there maybe a need to sync 
     
-    /* transfer pixel data over to I2S bit buffers */
+    /* transfer pixel data over to I2s bit buffers */
     FillBuffers();
     
     ResetDirty();
-    _endTime = micros(); // Save EOD time for latch on next call
 }
 
 
