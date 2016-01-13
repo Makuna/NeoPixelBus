@@ -4,7 +4,7 @@
 
 Arduino NeoPixel library
 
-ESP8266 CUSTOMERS PLEASE READ:  While this branch does work with the esp8266, due to the latest SDK releases it will not function reliably when WiFi is being used.  Therefore I suggest you use the UartDriven branch, which includes a solution that will work with WiFi on.  Further it contains enhancements that just can't be supported on AVR platform.  Including HslColor object and an enhanced animator manager.
+ESP8266 CUSTOMERS PLEASE READ:  While this branch does work with the esp8266, due to the latest SDK releases it will not function reliably when WiFi is being used.  Therefore I suggest you use the DmaDriven or UartDriven branches, which both include solutions that will work with WiFi on.  Further they contains enhancements that just can't be supported on AVR platform.  Including HslColor object and an enhanced animator manager.
 
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Makuna/NeoPixelBus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
@@ -39,10 +39,10 @@ instantiates a RgbColor object with the given brightness. 0 is black, 128 is gre
 returns the general brightness of the pixe, averaging color.
 
 #### void Darken(uint8_t delta)
-this will darken the color by the given amount
+this will darken the color by the given amount, blending toward black.  This method is destructive in that you can't expect to then call lighten and return to the original color.
 
 #### void Lighten(uint8_t delta)
-this will lighten the color by the given amount
+this will lighten the color by the given amount, blending toward white.  This method is destructive in that you can't expect to then call darken and return to the original color.
 
 #### static RgbColor LinearBlend(RgbColor left, RgbColor right, uint8_t progress)
 this will return a color that is a blend between the given colors.  The amount to blend is given by the value of progress, 0 will return the left value, 255 will return the right value, 128 will return the value between them.
