@@ -42,23 +42,22 @@ enum ColorType
 
 #define NEO_SYNC    0x20 // wait for vsync before updating buffers
 
-
-
 // '_flagsState' flags for internal state
 #define NEO_EXTMEMORY 0x01 // external memory, don't deallocate it
 #define NEO_STARTED 0x40 // flag to know that the transmission has started
 #define NEO_DIRTY   0x80 // a change was made it _pixels that requires a show
 
 
-struct slc_queue_item {
-  uint32  blocksize:12;
-  uint32  datalen:12;
-  uint32  unused:5;
-  uint32  sub_sof:1;
-  uint32  eof:1;
-  uint32  owner:1;
-  uint32  buf_ptr;
-  uint32  next_link_ptr;
+struct slc_queue_item 
+{
+    uint32  blocksize:12;
+    uint32  datalen:12;
+    uint32  unused:5;
+    uint32  sub_sof:1;
+    uint32  eof:1;
+    uint32  owner:1;
+    uint32  buf_ptr;
+    uint32  next_link_ptr;
 };
 
 class NeoPixelBus
