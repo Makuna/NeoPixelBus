@@ -131,91 +131,91 @@ void NeoPixelBus::Begin(void)
     /* first populate bit buffers with data */
     FillBuffers();
     
-	/* reset DMA registers */
-	SET_PERI_REG_MASK(SLC_CONF0, SLC_RXLINK_RST);
-	CLEAR_PERI_REG_MASK(SLC_CONF0, SLC_RXLINK_RST);
+    /* reset DMA registers */
+    SET_PERI_REG_MASK(SLC_CONF0, SLC_RXLINK_RST);
+    CLEAR_PERI_REG_MASK(SLC_CONF0, SLC_RXLINK_RST);
 
-	/* clear all interrupt flags */
-	SET_PERI_REG_MASK(SLC_INT_CLR, 0xffffffff);
+    /* clear all interrupt flags */
+    SET_PERI_REG_MASK(SLC_INT_CLR, 0xffffffff);
 
-	/* set up DMA */
-	CLEAR_PERI_REG_MASK(SLC_CONF0, (SLC_MODE<<SLC_MODE_S));
-	SET_PERI_REG_MASK(SLC_CONF0, (1<<SLC_MODE_S));
-	SET_PERI_REG_MASK(SLC_RX_DSCR_CONF, SLC_INFOR_NO_REPLACE|SLC_TOKEN_NO_REPLACE);
-	CLEAR_PERI_REG_MASK(SLC_RX_DSCR_CONF, SLC_RX_FILL_EN|SLC_RX_EOF_MODE | SLC_RX_FILL_MODE);
+    /* set up DMA */
+    CLEAR_PERI_REG_MASK(SLC_CONF0, (SLC_MODE<<SLC_MODE_S));
+    SET_PERI_REG_MASK(SLC_CONF0, (1<<SLC_MODE_S));
+    SET_PERI_REG_MASK(SLC_RX_DSCR_CONF, SLC_INFOR_NO_REPLACE|SLC_TOKEN_NO_REPLACE);
+    CLEAR_PERI_REG_MASK(SLC_RX_DSCR_CONF, SLC_RX_FILL_EN|SLC_RX_EOF_MODE | SLC_RX_FILL_MODE);
 
     /* prepare linked DMA descriptors, having EOF set for all */
-	_i2sBufDescOut.owner = 1;
-	_i2sBufDescOut.eof = 1;
-	_i2sBufDescOut.sub_sof = 0;
-	_i2sBufDescOut.datalen = _bitBufferSize;
-	_i2sBufDescOut.blocksize = _bitBufferSize;
-	_i2sBufDescOut.buf_ptr = (uint32_t)_i2sBlock;
-	_i2sBufDescOut.unused = 0;
-	_i2sBufDescOut.next_link_ptr = (uint32_t)&_i2sBufDescLatch;
+    _i2sBufDescOut.owner = 1;
+    _i2sBufDescOut.eof = 1;
+    _i2sBufDescOut.sub_sof = 0;
+    _i2sBufDescOut.datalen = _bitBufferSize;
+    _i2sBufDescOut.blocksize = _bitBufferSize;
+    _i2sBufDescOut.buf_ptr = (uint32_t)_i2sBlock;
+    _i2sBufDescOut.unused = 0;
+    _i2sBufDescOut.next_link_ptr = (uint32_t)&_i2sBufDescLatch;
 
     /* this zero-buffer block implements the latch/reset signal */
-	_i2sBufDescLatch.owner = 1;
-	_i2sBufDescLatch.eof = 1;
-	_i2sBufDescLatch.sub_sof = 0;
-	_i2sBufDescLatch.datalen = sizeof(_i2sZeroes);
-	_i2sBufDescLatch.blocksize = sizeof(_i2sZeroes);
-	_i2sBufDescLatch.buf_ptr = (uint32_t)_i2sZeroes;
-	_i2sBufDescLatch.unused = 0;
-	_i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescOut;
+    _i2sBufDescLatch.owner = 1;
+    _i2sBufDescLatch.eof = 1;
+    _i2sBufDescLatch.sub_sof = 0;
+    _i2sBufDescLatch.datalen = sizeof(_i2sZeroes);
+    _i2sBufDescLatch.blocksize = sizeof(_i2sZeroes);
+    _i2sBufDescLatch.buf_ptr = (uint32_t)_i2sZeroes;
+    _i2sBufDescLatch.unused = 0;
+    _i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescOut;
     
     /* configure the first descriptor. TX_LINK isnt used, but has to be configured */
-	CLEAR_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_DESCADDR_MASK);
-	CLEAR_PERI_REG_MASK(SLC_TX_LINK, SLC_TXLINK_DESCADDR_MASK);
-	SET_PERI_REG_MASK(SLC_RX_LINK, ((uint32)&_i2sBufDescOut) & SLC_RXLINK_DESCADDR_MASK);
-	SET_PERI_REG_MASK(SLC_TX_LINK, ((uint32)&_i2sBufDescOut) & SLC_TXLINK_DESCADDR_MASK);
+    CLEAR_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_DESCADDR_MASK);
+    CLEAR_PERI_REG_MASK(SLC_TX_LINK, SLC_TXLINK_DESCADDR_MASK);
+    SET_PERI_REG_MASK(SLC_RX_LINK, ((uint32)&_i2sBufDescOut) & SLC_RXLINK_DESCADDR_MASK);
+    SET_PERI_REG_MASK(SLC_TX_LINK, ((uint32)&_i2sBufDescOut) & SLC_TXLINK_DESCADDR_MASK);
 
     /* we dont need interrupts */
     ETS_SLC_INTR_DISABLE();
-	WRITE_PERI_REG(SLC_INT_CLR, 0xffffffff);
+    WRITE_PERI_REG(SLC_INT_CLR, 0xffffffff);
     
 #ifdef USE_2812_INTERRUPTS
     /* ouh, user wants them. enable. on your own risk! */
-	WRITE_PERI_REG(SLC_INT_ENA, SLC_RX_EOF_INT_ENA);
+    WRITE_PERI_REG(SLC_INT_ENA, SLC_RX_EOF_INT_ENA);
     ETS_SLC_INTR_ATTACH((int_handler_t)NeoPixelBus_DmaInterrupt, (void *)this);
-	ETS_SLC_INTR_ENABLE();
+    ETS_SLC_INTR_ENABLE();
 #endif
 
-	/* start RX link */
-	SET_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_START);
+    /* start RX link */
+    SET_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_START);
 
-	/* configure RDX0/GPIO3 for output. it is the only supported pin unfortunately. */
-	PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_I2SO_DATA);
+    /* configure RDX0/GPIO3 for output. it is the only supported pin unfortunately. */
+    PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_I2SO_DATA);
 
-	/* configure I2S subsystem */
+    /* configure I2S subsystem */
     I2S_CLK_ENABLE();
-	CLEAR_PERI_REG_MASK(I2SCONF, I2S_I2S_RESET_MASK);
-	SET_PERI_REG_MASK(I2SCONF, I2S_I2S_RESET_MASK);
-	CLEAR_PERI_REG_MASK(I2SCONF, I2S_I2S_RESET_MASK);
+    CLEAR_PERI_REG_MASK(I2SCONF, I2S_I2S_RESET_MASK);
+    SET_PERI_REG_MASK(I2SCONF, I2S_I2S_RESET_MASK);
+    CLEAR_PERI_REG_MASK(I2SCONF, I2S_I2S_RESET_MASK);
 
-	/* Select 16bits per channel (FIFO_MOD=0), no DMA access (FIFO only) */
-	CLEAR_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN|(I2S_I2S_RX_FIFO_MOD<<I2S_I2S_RX_FIFO_MOD_S)|(I2S_I2S_TX_FIFO_MOD<<I2S_I2S_TX_FIFO_MOD_S));
-	/* Enable DMA in i2s subsystem */
-	SET_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN);
+    /* Select 16bits per channel (FIFO_MOD=0), no DMA access (FIFO only) */
+    CLEAR_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN|(I2S_I2S_RX_FIFO_MOD<<I2S_I2S_RX_FIFO_MOD_S)|(I2S_I2S_TX_FIFO_MOD<<I2S_I2S_TX_FIFO_MOD_S));
+    /* Enable DMA in i2s subsystem */
+    SET_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN);
 
     uint32_t bestClkmDiv = Is400mhzPixels() ? 8 : 4;
     uint32_t bestBckDiv = 17;
     
     /* configure the rates */
-	CLEAR_PERI_REG_MASK(I2SCONF, I2S_TRANS_SLAVE_MOD|
-						(I2S_BITS_MOD<<I2S_BITS_MOD_S)|
-						(I2S_BCK_DIV_NUM <<I2S_BCK_DIV_NUM_S)|
-						(I2S_CLKM_DIV_NUM<<I2S_CLKM_DIV_NUM_S));
-	SET_PERI_REG_MASK(I2SCONF, I2S_RIGHT_FIRST|I2S_MSB_RIGHT|I2S_RECE_SLAVE_MOD|
-						I2S_RECE_MSB_SHIFT|I2S_TRANS_MSB_SHIFT|
-						(((bestBckDiv-1)&I2S_BCK_DIV_NUM )<<I2S_BCK_DIV_NUM_S)|
-						(((bestClkmDiv-1)&I2S_CLKM_DIV_NUM)<<I2S_CLKM_DIV_NUM_S));
+    CLEAR_PERI_REG_MASK(I2SCONF, I2S_TRANS_SLAVE_MOD|
+                        (I2S_BITS_MOD<<I2S_BITS_MOD_S)|
+                        (I2S_BCK_DIV_NUM <<I2S_BCK_DIV_NUM_S)|
+                        (I2S_CLKM_DIV_NUM<<I2S_CLKM_DIV_NUM_S));
+    SET_PERI_REG_MASK(I2SCONF, I2S_RIGHT_FIRST|I2S_MSB_RIGHT|I2S_RECE_SLAVE_MOD|
+                        I2S_RECE_MSB_SHIFT|I2S_TRANS_MSB_SHIFT|
+                        (((bestBckDiv-1)&I2S_BCK_DIV_NUM )<<I2S_BCK_DIV_NUM_S)|
+                        (((bestClkmDiv-1)&I2S_CLKM_DIV_NUM)<<I2S_CLKM_DIV_NUM_S));
 
     /* disable all interrupts */
-	SET_PERI_REG_MASK(I2SINT_CLR, I2S_I2S_RX_WFULL_INT_CLR|I2S_I2S_PUT_DATA_INT_CLR|I2S_I2S_TAKE_DATA_INT_CLR);
+    SET_PERI_REG_MASK(I2SINT_CLR, I2S_I2S_RX_WFULL_INT_CLR|I2S_I2S_PUT_DATA_INT_CLR|I2S_I2S_TAKE_DATA_INT_CLR);
     
-	/* fire the macine */
-	SET_PERI_REG_MASK(I2SCONF, I2S_I2S_TX_START);
+    /* fire the macine */
+    SET_PERI_REG_MASK(I2SCONF, I2S_I2S_TX_START);
     
     /* set internal flag so we know that DMA is up and running */
     Started();
@@ -233,7 +233,7 @@ void NeoPixelBus::SyncWait(void)
     /* poll for SLC_RX_EOF_DES_ADDR getting set to the buffer with pixel data */
     WRITE_PERI_REG(SLC_RX_EOF_DES_ADDR, 0);
     
-	while (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) != (uint32_t)&_i2sBufDescOut)
+    while (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) != (uint32_t)&_i2sBufDescOut)
     {
     }
     
@@ -262,14 +262,14 @@ void NeoPixelBus::FillBuffers(void)
     }
     
     /* now it is transferring blank area, so it is safe to update buffers */
-	uint16_t *ptr = (uint16_t*)_i2sBlock;
+    uint16_t *ptr = (uint16_t*)_i2sBlock;
 
-	for (int pixel = 0; pixel < _sizePixels; pixel++ )
-	{
-		uint8_t dataByte = _pixels[pixel];
-		*(ptr++) = bitpatterns[(dataByte & 0x0f)];
-		*(ptr++) = bitpatterns[(dataByte >> 4) & 0x0f];
-	}
+    for (int pixel = 0; pixel < _sizePixels; pixel++ )
+    {
+        uint8_t dataByte = _pixels[pixel];
+        *(ptr++) = bitpatterns[(dataByte & 0x0f)];
+        *(ptr++) = bitpatterns[(dataByte >> 4) & 0x0f];
+    }
 }
 
 void NeoPixelBus::Show(void)
