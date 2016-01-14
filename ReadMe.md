@@ -5,8 +5,8 @@
 Arduino NeoPixel library
 
 NOW SUPPORTS esp8266! 
-This branch (DmaDriven) only supports esp8266, and uses the hardware I2C to send the data.  This model will work with WiFi features without problems that the bitbang model has. 
-Thanks to Georg Hofstetter for porting this work.
+This branch (DmaDriven) only supports esp8266, and uses the hardware I2S to send the data.  This model will work with WiFi features without problems that the bitbang model has. 
+Thanks to g3gg0.de for porting this work from the original that was from https://github.com/cnlohr/esp8266ws2812i2s.
 
 NEW Animation class provides more flexible animation definitions
 
@@ -84,7 +84,7 @@ This represents a single NeoPixel Bus that is connected by a single pin.  Please
 
 #### NeoPixelBus(uint16_t n, uint8_t p, uint8_t t = NEO_GRB | NEO_KHZ800);
 instantiates a NewoPixelBus object, with n number of pixels on the bus, over the p pin, using the defined NeoPixel type.
-For the exp8266, only the RDX0/GPIO3 pin is supported due to the hardware I2C restriction and this argument is ignored.
+For the exp8266, only the RDX0/GPIO3 pin is supported due to the hardware I2S restriction and this argument is ignored.
 There are some NeoPixels that address the color values differently, so if you set the green color but it displays as red, use the NEO_RGB type flag.
 
 ```
