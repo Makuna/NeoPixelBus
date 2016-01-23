@@ -78,11 +78,13 @@ public:
 
     void Begin();
     void Show();
-    inline bool CanShow(void) const
+    inline bool CanShow() const
     { 
         // the I2s model is async, so latching isn't interesting
         return true;
     };
+    void Pause();
+    void Resume();
 
     void ClearTo(uint8_t r, uint8_t g, uint8_t b);
     void ClearTo(RgbColor c)
@@ -142,8 +144,9 @@ public:
     };
 
     RgbColor GetPixelColor(uint16_t n) const;
-    void SyncWait(void);
-    void FillBuffers(void);
+
+    void SyncWait() const;
+    
 
     /* 24 bit per LED, 3 I2S bits per databit, and of that the byte count */
     static uint32_t CalculateI2sBufferSize(uint16_t pixelCount)
@@ -168,10 +171,23 @@ private:
         UpdatePixelColor(n, c.R, c.G, c.B);
     };
 
+    void DataWait() const;
+    void NullWait() const;
+
+    void StopDma();
+    void StartDma();
+
+    void FillBuffers();
+
     void Started()
     {
         _flagsState |= NEO_STARTED;
     };
+
+    void Stopped()
+    {
+        _flagsState &= !NEO_STARTED;
+    }
 
     void ExternalMemory()
     {

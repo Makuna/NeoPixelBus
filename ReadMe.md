@@ -7,6 +7,7 @@ Arduino NeoPixel library
 NOW SUPPORTS esp8266! 
 This branch (DmaDriven) only supports esp8266, and uses the hardware I2S to send the data.  This model will work with WiFi features without problems that the bitbang model has. 
 Thanks to g3gg0.de for porting this work from the original that was from https://github.com/cnlohr/esp8266ws2812i2s.
+A side effect of using Dma is that it constantly sends out data without the need for the CPU to get envolved.  This is different from other branches.  Two new methods were added to Pause() and Resume() this constant output.  Calling Show() will automatically Resume if the data has changed since the last Show().
 
 NEW Animation class provides more flexible animation definitions
 
@@ -117,6 +118,12 @@ this will attempt to update the connected pixels with the current state.
 
 #### bool CanShow() const
 this will return that enough time has passed since the last show that another show can be made.  The show will block by calling delay(0) until this is true.
+
+#### void Pause();
+this will pause the constant Dma output on the pin until either Resume() is called or Show() is called with changes since the last call to Show().
+
+#### void Resume();
+this will resume the constant Dma output on the pin.  See Pause().
 
 #### void ClearTo(RgbColor color)
 this will set all pixels to the given color
