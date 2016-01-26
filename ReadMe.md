@@ -4,7 +4,7 @@
 
 Arduino NeoPixel library
 
-NOW SUPPORTS esp8266!  If you plan to use WiFi features of the esp8266, please use the UartDriven branch instead.
+NOW SUPPORTS esp8266!  If you plan to use WiFi features of the esp8266, please use the DmaDriven or UartDriven branch instead.
 
 NEW Animation class provides more flexible animation definitions
 
