@@ -72,14 +72,14 @@ struct RgbColor
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
     // NOTE: This is a simple linear change
-    // delta - (0-255) the amount to dim the color
+    // delta - (0-255) the amount to dim the color toward black
     // ------------------------------------------------------------------------
 	void Darken(uint8_t delta);
 
     // ------------------------------------------------------------------------
     // Lighten will adjust the color by the given delta toward white
     // NOTE: This is a simple linear change
-    // delta - (0-255) the amount to lighten the color
+    // delta - (0-255) the amount to lighten the color toward white
     // ------------------------------------------------------------------------
 	void Lighten(uint8_t delta);
 
