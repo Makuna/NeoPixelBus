@@ -19,11 +19,9 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-enum ColorType
-{
-    ColorType_Rgb,
-    ColorType_Hsl
-};
+#if !defined(ARDUINO_ARCH_ESP8266)
+#error "This library only supports boards with an esp8266 processor.""
+#endif
 
 #include "RgbColor.h"
 #include "HslColor.h"
@@ -70,11 +68,6 @@ public:
     NeoPixelBus(uint16_t n, uint8_t p, uint8_t t, uint8_t* pixelBuf, uint8_t* bitBuf);
     NeoPixelBus(uint16_t n, uint8_t p, uint8_t t = NEO_GRB | NEO_KHZ800);
     ~NeoPixelBus();
-
-    inline uint16_t getPixelCount()
-    {
-        return _countPixels;
-    }
 
     void Begin();
     void Show();
