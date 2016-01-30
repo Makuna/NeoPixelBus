@@ -61,7 +61,7 @@ extern "C"
 #include "user_interface.h"
 
 // ugly.. where to get the real prototype from? 
-extern void rom_i2c_writeReg_Mask(uint32_t block, uint32_t host_id, uint32_t reg_add, uint32_t Msb, uint32_t Lsb, uint32_t indata);
+void rom_i2c_writeReg_Mask(uint32_t block, uint32_t host_id, uint32_t reg_add, uint32_t Msb, uint32_t Lsb, uint32_t indata);
 }
 
 #ifdef USE_2812_INTERRUPTS
@@ -72,6 +72,7 @@ extern "C"
     {
         WRITE_PERI_REG(SLC_INT_CLR, SLC_RX_EOF_INT_CLR);
     }
+
 }
 #endif
 
@@ -131,7 +132,7 @@ void NeoPixelBus::StopDma()
     NullWait();
 }
 
-void NeoPixelBus::StartDma()
+void NeoPixelBus::InitializeDma()
 {
     // reset DMA registers 
     SET_PERI_REG_MASK(SLC_CONF0, SLC_RXLINK_RST);
@@ -164,8 +165,18 @@ void NeoPixelBus::StartDma()
     _i2sBufDescLatch.blocksize = sizeof(_i2sZeroes);
     _i2sBufDescLatch.buf_ptr = (uint32_t)_i2sZeroes;
     _i2sBufDescLatch.unused = 0;
-    _i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescOut;
 
+    if (IsContinuousOuput())
+    {
+        // loop continously
+        _i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescOut;
+    }
+    else
+    {
+        // stop after the first
+        _i2sBufDescLatch.next_link_ptr = 0;
+    }
+ 
     // configure the first descriptor
     // TX_LINK isnt used, but has to be configured 
     CLEAR_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_DESCADDR_MASK);
@@ -183,9 +194,6 @@ void NeoPixelBus::StartDma()
     ETS_SLC_INTR_ATTACH((int_handler_t)NeoPixelBus_DmaInterrupt, (void *)this);
     ETS_SLC_INTR_ENABLE();
 #endif
-
-    // start RX link 
-    SET_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_START);
 
     // configure RDX0/GPIO3 for output. it is the only supported pin unfortunately. 
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_I2SO_DATA);
@@ -217,11 +225,7 @@ void NeoPixelBus::StartDma()
     // disable all interrupts 
     SET_PERI_REG_MASK(I2SINT_CLR, I2S_I2S_RX_WFULL_INT_CLR | I2S_I2S_PUT_DATA_INT_CLR | I2S_I2S_TAKE_DATA_INT_CLR);
 
-    // fire the machine 
-    SET_PERI_REG_MASK(I2SCONF, I2S_I2S_TX_START);
-
-    // set internal flag so we know that DMA is up and running 
-    Started();
+    // dma is now ready to start
 }
 
 void NeoPixelBus::Begin() 
@@ -233,13 +237,78 @@ void NeoPixelBus::Begin()
     
     memset(_i2sZeroes, 0x00, sizeof(_i2sZeroes));
     memset(_i2sBlock, 0x00, _bitBufferSize);
-    
+        
+    // clear the eof desc addr so the FillBuffers works correctly the first time
+    WRITE_PERI_REG(SLC_RX_EOF_DES_ADDR, 0);
+
     // first populate bit buffers with data 
     FillBuffers();
     
-    StartDma();
+    InitializeDma();
     
     Dirty();
+}
+
+void NeoPixelBus::Show()
+{
+    if (!IsDirty())
+    {
+        return;
+    }
+
+    FillBuffers();
+
+    if (IsContinuousOuput())
+    {
+        if (!IsStarted())
+        {
+            Resume();
+        }
+    }
+    else
+    {
+        // wait for latch to complete
+        NullWait();
+        StartDma();
+    }
+
+    ResetDirty();
+}
+
+void NeoPixelBus::Pause()
+{
+    if (!_pixels || !_i2sBlock || !IsStarted() || !IsContinuousOuput())
+    {
+        return;
+    }
+
+    // wait for latching blank data to be actively sendings then...
+    SyncWait();
+
+    // set desriptor to stop at the end of the latch
+    _i2sBufDescLatch.next_link_ptr = 0;
+
+    // set internal flag so we know that DMA is not running 
+    Stopped();
+}
+
+void NeoPixelBus::Resume()
+{
+    if (!_pixels || !_i2sBlock || IsStarted() || !IsContinuousOuput())
+    {
+        return;
+    }
+
+    // wait to make sure we are not waiting for the Pause
+    NullWait();
+
+    // fix descriptor to run/loop again
+    _i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescOut;
+
+    StartDma();
+
+    // set internal flag so we know that DMA is up and running 
+    Started();
 }
 
 void NeoPixelBus::SyncWait() const
@@ -249,31 +318,22 @@ void NeoPixelBus::SyncWait() const
         return;
     }
     
-    // poll for SLC_RX_EOF_DES_ADDR getting set to the buffer with pixel data 
-    WRITE_PERI_REG(SLC_RX_EOF_DES_ADDR, 0);
+    // poll for SLC_RX_EOF_DES_ADDR getting set to anything other than 
+    // the buffer with pixel data 
     
-    while (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) != (uint32_t)&_i2sBufDescOut)
+    while (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) == (uint32_t)&_i2sBufDescLatch)
     {
+        // due to how long the data send could be (300 pixels is 9ms)
+        // we will yield while we wait
+        yield();
     }
     
     // okay right now we are somewhere in the blank "latch/reset" section 
 }
 
-void NeoPixelBus::DataWait() const
+bool NeoPixelBus::IsNullDmaState() const
 {
-    if (!IsStarted())
-    {
-        return;
-    }
-
-    // poll for SLC_RX_EOF_DES_ADDR getting set to the buffer with pixel data 
-    WRITE_PERI_REG(SLC_RX_EOF_DES_ADDR, 0);
-
-    while (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) != (uint32_t)&_i2sBufDescLatch)
-    {
-    }
-
-    // okay right now we are somewhere in the data send section 
+    return (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) == 0);
 }
 
 void NeoPixelBus::NullWait() const
@@ -283,14 +343,16 @@ void NeoPixelBus::NullWait() const
         return;
     }
 
-    // poll for SLC_RX_EOF_DES_ADDR getting set to the buffer with pixel data 
-    WRITE_PERI_REG(SLC_RX_EOF_DES_ADDR, 0x00000001);
-
-    while (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) != NULL)
+    // poll for SLC_RX_EOF_DES_ADDR getting set to null
+    
+    while (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) != 0)
     {
+        // due to how long the data send could be (300 pixels is 9ms)
+        // we will yield while we wait
+        yield();
     }
 
-    // okay right now we are somewhere in the data send section 
+    // okay right now we are not sending anything 
 }
 
 void NeoPixelBus::FillBuffers()
@@ -308,11 +370,13 @@ void NeoPixelBus::FillBuffers()
         return;
     }
     
-    // only wait for a done transmission before updating, if user configured it 
-    if (IsSyncWithOutput())
+    // only wait for a done transmission before updating, 
+    // if user configured it or in in non-continuous mode
+    if (!IsContinuousOuput() || IsSyncWithOutput() )
     {
         SyncWait();
     }
+
     
     // now it is transferring blank area, so it is safe to update buffers 
     uint16_t *ptr = (uint16_t*)_i2sBlock;
@@ -325,57 +389,10 @@ void NeoPixelBus::FillBuffers()
     }
 }
 
-void NeoPixelBus::Show()
+void NeoPixelBus::StartDma()
 {
-    if (!IsDirty())
-    {
-        return;
-    }
-
-    FillBuffers();
-
-    ResetDirty();
-
-    if (!IsStarted())
-    {
-        Resume();
-    }
-}
-
-void NeoPixelBus::Pause()
-{
-    if (!_pixels || !_i2sBlock || !IsStarted())
-    {
-        return;
-    }
-
-    // wait for latching blank data to be actively sendings then...
-    SyncWait();
-
-    // set desriptor to stop at the end of the latch
-    _i2sBufDescLatch.eof = 0;
-    _i2sBufDescLatch.next_link_ptr = 0;
-
-    // set internal flag so we know that DMA is not running 
-    Stopped();
-}
-
-void NeoPixelBus::Resume()
-{
-    if (!_pixels || !_i2sBlock || IsStarted())
-    {
-        return;
-    }
-
-    // wait to make sure we are not waiting for the Pause
-    NullWait();
-
     // clear all interrupt flags 
     SET_PERI_REG_MASK(SLC_INT_CLR, 0xffffffff);
-
-    // fix descriptor to run/loop again
-    _i2sBufDescLatch.eof = 1;
-    _i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescOut;
 
     // configure the first descriptor
     // TX_LINK isnt used, but has to be configured 
@@ -390,9 +407,6 @@ void NeoPixelBus::Resume()
     SET_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_START);
     // fire the machine again
     SET_PERI_REG_MASK(I2SCONF, I2S_I2S_TX_START);
-
-    // set internal flag so we know that DMA is up and running 
-    Started();
 }
 
 // Set pixel color from separate R,G,B components:

@@ -19,8 +19,8 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-#if !defined(ARDUINO_ARCH_ESP8266)
-#error "This library only supports boards with an esp8266 processor.""
+#ifndef ESP8266
+#error "This library only supports boards with an esp8266 processor."
 #endif
 
 #include "RgbColor.h"
@@ -31,14 +31,15 @@ License along with NeoPixel.  If not, see
 // '_flagsPixels' flags for LED _pixels (third parameter to constructor):
 #define NEO_RGB     0x00 // Wired for RGB data order
 #define NEO_GRB     0x01 // Wired for GRB data order
-#define NEO_BRG     0x04
-#define NEO_COLMASK 0x05
+#define NEO_BRG     0x02
+#define NEO_COLMASK 0x08 // which bits are used for the color order flags
 
 #define NEO_KHZ400  0x10 // 400 KHz datastream
 #define NEO_KHZ800  0x00 // 800 KHz datastream (default)
 #define NEO_SPDMASK 0x10 // which bits are used for speed flags
 
-#define NEO_SYNC    0x20 // wait for vsync before updating buffers
+#define NEO_CONTINUOUS  0x20 // let Dma send the data in loop as fast as it can
+#define NEO_SYNC        0x40 // wait for vsync before updating buffers
 
 // '_flagsState' flags for internal state
 #define NEO_EXTMEMORY 0x01 // external memory, don't deallocate it
@@ -73,9 +74,20 @@ public:
     void Show();
     inline bool CanShow() const
     { 
-        // the I2s model is async, so latching isn't interesting
-        return true;
+        if (IsContinuousOuput())
+        {
+            // the Dma model is async when running in continuous mode, 
+            // so latching isn't interesting
+            return true;
+        }
+        else
+        {
+            return IsNullDmaState();
+        }
     };
+
+    // if running in continuous mode, these allow the user to
+    // pause pin output and resume pin output
     void Pause();
     void Resume();
 
@@ -120,6 +132,11 @@ public:
         return  (_flagsPixels & NEO_SYNC);
     };
 
+    bool IsContinuousOuput() const
+    {
+        return  (_flagsPixels & NEO_CONTINUOUS);
+    };
+    
     uint8_t* Pixels() const
     {
         return _pixels;
@@ -148,14 +165,6 @@ public:
     }
 
 private:
-
-    struct slc_queue_item _i2sBufDescOut;
-    struct slc_queue_item _i2sBufDescLatch;
-
-    uint32_t _bitBufferSize;
-    uint8_t _i2sZeroes[24]; // 24 buytes creates the minimum 50us latch per spec
-    uint8_t* _i2sBlock;
-
     friend NeoPixelAnimator;
 
     void UpdatePixelColor(uint16_t n, uint8_t r, uint8_t g, uint8_t b);
@@ -164,10 +173,11 @@ private:
         UpdatePixelColor(n, c.R, c.G, c.B);
     };
 
-    void DataWait() const;
+    bool IsNullDmaState() const;
     void NullWait() const;
 
     void StopDma();
+    void InitializeDma();
     void StartDma();
 
     void FillBuffers();
@@ -194,6 +204,13 @@ private:
     const uint16_t    _countPixels;     // Number of RGB LEDs in strip
     const uint16_t    _sizePixels;      // Size of '_pixels' buffer below
     
+    struct slc_queue_item _i2sBufDescOut;
+    struct slc_queue_item _i2sBufDescLatch;
+
+    uint32_t _bitBufferSize;
+    uint8_t* _i2sBlock;
+    uint8_t _i2sZeroes[24]; // 24 bytes creates the minimum 50us latch per spec
+
     uint8_t _flagsPixels;    // Pixel flags (400 vs 800 KHz, RGB vs GRB color)
     uint8_t _flagsState;     // internal state
     uint8_t* _pixels;        // Holds LED color values (3 bytes each)

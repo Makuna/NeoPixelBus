@@ -6,8 +6,11 @@ Arduino NeoPixel library
 
 NOW SUPPORTS esp8266! 
 This branch (DmaDriven) only supports esp8266, and uses the hardware I2S to send the data.  This model will work with WiFi features without problems that the bitbang model has. 
-Thanks to g3gg0.de for porting this work from the original that was from https://github.com/cnlohr/esp8266ws2812i2s.
-A side effect of using Dma is that it constantly sends out data without the need for the CPU to get envolved.  This is different from other branches.  Two new methods were added to Pause() and Resume() this constant output.  Calling Show() will automatically Resume if the data has changed since the last Show().
+Thanks to g3gg0.de for porting the initial work from the original that was from https://github.com/cnlohr/esp8266ws2812i2s.
+One benifit of using Dma is that it now allows the data to be sent out in a continuous loop without the need for the CPU to get envolved.  By defualt this version will send out a single data "burp" and then stop just like most implementations.  If you use the NEO_CONTINUOUS flag to initialize the NeoPixelBus, it will then send out the data continuously over and over even if there has been no changes.
+```
+NeoPixelBus strip = NeoPixelBus(pixelCount, pixelPin, NEO_CONTINUOUS | NEO_SYNC );
+```
 
 NEW Animation class provides more flexible animation definitions
 
