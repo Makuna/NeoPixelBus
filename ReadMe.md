@@ -17,9 +17,6 @@ The Api is similiar, but it removes the overal brightness feature and adds anima
 
 If you use this library with Boards other than the Esp8266, you will be required to also have STL present.  Currently I don't know a way to get this and make it available to library in a general way.
 
-While an attempt is being made with this project, the version is out of date for C++ 11 support that Arduino IDE now supports.
-
-https://github.com/maniacbug/StandardCplusplus
 
 
 ## Installing This Library
