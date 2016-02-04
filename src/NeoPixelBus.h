@@ -55,11 +55,6 @@ public:
     NeoPixelBus(uint16_t n, uint8_t p, uint8_t t = NEO_GRB | NEO_KHZ800);
     ~NeoPixelBus();
 
-    inline uint16_t getPixelCount()
-    {
-        return _countPixels;
-    }
-
     void Begin();
     void Show();
     inline bool CanShow(void) const

@@ -17,12 +17,16 @@ License along with NeoPixel.  If not, see
 #include "NeoPixelBus.h"
 #include "NeoPixelAnimator.h"
 
-NeoPixelAnimator::NeoPixelAnimator(NeoPixelBus* bus) :
+NeoPixelAnimator::NeoPixelAnimator(NeoPixelBus* bus, uint16_t timeScale) :
     _bus(bus),
     _animationLastTick(0),
     _activeAnimations(0),
     _isRunning(true)
 {
+    // due to strange esp include header issues, min and max aren't usable
+    _timeScale = (timeScale < 1) ? (1) : (timeScale > 32768) ? 32768 : timeScale;
+    //_timeScale = max(1, min(32768, timeScale));
+
     _animations = new AnimationContext[_bus->PixelCount()];
 }
 
@@ -55,9 +59,7 @@ void NeoPixelAnimator::StartAnimation(uint16_t n, uint16_t time, AnimUpdateCallb
         time = 1;
     }
 
-    _animations[n].time = time;
-    _animations[n].remaining = time;
-    _animations[n].fnUpdate = animUpdate;
+    _animations[n].StartAnimation(time, animUpdate);
 
     _activeAnimations++;
 }
@@ -67,9 +69,7 @@ void NeoPixelAnimator::StopAnimation(uint16_t n)
     if (IsAnimating(n))
     {
         _activeAnimations--;
-        _animations[n].time = 0;
-        _animations[n].remaining = 0;
-        _animations[n].fnUpdate = NULL;
+        _animations[n].StopAnimation();
     }
 }
 
@@ -87,23 +87,19 @@ void NeoPixelAnimator::FadeTo(uint16_t time, RgbColor color)
     }
 }
 
-void NeoPixelAnimator::UpdateAnimations(uint32_t maxDeltaMs)
+void NeoPixelAnimator::UpdateAnimations()
 {
     if (_isRunning)
     {
         uint32_t currentTick = millis();
         uint32_t delta = currentTick - _animationLastTick;
 
-        if (delta > maxDeltaMs)
-        {
-            delta = maxDeltaMs;
-        }
-
-        if (delta > 0)
+        if (delta >= _timeScale)
         {
             uint16_t countAnimations = _activeAnimations;
-
             AnimationContext* pAnim;
+
+            delta /= _timeScale; // scale delta into animation time
 
             for (uint16_t iAnim = 0; iAnim < _bus->PixelCount() && countAnimations > 0; iAnim++)
             {
@@ -116,12 +112,16 @@ void NeoPixelAnimator::UpdateAnimations(uint32_t maxDeltaMs)
                     float progress = (float)(pAnim->time - pAnim->remaining) / (float)pAnim->time;
 
                     pAnim->fnUpdate(progress);
+
                     countAnimations--;
                 }
                 else if (pAnim->remaining > 0)
                 {
                     pAnim->fnUpdate(1.0f);
-                    StopAnimation(iAnim);
+
+                    _activeAnimations--;
+                    pAnim->StopAnimation();
+
                     countAnimations--;
                 }
             }
