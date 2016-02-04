@@ -4,6 +4,8 @@
 
 Arduino NeoPixel library
 
+Please read this best practices link before connecting your NeoPixels, it will save you alot of time and effort. [AdaFruits NeoPixel Best Practices](https://learn.adafruit.com/adafruit-neopixel-uberguide/best-practices)
+
 NOW SUPPORTS esp8266! 
 This branch (UartDriven) only supports esp8266, and uses the hardware UART to send the data.  This model is required today if you want to use WiFi due to SDK changes that will cause the bitbang model to crash the SDK WiFi code.  Currently it is unknown if they will fix the SDK so that the bitbang model can ever be used. 
 Thanks to stiliface and forkineye for this work.
@@ -31,9 +33,11 @@ It should now show up in the import list.
 
 ## Samples
 ### NeoPixelTest
-this is simple example that sets four neopixels to red, green, blue, and then white in order; and then flashes them.  If the first pixel is green and the second is red, you need to pass the NEO_RGB flag into the NeoPixelBus constructor.
+this is simple example that sets four pixels to red, green, blue, and then white in order; and then flashes them.  If the first pixel is green and the second is red, you need to pass the NEO_RGB flag into the NeoPixelBus constructor.
 ### NeoPixelFun
 this is a more complex example, that includes code for three effects, and demonstrates animations.
+### NeoPixelAnimation
+this is a more complex example that demonstrates animations and the timescale support.
 
 ## API Documentation
 
@@ -143,8 +147,18 @@ this will return the number of pixels in the underlying buffer.
 
 
 ### NeoPixelAnimator object
-This manages the animations for a single NeoPixelBus.  All time values are in milliseconds.
+This manages the animations for a single NeoPixelBus.  All time values are by default in milliseconds but can be changed by the timeScale argument on the constructor.
 NOTE:  NeoPixelBus::Show() must still be called to push the color state to the physical NeoPixels.
+
+#### NeoPixelAnimator(NeoPixelBus* bus, uint16_t timeScale = NEO_MILLISECONDS);
+instantiates a NeoPixelAnimator object, associates it to the given bus, and defines the time scale used by the given value.
+```
+NEO_MILLISECONDS        1    // ~65 seconds max duration, ms updates
+NEO_CENTISECONDS       10    // ~10.9 minutes max duration, centisecond updates
+NEO_DECISECONDS       100    // ~1.8 hours max duration, decisecond updates
+NEO_SECONDS          1000    // ~18.2 hours max duration, second updates
+NEO_DECASECONDS     10000    // ~7.5 days, 10 second updates
+```
 
 #### bool IsAnimating() const
 this method will return the current animation state.  It will return false if there are no active animations.

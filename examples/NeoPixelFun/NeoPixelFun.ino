@@ -67,7 +67,7 @@ void FadeInFadeOutRinseRepeat(uint8_t peak)
             AnimUpdateCallback animUpdate = [=](float progress)
             {
                 // progress will start at 0.0 and end at 1.0
-                RgbColor updatedColor = RgbColor::LinearBlend(originalColor, color, (uint8_t)(255 * progress));
+                RgbColor updatedColor = RgbColor::LinearBlend(originalColor, color, progress);
                 strip.SetPixelColor(pixel, updatedColor);
             };
             animations.StartAnimation(pixel, time, animUpdate);
@@ -84,7 +84,7 @@ void FadeInFadeOutRinseRepeat(uint8_t peak)
             AnimUpdateCallback animUpdate = [=](float progress)
             {
                 // progress will start at 0.0 and end at 1.0
-                RgbColor updatedColor = RgbColor::LinearBlend(originalColor, RgbColor(0, 0, 0), (uint8_t)(255 * progress));
+                RgbColor updatedColor = RgbColor::LinearBlend(originalColor, RgbColor(0, 0, 0), progress);
                 strip.SetPixelColor(pixel, updatedColor);
             };
             // start the animation
@@ -112,7 +112,7 @@ void PickRandom(uint8_t peak)
         AnimUpdateCallback animUpdate = [=](float progress)
         {
             // progress will start at 0.0 and end at 1.0
-            HslColor updatedColor = HslColor::LinearBlend(originalColor, color, (uint8_t)(255 * progress));
+            HslColor updatedColor = HslColor::LinearBlend(originalColor, color, progress);
             strip.SetPixelColor(pixel, updatedColor);
         };
         // start the animation
@@ -156,7 +156,7 @@ void LoopAround(uint8_t peak, uint16_t speed)
         AnimUpdateCallback animUpdate = [=](float progress)
         {
             // progress will start at 0.0 and end at 1.0
-            RgbColor updatedColor = RgbColor::LinearBlend(originalColor, color, (uint8_t)(255 * progress));
+            RgbColor updatedColor = RgbColor::LinearBlend(originalColor, color, progress);
             strip.SetPixelColor(pixel, updatedColor);
         };
 

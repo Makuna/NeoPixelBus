@@ -23,10 +23,16 @@ class NeoPixelBus;
 
 typedef std::function<void(float progress)> AnimUpdateCallback;
 
+#define NEO_MILLISECONDS        1    // ~65 seconds max duration, ms updates
+#define NEO_CENTISECONDS       10    // ~10.9 minutes max duration, centisecond updates
+#define NEO_DECISECONDS       100    // ~1.8 hours max duration, decisecond updates
+#define NEO_SECONDS          1000    // ~18.2 hours max duration, second updates
+#define NEO_DECASECONDS     10000    // ~7.5 days, 10 second updates
+
 class NeoPixelAnimator
 {
 public:
-    NeoPixelAnimator(NeoPixelBus* bus);
+    NeoPixelAnimator(NeoPixelBus* bus, uint16_t timeScale = NEO_MILLISECONDS);
     ~NeoPixelAnimator();
 
     bool IsAnimating() const
@@ -41,7 +47,7 @@ public:
 
     void StartAnimation(uint16_t n, uint16_t time, AnimUpdateCallback animUpdate);
     void StopAnimation(uint16_t n);
-    void UpdateAnimations(uint32_t maxDeltaMs = 1000);
+    void UpdateAnimations();
 
     bool IsPaused()
     {
@@ -59,6 +65,11 @@ public:
         _animationLastTick = millis();
     }
 
+    uint16_t TimeScale()
+    {
+        return _timeScale;
+    }
+
     void FadeTo(uint16_t time, RgbColor color);
 
 private:
@@ -72,6 +83,20 @@ private:
             fnUpdate(NULL)
         {}
 
+        void StartAnimation(uint16_t duration, AnimUpdateCallback animUpdate)
+        {
+            time = duration;
+            remaining = duration;
+            fnUpdate = animUpdate;
+        }
+
+        void StopAnimation()
+        {
+            time = 0;
+            remaining = 0;
+            fnUpdate = NULL;
+        }
+
         uint16_t time;
         uint16_t remaining;
        
@@ -81,5 +106,6 @@ private:
     AnimationContext* _animations;
     uint32_t _animationLastTick;
     uint16_t _activeAnimations;
+    uint16_t _timeScale;
     bool _isRunning;
 };
