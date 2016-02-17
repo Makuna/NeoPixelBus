@@ -32,7 +32,7 @@ License along with NeoPixel.  If not, see
 #define NEO_RGB     0x00 // Wired for RGB data order
 #define NEO_GRB     0x01 // Wired for GRB data order
 #define NEO_BRG     0x02
-#define NEO_COLMASK 0x08 // which bits are used for the color order flags
+#define NEO_COLMASK 0x03 // which bits are used for the color order flags
 
 #define NEO_KHZ400  0x10 // 400 KHz datastream
 #define NEO_KHZ800  0x00 // 800 KHz datastream (default)
