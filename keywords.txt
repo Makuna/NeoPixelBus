@@ -1,0 +1,73 @@
+#######################################
+# Syntax Coloring Map NeoPixelBus
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+NeoPixelBus	KEYWORD1
+RgbwColor	KEYWORD1
+RgbColor	KEYWORD1
+HslColor	KEYWORD1
+HsbColor	KEYWORD1
+NeoGrbFeature	KEYWORD1
+NeoRgbwFeature	KEYWORD1
+NeoRgbFeature	KEYWORD1
+NeoBrgFeature	KEYWORD1
+NeoAvr800KbpsMethod	KEYWORD1
+NeoAvr400KbpsMethod	KEYWORD1
+NeoEsp8266Dma800Method	KEYWORD1
+NeoEsp8266Dma400Method	KEYWORD1
+NeoEsp8266Uart800Method	KEYWORD1
+NeoEsp8266Uart400Method	KEYWORD1
+NeoEsp8266BitBang800Method	KEYWORD1
+NeoEsp8266BitBang400Method	KEYWORD1
+NeoPixelAnimator	KEYWORD1
+AnimationParam	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+Begin	KEYWORD2
+Show	KEYWORD2
+CanShow	KEYWORD2
+ClearTo	KEYWORD2
+IsDirty	KEYWORD2
+Dirty	KEYWORD2
+ResetDirty	KEYWORD2
+Pixels	KEYWORD2
+PixelsSize	KEYWORD2
+PixelCount	KEYWORD2
+SetPixelColor	KEYWORD2
+GetPixelColor	KEYWORD2
+CalculateBrightness	KEYWORD2
+Darken	KEYWORD2
+Lighten	KEYWORD2
+LinearBlend	KEYWORD2
+IsAnimating	KEYWORD2
+NextAvailableAnimation	KEYWORD2
+StartAnimation	KEYWORD2
+StopAnimation	KEYWORD2
+RestartAnimation	KEYWORD2
+IsAnimationActive	KEYWORD2
+AnimationDuration	KEYWORD2
+UpdateAnimations	KEYWORD2
+IsPaused	KEYWORD2
+Pause	KEYWORD2
+Resume	KEYWORD2
+TimeScale	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+NEO_MILLISECONDS	LITERAL1
+NEO_CENTISECONDS	LITERAL1
+NEO_DECISECONDS	LITERAL1
+NEO_SECONDS	LITERAL1
+NEO_DECASECONDS	LITERAL1
+AnimationState_Started	LITERAL1
+AnimationState_Progress	LITERAL1
+AnimationState_Completed	LITERAL1
