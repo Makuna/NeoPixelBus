@@ -138,7 +138,9 @@ public:
         // rather than stalling for the latch.
         while (!IsReadyToUpdate())
         {
+#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA)
             yield(); // allows for system yield if needed
+#endif
         }
 
         noInterrupts(); // Need 100% focus on instruction timing
@@ -173,6 +175,10 @@ private:
 
 typedef NeoAvrMethodBase<NeoAvrSpeed800Kbps> NeoAvr800KbpsMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed400Kbps> NeoAvr400KbpsMethod;
+
+// AVR doesn't have alternatives yet, so there is just the default
+typedef NeoAvr800KbpsMethod Neo800KbpsMethod;
+typedef NeoAvr400KbpsMethod Neo400KbpsMethod;
 
 #endif
 

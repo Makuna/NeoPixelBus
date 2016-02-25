@@ -48,6 +48,8 @@ typedef void(*AnimUpdateCallback)(const AnimationParam& param);
 
 #else
 
+#undef max
+#undef min
 #include <functional>
 typedef std::function<void(const AnimationParam& param)> AnimUpdateCallback;
 

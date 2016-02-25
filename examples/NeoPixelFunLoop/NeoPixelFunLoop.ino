@@ -23,13 +23,7 @@ const uint16_t PixelFadeDuration = 400; // half a second
 // one second divide by the number of pixels = loop once a second
 const uint16_t NextPixelMoveDuration = 1000 / PixelCount; // how fast we move through the pixels
 
-#ifdef ARDUINO_ARCH_AVR
-NeoPixelBus<NeoGrbFeature, NeoAvr800KbpsMethod> strip(PixelCount, PixelPin);
-#elif ARDUINO_ARCH_ESP8266
-NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(PixelCount, PixelPin);
-#else
-#error "Platform Currently Not Supported"
-#endif
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 
 // what is stored for state is specific to the need, in this case, the colors and
 // the pixel to animate;

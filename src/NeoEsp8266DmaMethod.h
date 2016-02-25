@@ -330,4 +330,8 @@ private:
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed800Kbps> NeoEsp8266Dma800KbpsMethod;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed400Kbps> NeoEsp8266Dma400KbpsMethod;
 
+// Dma  method is the default method for Esp8266
+typedef NeoEsp8266Dma800KbpsMethod Neo800KbpsMethod;
+typedef NeoEsp8266Dma400KbpsMethod Neo400KbpsMethod;
+
 #endif

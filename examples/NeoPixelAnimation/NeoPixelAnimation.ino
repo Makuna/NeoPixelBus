@@ -21,16 +21,14 @@
 const uint16_t PixelCount = 4; // make sure to set this to the number of pixels in your strip
 const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for UartDriven branch
 
-#ifdef ARDUINO_ARCH_AVR
-NeoPixelBus<NeoGrbFeature, NeoAvr800KbpsMethod> strip(PixelCount, PixelPin);
-#elif ARDUINO_ARCH_ESP8266
-NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(PixelCount, PixelPin);
-#else
-#error "Platform Currently Not Supported"
-#endif
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+// Other Esp8266 alternative methods
+//NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart800KbpsMethod> strip(PixelCount, PixelPin);
+//NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> strip(PixelCount, PixelPin);
 
 // NeoPixel animation time management object
 NeoPixelAnimator animations(PixelCount, NEO_CENTISECONDS);
+
 // create with enough animations to have one per pixel, depending on the animation
 // effect, you may need more or less.
 //
@@ -52,6 +50,8 @@ NeoPixelAnimator animations(PixelCount, NEO_CENTISECONDS);
 
 #ifdef ARDUINO_ARCH_AVR
 // for AVR, you need to manage the state due to lack of STL/compiler support
+// for Esp8266 you can define the function using a lambda and state is created for you
+// see below for an example
 struct MyAnimationState
 {
     RgbColor StartingColor;
