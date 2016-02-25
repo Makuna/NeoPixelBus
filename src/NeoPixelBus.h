@@ -33,11 +33,13 @@ License along with NeoPixel.  If not, see
 #include "RgbwColor.h"
 #include "NeoColorFeatures.h"
 
-#ifdef ARDUINO_ARCH_ESP8266
+#if defined(ARDUINO_ARCH_ESP8266)
 #include "NeoEsp8266DmaMethod.h"
 #include "NeoEsp8266UartMethod.h"
 #include "NeoEsp8266BitBangMethod.h"
-#elif ARDUINO_ARCH_AVR
+#elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
+#include "NeoArmMethod.h"
+#elif defined(ARDUINO_ARCH_AVR)
 #include "NeoAvrMethod.h"
 #else
 #error "Platform Currently Not Supported, please add an Issue at Github/Makuna/NeoPixelBus"
@@ -83,7 +85,7 @@ public:
 
     inline bool CanShow() const
     { 
-        _method.IsReadyToUpdate();
+        return _method.IsReadyToUpdate();
     };
 
     bool IsDirty() const

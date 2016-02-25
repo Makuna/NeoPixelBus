@@ -33,7 +33,8 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
-#ifdef ARDUINO_ARCH_AVR
+// must also check for arm due to Teensy incorrectly having ARDUINO_ARCH_AVR set
+#if defined(ARDUINO_ARCH_AVR) && !defined(__arm__)
 
 #include <Arduino.h>
 
@@ -53,6 +54,7 @@ License along with NeoPixel.  If not, see
 
 #if (F_CPU >= 7400000UL) && (F_CPU <= 9500000UL)  // 8Mhz CPU
 
+#ifdef PORTD // PORTD isn't present on ATtiny85, etc.
 void send_pixels_8mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pinMask)
 {
     volatile size_t i = sizePixels; // Loop counter
@@ -176,6 +178,7 @@ void send_pixels_8mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pinM
         [hi]     "r" (hi),
         [lo]     "r" (lo) );
 }
+#endif
 
 void send_pixels_8mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pinMask)
 {
@@ -327,6 +330,7 @@ void send_pixels_8mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* 
 
 #elif (F_CPU >= 11100000UL) && (F_CPU <= 14300000UL)  // 12Mhz CPU
 
+#ifdef PORTD // PORTD isn't present on ATtiny85, etc.
 void send_pixels_12mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pinMask)
 {
     volatile size_t i = sizePixels; // Loop counter
@@ -398,10 +402,11 @@ void send_pixels_12mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pin
         [hi]     "r" (hi),
         [lo]     "r" (lo));
 }
+#endif
 
 void send_pixels_12mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pinMask)
 {
-    volatile size_t i = sizePixels; // Loop counter
+    volatile uint16_t i = (uint16_t)sizePixels; // Loop counter
     volatile uint8_t* ptr = pixels; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
@@ -463,7 +468,7 @@ void send_pixels_12mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pin
 
 void send_pixels_12mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask)
 {
-    volatile size_t i = sizePixels; // Loop counter
+    volatile uint16_t i = (uint16_t)sizePixels; // Loop counter
     volatile uint8_t* ptr = pixels; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
@@ -519,7 +524,7 @@ void send_pixels_12mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t*
 
 void send_pixels_16mhz_800(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask)
 {
-    volatile size_t i = sizePixels; // Loop counter
+    volatile uint16_t i = (uint16_t)sizePixels; // Loop counter
     volatile uint8_t* ptr = pixels; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
@@ -531,7 +536,8 @@ void send_pixels_16mhz_800(uint8_t* pixels, size_t sizePixels, volatile uint8_t*
     // 20 inst. clocks per bit: HHHHHxxxxxxxxLLLLLLL
     // ST instructions:         ^   ^        ^       (T=0,5,13)
 
-    volatile uint8_t next, bit;
+    volatile uint8_t next;
+    volatile uint8_t bit;
 
     hi = *port | pinMask;
     lo = *port & ~pinMask;

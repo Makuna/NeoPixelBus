@@ -75,7 +75,7 @@ void NeoPixelAnimator::StartAnimation(uint16_t n,
         uint16_t duration, 
         AnimUpdateCallback animUpdate)
 {
-    if (n >= _countAnimations)
+    if (n >= _countAnimations || animUpdate == NULL)
     {
         return;
     }
@@ -140,8 +140,7 @@ void NeoPixelAnimator::UpdateAnimations()
                     param.state = (pAnim->_remaining == pAnim->_duration) ? AnimationState_Started : AnimationState_Progress;
                     param.progress = (float)(pAnim->_duration - pAnim->_remaining) / (float)pAnim->_duration;
 
-                    if (fnUpdate)
-                        fnUpdate(param);
+                    fnUpdate(param);
 
                     pAnim->_remaining -= delta;
 
@@ -155,8 +154,7 @@ void NeoPixelAnimator::UpdateAnimations()
                     _activeAnimations--; 
                     pAnim->StopAnimation();
 
-                    if (fnUpdate)
-                        fnUpdate(param);
+                    fnUpdate(param);
                     
                     countAnimations--;
                 }

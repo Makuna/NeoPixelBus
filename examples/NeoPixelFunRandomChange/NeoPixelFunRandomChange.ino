@@ -10,13 +10,7 @@
 const uint16_t PixelCount = 16; // make sure to set this to the number of pixels in your strip
 const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for UartDriven branch
 
-#ifdef ARDUINO_ARCH_AVR
-NeoPixelBus<NeoGrbFeature, NeoAvr800KbpsMethod> strip(PixelCount, PixelPin);
-#elif ARDUINO_ARCH_ESP8266
-NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(PixelCount, PixelPin);
-#else
-#error "Platform Currently Not Supported"
-#endif
+NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 
 NeoPixelAnimator animations(PixelCount); // NeoPixel animation management object
 

@@ -29,25 +29,6 @@ License along with NeoPixel.  If not, see
 #include "HsbColor.h"
 #include "RgbwColor.h"
 
-static float _CalcColor(float p, float q, float t)
-{
-    if (t < 0.0f)
-        t += 1.0f;
-    if (t > 1.0f)
-        t -= 1.0f;
-
-    if (t < 1.0f / 6.0f)
-        return p + (q - p) * 6.0f * t;
-
-    if (t < 0.5f)
-        return q;
-
-    if (t < 2.0f / 3.0f)
-        return p + ((q - p) * (2.0f / 3.0f - t) * 6.0f);
-
-    return p;
-}
-
 RgbwColor::RgbwColor(HslColor color)
 {
     RgbColor rgbColor(color);
