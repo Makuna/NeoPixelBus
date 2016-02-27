@@ -43,48 +43,45 @@ RgbwColor::RgbwColor(HsbColor color)
 
 uint8_t RgbwColor::CalculateBrightness() const
 {
-    if (IsColorLess())
+    uint8_t colorB = (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
+    if (W > colorB)
     {
         return W;
     }
-    else if (W == 0)
-    {
-        return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
-    }
     else
     {
-        return (uint8_t)(((((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3) + (uint16_t)W) / 2);
+        return colorB;
     }
 }
 
 void RgbwColor::Darken(uint8_t delta)
 {
-	if (R > delta)
-	{
-		R -= delta;
-	}
-	else
-	{
-		R = 0;
-	}
+    if (R > delta)
+    {
+        R -= delta;
+    }
+    else
+    {
+        R = 0;
+    }
 
-	if (G > delta)
-	{
-		G -= delta;
-	}
-	else
-	{
-		G = 0;
-	}
+    if (G > delta)
+    {
+        G -= delta;
+    }
+    else
+    {
+        G = 0;
+    }
 
-	if (B > delta)
-	{
-		B -= delta;
-	}
-	else
-	{
-		B = 0;
-	}
+    if (B > delta)
+    {
+        B -= delta;
+    }
+    else
+    {
+        B = 0;
+    }
 
     if (W > delta)
     {
@@ -142,8 +139,8 @@ void RgbwColor::Lighten(uint8_t delta)
 
 RgbwColor RgbwColor::LinearBlend(RgbwColor left, RgbwColor right, float progress)
 {
-	return RgbwColor( left.R + ((right.R - left.R) * progress),
-		left.G + ((right.G - left.G) * progress),
-		left.B + ((right.B - left.B) * progress),
+    return RgbwColor( left.R + ((right.R - left.R) * progress),
+        left.G + ((right.G - left.G) * progress),
+        left.B + ((right.B - left.B) * progress),
         left.W + ((right.W - left.W) * progress) );
 }

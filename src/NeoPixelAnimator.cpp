@@ -44,38 +44,36 @@ NeoPixelAnimator::~NeoPixelAnimator()
     delete[] _animations;
 }
 
-bool NeoPixelAnimator::NextAvailableAnimation(uint16_t* result, uint16_t after)
+bool NeoPixelAnimator::NextAvailableAnimation(uint16_t* indexAvailable, uint16_t indexStart)
 {
-    if (result == NULL)
-    {
-        return false;
-    }
-
-    if (after >= _countAnimations)
+    if (indexStart >= _countAnimations)
     {
         // last one
-        after = _countAnimations - 1;
+        indexStart = _countAnimations - 1;
     }
 
-    uint16_t next = after;
+    uint16_t next = indexStart;
 
     do
     {
-        next = (next + 1) % _countAnimations;
         if (!IsAnimationActive(next))
         {
-            *result = next;
+            if (indexAvailable)
+            {
+                *indexAvailable = next;
+            }
             return true;
         }
-    } while (next != after);
+        next = (next + 1) % _countAnimations;
+    } while (next != indexStart);
     return false;
 }
 
-void NeoPixelAnimator::StartAnimation(uint16_t n, 
+void NeoPixelAnimator::StartAnimation(uint16_t indexAnimation, 
         uint16_t duration, 
         AnimUpdateCallback animUpdate)
 {
-    if (n >= _countAnimations || animUpdate == NULL)
+    if (indexAnimation >= _countAnimations || animUpdate == NULL)
     {
         return;
     }
@@ -85,7 +83,7 @@ void NeoPixelAnimator::StartAnimation(uint16_t n,
         _animationLastTick = millis();
     }
 
-    StopAnimation(n);
+    StopAnimation(indexAnimation);
 
     // all animations must have at least non zero duration, otherwise
     // they are considered stopped
@@ -94,22 +92,22 @@ void NeoPixelAnimator::StartAnimation(uint16_t n,
         duration = 1;
     }
 
-    _animations[n].StartAnimation(duration, animUpdate);
+    _animations[indexAnimation].StartAnimation(duration, animUpdate);
 
     _activeAnimations++;
 }
 
-void NeoPixelAnimator::StopAnimation(uint16_t n)
+void NeoPixelAnimator::StopAnimation(uint16_t indexAnimation)
 {
-    if (n >= _countAnimations)
+    if (indexAnimation >= _countAnimations)
     {
         return;
     }
 
-    if (IsAnimationActive(n))
+    if (IsAnimationActive(indexAnimation))
     {
         _activeAnimations--;
-        _animations[n].StopAnimation();
+        _animations[indexAnimation].StopAnimation();
     }
 }
 
