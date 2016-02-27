@@ -47,9 +47,13 @@ uint8_t RgbwColor::CalculateBrightness() const
     {
         return W;
     }
-    else
+    else if (W == 0)
     {
         return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
+    }
+    else
+    {
+        return (uint8_t)(((((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3) + (uint16_t)W) / 2);
     }
 }
 

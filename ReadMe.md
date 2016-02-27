@@ -14,21 +14,9 @@ For quick questions jump on Gitter and ask away.
 
 For bugs, make sure there isn't an active issue and then create one.
 
-This new library supports a templatized model of defining which method gets used to send data and what order and size the pixel data is sent in.  This new design creates the smallest code for each definition of features used.  Please see examples to become familiar with the new design.
+This new library supports a templatized model of defining which method gets used to send data and what order and size the pixel data is sent in.  This new design creates the smallest code for each definition of features used.  Please see examples to become familiar with the new design.  
+Due to this design you will often realize over 500 bytes of more program storage for your sketch.  Important for the smallest Arduinos project.
 
-Using the StandTest example from AdaFruit_NeoPixel library targeting a Arduino Mega 2560 as a comparison, you can see the compilation results below.
-
-AdaFruit_NeoPixel library
-```
-Sketch uses 4,236 bytes (1%) of program storage space. Maximum is 253,952 bytes.
-Global variables use 40 bytes (0%) of dynamic memory, leaving 8,152 bytes for local variables. Maximum is 8,192 bytes.
-```
-
-NeoPixelBus library
-```
-Sketch uses 3,570 bytes (1%) of program storage space. Maximum is 253,952 bytes.
-Global variables use 34 bytes (0%) of dynamic memory, leaving 8,158 bytes for local variables. Maximum is 8,192 bytes.
-```
 
 ## Installing This Library (prefered)
 Open the Library Manager and search for "NeoPixelBus by Makuna" and install
