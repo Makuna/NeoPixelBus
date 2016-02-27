@@ -74,36 +74,36 @@ public:
     }
 
 
-    bool NextAvailableAnimation(uint16_t* result, uint16_t after);
+    bool NextAvailableAnimation(uint16_t* indexAvailable, uint16_t indexStart = 0);
 
-    void StartAnimation(uint16_t n, uint16_t duration, AnimUpdateCallback animUpdate);
-    void StopAnimation(uint16_t n);
-    void RestartAnimation(uint16_t n)
+    void StartAnimation(uint16_t indexAnimation, uint16_t duration, AnimUpdateCallback animUpdate);
+    void StopAnimation(uint16_t indexAnimation);
+    void RestartAnimation(uint16_t indexAnimation)
     {
-        if (n >= _countAnimations || _animations[n]._duration == 0)
+        if (indexAnimation >= _countAnimations || _animations[indexAnimation]._duration == 0)
         {
             return;
         }
 
-        StartAnimation(n, _animations[n]._duration, (_animations[n]._fnCallback));
+        StartAnimation(indexAnimation, _animations[indexAnimation]._duration, (_animations[indexAnimation]._fnCallback));
     }
 
-    bool IsAnimationActive(uint16_t n) const
+    bool IsAnimationActive(uint16_t indexAnimation) const
     {
-        if (n >= _countAnimations)
+        if (indexAnimation >= _countAnimations)
         {
             return false;
         }
-        return (IsAnimating() && _animations[n]._remaining != 0);
+        return (IsAnimating() && _animations[indexAnimation]._remaining != 0);
     }
 
-    uint16_t AnimationDuration(uint16_t n)
+    uint16_t AnimationDuration(uint16_t indexAnimation)
     {
-        if (n >= _countAnimations)
+        if (indexAnimation >= _countAnimations)
         {
             return 0;
         }
-        return _animations[n]._duration;
+        return _animations[indexAnimation]._duration;
     }
 
     void UpdateAnimations();
