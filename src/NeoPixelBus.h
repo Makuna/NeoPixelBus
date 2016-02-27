@@ -116,27 +116,27 @@ public:
     size_t PixelSize() const
     {
         return T_COLOR_FEATURE::PixelSize;
-    }
+    };
 
     uint16_t PixelCount() const
     {
         return _countPixels;
     };
 
-    void SetPixelColor(uint16_t n, typename T_COLOR_FEATURE::ColorObject c)
+    void SetPixelColor(uint16_t indexPixel, typename T_COLOR_FEATURE::ColorObject color)
     {
-        if (n < _countPixels)
+        if (indexPixel < _countPixels)
         {
-            T_COLOR_FEATURE::applyPixelColor(_method.getPixels(), n, c);
+            T_COLOR_FEATURE::applyPixelColor(_method.getPixels(), indexPixel, color);
             Dirty();
         }
     };
 
-    typename T_COLOR_FEATURE::ColorObject GetPixelColor(uint16_t n) const
+    typename T_COLOR_FEATURE::ColorObject GetPixelColor(uint16_t indexPixel) const
     {
-        if (n < _countPixels)
+        if (indexPixel < _countPixels)
         {
-            return T_COLOR_FEATURE::retrievePixelColor(_method.getPixels(), n);
+            return T_COLOR_FEATURE::retrievePixelColor(_method.getPixels(), indexPixel);
         }
         else
         {
@@ -146,12 +146,12 @@ public:
         }
     };
 
-    void ClearTo(typename T_COLOR_FEATURE::ColorObject c)
+    void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
     {
         uint8_t* pixels = _method.getPixels();
         for (uint16_t n = 0; n < _countPixels; n++)
         {
-            T_COLOR_FEATURE::applyPixelColor(pixels, n, c);
+            T_COLOR_FEATURE::applyPixelColor(pixels, n, color);
         }
         Dirty();
     };

@@ -40,20 +40,20 @@ struct RgbColor
     // ------------------------------------------------------------------------
     // Construct a RgbColor using R, G, B values (0-255)
     // ------------------------------------------------------------------------
-	RgbColor(uint8_t r, uint8_t g, uint8_t b) :
-		R(r), G(g), B(b)
-	{
-	};
+    RgbColor(uint8_t r, uint8_t g, uint8_t b) :
+        R(r), G(g), B(b)
+    {
+    };
 
     // ------------------------------------------------------------------------
     // Construct a RgbColor using a single brightness value (0-255)
     // This works well for creating gray tone colors
     // (0) = black, (255) = white, (128) = gray
     // ------------------------------------------------------------------------
-	RgbColor(uint8_t brightness) :
-		R(brightness), G(brightness), B(brightness)
-	{
-	};
+    RgbColor(uint8_t brightness) :
+        R(brightness), G(brightness), B(brightness)
+    {
+    };
 
     // ------------------------------------------------------------------------
     // Construct a RgbColor using HslColor
@@ -69,29 +69,29 @@ struct RgbColor
     // Construct a RgbColor that will have its values set in latter operations
     // CAUTION:  The R,G,B members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
-	RgbColor()
-	{
-	};
+    RgbColor()
+    {
+    };
 
     // ------------------------------------------------------------------------
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
-	uint8_t CalculateBrightness() const;
+    uint8_t CalculateBrightness() const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to dim the color
     // ------------------------------------------------------------------------
-	void Darken(uint8_t delta);
+    void Darken(uint8_t delta);
 
     // ------------------------------------------------------------------------
     // Lighten will adjust the color by the given delta toward white
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to lighten the color
     // ------------------------------------------------------------------------
-	void Lighten(uint8_t delta);
+    void Lighten(uint8_t delta);
 
     // ------------------------------------------------------------------------
     // LinearBlend between two colors by the amount defined by progress variable
@@ -100,14 +100,14 @@ struct RgbColor
     // progress - (0.0 - 1.0) value where 0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-	static RgbColor LinearBlend(RgbColor left, RgbColor right, float progress);
+    static RgbColor LinearBlend(RgbColor left, RgbColor right, float progress);
     
     // ------------------------------------------------------------------------
     // Red, Green, Blue color members (0-255) where 
     // (0,0,0) is black and (255,255,255) is white
     // ------------------------------------------------------------------------
-	uint8_t R;
-	uint8_t G;
-	uint8_t B;
+    uint8_t R;
+    uint8_t G;
+    uint8_t B;
 };
 
