@@ -1,11 +1,15 @@
 // NeoPixelAnimation
-// This example will randomly pick a new color for each pixel and 
-// animate the current color to the new color over a random small amount of time
+// This example will randomly pick a new color for each pixel and animate
+// the current color to the new color over a random small amount of time, using
+// a randomly selected animation curve.
 // It will repeat this process once all pixels have finished the animation
 // 
 // This will demonstrate the use of the NeoPixelAnimator extended time feature.
 // This feature allows for different time scales to be used, allowing slow extended
 // animations to be created.
+// 
+// This will demonstrate the use of the NeoEase animation ease methods; that provide
+// simulated acceleration to the animations.
 //
 // It also includes platform specific code for Esp8266 that demonstrates easy
 // animation state and function definition inline.  This is not available on AVR
@@ -19,12 +23,17 @@
 #include <NeoPixelAnimator.h>
 
 const uint16_t PixelCount = 4; // make sure to set this to the number of pixels in your strip
-const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for UartDriven branch
+const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
-// Other Esp8266 alternative methods
+// For Esp8266, the Pin is ignored and it uses GPIO3.  
+// There are other Esp8266 alternative methods that provide more pin options, but also have
+// other side effects.
 //NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart800KbpsMethod> strip(PixelCount, PixelPin);
+// NeoEsp8266Uart800KbpsMethod also ignores the pin parameter and uses GPI02
 //NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> strip(PixelCount, PixelPin);
+// NeoEsp8266Uart800KbpsMethod will work with all but pin 16, but is not stable with WiFi 
+// being active
 
 // NeoPixel animation time management object
 NeoPixelAnimator animations(PixelCount, NEO_CENTISECONDS);
@@ -54,8 +63,9 @@ NeoPixelAnimator animations(PixelCount, NEO_CENTISECONDS);
 // see below for an example
 struct MyAnimationState
 {
-    RgbColor StartingColor;
-    RgbColor EndingColor;
+    RgbColor StartingColor;  // the color the animation starts at
+    RgbColor EndingColor; // the color the animation will end at
+    AnimEaseFunction Easeing; // the acceleration curve it will use 
 };
 
 MyAnimationState animationState[PixelCount];
@@ -63,6 +73,10 @@ MyAnimationState animationState[PixelCount];
 
 void AnimUpdate(const AnimationParam& param)
 {
+    // first apply an easing (curve) to the animation
+    // this simulates acceleration to the effect
+    float progress = animationState[param.index].Easeing(param.progress);
+
     // this gets called for each animation on every time step
     // progress will start at 0.0 and end at 1.0
     // we use the blend function on the RgbColor to mix
@@ -70,7 +84,7 @@ void AnimUpdate(const AnimationParam& param)
     RgbColor updatedColor = RgbColor::LinearBlend(
         animationState[param.index].StartingColor,
         animationState[param.index].EndingColor,
-        param.progress);
+        progress);
     // apply the color to the strip
     strip.SetPixelColor(param.index, updatedColor);
 }
@@ -132,13 +146,29 @@ void SetupAnimationSet()
         RgbColor originalColor = strip.GetPixelColor(pixel);
         // and ends with a random color
         RgbColor targetColor = RgbColor(random(peak), random(peak), random(peak));
+        // with the random ease function
+        AnimEaseFunction easing;
 
+        switch (random(3))
+        {
+        case 0:
+            easing = NeoEase::CubicIn;
+            break;
+        case 1:
+            easing = NeoEase::CubicOut;
+            break;
+        case 2:
+            easing = NeoEase::QuadraticInOut;
+            break;
+        }
 
 #ifdef ARDUINO_ARCH_AVR
         // each animation starts with the color that was present
         animationState[pixel].StartingColor = originalColor;
         // and ends with a random color
         animationState[pixel].EndingColor = targetColor;
+        // using the specific curve
+        animationState[pixel].Easeing = easing;
 
         // now use the animation state we just calculated and start the animation
         // which will continue to run and call the update function until it completes
@@ -146,7 +176,7 @@ void SetupAnimationSet()
 #else
         // we must supply a function that will define the animation, in this example
         // we are using "lambda expression" to define the function inline, which gives
-        // us an easy way to "capture" the originalColor and color for the call back.
+        // us an easy way to "capture" the originalColor and targetColor for the call back.
         //
         // this function will get called back when ever the animation needs to change
         // the state of the pixel, it will provide a animation progress value
@@ -162,7 +192,11 @@ void SetupAnimationSet()
         AnimUpdateCallback animUpdate = [=](const AnimationParam& param)
         {
             // progress will start at 0.0 and end at 1.0
-            RgbColor updatedColor = RgbColor::LinearBlend(originalColor, targetColor, param.progress);
+            // we convert to the curve we want
+            float progress = easing(param.progress);
+
+            // use the curve value to apply to the animation
+            RgbColor updatedColor = RgbColor::LinearBlend(originalColor, targetColor, progress);
             strip.SetPixelColor(pixel, updatedColor);
         };
 

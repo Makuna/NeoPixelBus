@@ -26,7 +26,10 @@ NeoEsp8266Uart400Method	KEYWORD1
 NeoEsp8266BitBang800Method	KEYWORD1
 NeoEsp8266BitBang400Method	KEYWORD1
 NeoPixelAnimator	KEYWORD1
+AnimUpdateCallback	KEYWORD1
 AnimationParam	KEYWORD1
+NeoEase	KEYWORD1
+AnimEaseFunction	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -60,6 +63,27 @@ IsPaused	KEYWORD2
 Pause	KEYWORD2
 Resume	KEYWORD2
 TimeScale	KEYWORD2
+QuadraticIn	KEYWORD2
+QuadraticOut	KEYWORD2
+QuadraticInOut	KEYWORD2
+CubicIn	KEYWORD2
+CubicOut	KEYWORD2
+CubicInOut	KEYWORD2
+QuarticIn	KEYWORD2
+QuarticOut	KEYWORD2
+QuarticInOut	KEYWORD2
+QuinticIn	KEYWORD2
+QuinticOut	KEYWORD2
+QuinticInOut	KEYWORD2
+SinusoidalIn	KEYWORD2
+SinusoidalOut	KEYWORD2
+SinusoidalInOut	KEYWORD2
+ExponentialIn	KEYWORD2
+ExponentialOut	KEYWORD2
+ExponentialInOut	KEYWORD2
+CircularIn	KEYWORD2
+CircularOut	KEYWORD2
+CircularInOut	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
