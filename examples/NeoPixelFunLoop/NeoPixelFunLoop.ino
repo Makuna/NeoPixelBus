@@ -16,7 +16,7 @@
 
 
 const uint16_t PixelCount = 16; // make sure to set this to the number of pixels in your strip
-const uint16_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for UartDriven branch
+const uint16_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 const uint16_t AnimCount = 8; // we only need about 8 animations, one to track movement, and the rest to actually animate
 
 const uint16_t PixelFadeDuration = 400; // half a second
@@ -24,6 +24,14 @@ const uint16_t PixelFadeDuration = 400; // half a second
 const uint16_t NextPixelMoveDuration = 1000 / PixelCount; // how fast we move through the pixels
 
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+// For Esp8266, the Pin is ignored and it uses GPIO3.  
+// There are other Esp8266 alternative methods that provide more pin options, but also have
+// other side effects.
+//NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart800KbpsMethod> strip(PixelCount, PixelPin);
+// NeoEsp8266Uart800KbpsMethod also ignores the pin parameter and uses GPI02
+//NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> strip(PixelCount, PixelPin);
+// NeoEsp8266Uart800KbpsMethod will work with all but pin 16, but is not stable with WiFi 
+// being active
 
 // what is stored for state is specific to the need, in this case, the colors and
 // the pixel to animate;

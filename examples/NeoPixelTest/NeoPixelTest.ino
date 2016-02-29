@@ -14,7 +14,7 @@
 #include <NeoPixelBus.h>
 
 const uint16_t PixelCount = 4; // this example assumes 4 pixels, making it smaller will cause a failure
-const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for UartDriven branch
+const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 
 #define colorSaturation 128
 
@@ -26,15 +26,17 @@ NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 // each having their own restrictions
 //
 // These two are the same as above as the DMA method is the default
+// NOTE: These will ignore the PIN and use GPI03 pin
 //NeoPixelBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoRgbFeature, NeoEsp8266Dma400KbpsMethod> strip(PixelCount, PixelPin);
 
 // Uart method is good for the Esp-01 or other pin restricted modules
+// NOTE: These will ignore the PIN and use GPI02 pin
 //NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoRgbFeature, NeoEsp8266Uart400KbpsMethod> strip(PixelCount, PixelPin);
 
 // The bitbang method is really only good if you are not using WiFi features of the ESP
-// It has no pin restrictions.
+// It works with all but pin 16
 //NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoRgbFeature, NeoEsp8266BitBang400KbpsMethod> strip(PixelCount, PixelPin);
 
