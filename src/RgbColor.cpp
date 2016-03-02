@@ -93,9 +93,13 @@ RgbColor::RgbColor(HsbColor color)
     else
     {
         if (h < 0.0f)
+        {
             h += 1.0f;
-        if (h > 1.0f)
+        }
+        else if (h >= 1.0f)
+        {
             h -= 1.0f;
+        }
         h *= 6.0f;
         int i = (int)h;
         float f = h - i;
