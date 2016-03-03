@@ -27,20 +27,20 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-#include "RgbColor.h"
-#include "HslColor.h"
-#include "HsbColor.h"
-#include "RgbwColor.h"
-#include "NeoColorFeatures.h"
+#include "internal/RgbColor.h"
+#include "internal/HslColor.h"
+#include "internal/HsbColor.h"
+#include "internal/RgbwColor.h"
+#include "internal/NeoColorFeatures.h"
 
 #if defined(ARDUINO_ARCH_ESP8266)
-#include "NeoEsp8266DmaMethod.h"
-#include "NeoEsp8266UartMethod.h"
-#include "NeoEsp8266BitBangMethod.h"
+#include "internal/NeoEsp8266DmaMethod.h"
+#include "internal/NeoEsp8266UartMethod.h"
+#include "internal/NeoEsp8266BitBangMethod.h"
 #elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
-#include "NeoArmMethod.h"
+#include "internal/NeoArmMethod.h"
 #elif defined(ARDUINO_ARCH_AVR)
-#include "NeoAvrMethod.h"
+#include "internal/NeoAvrMethod.h"
 #else
 #error "Platform Currently Not Supported, please add an Issue at Github/Makuna/NeoPixelBus"
 #endif
