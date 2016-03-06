@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-HslColor provides a color object that can be directly consumed by NeoPixelBus
+HtmlColor provides a color object that can be directly consumed by NeoPixelBus
 
 Written by Michael C. Miller.
 
@@ -26,51 +26,49 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #include <Arduino.h>
+#include "RgbColor.h"
+
 
 // ------------------------------------------------------------------------
-// HslColor represents a color object that is represented by Hue, Saturation, Lightness
-// component values.  It contains helpful color routines to manipulate the 
-// color.
+// HtmlColor represents a color object that is represented by a single uint32
+// value.  It contains minimal routines and used primarily as a helper to
+// initialize other color objects
 // ------------------------------------------------------------------------
-struct HslColor
+struct HtmlColor
 {
-
     // ------------------------------------------------------------------------
-    // Construct a HslColor using H, S, L values (0.0 - 1.0)
-    // L should be limited to between (0.0 - 0.5)
+    // Construct a HtmlColor using a single value (0-0xffffff)
+    // This works well for hexidecimal color definitions
+    // 0xff0000 = red, 0x00ff00 = green, and 0x0000ff = blue
     // ------------------------------------------------------------------------
-    HslColor(float h, float s, float l) :
-        H(h), S(s), L(l)
+    HtmlColor(uint32_t color) :
+        Color(color)
     {
     };
 
     // ------------------------------------------------------------------------
-    // Construct a HslColor using RgbColor
+    // Construct a HtmlColor using RgbColor
     // ------------------------------------------------------------------------
-    HslColor(const RgbColor& color);
+    HtmlColor(const RgbColor& color)
+    {
+        Color = color.R << 16 | color.G << 8 | color.B;
+    }
 
     // ------------------------------------------------------------------------
-    // Construct a HslColor that will have its values set in latter operations
-    // CAUTION:  The H,S,L members are not initialized and may not be consistent
+    // Construct a HtmlColor that will have its values set in latter operations
+    // CAUTION:  The Color member is not initialized and may not be consistent
     // ------------------------------------------------------------------------
-    HslColor()
+    HtmlColor()
     {
     };
 
+    
     // ------------------------------------------------------------------------
-    // LinearBlend between two colors by the amount defined by progress variable
-    // left - the color to start the blend at
-    // right - the color to end the blend at
-    // progress - (0.0 - 1.0) value where 0.0 will return left and 1.0 will return right
-    //     and a value between will blend the color weighted linearly between them
+    // Color member (0-0xffffff) where 
+    // 0xff0000 is red
+    // 0x00ff00 is green
+    // 0x0000ff is blue
     // ------------------------------------------------------------------------
-    static HslColor LinearBlend(HslColor left, HslColor right, float progress);
-
-    // ------------------------------------------------------------------------
-    // Hue, Saturation, Lightness color members 
-    // ------------------------------------------------------------------------
-    float H;
-    float S;
-    float L;
+    uint32_t Color;
 };
 

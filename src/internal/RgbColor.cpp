@@ -27,6 +27,7 @@ License along with NeoPixel.  If not, see
 #include "RgbColor.h"
 #include "HslColor.h"
 #include "HsbColor.h"
+#include "HtmlColor.h"
 
 static float _CalcColor(float p, float q, float t)
 {
@@ -47,7 +48,12 @@ static float _CalcColor(float p, float q, float t)
     return p;
 }
 
-RgbColor::RgbColor(HslColor color)
+RgbColor::RgbColor(const HtmlColor& color) :
+    R((color.Color >> 16) & 0xff), G((color.Color >> 8) & 0xff), B(color.Color & 0xff)
+{
+}
+
+RgbColor::RgbColor(const HslColor& color)
 {
     float r;
     float g;
@@ -76,7 +82,7 @@ RgbColor::RgbColor(HslColor color)
     B = (uint8_t)(b * 255.0f);
 }
 
-RgbColor::RgbColor(HsbColor color)
+RgbColor::RgbColor(const HsbColor& color)
 {
     float r;
     float g;

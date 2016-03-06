@@ -11,6 +11,7 @@ RgbwColor	KEYWORD1
 RgbColor	KEYWORD1
 HslColor	KEYWORD1
 HsbColor	KEYWORD1
+HtmlColor	KEYWORD1
 NeoGrbFeature	KEYWORD1
 NeoRgbwFeature	KEYWORD1
 NeoRgbFeature	KEYWORD1
