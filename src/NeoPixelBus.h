@@ -30,6 +30,7 @@ License along with NeoPixel.  If not, see
 #include "internal/RgbColor.h"
 #include "internal/HslColor.h"
 #include "internal/HsbColor.h"
+#include "internal/HtmlColor.h"
 #include "internal/RgbwColor.h"
 #include "internal/NeoColorFeatures.h"
 

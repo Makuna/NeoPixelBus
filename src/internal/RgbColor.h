@@ -29,6 +29,7 @@ License along with NeoPixel.  If not, see
 
 struct HslColor;
 struct HsbColor;
+struct HtmlColor;
 
 // ------------------------------------------------------------------------
 // RgbColor represents a color object that is represented by Red, Green, Blue
@@ -56,14 +57,19 @@ struct RgbColor
     };
 
     // ------------------------------------------------------------------------
+    // Construct a RgbColor using HtmlColor
+    // ------------------------------------------------------------------------
+    RgbColor(const HtmlColor& color);
+
+    // ------------------------------------------------------------------------
     // Construct a RgbColor using HslColor
     // ------------------------------------------------------------------------
-    RgbColor(HslColor color);
+    RgbColor(const HslColor& color);
 
     // ------------------------------------------------------------------------
     // Construct a RgbColor using HsbColor
     // ------------------------------------------------------------------------
-    RgbColor(HsbColor color);
+    RgbColor(const HsbColor& color);
 
     // ------------------------------------------------------------------------
     // Construct a RgbColor that will have its values set in latter operations

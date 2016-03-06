@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 #include "HsbColor.h"
 
 
-HsbColor::HsbColor(RgbColor color)
+HsbColor::HsbColor(const RgbColor& color)
 {
     // convert colors to float between (0.0 - 1.0)
     float r = color.R / 255.0f;

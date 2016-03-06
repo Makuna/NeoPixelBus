@@ -45,7 +45,7 @@ struct HsbColor
     // ------------------------------------------------------------------------
     // Construct a HsbColor using RgbColor
     // ------------------------------------------------------------------------
-    HsbColor(RgbColor color);
+    HsbColor(const RgbColor& color);
 
     // ------------------------------------------------------------------------
     // Construct a HsbColor that will have its values set in latter operations
