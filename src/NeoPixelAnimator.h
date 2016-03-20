@@ -125,9 +125,14 @@ public:
         _animationLastTick = millis();
     }
 
-    uint16_t TimeScale()
+    uint16_t getTimeScale()
     {
         return _timeScale;
+    }
+
+    void setTimeScale(uint16_t timeScale)
+    {
+        _timeScale = (timeScale < 1) ? (1) : (timeScale > 32768) ? 32768 : timeScale;
     }
 
 private:

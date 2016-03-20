@@ -29,13 +29,13 @@ License along with NeoPixel.  If not, see
 #include "HsbColor.h"
 #include "RgbwColor.h"
 
-RgbwColor::RgbwColor(HslColor color)
+RgbwColor::RgbwColor(const HslColor& color)
 {
     RgbColor rgbColor(color);
     *this = rgbColor;
 }
 
-RgbwColor::RgbwColor(HsbColor color)
+RgbwColor::RgbwColor(const HsbColor& color)
 {
     RgbColor rgbColor(color);
     *this = rgbColor;
@@ -137,10 +137,29 @@ void RgbwColor::Lighten(uint8_t delta)
     }
 }
 
-RgbwColor RgbwColor::LinearBlend(RgbwColor left, RgbwColor right, float progress)
+RgbwColor RgbwColor::LinearBlend(const RgbwColor& left, const RgbwColor& right, float progress)
 {
     return RgbwColor( left.R + ((right.R - left.R) * progress),
         left.G + ((right.G - left.G) * progress),
         left.B + ((right.B - left.B) * progress),
         left.W + ((right.W - left.W) * progress) );
+}
+
+RgbwColor RgbwColor::BilinearBlend(const RgbwColor& c00, 
+    const RgbwColor& c01, 
+    const RgbwColor& c10, 
+    const RgbwColor& c11, 
+    float x, 
+    float y)
+{
+    float v00 = (1.0f - x) * (1.0f - y);
+    float v10 = x * (1.0f - y);
+    float v01 = (1.0f - x) * y;
+    float v11 = x * y;
+
+    return RgbwColor(
+        c00.R * v00 + c10.R * v10 + c01.R * v01 + c11.R * v11,
+        c00.G * v00 + c10.G * v10 + c01.G * v01 + c11.G * v11,
+        c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11,
+        c00.W * v00 + c10.W * v10 + c01.W * v01 + c11.W * v11 );
 }

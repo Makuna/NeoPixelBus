@@ -62,7 +62,38 @@ struct HtmlColor
     {
     };
 
-    
+    // ------------------------------------------------------------------------
+    // Comparison operators
+    // ------------------------------------------------------------------------
+    bool operator==(const HtmlColor& other) const
+    {
+        return (Color == other.Color);
+    };
+
+    bool operator!=(const HtmlColor& other) const
+    {
+        return !(*this == other);
+    };
+
+    // ------------------------------------------------------------------------
+    // BilinearBlend between four colors by the amount defined by 2d variable
+    // c00 - upper left quadrant color
+    // c01 - upper right quadrant color
+    // c10 - lower left quadrant color
+    // c11 - lower right quadrant color
+    // x - unit value (0.0 - 1.0) that defines the blend progress in horizontal space
+    // y - unit value (0.0 - 1.0) that defines the blend progress in vertical space
+    // ------------------------------------------------------------------------
+    static HtmlColor BilinearBlend(const HtmlColor& c00,
+        const HtmlColor& c01,
+        const HtmlColor& c10,
+        const HtmlColor& c11,
+        float x,
+        float y)
+    {
+        return RgbColor::BilinearBlend(c00, c01, c10, c11, x, y);
+    }
+
     // ------------------------------------------------------------------------
     // Color member (0-0xffffff) where 
     // 0xff0000 is red

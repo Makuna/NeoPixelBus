@@ -1,6 +1,7 @@
 /*-------------------------------------------------------------------------
 HslColor provides a color object that can be directly consumed by NeoPixelBus
 
+
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
@@ -70,7 +71,7 @@ HslColor::HslColor(const RgbColor& color)
     L = l;
 }
 
-HslColor HslColor::LinearBlend(HslColor left, HslColor right, float progress)
+HslColor HslColor::LinearBlend(const HslColor& left, const HslColor& right, float progress)
 {
     return HslColor(left.H + ((right.H - left.H) * progress),
         left.S + ((right.S - left.S) * progress),

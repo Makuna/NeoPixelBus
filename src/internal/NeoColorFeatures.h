@@ -30,26 +30,23 @@ class Neo3Elements
 {
 public:
     static const size_t PixelSize = 3;
-    static const RgbColor Empty();
 
     static uint8_t* getPixelAddress(uint8_t* pPixels, uint16_t indexPixel) 
     {
-        return &pPixels[indexPixel * PixelSize];
+        return pPixels + indexPixel * PixelSize;
     }
 
     typedef RgbColor ColorObject;
-
 };
 
 class Neo4Elements
 {
 public:
     static const size_t PixelSize = 4;
-    static const RgbColor Empty();
 
     static uint8_t* getPixelAddress(uint8_t* pPixels, uint16_t indexPixel) 
     {
-        return &pPixels[indexPixel * PixelSize];
+        return pPixels + indexPixel * PixelSize;
     }
 
     typedef RgbwColor ColorObject;

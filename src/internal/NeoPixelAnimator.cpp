@@ -32,10 +32,7 @@ NeoPixelAnimator::NeoPixelAnimator(uint16_t countAnimations, uint16_t timeScale)
     _activeAnimations(0),
     _isRunning(true)
 {
-    // due to strange esp include header issues, min and max aren't usable
-    _timeScale = (timeScale < 1) ? (1) : (timeScale > 32768) ? 32768 : timeScale;
-    //_timeScale = max(1, min(32768, timeScale));
-
+    setTimeScale(timeScale);
     _animations = new AnimationContext[_countAnimations];
 }
 

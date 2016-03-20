@@ -64,7 +64,7 @@ struct HslColor
     // progress - (0.0 - 1.0) value where 0.0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static HslColor LinearBlend(HslColor left, HslColor right, float progress);
+    static HslColor LinearBlend(const HslColor& left, const HslColor& right, float progress);
 
     // ------------------------------------------------------------------------
     // Hue, Saturation, Lightness color members 
