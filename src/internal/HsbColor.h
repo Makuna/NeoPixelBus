@@ -1,3 +1,4 @@
+
 /*-------------------------------------------------------------------------
 HsbColor provides a color object that can be directly consumed by NeoPixelBus
 
@@ -62,7 +63,7 @@ struct HsbColor
     // progress - (0.0 - 1.0) value where 0.0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static HsbColor LinearBlend(HsbColor left, HsbColor right, float progress);
+    static HsbColor LinearBlend(const HsbColor& left, const HsbColor& right, float progress);
 
     // ------------------------------------------------------------------------
     // Hue, Saturation, Brightness color members 

@@ -32,6 +32,15 @@ License along with NeoPixel.  If not, see
 #include "internal/HsbColor.h"
 #include "internal/HtmlColor.h"
 #include "internal/RgbwColor.h"
+
+#include "internal/Layouts.h"
+#include "internal/NeoTopology.h"
+#include "internal/NeoTiles.h"
+#include "internal/NeoMosaic.h"
+
+#include "internal/NeoEase.h"
+#include "internal/NeoGamma.h"
+
 #include "internal/NeoColorFeatures.h"
 
 #if defined(ARDUINO_ARCH_ESP8266)
@@ -124,7 +133,7 @@ public:
         return _countPixels;
     };
 
-    void SetPixelColor(uint16_t indexPixel, typename T_COLOR_FEATURE::ColorObject color)
+    void SetPixelColor(uint16_t indexPixel, const typename T_COLOR_FEATURE::ColorObject& color)
     {
         if (indexPixel < _countPixels)
         {

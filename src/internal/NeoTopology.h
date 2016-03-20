@@ -1,5 +1,8 @@
+#pragma once
+
 /*-------------------------------------------------------------------------
-HsbColor provides a color object that can be directly consumed by NeoPixelBus
+NeoTopology provides a mapping feature of a 2d cordinate to linear 1d cordinate
+It is used to map a matrix of NeoPixels to a index on the NeoPixelBus
 
 Written by Michael C. Miller.
 
@@ -24,52 +27,47 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
-#include "RgbColor.h"
-#include "HsbColor.h"
-
-
-HsbColor::HsbColor(const RgbColor& color)
+enum NeoTopologyHint
 {
-    // convert colors to float between (0.0 - 1.0)
-    float r = color.R / 255.0f;
-    float g = color.G / 255.0f;
-    float b = color.B / 255.0f;
+    NeoTopologyHint_FirstOnPanel,
+    NeoTopologyHint_InPanel,
+    NeoTopologyHint_LastOnPanel,
+};
 
-    float max = (r > g && r > b) ? r : (g > b) ? g : b;
-    float min = (r < g && r < b) ? r : (g < b) ? g : b;
-
-    float d = max - min;
-
-    float h = 0.0; 
-    float v = max;
-    float s = (v == 0.0f) ? 0 : (d / v);
-
-    if (d != 0.0f)
+template <typename T_LAYOUT> class NeoTopology
+{
+public:
+    NeoTopology(uint16_t width, uint16_t height) :
+        _width(width),
+        _height(height)
     {
-        if (r == max)
-        {
-            h = (g - b) / d + (g < b ? 6.0f : 0.0f);
-        }
-        else if (g == max)
-        {
-            h = (b - r) / d + 2.0f;
-        }
-        else
-        {
-            h = (r - g) / d + 4.0f;
-        }
-        h /= 6.0f;
+
     }
 
+    uint16_t Map(uint16_t x, uint16_t y) const
+    {   
+        if (x >= _width)
+        {
+            x = _width - 1;
+        }
+        if (y >= _height)
+        {
+            y = _height - 1;
+        }
+        return T_LAYOUT::Map(_width, _height, x, y);
+    }
 
-    H = h;
-    S = s;
-    B = v;
-}
+    uint16_t getWidth() const 
+    {
+        return _width;
+    }
 
-HsbColor HsbColor::LinearBlend(const HsbColor& left, const HsbColor& right, float progress)
-{
-    return HsbColor(left.H + ((right.H - left.H) * progress),
-        left.S + ((right.S - left.S) * progress),
-        left.B + ((right.B - left.B) * progress));
-}
+    uint16_t getHeight() const 
+    {
+        return _height;
+    }
+
+private:
+    const uint16_t _width;
+    const uint16_t _height;
+};

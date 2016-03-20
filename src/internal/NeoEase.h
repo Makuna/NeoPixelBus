@@ -28,187 +28,197 @@ License along with NeoPixel.  If not, see
 
 #ifdef ARDUINO_ARCH_AVR
 
-typedef float(*AnimEaseFunction)(float linear);
+typedef float(*AnimEaseFunction)(float unitValue);
 
 #else
 
 #undef max
 #undef min
 #include <functional>
-typedef std::function<float(float linear)> AnimEaseFunction;
+typedef std::function<float(float unitValue)> AnimEaseFunction;
 
 #endif
 
 class NeoEase
 {
 public:
-    static float QuadraticIn(float linear)
+    static float Linear(float unitValue)
     {
-        return linear * linear;
+        return unitValue;
     }
 
-    static float QuadraticOut(float linear)
+    static float QuadraticIn(float unitValue)
     {
-        return (-linear * (linear - 2.0f));
+        return unitValue * unitValue;
     }
 
-    static float QuadraticInOut(float linear)
+    static float QuadraticOut(float unitValue)
     {
-        linear *= 2.0f;
-        if (linear < 1.0f)
+        return (-unitValue * (unitValue - 2.0f));
+    }
+
+    static float QuadraticInOut(float unitValue)
+    {
+        unitValue *= 2.0f;
+        if (unitValue < 1.0f)
         {
-            return (0.5f * linear * linear);
+            return (0.5f * unitValue * unitValue);
         }
         else
         {
-            linear -= 1.0f;
-            return (-0.5f * (linear * (linear - 2.0f) - 1.0f));
+            unitValue -= 1.0f;
+            return (-0.5f * (unitValue * (unitValue - 2.0f) - 1.0f));
         }
     }
 
-    static float CubicIn(float linear)
+    static float CubicIn(float unitValue)
     {
-        return (linear * linear * linear);
+        return (unitValue * unitValue * unitValue);
     }
 
-    static float CubicOut(float linear)
+    static float CubicOut(float unitValue)
     {
-        linear -= 1.0f;
-        return (linear * linear * linear + 1);
+        unitValue -= 1.0f;
+        return (unitValue * unitValue * unitValue + 1);
     }
 
-    static float CubicInOut(float linear)
+    static float CubicInOut(float unitValue)
     {
-        linear *= 2.0f;
-        if (linear < 1.0f)
+        unitValue *= 2.0f;
+        if (unitValue < 1.0f)
         {
-            return (0.5f * linear * linear * linear);
+            return (0.5f * unitValue * unitValue * unitValue);
         }
         else
         {
-            linear -= 2.0f;
-            return (0.5f * (linear * linear * linear + 2.0f));
+            unitValue -= 2.0f;
+            return (0.5f * (unitValue * unitValue * unitValue + 2.0f));
         }
     }
 
-    static float QuarticIn(float linear)
+    static float QuarticIn(float unitValue)
     {
-        return (linear * linear * linear * linear);
+        return (unitValue * unitValue * unitValue * unitValue);
     }
 
-    static float QuarticOut(float linear)
+    static float QuarticOut(float unitValue)
     {
-        linear -= 1.0f;
-        return -(linear * linear * linear * linear - 1);
+        unitValue -= 1.0f;
+        return -(unitValue * unitValue * unitValue * unitValue - 1);
     }
 
-    static float QuarticInOut(float linear)
+    static float QuarticInOut(float unitValue)
     {
-        linear *= 2.0f;
-        if (linear < 1.0f)
+        unitValue *= 2.0f;
+        if (unitValue < 1.0f)
         {
-            return (0.5f * linear * linear * linear * linear);
+            return (0.5f * unitValue * unitValue * unitValue * unitValue);
         }
         else
         {
-            linear -= 2.0f;
-            return (-0.5f * (linear * linear * linear * linear - 2.0f));
+            unitValue -= 2.0f;
+            return (-0.5f * (unitValue * unitValue * unitValue * unitValue - 2.0f));
         }
     }
 
-    static float QuinticIn(float linear)
+    static float QuinticIn(float unitValue)
     {
-        return (linear * linear * linear * linear * linear);
+        return (unitValue * unitValue * unitValue * unitValue * unitValue);
     }
 
-    static float QuinticOut(float linear)
+    static float QuinticOut(float unitValue)
     {
-        linear -= 1.0f;
-        return (linear * linear * linear * linear * linear + 1.0f);
+        unitValue -= 1.0f;
+        return (unitValue * unitValue * unitValue * unitValue * unitValue + 1.0f);
     }
 
-    static float QuinticInOut(float linear)
+    static float QuinticInOut(float unitValue)
     {
-        linear *= 2.0f;
-        if (linear < 1.0f)
+        unitValue *= 2.0f;
+        if (unitValue < 1.0f)
         {
-            return (0.5f * linear * linear * linear * linear * linear);
+            return (0.5f * unitValue * unitValue * unitValue * unitValue * unitValue);
         }
         else
         {
-            linear -= 2.0f;
-            return (0.5f * (linear * linear * linear * linear * linear + 2.0f));
+            unitValue -= 2.0f;
+            return (0.5f * (unitValue * unitValue * unitValue * unitValue * unitValue + 2.0f));
         }
     }
 
-    static float SinusoidalIn(float linear)
+    static float SinusoidalIn(float unitValue)
     {
-        return (-cos(linear * HALF_PI) + 1.0f);
+        return (-cos(unitValue * HALF_PI) + 1.0f);
     }
 
-    static float SinusoidalOut(float linear)
+    static float SinusoidalOut(float unitValue)
     {
-        return (sin(linear * HALF_PI));
+        return (sin(unitValue * HALF_PI));
     }
 
-    static float SinusoidalInOut(float linear)
+    static float SinusoidalInOut(float unitValue)
     {
-        return -0.5 * (cos(PI * linear) - 1.0f);
+        return -0.5 * (cos(PI * unitValue) - 1.0f);
     }
 
-    static float ExponentialIn(float linear)
+    static float ExponentialIn(float unitValue)
     {
-        return (pow(2, 10.0f * (linear - 1.0f)));
+        return (pow(2, 10.0f * (unitValue - 1.0f)));
     }
 
-    static float ExponentialOut(float linear)
+    static float ExponentialOut(float unitValue)
     {
-        return (-pow(2, -10.0f * linear) + 1.0f);
+        return (-pow(2, -10.0f * unitValue) + 1.0f);
     }
 
-    static float ExponentialInOut(float linear)
+    static float ExponentialInOut(float unitValue)
     {
-        linear *= 2.0f;
-        if (linear < 1.0f)
+        unitValue *= 2.0f;
+        if (unitValue < 1.0f)
         {
-            return (0.5f * pow(2, 10.0f * (linear - 1.0f)));
+            return (0.5f * pow(2, 10.0f * (unitValue - 1.0f)));
         }
         else
         {
-            linear -= 1.0f;
-            return (0.5f * (-pow(2, -10.0f * linear) + 2.0f));
+            unitValue -= 1.0f;
+            return (0.5f * (-pow(2, -10.0f * unitValue) + 2.0f));
         }
     }
 
-    static float CircularIn(float linear)
+    static float CircularIn(float unitValue)
     {
-        if (linear == 1.0f)
+        if (unitValue == 1.0f)
         {
             return 1.0f;
         }
         else
         {
-            return (-(sqrt(1.0f - linear * linear) - 1.0f));
+            return (-(sqrt(1.0f - unitValue * unitValue) - 1.0f));
         }
     }
 
-    static float CircularOut(float linear)
+    static float CircularOut(float unitValue)
     {
-        linear -= 1.0f;
-        return (sqrt(1.0f - linear * linear));
+        unitValue -= 1.0f;
+        return (sqrt(1.0f - unitValue * unitValue));
     }
 
-    static float CircularInOut(float linear)
+    static float CircularInOut(float unitValue)
     {
-        linear *= 2.0f;
-        if (linear < 1.0f)
+        unitValue *= 2.0f;
+        if (unitValue < 1.0f)
         {
-            return (-0.5f * (sqrt(1.0f - linear * linear) - 1));
+            return (-0.5f * (sqrt(1.0f - unitValue * unitValue) - 1));
         }
         else
         {
-            linear -= 2.0f;
-            return (0.5f * (sqrt(1.0f - linear * linear) + 1.0f));
+            unitValue -= 2.0f;
+            return (0.5f * (sqrt(1.0f - unitValue * unitValue) + 1.0f));
         }
+    }
+
+    static float Gamma(float unitValue)
+    {
+        return pow(unitValue, 1.0f / 0.45f);
     }
 };

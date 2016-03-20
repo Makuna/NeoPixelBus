@@ -59,7 +59,7 @@ struct RgbwColor
     // ------------------------------------------------------------------------
     // Construct a RgbwColor using RgbColor
     // ------------------------------------------------------------------------
-    RgbwColor(RgbColor color) :
+    RgbwColor(const RgbColor& color) :
         R(color.R),
         G(color.G),
         B(color.B),
@@ -71,12 +71,12 @@ struct RgbwColor
     // ------------------------------------------------------------------------
     // Construct a RgbwColor using HslColor
     // ------------------------------------------------------------------------
-    RgbwColor(HslColor color);
+    RgbwColor(const HslColor& color);
 
     // ------------------------------------------------------------------------
     // Construct a RgbwColor using HsbColor
     // ------------------------------------------------------------------------
-    RgbwColor(HsbColor color);
+    RgbwColor(const HsbColor& color);
 
     // ------------------------------------------------------------------------
     // Construct a RgbwColor that will have its values set in latter operations
@@ -84,6 +84,16 @@ struct RgbwColor
     // ------------------------------------------------------------------------
     RgbwColor()
     {
+    };
+
+    bool operator==(const RgbwColor& other) const
+    {
+        return (R == other.R && G == other.G && B == other.B && W == other.W);
+    };
+
+    bool operator!=(const RgbwColor& other) const
+    {
+        return !(*this == other);
     };
 
     // ------------------------------------------------------------------------
@@ -130,8 +140,24 @@ struct RgbwColor
     // progress - (0.0 - 1.0) value where 0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static RgbwColor LinearBlend(RgbwColor left, RgbwColor right, float progress);
+    static RgbwColor LinearBlend(const RgbwColor& left, const RgbwColor& right, float progress);
     
+    // ------------------------------------------------------------------------
+    // BilinearBlend between four colors by the amount defined by 2d variable
+    // c00 - upper left quadrant color
+    // c01 - upper right quadrant color
+    // c10 - lower left quadrant color
+    // c11 - lower right quadrant color
+    // x - unit value (0.0 - 1.0) that defines the blend progress in horizontal space
+    // y - unit value (0.0 - 1.0) that defines the blend progress in vertical space
+    // ------------------------------------------------------------------------
+    static RgbwColor BilinearBlend(const RgbwColor& c00, 
+        const RgbwColor& c01, 
+        const RgbwColor& c10, 
+        const RgbwColor& c11, 
+        float x, 
+        float y);
+
     // ------------------------------------------------------------------------
     // Red, Green, Blue, White color members (0-255) where 
     // (0,0,0,0) is black and (255,255,255, 0) and (0,0,0,255) is white

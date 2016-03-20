@@ -217,9 +217,27 @@ void RgbColor::Lighten(uint8_t delta)
 	}
 }
 
-RgbColor RgbColor::LinearBlend(RgbColor left, RgbColor right, float progress)
+RgbColor RgbColor::LinearBlend(const RgbColor& left, const RgbColor& right, float progress)
 {
 	return RgbColor( left.R + ((right.R - left.R) * progress),
 		left.G + ((right.G - left.G) * progress),
 		left.B + ((right.B - left.B) * progress));
+}
+
+RgbColor RgbColor::BilinearBlend(const RgbColor& c00, 
+    const RgbColor& c01, 
+    const RgbColor& c10, 
+    const RgbColor& c11, 
+    float x, 
+    float y)
+{
+    float v00 = (1.0f - x) * (1.0f - y);
+    float v10 = x * (1.0f - y);
+    float v01 = (1.0f - x) * y;
+    float v11 = x * y;
+
+    return RgbColor(
+        c00.R * v00 + c10.R * v10 + c01.R * v01 + c11.R * v11,
+        c00.G * v00 + c10.G * v10 + c01.G * v01 + c11.G * v11,
+        c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11);
 }

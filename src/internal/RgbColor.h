@@ -79,6 +79,16 @@ struct RgbColor
     {
     };
 
+    bool operator==(const RgbColor& other) const
+    {
+        return (R == other.R && G == other.G && B == other.B);
+    };
+
+    bool operator!=(const RgbColor& other) const
+    {
+        return !(*this == other);
+    };
+
     // ------------------------------------------------------------------------
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
@@ -93,7 +103,7 @@ struct RgbColor
     void Darken(uint8_t delta);
 
     // ------------------------------------------------------------------------
-    // Lighten will adjust the color by the given delta toward white
+    // Lighten will adjust the color by the given delta toward ite
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to lighten the color
     // ------------------------------------------------------------------------
@@ -106,8 +116,24 @@ struct RgbColor
     // progress - (0.0 - 1.0) value where 0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static RgbColor LinearBlend(RgbColor left, RgbColor right, float progress);
+    static RgbColor LinearBlend(const RgbColor& left, const RgbColor& right, float progress);
     
+    // ------------------------------------------------------------------------
+    // BilinearBlend between four colors by the amount defined by 2d variable
+    // c00 - upper left quadrant color
+    // c01 - upper right quadrant color
+    // c10 - lower left quadrant color
+    // c11 - lower right quadrant color
+    // x - unit value (0.0 - 1.0) that defines the blend progress in horizontal space
+    // y - unit value (0.0 - 1.0) that defines the blend progress in vertical space
+    // ------------------------------------------------------------------------
+    static RgbColor BilinearBlend(const RgbColor& c00, 
+        const RgbColor& c01, 
+        const RgbColor& c10, 
+        const RgbColor& c11, 
+        float x, 
+        float y);
+
     // ------------------------------------------------------------------------
     // Red, Green, Blue color members (0-255) where 
     // (0,0,0) is black and (255,255,255) is white
