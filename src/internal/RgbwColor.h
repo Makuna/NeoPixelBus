@@ -86,6 +86,9 @@ struct RgbwColor
     {
     };
 
+    // ------------------------------------------------------------------------
+    // Comparison operators
+    // ------------------------------------------------------------------------
     bool operator==(const RgbwColor& other) const
     {
         return (R == other.R && G == other.G && B == other.B && W == other.W);

@@ -19,8 +19,8 @@ NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 
 // uncomment only one of these to compare memory use or speed
 //
-// NeoGamma<NeoGammaEquationMethod> gamma;
-NeoGamma<NeoGammaTableMethod> gamma;
+// NeoGamma<NeoGammaEquationMethod> colorGamma;
+NeoGamma<NeoGammaTableMethod> colorGamma;
 
 void DrawPixels(bool corrected, HslColor startColor, HslColor stopColor)
 {
@@ -30,7 +30,7 @@ void DrawPixels(bool corrected, HslColor startColor, HslColor stopColor)
         RgbColor color = HslColor::LinearBlend(startColor, stopColor, progress);
         if (corrected)
         {
-            color = gamma.Correct(color);
+            color = colorGamma.Correct(color);
         }
         strip.SetPixelColor(index, color);
     }

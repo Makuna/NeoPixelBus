@@ -63,6 +63,19 @@ struct HtmlColor
     };
 
     // ------------------------------------------------------------------------
+    // Comparison operators
+    // ------------------------------------------------------------------------
+    bool operator==(const HtmlColor& other) const
+    {
+        return (Color == other.Color);
+    };
+
+    bool operator!=(const HtmlColor& other) const
+    {
+        return !(*this == other);
+    };
+
+    // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
     // c00 - upper left quadrant color
     // c01 - upper right quadrant color
