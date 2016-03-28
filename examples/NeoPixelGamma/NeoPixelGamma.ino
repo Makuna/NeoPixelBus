@@ -27,7 +27,7 @@ void DrawPixels(bool corrected, HslColor startColor, HslColor stopColor)
     for (uint16_t index = 0; index < strip.PixelCount() - 1; index++)
     {
         float progress = index / static_cast<float>(strip.PixelCount() - 2);
-        RgbColor color = HslColor::LinearBlend(startColor, stopColor, progress);
+        RgbColor color = HslColor::LinearBlend<NeoHueBlendShortestDistance>(startColor, stopColor, progress);
         if (corrected)
         {
             color = colorGamma.Correct(color);

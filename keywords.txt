@@ -53,6 +53,10 @@ NeoMosaic	KEYWORD1
 NeoGammaEquationMethod	KEYWORD1
 NeoGammaTableMethod	KEYWORD1
 NeoGamma	KEYWORD1
+NeoHueBlendShortestDistance	KEYWORD1
+NeoHueBlendLongestDistance	KEYWORD1
+NeoHueBlendClockwiseDirection	KEYWORD1
+NeoHueBlendCounterClockwiseDirection	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
