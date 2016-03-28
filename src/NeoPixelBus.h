@@ -27,6 +27,8 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
+#include "internal/NeoHueBlend.h"
+
 #include "internal/RgbColor.h"
 #include "internal/HslColor.h"
 #include "internal/HsbColor.h"

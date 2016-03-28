@@ -70,10 +70,3 @@ HslColor::HslColor(const RgbColor& color)
     S = s;
     L = l;
 }
-
-HslColor HslColor::LinearBlend(const HslColor& left, const HslColor& right, float progress)
-{
-    return HslColor(left.H + ((right.H - left.H) * progress),
-        left.S + ((right.S - left.S) * progress),
-        left.L + ((right.L - left.L) * progress));
-}

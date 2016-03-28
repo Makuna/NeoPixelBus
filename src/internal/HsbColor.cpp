@@ -66,10 +66,3 @@ HsbColor::HsbColor(const RgbColor& color)
     S = s;
     B = v;
 }
-
-HsbColor HsbColor::LinearBlend(const HsbColor& left, const HsbColor& right, float progress)
-{
-    return HsbColor(left.H + ((right.H - left.H) * progress),
-        left.S + ((right.S - left.S) * progress),
-        left.B + ((right.B - left.B) * progress));
-}

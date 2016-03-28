@@ -64,7 +64,14 @@ struct HslColor
     // progress - (0.0 - 1.0) value where 0.0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static HslColor LinearBlend(const HslColor& left, const HslColor& right, float progress);
+    template <typename T_NEOHUEBLEND> static HslColor LinearBlend(const HslColor& left,
+        const HslColor& right,
+        float progress)
+    {
+        return HslColor(T_NEOHUEBLEND::HueBlend(left.H, right.H, progress),
+            left.S + ((right.S - left.S) * progress),
+            left.L + ((right.L - left.L) * progress));
+    };
 
     // ------------------------------------------------------------------------
     // Hue, Saturation, Lightness color members 
