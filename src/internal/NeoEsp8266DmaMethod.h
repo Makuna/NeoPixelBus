@@ -63,6 +63,7 @@ struct slc_queue_item
     uint32  next_link_ptr;
 };
 
+
 class NeoEsp8266DmaSpeed800Kbps
 {
 public:
@@ -75,6 +76,13 @@ class NeoEsp8266DmaSpeed400Kbps
 public:
     const static uint32_t I2sClockDivisor = 6; 
     const static uint32_t I2sBaseClockDivisor = 16;
+};
+
+enum NeoDmaState
+{
+    NeoDmaState_Idle,
+    NeoDmaState_Pending,
+    NeoDmaState_Sending,
 };
 
 template<typename T_SPEED> class NeoEsp8266DmaMethodBase
@@ -92,124 +100,116 @@ public:
         memset(_i2sBlock, 0x00, _bitBufferSize);
 
         memset(_i2sZeroes, 0x00, sizeof(_i2sZeroes));
+
+        s_this = this;
     }
 
     ~NeoEsp8266DmaMethodBase()
     {
+        StopDma();
+
         free(_pixels);
         free(_i2sBlock);
     }
 
     bool IsReadyToUpdate() const
     {
-        return IsStoppedDmaState();
+        return (_dmaState == NeoDmaState_Idle);
     }
 
     void Initialize()
     {
-        InitializeDma();
-    }
+        _dmaState = NeoDmaState_Idle;
 
-    void InitializeDma()
-    {
-        // reset DMA registers 
-        SET_PERI_REG_MASK(SLC_CONF0, SLC_RXLINK_RST);
-        CLEAR_PERI_REG_MASK(SLC_CONF0, SLC_RXLINK_RST);
-
-        // clear all interrupt flags 
-        SET_PERI_REG_MASK(SLC_INT_CLR, 0xffffffff);
-
-        // set up DMA 
-        CLEAR_PERI_REG_MASK(SLC_CONF0, (SLC_MODE << SLC_MODE_S));
-        SET_PERI_REG_MASK(SLC_CONF0, (1 << SLC_MODE_S));
-        SET_PERI_REG_MASK(SLC_RX_DSCR_CONF, SLC_INFOR_NO_REPLACE | SLC_TOKEN_NO_REPLACE);
-        CLEAR_PERI_REG_MASK(SLC_RX_DSCR_CONF, SLC_RX_FILL_EN | SLC_RX_EOF_MODE | SLC_RX_FILL_MODE);
-
-        // prepare linked DMA descriptors, having EOF set for all 
-        _i2sBufDescOut.owner = 1;
-        _i2sBufDescOut.eof = 1;
-        _i2sBufDescOut.sub_sof = 0;
-        _i2sBufDescOut.datalen = _bitBufferSize;
-        _i2sBufDescOut.blocksize = _bitBufferSize;
-        _i2sBufDescOut.buf_ptr = (uint32_t)_i2sBlock;
-        _i2sBufDescOut.unused = 0;
-        _i2sBufDescOut.next_link_ptr = (uint32_t)&_i2sBufDescLatch;
-
-        // this zero-buffer block implements the latch/reset signal 
+        // prepare linked DMA descriptors, having EOF set only for the data
+        // primary data item
+        _i2sBufDescData.owner = 1;
+        _i2sBufDescData.eof = 1;
+        _i2sBufDescData.sub_sof = 0;
+        _i2sBufDescData.datalen = sizeof(_i2sZeroes); // will get modified in ISR
+        _i2sBufDescData.blocksize = sizeof(_i2sZeroes); // will get modified in ISR
+        _i2sBufDescData.buf_ptr = (uint32_t)_i2sZeroes; // will get modified in ISR
+        _i2sBufDescData.unused = 0;
+        _i2sBufDescData.next_link_ptr = (uint32_t)&_i2sBufDescLatch;
+ 
+        // this zero-buffer block helps implements the latch/reset signal 
+        // and gives the ISR time to modify buf_ptr in _i2sBufDescData
         _i2sBufDescLatch.owner = 1;
-        _i2sBufDescLatch.eof = 1;
+        _i2sBufDescLatch.eof = 0; // no need to trigger interrupt
         _i2sBufDescLatch.sub_sof = 0;
         _i2sBufDescLatch.datalen = sizeof(_i2sZeroes);
         _i2sBufDescLatch.blocksize = sizeof(_i2sZeroes);
         _i2sBufDescLatch.buf_ptr = (uint32_t)_i2sZeroes;
         _i2sBufDescLatch.unused = 0;
-        _i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescStopped;
-
-        // this empty block will stop the output and provide a flag that latch/reset has been sent
-        // it basically loops
-        _i2sBufDescStopped.owner = 1;
-        _i2sBufDescStopped.eof = 1;
-        _i2sBufDescStopped.sub_sof = 0;
-        _i2sBufDescStopped.datalen = sizeof(_i2sZeroes);
-        _i2sBufDescStopped.blocksize = sizeof(_i2sZeroes);
-        _i2sBufDescStopped.buf_ptr = (uint32_t)_i2sZeroes;;
-        _i2sBufDescStopped.unused = 0;
-        _i2sBufDescStopped.next_link_ptr = (uint32_t)&_i2sBufDescStopped;
-
-        // configure the first descriptor
-        // TX_LINK isnt used, but has to be configured 
-        CLEAR_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_DESCADDR_MASK);
-        CLEAR_PERI_REG_MASK(SLC_TX_LINK, SLC_TXLINK_DESCADDR_MASK);
-        SET_PERI_REG_MASK(SLC_RX_LINK, ((uint32)&_i2sBufDescOut) & SLC_RXLINK_DESCADDR_MASK);
-        SET_PERI_REG_MASK(SLC_TX_LINK, ((uint32)&_i2sBufDescOut) & SLC_TXLINK_DESCADDR_MASK);
-
-        // we dont need interrupts 
-        ETS_SLC_INTR_DISABLE();
-        WRITE_PERI_REG(SLC_INT_CLR, 0xffffffff);
-
-        // configure RDX0/GPIO3 for output. it is the only supported pin unfortunately. 
-        PIN_FUNC_SELECT(PERIPHS_IO_MUX_U0RXD_U, FUNC_I2SO_DATA);
-
-        // configure I2S subsystem 
-        I2S_CLK_ENABLE();
-        CLEAR_PERI_REG_MASK(I2SCONF, I2S_I2S_RESET_MASK);
-        SET_PERI_REG_MASK(I2SCONF, I2S_I2S_RESET_MASK);
-        CLEAR_PERI_REG_MASK(I2SCONF, I2S_I2S_RESET_MASK);
-
-        // Select 16bits per channel (FIFO_MOD=0), no DMA access (FIFO only) 
-        CLEAR_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN | 
-                (I2S_I2S_RX_FIFO_MOD << I2S_I2S_RX_FIFO_MOD_S) | 
-                (I2S_I2S_TX_FIFO_MOD << I2S_I2S_TX_FIFO_MOD_S));
-        // Enable DMA in i2s subsystem 
-        SET_PERI_REG_MASK(I2S_FIFO_CONF, I2S_I2S_DSCR_EN);
+        _i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescData;
         
-        // configure the rates 
-        CLEAR_PERI_REG_MASK(I2SCONF, I2S_TRANS_SLAVE_MOD |
-                (I2S_BITS_MOD << I2S_BITS_MOD_S) |
-                (I2S_BCK_DIV_NUM << I2S_BCK_DIV_NUM_S) |
-                (I2S_CLKM_DIV_NUM << I2S_CLKM_DIV_NUM_S));
-        SET_PERI_REG_MASK(I2SCONF, I2S_RIGHT_FIRST | I2S_MSB_RIGHT | I2S_RECE_SLAVE_MOD |
-                I2S_RECE_MSB_SHIFT | I2S_TRANS_MSB_SHIFT |
-                ((T_SPEED::I2sBaseClockDivisor & I2S_BCK_DIV_NUM) << I2S_BCK_DIV_NUM_S) |
-                ((T_SPEED::I2sClockDivisor & I2S_CLKM_DIV_NUM) << I2S_CLKM_DIV_NUM_S));
 
-        // disable all interrupts 
-        SET_PERI_REG_MASK(I2SINT_CLR, I2S_I2S_RX_WFULL_INT_CLR | 
-                I2S_I2S_PUT_DATA_INT_CLR | 
-                I2S_I2S_TAKE_DATA_INT_CLR);
+        ETS_SLC_INTR_DISABLE();
+        SLCC0 |= SLCRXLR | SLCTXLR;
+        SLCC0 &= ~(SLCRXLR | SLCTXLR);
+        SLCIC = 0xFFFFFFFF;
 
-        // dma is now ready to start
+        // Configure DMA
+        SLCC0 &= ~(SLCMM << SLCM); // clear DMA MODE
+        SLCC0 |= (1 << SLCM); // set DMA MODE to 1
+        SLCRXDC |= SLCBINR | SLCBTNR; // enable INFOR_NO_REPLACE and TOKEN_NO_REPLACE
+        SLCRXDC &= ~(SLCBRXFE | SLCBRXEM | SLCBRXFM); // disable RX_FILL, RX_EOF_MODE and RX_FILL_MODE
+
+        // Feed DMA the 1st buffer desc addr
+        // To send data to the I2S subsystem, counter-intuitively we use the RXLINK part, not the TXLINK as you might
+        // expect. The TXLINK part still needs a valid DMA descriptor, even if it's unused: the DMA engine will throw
+        // an error at us otherwise. Just feed it any random descriptor.
+        SLCTXL &= ~(SLCTXLAM << SLCTXLA); // clear TX descriptor address
+        SLCTXL |= (uint32)&_i2sBufDescLatch << SLCTXLA; // set TX descriptor address. any random desc is OK, we don't use TX but it needs to be valid
+        SLCRXL &= ~(SLCRXLAM << SLCRXLA); // clear RX descriptor address
+        SLCRXL |= (uint32)&_i2sBufDescData << SLCRXLA; // set RX descriptor address
+
+        ETS_SLC_INTR_ATTACH(i2s_slc_isr, NULL);
+        SLCIE = SLCIRXEOF; // Enable only for RX EOF interrupt
+
+        ETS_SLC_INTR_ENABLE();
+
+        //Start transmission
+        SLCTXL |= SLCTXLS;
+        SLCRXL |= SLCRXLS;
+
+        pinMode(3, FUNCTION_1); // I2S0_DATA
+
+        I2S_CLK_ENABLE();
+        I2SIC = 0x3F;
+        I2SIE = 0;
+
+        //Reset I2S
+        I2SC &= ~(I2SRST);
+        I2SC |= I2SRST;
+        I2SC &= ~(I2SRST);
+
+        I2SFC &= ~(I2SDE | (I2STXFMM << I2STXFM) | (I2SRXFMM << I2SRXFM)); // Set RX/TX FIFO_MOD=0 and disable DMA (FIFO only)
+        I2SFC |= I2SDE; //Enable DMA
+        I2SCC &= ~((I2STXCMM << I2STXCM) | (I2SRXCMM << I2SRXCM)); // Set RX/TX CHAN_MOD=0
+
+        // set the rate
+        uint32_t i2s_clock_div = T_SPEED::I2sClockDivisor & I2SCDM;
+        uint8_t i2s_bck_div = T_SPEED::I2sBaseClockDivisor & I2SBDM;
+
+        //!trans master, !bits mod, rece slave mod, rece msb shift, right first, msb right
+        I2SC &= ~(I2STSM | (I2SBMM << I2SBM) | (I2SBDM << I2SBD) | (I2SCDM << I2SCD));
+        I2SC |= I2SRF | I2SMR | I2SRSM | I2SRMS | (i2s_bck_div << I2SBD) | (i2s_clock_div << I2SCD);
+
+        I2SC |= I2STXS; // Start transmission
     }
 
-    void Update()
+    void ICACHE_RAM_ATTR Update()
     {
+        // wait for not actively sending data
+        while (_dmaState != NeoDmaState_Idle)
+        {
+            yield();
+        }
         FillBuffers();
 
-        // wait for latch to complete if it hasn't already
-        NullWait();
-
-        StopDma();
-        StartDma();
+        // toggle state so the ISR reacts
+        _dmaState = NeoDmaState_Pending;
     }
 
     uint8_t* getPixels() const
@@ -223,7 +223,68 @@ public:
     }
 
 private:
-    
+    static NeoEsp8266DmaMethodBase* s_this; // for the ISR
+
+    size_t    _sizePixels;    // Size of '_pixels' buffer below
+    uint8_t*  _pixels;        // Holds LED color values
+
+    struct slc_queue_item _i2sBufDescData;
+    struct slc_queue_item _i2sBufDescLatch;
+
+    uint32_t _bitBufferSize;
+    uint8_t* _i2sBlock;
+    // normally 24 bytes creates the minimum 50us latch per spec but
+    // with the new logic, this latch is used to space between three states
+    uint8_t _i2sZeroes[8]; 
+
+    volatile NeoDmaState _dmaState;
+
+    // This routine is called as soon as the DMA routine has something to tell us. All we
+    // handle here is the RX_EOF_INT status, which indicate the DMA has sent a buffer whose
+    // descriptor has the 'EOF' field set to 1.
+    volatile static void ICACHE_RAM_ATTR i2s_slc_isr(void)
+    {
+        uint32_t slc_intr_status = SLCIS;
+
+        SLCIC = 0xFFFFFFFF;
+
+        if (slc_intr_status & SLCIRXEOF)
+        {
+            ETS_SLC_INTR_DISABLE();
+
+            slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
+
+            if (finished_item == &(s_this->_i2sBufDescData))
+            {
+                switch (s_this->_dmaState)
+                {
+                case NeoDmaState_Idle:
+                    break;
+
+                case NeoDmaState_Pending:
+                    // data block has pending data waiting to send, prepare it
+                    finished_item->datalen = s_this->_bitBufferSize;
+                    finished_item->blocksize = s_this->_bitBufferSize;
+                    finished_item->buf_ptr = (uint32_t)(s_this->_i2sBlock);
+
+                    s_this->_dmaState = NeoDmaState_Sending;
+                    break;
+
+                case NeoDmaState_Sending:
+                    // the data block had actual data, clear it
+                    finished_item->datalen = sizeof(s_this->_i2sZeroes);
+                    finished_item->blocksize = sizeof(s_this->_i2sZeroes);
+                    finished_item->buf_ptr = (uint32_t)(s_this->_i2sZeroes);
+
+                    s_this->_dmaState = NeoDmaState_Idle;
+                    break;
+                }
+            }
+
+            ETS_SLC_INTR_ENABLE();
+        }
+    }
+
     static uint32_t CalculateI2sBufferSize(uint16_t pixelCount, size_t elementSize)
     {
         // 4 I2S bytes per pixels byte 
@@ -240,11 +301,6 @@ private:
             0b1110111010001000, 0b1110111010001110, 0b1110111011101000, 0b1110111011101110,
         };
 
-        // wait for the data to be done transmission before updating, 
-        // it may still be sending the latch/reset though, buts OK
-        SyncWait();
-
-        // now it is transferring blank area, so it is safe to update dma buffers 
         uint16_t* pDma = (uint16_t*)_i2sBlock;
         uint8_t* pPixelsEnd = _pixels + _sizePixels;
         for (uint8_t* pPixel = _pixels; pPixel < pPixelsEnd; pPixel++)
@@ -256,76 +312,18 @@ private:
 
     void StopDma()
     {
-        SET_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_STOP);
+        ETS_SLC_INTR_DISABLE();
+        SLCIC = 0xFFFFFFFF;
+        SLCIE = 0;
+        SLCTXL &= ~(SLCTXLAM << SLCTXLA); // clear TX descriptor address
+        SLCRXL &= ~(SLCRXLAM << SLCRXLA); // clear RX descriptor address
+
+        pinMode(3, INPUT);
     }
-
-    void StartDma()
-    {
-        // clear all interrupt flags 
-        SET_PERI_REG_MASK(SLC_INT_CLR, 0xffffffff);
-
-        // configure the first descriptor
-        // TX_LINK isnt used, but has to be configured 
-        CLEAR_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_DESCADDR_MASK);
-        CLEAR_PERI_REG_MASK(SLC_TX_LINK, SLC_TXLINK_DESCADDR_MASK);
-        SET_PERI_REG_MASK(SLC_RX_LINK, ((uint32)&_i2sBufDescOut) & SLC_RXLINK_DESCADDR_MASK);
-        SET_PERI_REG_MASK(SLC_TX_LINK, ((uint32)&_i2sBufDescOut) & SLC_TXLINK_DESCADDR_MASK);
-
-        WRITE_PERI_REG(SLC_INT_CLR, 0xffffffff);
-
-        // start RX link 
-        SET_PERI_REG_MASK(SLC_RX_LINK, SLC_RXLINK_START);
-
-        // fire the machine again
-        SET_PERI_REG_MASK(I2SCONF, I2S_I2S_TX_START);
-    }
-
-    void NullWait() const
-    {
-        while (!IsStoppedDmaState())
-        {
-            // due to how long the data send could be (300 pixels is 9ms)
-            // we will yield while we wait
-            yield();
-        }
-
-        // okay right now we are not sending anything 
-    }
-
-    void SyncWait() const
-    {
-        // poll for SLC_RX_EOF_DES_ADDR getting set to anything other than 
-        // the buffer with pixel data 
-
-        while (READ_PERI_REG(SLC_RX_EOF_DES_ADDR) == (uint32_t)&_i2sBufDescLatch)
-        {
-            WRITE_PERI_REG(SLC_RX_EOF_DES_ADDR, 0xffffffff);
-            // due to how long the data send could be (300 pixels is 9ms)
-            // we will yield while we wait
-            yield();
-        }
-
-        // okay right now we are somewhere in the blank "latch/reset" section or
-        // stopped
-    }
-
-    bool IsStoppedDmaState() const
-    {
-        uint32_t state = READ_PERI_REG(SLC_RX_EOF_DES_ADDR);
-        return (state == 0 || state == (uint32_t)&_i2sBufDescStopped);
-    }
-
-    size_t    _sizePixels;      // Size of '_pixels' buffer below
-    uint8_t* _pixels;        // Holds LED color values
-
-    struct slc_queue_item _i2sBufDescOut;
-    struct slc_queue_item _i2sBufDescLatch;
-    struct slc_queue_item _i2sBufDescStopped;
-
-    uint32_t _bitBufferSize;
-    uint8_t* _i2sBlock;
-    uint8_t _i2sZeroes[24]; // 24 bytes creates the minimum 50us latch per spec
 };
+
+template<typename T_SPEED> 
+NeoEsp8266DmaMethodBase<T_SPEED>* NeoEsp8266DmaMethodBase<T_SPEED>::s_this;
 
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed800Kbps> NeoEsp8266Dma800KbpsMethod;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed400Kbps> NeoEsp8266Dma400KbpsMethod;
