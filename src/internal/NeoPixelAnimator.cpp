@@ -117,12 +117,11 @@ void NeoPixelAnimator::UpdateAnimations()
 
         if (delta >= _timeScale)
         {
-            uint16_t countAnimations = _activeAnimations;
             AnimationContext* pAnim;
 
             delta /= _timeScale; // scale delta into animation time
 
-            for (uint16_t iAnim = 0; iAnim < _countAnimations && countAnimations > 0; iAnim++)
+            for (uint16_t iAnim = 0; iAnim < _countAnimations; iAnim++)
             {
                 pAnim = &_animations[iAnim];
                 AnimUpdateCallback fnUpdate = pAnim->_fnCallback;
@@ -138,8 +137,6 @@ void NeoPixelAnimator::UpdateAnimations()
                     fnUpdate(param);
 
                     pAnim->_remaining -= delta;
-
-                    countAnimations--;
                 }
                 else if (pAnim->_remaining > 0)
                 {
@@ -150,8 +147,6 @@ void NeoPixelAnimator::UpdateAnimations()
                     pAnim->StopAnimation();
 
                     fnUpdate(param);
-                    
-                    countAnimations--;
                 }
             }
 
