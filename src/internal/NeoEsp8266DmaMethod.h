@@ -150,14 +150,6 @@ public:
             _i2sBufDesc[indexDesc].unused = 0;
             _i2sBufDesc[indexDesc].next_link_ptr = (uint32_t)&(_i2sBufDesc[indexDesc + 1]);
 
-            Serial.print("block #");
-            Serial.print(indexDesc);
-            Serial.print(" 0x");
-            Serial.print(_i2sBufDesc[indexDesc].buf_ptr, HEX);
-            Serial.print(" (");
-            Serial.print(_i2sBufDesc[indexDesc].blocksize);
-            Serial.println(")");
-
             is2Buffer += blockSize;
             is2BufferSize -= blockSize;
         }

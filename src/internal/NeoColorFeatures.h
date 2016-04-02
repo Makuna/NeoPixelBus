@@ -55,7 +55,7 @@ public:
 class NeoGrbFeature : public Neo3Elements
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, Neo3Elements::ColorObject color)
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
@@ -64,9 +64,9 @@ public:
         *p = color.B;
     }
 
-    static Neo3Elements::ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
     {
-        Neo3Elements::ColorObject color;
+        ColorObject color;
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.G = *p++;
@@ -77,10 +77,38 @@ public:
     }
 };
 
+class NeoGrbwFeature : public Neo4Elements
+{
+public:
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        *p++ = color.G;
+        *p++ = color.R;
+        *p++ = color.B;
+        *p = color.W;
+    }
+
+    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        color.G = *p++;
+        color.R = *p++;
+        color.B = *p++;
+        color.W = *p;
+
+
+        return color;
+    }
+};
+
 class NeoRgbwFeature : public Neo4Elements
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, Neo4Elements::ColorObject color)
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
@@ -90,9 +118,9 @@ public:
         *p = color.W;
     }
 
-    static Neo4Elements::ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
     {
-        Neo4Elements::ColorObject color;
+        ColorObject color;
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.R = *p++;
@@ -107,7 +135,7 @@ public:
 class NeoRgbFeature : public Neo3Elements
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, Neo3Elements::ColorObject color)
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
@@ -116,9 +144,9 @@ public:
         *p = color.B;
     }
 
-    static Neo3Elements::ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
     {
-        Neo3Elements::ColorObject color;
+        ColorObject color;
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.R = *p++;
@@ -132,7 +160,7 @@ public:
 class NeoBrgFeature : public Neo3Elements
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, Neo3Elements::ColorObject color)
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
@@ -141,9 +169,9 @@ public:
         *p = color.G;
     }
 
-    static Neo3Elements::ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
     {
-        Neo3Elements::ColorObject color;
+        ColorObject color;
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.B = *p++;

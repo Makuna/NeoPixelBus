@@ -17,11 +17,13 @@
 
 const uint16_t PixelCount = 16; // make sure to set this to the number of pixels in your strip
 const uint16_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
-const uint16_t AnimCount = 8; // we only need about 8 animations, one to track movement, and the rest to actually animate
+const uint16_t AnimCount = PixelCount / 5 * 2 + 1; // we only need enough animations for the tail and one extra
 
-const uint16_t PixelFadeDuration = 400; // half a second
+const uint16_t PixelFadeDuration = 300; // third of a second
 // one second divide by the number of pixels = loop once a second
 const uint16_t NextPixelMoveDuration = 1000 / PixelCount; // how fast we move through the pixels
+
+NeoGamma<NeoGammaTableMethod> colorGamma; // for any fade animations, best to correct gamma
 
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 // For Esp8266, the Pin is ignored and it uses GPIO3.  
@@ -78,7 +80,8 @@ void FadeOutAnimUpdate(const AnimationParam& param)
         animationState[param.index].EndingColor,
         param.progress);
     // apply the color to the strip
-    strip.SetPixelColor(animationState[param.index].IndexPixel, updatedColor);
+    strip.SetPixelColor(animationState[param.index].IndexPixel, 
+        colorGamma.Correct(updatedColor));
 }
 
 void LoopAnimUpdate(const AnimationParam& param)
@@ -93,7 +96,7 @@ void LoopAnimUpdate(const AnimationParam& param)
         // pick the next pixel inline to start animating
         // 
         frontPixel = (frontPixel + 1) % PixelCount; // increment and wrap
-        if (frontPixel == 1)
+        if (frontPixel == 0)
         {
             // we looped, lets pick a new front color
             frontColor = HslColor(random(360) / 360.0f, 1.0f, 0.25f);
@@ -103,7 +106,7 @@ void LoopAnimUpdate(const AnimationParam& param)
         // do we have an animation available to use to animate the next front pixel?
         // if you see skipping, then either you are going to fast or need to increase
         // the number of animation channels
-        if (animations.NextAvailableAnimation(&indexAnim, 0))
+        if (animations.NextAvailableAnimation(&indexAnim, 1))
         {
             animationState[indexAnim].StartingColor = frontColor;
             animationState[indexAnim].EndingColor = RgbColor(0, 0, 0);
