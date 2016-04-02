@@ -3,9 +3,9 @@ NeoPixel library helper functions for Esp8266.
 
 
 Written by Michael C. Miller.
-Thanks to g3gg0.de for porting the initial DMA support.
-Thanks to github/cnlohr for the original work on DMA support, which is
-located at https://github.com/cnlohr/esp8266ws2812i2s.
+Thanks to g3gg0.de for porting the initial DMA support which lead to this.
+Thanks to github/cnlohr for the original work on DMA support, which opend
+all our minds to a better way (located at https://github.com/cnlohr/esp8266ws2812i2s).
 
 I invest time and resources providing this open source code,
 please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
@@ -84,24 +84,34 @@ enum NeoDmaState
     NeoDmaState_Pending,
     NeoDmaState_Sending,
 };
+const uint16_t c_maxDmaBlockSize = 4095;
+const uint16_t c_dmaBytesPerPixelBytes = 4;
+const uint8_t c_I2sPin = 3; // due to I2S hardware, the pin used is restricted to this
 
 template<typename T_SPEED> class NeoEsp8266DmaMethodBase
 {
 public:
     NeoEsp8266DmaMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize) 
     {
-        _sizePixels = pixelCount * elementSize;
-        _bitBufferSize = CalculateI2sBufferSize(pixelCount, elementSize);
+        uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
 
-        _pixels = (uint8_t*)malloc(_sizePixels);
-        memset(_pixels, 0x00, _sizePixels);
+        _pixelsSize = pixelCount * elementSize;
+        _i2sBufferSize = pixelCount * dmaPixelSize;
 
-        _i2sBlock = (uint8_t*)malloc(_bitBufferSize);
-        memset(_i2sBlock, 0x00, _bitBufferSize);
+        _pixels = (uint8_t*)malloc(_pixelsSize);
+        memset(_pixels, 0x00, _pixelsSize);
+
+        _i2sBuffer = (uint8_t*)malloc(_i2sBufferSize);
+        memset(_i2sBuffer, 0x00, _i2sBufferSize);
 
         memset(_i2sZeroes, 0x00, sizeof(_i2sZeroes));
 
-        s_this = this;
+        _is2BufMaxBlockSize = (c_maxDmaBlockSize / dmaPixelSize) * dmaPixelSize;
+
+        _i2sBufDescCount = (_i2sBufferSize / _is2BufMaxBlockSize) + 1 + 2; // need two more for state/latch blocks
+        _i2sBufDesc = (slc_queue_item*)malloc(_i2sBufDescCount * sizeof(slc_queue_item));
+
+        s_this = this; // store this for the ISR
     }
 
     ~NeoEsp8266DmaMethodBase()
@@ -109,7 +119,8 @@ public:
         StopDma();
 
         free(_pixels);
-        free(_i2sBlock);
+        free(_i2sBuffer);
+        free(_i2sBufDesc);
     }
 
     bool IsReadyToUpdate() const
@@ -119,31 +130,58 @@ public:
 
     void Initialize()
     {
-        _dmaState = NeoDmaState_Idle;
+        _dmaState = NeoDmaState_Sending; // start off sending empty buffer
 
-        // prepare linked DMA descriptors, having EOF set only for the data
-        // primary data item
-        _i2sBufDescData.owner = 1;
-        _i2sBufDescData.eof = 1;
-        _i2sBufDescData.sub_sof = 0;
-        _i2sBufDescData.datalen = sizeof(_i2sZeroes); // will get modified in ISR
-        _i2sBufDescData.blocksize = sizeof(_i2sZeroes); // will get modified in ISR
-        _i2sBufDescData.buf_ptr = (uint32_t)_i2sZeroes; // will get modified in ISR
-        _i2sBufDescData.unused = 0;
-        _i2sBufDescData.next_link_ptr = (uint32_t)&_i2sBufDescLatch;
- 
-        // this zero-buffer block helps implements the latch/reset signal 
-        // and gives the ISR time to modify buf_ptr in _i2sBufDescData
-        _i2sBufDescLatch.owner = 1;
-        _i2sBufDescLatch.eof = 0; // no need to trigger interrupt
-        _i2sBufDescLatch.sub_sof = 0;
-        _i2sBufDescLatch.datalen = sizeof(_i2sZeroes);
-        _i2sBufDescLatch.blocksize = sizeof(_i2sZeroes);
-        _i2sBufDescLatch.buf_ptr = (uint32_t)_i2sZeroes;
-        _i2sBufDescLatch.unused = 0;
-        _i2sBufDescLatch.next_link_ptr = (uint32_t)&_i2sBufDescData;
-        
+        uint8_t* is2Buffer = _i2sBuffer;
+        uint32_t is2BufferSize = _i2sBufferSize;
+        uint16_t indexDesc;
 
+        // prepare main data block decriptors that point into our one static dma buffer
+        for (indexDesc = 0; indexDesc < (_i2sBufDescCount - 2); indexDesc++)
+        {
+            uint32_t blockSize = (is2BufferSize > _is2BufMaxBlockSize) ? _is2BufMaxBlockSize : is2BufferSize;
+
+            _i2sBufDesc[indexDesc].owner = 1;
+            _i2sBufDesc[indexDesc].eof = 0; // no need to trigger interrupt generally
+            _i2sBufDesc[indexDesc].sub_sof = 0;
+            _i2sBufDesc[indexDesc].datalen = blockSize;
+            _i2sBufDesc[indexDesc].blocksize = blockSize;
+            _i2sBufDesc[indexDesc].buf_ptr = (uint32_t)is2Buffer;
+            _i2sBufDesc[indexDesc].unused = 0;
+            _i2sBufDesc[indexDesc].next_link_ptr = (uint32_t)&(_i2sBufDesc[indexDesc + 1]);
+
+            Serial.print("block #");
+            Serial.print(indexDesc);
+            Serial.print(" 0x");
+            Serial.print(_i2sBufDesc[indexDesc].buf_ptr, HEX);
+            Serial.print(" (");
+            Serial.print(_i2sBufDesc[indexDesc].blocksize);
+            Serial.println(")");
+
+            is2Buffer += blockSize;
+            is2BufferSize -= blockSize;
+        }
+
+        // prepare the two state/latch descriptors
+        for (; indexDesc < _i2sBufDescCount; indexDesc++)
+        {
+            _i2sBufDesc[indexDesc].owner = 1;
+            _i2sBufDesc[indexDesc].eof = 0; // no need to trigger interrupt generally
+            _i2sBufDesc[indexDesc].sub_sof = 0;
+            _i2sBufDesc[indexDesc].datalen = sizeof(_i2sZeroes);
+            _i2sBufDesc[indexDesc].blocksize = sizeof(_i2sZeroes);
+            _i2sBufDesc[indexDesc].buf_ptr = (uint32_t)_i2sZeroes;
+            _i2sBufDesc[indexDesc].unused = 0;
+            _i2sBufDesc[indexDesc].next_link_ptr = (uint32_t)&(_i2sBufDesc[indexDesc + 1]);
+        }
+
+        // the first state block will trigger the interrupt
+        _i2sBufDesc[indexDesc - 2].eof = 1;
+        // the last state block will loop to the first state block by defualt
+        _i2sBufDesc[indexDesc - 1].next_link_ptr = (uint32_t)&(_i2sBufDesc[indexDesc - 2]);
+
+        // setup the rest of i2s DMA
+        //
         ETS_SLC_INTR_DISABLE();
         SLCC0 |= SLCRXLR | SLCTXLR;
         SLCC0 &= ~(SLCRXLR | SLCTXLR);
@@ -160,9 +198,9 @@ public:
         // expect. The TXLINK part still needs a valid DMA descriptor, even if it's unused: the DMA engine will throw
         // an error at us otherwise. Just feed it any random descriptor.
         SLCTXL &= ~(SLCTXLAM << SLCTXLA); // clear TX descriptor address
-        SLCTXL |= (uint32)&_i2sBufDescLatch << SLCTXLA; // set TX descriptor address. any random desc is OK, we don't use TX but it needs to be valid
+        SLCTXL |= (uint32)&(_i2sBufDesc[_i2sBufDescCount-1]) << SLCTXLA; // set TX descriptor address. any random desc is OK, we don't use TX but it needs to be valid
         SLCRXL &= ~(SLCRXLAM << SLCRXLA); // clear RX descriptor address
-        SLCRXL |= (uint32)&_i2sBufDescData << SLCRXLA; // set RX descriptor address
+        SLCRXL |= (uint32)_i2sBufDesc << SLCRXLA; // set RX descriptor address
 
         ETS_SLC_INTR_ATTACH(i2s_slc_isr, NULL);
         SLCIE = SLCIRXEOF; // Enable only for RX EOF interrupt
@@ -173,7 +211,7 @@ public:
         SLCTXL |= SLCTXLS;
         SLCRXL |= SLCRXLS;
 
-        pinMode(3, FUNCTION_1); // I2S0_DATA
+        pinMode(c_I2sPin, FUNCTION_1); // I2S0_DATA
 
         I2S_CLK_ENABLE();
         I2SIC = 0x3F;
@@ -219,29 +257,32 @@ public:
 
     size_t getPixelsSize() const
     {
-        return _sizePixels;
+        return _pixelsSize;
     }
 
 private:
     static NeoEsp8266DmaMethodBase* s_this; // for the ISR
 
-    size_t    _sizePixels;    // Size of '_pixels' buffer below
+    size_t    _pixelsSize;    // Size of '_pixels' buffer 
     uint8_t*  _pixels;        // Holds LED color values
 
-    struct slc_queue_item _i2sBufDescData;
-    struct slc_queue_item _i2sBufDescLatch;
+    uint32_t _i2sBufferSize; // total size of _i2sBuffer
+    uint8_t* _i2sBuffer;  // holds the DMA buffer that is referenced by _i2sBufDesc
 
-    uint32_t _bitBufferSize;
-    uint8_t* _i2sBlock;
-    // normally 24 bytes creates the minimum 50us latch per spec but
+    // normally 24 bytes creates the minimum 50us latch per spec, but
     // with the new logic, this latch is used to space between three states
     uint8_t _i2sZeroes[8]; 
+
+    slc_queue_item* _i2sBufDesc;  // dma block descriptors
+    uint16_t _i2sBufDescCount;   // count of block descriptors in _i2sBufDesc
+    uint16_t _is2BufMaxBlockSize; // max size based on size of a pixel of a single block
 
     volatile NeoDmaState _dmaState;
 
     // This routine is called as soon as the DMA routine has something to tell us. All we
     // handle here is the RX_EOF_INT status, which indicate the DMA has sent a buffer whose
     // descriptor has the 'EOF' field set to 1.
+    // in the case of this code, the second to last state descriptor
     volatile static void ICACHE_RAM_ATTR i2s_slc_isr(void)
     {
         uint32_t slc_intr_status = SLCIS;
@@ -252,43 +293,40 @@ private:
         {
             ETS_SLC_INTR_DISABLE();
 
-            slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
-
-            if (finished_item == &(s_this->_i2sBufDescData))
+             switch (s_this->_dmaState)
             {
-                switch (s_this->_dmaState)
-                {
-                case NeoDmaState_Idle:
-                    break;
+            case NeoDmaState_Idle:
+                break;
 
-                case NeoDmaState_Pending:
+            case NeoDmaState_Pending:
+                {
+                    slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
+
                     // data block has pending data waiting to send, prepare it
-                    finished_item->datalen = s_this->_bitBufferSize;
-                    finished_item->blocksize = s_this->_bitBufferSize;
-                    finished_item->buf_ptr = (uint32_t)(s_this->_i2sBlock);
+                    // point last state block to top 
+                    (finished_item + 1)->next_link_ptr = (uint32_t)(s_this->_i2sBufDesc);
 
                     s_this->_dmaState = NeoDmaState_Sending;
-                    break;
+                }
+                break;
 
-                case NeoDmaState_Sending:
-                    // the data block had actual data, clear it
-                    finished_item->datalen = sizeof(s_this->_i2sZeroes);
-                    finished_item->blocksize = sizeof(s_this->_i2sZeroes);
-                    finished_item->buf_ptr = (uint32_t)(s_this->_i2sZeroes);
+            case NeoDmaState_Sending:
+                {
+                    slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
+
+                    // the data block had actual data sent
+                    // point last state block to first state block thus
+                    // just looping and not sending the data blocks
+                    (finished_item + 1)->next_link_ptr = (uint32_t)(finished_item);
 
                     s_this->_dmaState = NeoDmaState_Idle;
-                    break;
                 }
+                break;
             }
+
 
             ETS_SLC_INTR_ENABLE();
         }
-    }
-
-    static uint32_t CalculateI2sBufferSize(uint16_t pixelCount, size_t elementSize)
-    {
-        // 4 I2S bytes per pixels byte 
-        return ((uint32_t)pixelCount * elementSize * 4);
     }
 
     void FillBuffers()
@@ -301,8 +339,8 @@ private:
             0b1110111010001000, 0b1110111010001110, 0b1110111011101000, 0b1110111011101110,
         };
 
-        uint16_t* pDma = (uint16_t*)_i2sBlock;
-        uint8_t* pPixelsEnd = _pixels + _sizePixels;
+        uint16_t* pDma = (uint16_t*)_i2sBuffer;
+        uint8_t* pPixelsEnd = _pixels + _pixelsSize;
         for (uint8_t* pPixel = _pixels; pPixel < pPixelsEnd; pPixel++)
         {
             *(pDma++) = bitpatterns[((*pPixel) & 0x0f)];
@@ -318,7 +356,7 @@ private:
         SLCTXL &= ~(SLCTXLAM << SLCTXLA); // clear TX descriptor address
         SLCRXL &= ~(SLCRXLAM << SLCRXLA); // clear RX descriptor address
 
-        pinMode(3, INPUT);
+        pinMode(c_I2sPin, INPUT);
     }
 };
 
