@@ -181,3 +181,28 @@ public:
         return color;
     }
 };
+
+class NeoRbgFeature : public Neo3Elements
+{
+public:
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        *p++ = color.R;
+        *p++ = color.B;
+        *p = color.G;
+    }
+
+    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        color.R = *p++;
+        color.B = *p++;
+        color.G = *p;
+
+        return color;
+    }
+};
