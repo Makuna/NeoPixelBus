@@ -36,25 +36,38 @@ public:
         return pPixels + indexPixel * PixelSize;
     }
 
-    static void copyIncPixel(uint8_t*& pPixelDest, uint8_t* pPixelSrc)
+    static void replicatePixel(uint8_t* pPixelDest, uint8_t* pPixelSrc, uint16_t count)
     {
-        *pPixelDest++ = *pPixelSrc++;
-        *pPixelDest++ = *pPixelSrc++;
-        *pPixelDest++ = *pPixelSrc;
+        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        while (pPixelDest < pEnd)
+        {
+            *pPixelDest++ = pPixelSrc[0];
+            *pPixelDest++ = pPixelSrc[1];
+            *pPixelDest++ = pPixelSrc[2];
+        }
     }
 
-    static void moveIncPixel(uint8_t*& pPixelDest, uint8_t*& pPixelSrc)
+    static void movePixelsInc(uint8_t* pPixelDest, uint8_t* pPixelSrc, uint16_t count)
     {
-        *pPixelDest++ = *pPixelSrc++;
-        *pPixelDest++ = *pPixelSrc++;
-        *pPixelDest++ = *pPixelSrc++;
+        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        while (pPixelDest < pEnd)
+        {
+            *pPixelDest++ = *pPixelSrc++;
+            *pPixelDest++ = *pPixelSrc++;
+            *pPixelDest++ = *pPixelSrc++;
+        }
     }
 
-    static void moveDecPixel(uint8_t*& pPixelDest, uint8_t*& pPixelSrc)
+    static void movePixelsDec(uint8_t* pPixelDest, uint8_t* pPixelSrc, uint16_t count)
     {
-        *pPixelDest-- = *pPixelSrc--;
-        *pPixelDest-- = *pPixelSrc--;
-        *pPixelDest-- = *pPixelSrc--;
+        uint8_t* pDestBack = pPixelDest + (count * PixelSize);
+        uint8_t* pSrcBack = pPixelSrc + (count * PixelSize);
+        while (pDestBack > pPixelDest)
+        {
+            *--pDestBack = *--pSrcBack;
+            *--pDestBack = *--pSrcBack;
+            *--pDestBack = *--pSrcBack;
+        }
     }
 
     typedef RgbColor ColorObject;
@@ -70,30 +83,39 @@ public:
         return pPixels + indexPixel * PixelSize;
     }
 
-    static void copyIncPixel(uint8_t*& pPixelDest, uint8_t* pPixelSrc)
+    static void replicatePixel(uint8_t* pPixelDest, uint8_t* pPixelSrc, uint16_t count)
     {
         uint32_t* pDest = (uint32_t*)pPixelDest;
         uint32_t* pSrc = (uint32_t*)pPixelSrc;
-        *pDest++ = *pSrc;
-        pPixelDest = (uint8_t*)pDest;
+
+        uint32_t* pEnd = pDest + count;
+        while (pDest < pEnd)
+        {
+            *pDest++ = *pSrc;
+        }
     }
 
-    static void moveIncPixel(uint8_t*& pPixelDest, uint8_t*& pPixelSrc)
+    static void movePixelsInc(uint8_t* pPixelDest, uint8_t* pPixelSrc, uint16_t count)
     {
         uint32_t* pDest = (uint32_t*)pPixelDest;
         uint32_t* pSrc = (uint32_t*)pPixelSrc;
-        *pDest++ = *pSrc++;
-        pPixelDest = (uint8_t*)pDest;
-        pPixelSrc = (uint8_t*)pSrc;
+        uint32_t* pEnd = pDest + count;
+        while (pDest < pEnd)
+        {
+            *pDest++ = *pSrc++;
+        }
     }
 
-    static void moveDecPixel(uint8_t*& pPixelDest, uint8_t*& pPixelSrc)
+    static void movePixelsDec(uint8_t* pPixelDest, uint8_t* pPixelSrc, uint16_t count)
     {
         uint32_t* pDest = (uint32_t*)pPixelDest;
         uint32_t* pSrc = (uint32_t*)pPixelSrc;
-        *pDest-- = *pSrc--;
-        pPixelDest = (uint8_t*)pDest;
-        pPixelSrc = (uint8_t*)pSrc;
+        uint32_t* pDestBack = pDest + count;
+        uint32_t* pSrcBack = pSrc + count;
+        while (pDestBack > pDest)
+        {
+            *--pDestBack = *--pSrcBack;
+        }
     }
 
     typedef RgbwColor ColorObject;
