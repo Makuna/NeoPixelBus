@@ -269,6 +269,7 @@ public:
 
             // move temp back
             pLast = T_COLOR_FEATURE::getPixelAddress(temp, rotationCount - 1);
+            pBack = T_COLOR_FEATURE::getPixelAddress(pixels, first + rotationCount - 1);
             while (pLast >= pFirst)
             {
                 T_COLOR_FEATURE::moveDecPixel(pBack, pLast);
