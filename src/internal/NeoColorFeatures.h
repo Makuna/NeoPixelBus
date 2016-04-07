@@ -36,6 +36,27 @@ public:
         return pPixels + indexPixel * PixelSize;
     }
 
+    static void copyIncPixel(uint8_t*& pPixelDest, uint8_t* pPixelSrc)
+    {
+        *pPixelDest++ = *pPixelSrc++;
+        *pPixelDest++ = *pPixelSrc++;
+        *pPixelDest++ = *pPixelSrc;
+    }
+
+    static void moveIncPixel(uint8_t*& pPixelDest, uint8_t*& pPixelSrc)
+    {
+        *pPixelDest++ = *pPixelSrc++;
+        *pPixelDest++ = *pPixelSrc++;
+        *pPixelDest++ = *pPixelSrc++;
+    }
+
+    static void moveDecPixel(uint8_t*& pPixelDest, uint8_t*& pPixelSrc)
+    {
+        *pPixelDest-- = *pPixelSrc--;
+        *pPixelDest-- = *pPixelSrc--;
+        *pPixelDest-- = *pPixelSrc--;
+    }
+
     typedef RgbColor ColorObject;
 };
 
@@ -47,6 +68,32 @@ public:
     static uint8_t* getPixelAddress(uint8_t* pPixels, uint16_t indexPixel) 
     {
         return pPixels + indexPixel * PixelSize;
+    }
+
+    static void copyIncPixel(uint8_t*& pPixelDest, uint8_t* pPixelSrc)
+    {
+        uint32_t* pDest = (uint32_t*)pPixelDest;
+        uint32_t* pSrc = (uint32_t*)pPixelSrc;
+        *pDest++ = *pSrc;
+        pPixelDest = (uint8_t*)pDest;
+    }
+
+    static void moveIncPixel(uint8_t*& pPixelDest, uint8_t*& pPixelSrc)
+    {
+        uint32_t* pDest = (uint32_t*)pPixelDest;
+        uint32_t* pSrc = (uint32_t*)pPixelSrc;
+        *pDest++ = *pSrc++;
+        pPixelDest = (uint8_t*)pDest;
+        pPixelSrc = (uint8_t*)pSrc;
+    }
+
+    static void moveDecPixel(uint8_t*& pPixelDest, uint8_t*& pPixelSrc)
+    {
+        uint32_t* pDest = (uint32_t*)pPixelDest;
+        uint32_t* pSrc = (uint32_t*)pPixelSrc;
+        *pDest-- = *pSrc--;
+        pPixelDest = (uint8_t*)pDest;
+        pPixelSrc = (uint8_t*)pSrc;
     }
 
     typedef RgbwColor ColorObject;
