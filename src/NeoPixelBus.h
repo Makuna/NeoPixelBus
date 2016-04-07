@@ -160,13 +160,149 @@ public:
 
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
     {
+        uint8_t temp[T_COLOR_FEATURE::PixelSize]; 
+
+        T_COLOR_FEATURE::applyPixelColor(temp, 0, color);
+
         uint8_t* pixels = _method.getPixels();
-        for (uint16_t n = 0; n < _countPixels; n++)
+        uint8_t* pFirst = T_COLOR_FEATURE::getPixelAddress(pixels, 0);
+        uint8_t* pLast = T_COLOR_FEATURE::getPixelAddress(pixels, _countPixels);
+        uint8_t* pFront = temp;
+        while (pFirst < pLast)
         {
-            T_COLOR_FEATURE::applyPixelColor(pixels, n, color);
+            T_COLOR_FEATURE::copyIncPixel(pFirst, pFront);
         }
+
         Dirty();
     };
+
+    void RotateLeft(uint16_t rotationCount, uint16_t first = 0, uint16_t last = 0xffff)
+    {
+        if (last >= _countPixels)
+        {
+            last = _countPixels - 1;
+        }
+
+        if (first < _countPixels &&
+            last < _countPixels &&
+            first < last &&
+            (last - first) >= rotationCount)
+        {
+
+            // store in temp
+            uint8_t temp[rotationCount * T_COLOR_FEATURE::PixelSize];
+            uint8_t* pixels = _method.getPixels();
+            uint8_t* pFirst = T_COLOR_FEATURE::getPixelAddress(temp, 0);
+            uint8_t* pLast = T_COLOR_FEATURE::getPixelAddress(temp, rotationCount - 1);
+            uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, first);
+            while (pFirst <= pLast)
+            {
+                T_COLOR_FEATURE::moveIncPixel(pFirst, pFront);
+            }
+
+            // shift data
+            ShiftLeft(rotationCount, first, last);
+
+            // move temp back
+            pFirst = T_COLOR_FEATURE::getPixelAddress(temp, 0);
+            pFront = T_COLOR_FEATURE::getPixelAddress(pixels, last - (rotationCount - 1));
+            while (pFirst <= pLast)
+            {
+                T_COLOR_FEATURE::moveIncPixel(pFront, pFirst);
+            }
+
+            Dirty();
+        }
+    }
+
+    void ShiftLeft(uint16_t shiftCount, uint16_t first = 0, uint16_t last = 0xffff)
+    {
+        if (last >= _countPixels)
+        {
+            last = _countPixels - 1;
+        }
+
+        if (first < _countPixels && 
+            last < _countPixels && 
+            first < last &&
+            (last - first) >= shiftCount)
+        {
+            uint8_t* pixels = _method.getPixels();
+            uint8_t* pFirst = T_COLOR_FEATURE::getPixelAddress(pixels, first);
+            uint8_t* pLast = T_COLOR_FEATURE::getPixelAddress(pixels, last);
+            uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, first + shiftCount);
+            while (pFront <= pLast)
+            {
+                T_COLOR_FEATURE::moveIncPixel(pFirst, pFront);
+            }
+
+            Dirty();
+        }
+    }
+
+    void RotateRight(uint16_t rotationCount, uint16_t first = 0, uint16_t last = 0xffff)
+    {
+        if (last >= _countPixels)
+        {
+            last = _countPixels - 1;
+        }
+
+        if (first < _countPixels &&
+            last < _countPixels &&
+            first < last &&
+            (last - first) >= rotationCount)
+        {
+
+            // store in temp
+            uint8_t temp[rotationCount * T_COLOR_FEATURE::PixelSize];
+            uint8_t* pixels = _method.getPixels();
+            uint8_t* pFirst = T_COLOR_FEATURE::getPixelAddress(temp, 0);
+            uint8_t* pLast = T_COLOR_FEATURE::getPixelAddress(temp, rotationCount - 1);
+            uint8_t* pBack = T_COLOR_FEATURE::getPixelAddress(pixels, last);
+            while (pLast >= pFirst)
+            {
+                T_COLOR_FEATURE::moveDecPixel(pLast, pBack);
+            }
+
+            // shift data
+            ShiftRight(rotationCount, first, last);
+
+            // move temp back
+            pLast = T_COLOR_FEATURE::getPixelAddress(temp, rotationCount - 1);
+            pBack = T_COLOR_FEATURE::getPixelAddress(pixels, first + rotationCount - 1);
+            while (pLast >= pFirst)
+            {
+                T_COLOR_FEATURE::moveDecPixel(pBack, pLast);
+            }
+
+            Dirty();
+        }
+    }
+
+    void ShiftRight(uint16_t shiftCount, uint16_t first = 0, uint16_t last = 0xffff)
+    {
+        if (last >= _countPixels)
+        {
+            last = _countPixels - 1;
+        }
+
+        if (first < _countPixels &&
+            last < _countPixels &&
+            first < last &&
+            (last - first) >= shiftCount)
+        {
+            uint8_t* pixels = _method.getPixels();
+            uint8_t* pFirst = T_COLOR_FEATURE::getPixelAddress(pixels, first);
+            uint8_t* pLast = T_COLOR_FEATURE::getPixelAddress(pixels, last);
+            uint8_t* pBack = T_COLOR_FEATURE::getPixelAddress(pixels, last - shiftCount);
+            while (pBack >= pFirst)
+            {
+                T_COLOR_FEATURE::moveDecPixel(pLast, pBack);
+            }
+
+            Dirty();
+        }
+    }
 
 private:
     const uint16_t _countPixels; // Number of RGB LEDs in strip
