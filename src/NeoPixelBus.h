@@ -41,9 +41,9 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoMosaic.h"
 
 #include "internal/NeoBufferContext.h"
-#include "internal/NeoPixelBufferMethods.h"
-#include "internal/NeoPixelBuffer.h"
-#include "internal/NeoPixelSpriteSheet.h"
+#include "internal/NeoBufferMethods.h"
+#include "internal/NeoBuffer.h"
+#include "internal/NeoSpriteSheet.h"
 
 #include "internal/NeoEase.h"
 #include "internal/NeoGamma.h"

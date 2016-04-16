@@ -61,10 +61,10 @@ NeoHueBlendClockwiseDirection	KEYWORD1
 NeoHueBlendCounterClockwiseDirection	KEYWORD1
 NeoBufferContext	KEYWORD1
 LayoutMapCallback	KEYWORD1
-NeoPixelBufferMethod	KEYWORD1
-NeoPixelBufferProgmemMethod	KEYWORD1
-NeoPixelBuffer	KEYWORD1
-NeoPixelVerticalSpriteSheet	KEYWORD1
+NeoBufferMethod	KEYWORD1
+NeoBufferProgmemMethod	KEYWORD1
+NeoBuffer	KEYWORD1
+NeoVerticalSpriteSheet	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)

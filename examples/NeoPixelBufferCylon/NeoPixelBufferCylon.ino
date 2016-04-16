@@ -2,7 +2,7 @@
 // This example will move a Cylon Red Eye back and forth across the 
 // the full collection of pixels on the strip. 
 //
-// This will demonstrate the use of the NeoPixelVerticalSpriteSheet 
+// This will demonstrate the use of the NeoVerticalSpriteSheet 
 // 
 
 #include <NeoPixelBus.h>
@@ -26,7 +26,7 @@ NeoPixelBus<MyPixelColorFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
 
 // sprite sheet stored in progmem using the same pixel feature as the NeoPixelBus
-NeoPixelVerticalSpriteSheet<NeoPixelBufferProgmemMethod<MyPixelColorFeature>> spriteSheet(
+NeoVerticalSpriteSheet<NeoBufferProgmemMethod<MyPixelColorFeature>> spriteSheet(
         myImageWidth, // image width and sprite width since its vertical sprite sheet
         myImageHeight,  // image height
         1, // sprite is only one pixel high

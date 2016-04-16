@@ -26,10 +26,10 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 
-template<typename T_BUFFER_METHOD> class NeoPixelVerticalSpriteSheet
+template<typename T_BUFFER_METHOD> class NeoVerticalSpriteSheet
 {
 public:
-    NeoPixelVerticalSpriteSheet(uint16_t width,
+    NeoVerticalSpriteSheet(uint16_t width,
         uint16_t height,
         uint16_t spriteHeight,
         PGM_VOID_P pixels) :

@@ -25,10 +25,10 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-template<typename T_BUFFER_METHOD> class NeoPixelBuffer
+template<typename T_BUFFER_METHOD> class NeoBuffer
 {
 public:
-    NeoPixelBuffer(uint16_t width,
+    NeoBuffer(uint16_t width,
         uint16_t height,
         PGM_VOID_P pixels) :
         _method(width, height, pixels)

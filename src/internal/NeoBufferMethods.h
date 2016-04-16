@@ -40,10 +40,10 @@ typedef std::function<uint16_t(int16_t x, int16_t y)> LayoutMapCallback;
 
 #endif
 
-template<typename T_COLOR_FEATURE> class NeoPixelBufferMethod
+template<typename T_COLOR_FEATURE> class NeoBufferMethod
 {
 public:
-    NeoPixelBufferMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels = NULL) :
+    NeoBufferMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels = NULL) :
         _width(width),
         _height(height)
     {
@@ -157,10 +157,10 @@ private:
     uint8_t* _pixels;
 };
 
-template<typename T_COLOR_FEATURE> class NeoPixelBufferProgmemMethod
+template<typename T_COLOR_FEATURE> class NeoBufferProgmemMethod
 {
 public:
-    NeoPixelBufferProgmemMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels) :
+    NeoBufferProgmemMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels) :
         _width(width),
         _height(height),
         _pixels(pixels)
