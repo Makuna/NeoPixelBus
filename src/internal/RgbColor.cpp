@@ -48,10 +48,16 @@ static float _CalcColor(float p, float q, float t)
     return p;
 }
 
-RgbColor::RgbColor(const HtmlColor& color) :
-    R((color.Color >> 16) & 0xff), G((color.Color >> 8) & 0xff), B(color.Color & 0xff)
+RgbColor::RgbColor(const HtmlColor& color)
 {
-}
+    uint32_t temp = color.Color;
+
+    B = (temp & 0xff);
+    temp = temp >> 8;
+    G = (temp & 0xff);
+    temp = temp >> 8;
+    R = (temp & 0xff);
+};
 
 RgbColor::RgbColor(const HslColor& color)
 {

@@ -65,8 +65,12 @@ struct RgbwColor
         B(color.B),
         W(0)
     {
+    };
 
-    }
+    // ------------------------------------------------------------------------
+    // Construct a RgbwColor using HtmlColor
+    // ------------------------------------------------------------------------
+    RgbwColor(const HtmlColor& color);
 
     // ------------------------------------------------------------------------
     // Construct a RgbwColor using HslColor

@@ -28,6 +28,7 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+const uint16_t PixelIndex_OutOfBounds = 0xffff;
 
 //-----------------------------------------------------------------------------
 // RowMajor
