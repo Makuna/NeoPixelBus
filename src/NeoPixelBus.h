@@ -40,6 +40,11 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoTiles.h"
 #include "internal/NeoMosaic.h"
 
+#include "internal/NeoBufferContext.h"
+#include "internal/NeoPixelBufferMethods.h"
+#include "internal/NeoPixelBuffer.h"
+#include "internal/NeoPixelSpriteSheet.h"
+
 #include "internal/NeoEase.h"
 #include "internal/NeoGamma.h"
 
@@ -56,6 +61,9 @@ License along with NeoPixel.  If not, see
 #else
 #error "Platform Currently Not Supported, please add an Issue at Github/Makuna/NeoPixelBus"
 #endif
+
+
+
 
 // '_state' flags for internal state
 #define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
@@ -75,6 +83,12 @@ public:
     ~NeoPixelBus()
     {
 
+    }
+
+    operator NeoBufferContext<T_COLOR_FEATURE>()
+    {
+        Dirty(); // we assume you are playing with bits
+        return NeoBufferContext<T_COLOR_FEATURE>(_method.getPixels(), _method.getPixelsSize());
     }
 
     void Begin()
@@ -267,7 +281,9 @@ public:
             Dirty();
         }
     }
+    
 
+ 
 private:
     const uint16_t _countPixels; // Number of RGB LEDs in strip
 

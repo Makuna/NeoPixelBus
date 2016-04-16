@@ -32,6 +32,7 @@ enum NeoTopologyHint
     NeoTopologyHint_FirstOnPanel,
     NeoTopologyHint_InPanel,
     NeoTopologyHint_LastOnPanel,
+    NeoTopologyHint_OutOfBounds
 };
 
 template <typename T_LAYOUT> class NeoTopology
@@ -44,15 +45,32 @@ public:
 
     }
 
-    uint16_t Map(uint16_t x, uint16_t y) const
+    uint16_t Map(int16_t x, int16_t y) const
     {   
         if (x >= _width)
         {
             x = _width - 1;
         }
+        else if (x < 0)
+        {
+            x = 0;
+        }
         if (y >= _height)
         {
             y = _height - 1;
+        }
+        else if (y < 0)
+        {
+            y = 0;
+        }
+        return T_LAYOUT::Map(_width, _height, x, y);
+    }
+
+    uint16_t MapProbe(int16_t x, int16_t y) const
+    {
+        if (x < 0 || x >= _width || y < 0 || y >= _height)
+        {
+            return _width  * _height; // count, out of bounds
         }
         return T_LAYOUT::Map(_width, _height, x, y);
     }

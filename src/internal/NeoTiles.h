@@ -47,8 +47,29 @@ public:
     {
     }
 
-    uint16_t Map(uint16_t x, uint16_t y) const
+    uint16_t Map(int16_t x, int16_t y) const
     {
+        uint16_t totalWidth = getWidth();
+        uint16_t totalHeight = getHeight();
+
+        if (x >= totalWidth)
+        {
+            x = totalWidth - 1;
+        }
+        else if (x < 0)
+        {
+            x = 0;
+        }
+
+        if (y >= totalHeight)
+        {
+            y = totalHeight - 1;
+        }
+        else if (y < 0)
+        {
+            y = 0;
+        }
+
         uint16_t localIndex;
         uint16_t tileOffset;
 
@@ -57,8 +78,34 @@ public:
         return localIndex + tileOffset;
     }
 
-    NeoTopologyHint TopologyHint(uint16_t x, uint16_t y) const
+    uint16_t MapProbe(int16_t x, int16_t y) const
     {
+        uint16_t totalWidth = getWidth();
+        uint16_t totalHeight = getHeight();
+
+        if (x < 0 || x >= totalWidth || y < 0 || y >= totalHeight)
+        {
+            return totalWidth  * totalHeight; // count, out of bounds
+        }
+
+        uint16_t localIndex;
+        uint16_t tileOffset;
+
+        calculate(x, y, &localIndex, &tileOffset);
+
+        return localIndex + tileOffset;
+    }
+
+    NeoTopologyHint TopologyHint(int16_t x, int16_t y) const
+    {
+        uint16_t totalWidth = getWidth();
+        uint16_t totalHeight = getHeight();
+
+        if (x < 0 || x >= totalWidth || y < 0 || y >= totalHeight)
+        {
+            return NeoTopologyHint_OutOfBounds; 
+        }
+
         uint16_t localIndex;
         uint16_t tileOffset;
         NeoTopologyHint result;
@@ -98,19 +145,6 @@ private:
 
     void calculate(uint16_t x, uint16_t y, uint16_t* pLocalIndex, uint16_t* pTileOffset) const
     {
-        uint16_t totalWidth = getWidth();
-        uint16_t totalHeight = getHeight();
-
-        if (x >= totalWidth)
-        {
-            x = totalWidth - 1;
-        }
-
-        if (y >= totalHeight)
-        {
-            y = totalHeight - 1;
-        }
-
         uint16_t tileX = x / _topo.getWidth();
         uint16_t topoX = x % _topo.getWidth();
 

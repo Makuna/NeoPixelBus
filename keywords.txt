@@ -59,6 +59,12 @@ NeoHueBlendShortestDistance	KEYWORD1
 NeoHueBlendLongestDistance	KEYWORD1
 NeoHueBlendClockwiseDirection	KEYWORD1
 NeoHueBlendCounterClockwiseDirection	KEYWORD1
+NeoBufferContext	KEYWORD1
+LayoutMapCallback	KEYWORD1
+NeoPixelBufferMethod	KEYWORD1
+NeoPixelBufferProgmemMethod	KEYWORD1
+NeoPixelBuffer	KEYWORD1
+NeoPixelVerticalSpriteSheet	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
@@ -121,10 +127,17 @@ CircularOut	KEYWORD2
 CircularInOut	KEYWORD2
 Gamma	KEYWORD2
 Map	KEYWORD2
+MapProbe	KEYWORD2
 getWidth	KEYWORD2
 getHeight	KEYWORD2
 TopologyHint	KEYWORD2
 Correct	KEYWORD2
+SpriteWidth	KEYWORD2
+SpriteHeight	KEYWORD2
+SpriteCount	KEYWORD2
+Blt	KEYWORD2
+Width	KEYWORD2
+Height	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
@@ -141,3 +154,5 @@ AnimationState_Completed	LITERAL1
 NeoTopologyHint_FirstOnPanel	LITERAL1
 NeoTopologyHint_InPanel	LITERAL1
 NeoTopologyHint_LastOnPanel	LITERAL1
+NeoTopologyHint_OutOfBounds	LITERAL1
+PixelIndex_OutOfBounds	LITERAL1
