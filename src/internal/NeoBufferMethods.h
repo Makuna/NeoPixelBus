@@ -55,6 +55,11 @@ public:
         }
     }
 
+    ~NeoBufferMethod()
+    {
+        free(_pixels);
+    }
+
     operator NeoBufferContext<T_COLOR_FEATURE>()
     {
         return NeoBufferContext<T_COLOR_FEATURE>(Pixels(), PixelsSize());
