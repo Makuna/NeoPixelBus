@@ -35,6 +35,8 @@ License along with NeoPixel.  If not, see
 #include "internal/HtmlColor.h"
 #include "internal/RgbwColor.h"
 
+#include "internal/NeoColorFeatures.h"
+
 #include "internal/Layouts.h"
 #include "internal/NeoTopology.h"
 #include "internal/NeoTiles.h"
@@ -44,11 +46,10 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoBufferMethods.h"
 #include "internal/NeoBuffer.h"
 #include "internal/NeoSpriteSheet.h"
+#include "internal/NeoBitmapFile.h"
 
 #include "internal/NeoEase.h"
 #include "internal/NeoGamma.h"
-
-#include "internal/NeoColorFeatures.h"
 
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "internal/NeoEsp8266DmaMethod.h"

@@ -55,7 +55,7 @@ public:
         return _method.Height();
     };
 
-    void SetPixelColor(uint16_t indexSprite,
+    void SetPixelColor(
         int16_t x,
         int16_t y,
         typename T_BUFFER_METHOD::ColorObject color)
@@ -63,7 +63,7 @@ public:
         _method.SetPixelColor(pixelIndex(x, y), color);
     };
 
-    typename T_BUFFER_METHOD::ColorObject GetPixelColor(uint16_t indexSprite,
+    typename T_BUFFER_METHOD::ColorObject GetPixelColor(
         int16_t x,
         int16_t y) const
     {
