@@ -28,6 +28,20 @@ License along with NeoPixel.  If not, see
 #include <Arduino.h>
 #include "RgbColor.h"
 
+#if defined(USE_CSS3_COLORS)
+#define MAX_HTML_COLOR_NAME_LEN 21
+#else
+#define MAX_HTML_COLOR_NAME_LEN 8
+#endif
+
+// ------------------------------------------------------------------------
+// HtmlColor represents an association between a name and a HTML color code
+// ------------------------------------------------------------------------
+struct HtmlColorName
+{
+    PGM_P Name;
+    uint32_t Color;
+};
 
 // ------------------------------------------------------------------------
 // HtmlColor represents a color object that is represented by a single uint32
@@ -76,6 +90,42 @@ struct HtmlColor
     };
 
     // ------------------------------------------------------------------------
+    // Parse a HTML4/CSS3 color name
+    //
+    // name - the color name
+    // namelen - length of the name string
+    //
+    // It accepts all standard HTML4 names and, if USE_CSS3_COLORS macro is
+    // defined, the extended color names defined in CSS3 standard also.
+    //
+    // It also accepts 3 or 6 digit hexadecimal notation (#rgb or #rrggbb),
+    // but it doesn't accept RGB, RGBA nor HSL values.
+    //
+    // See https://www.w3.org/TR/css3-color/#SRGB
+    //
+    // Name MUST be stripped of any leading or tailing whitespace.
+    //
+    // Name MUST NOT be a PROGMEM pointer
+    // ------------------------------------------------------------------------
+    bool Parse(const char* name, size_t namelen);
+    bool Parse(const char* name) { return Parse(name, strlen(name)); }
+    bool Parse(String const &name) { return Parse(name.c_str(), name.length()); }
+
+    // ------------------------------------------------------------------------
+    // Converts this color code to its HTML4/CSS3 name
+    //
+    // buf - array of at least MAX_HTML_COLOR_NAME_LEN chars to store the name
+    // len - actual length of buf array
+    //
+    // It returns the space needed to write the color name not including the
+    // final NUL char.
+    //
+    // If there is not enough space in the buffer, it will write as many
+    // characters as allowed and will always finish the buffer with a NUL char
+    // ------------------------------------------------------------------------
+    size_t ToString(char *buf, size_t len) const;
+
+    // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
     // c00 - upper left quadrant color
     // c01 - upper right quadrant color
@@ -101,5 +151,12 @@ struct HtmlColor
     // 0x0000ff is blue
     // ------------------------------------------------------------------------
     uint32_t Color;
+
+private:
+    // ------------------------------------------------------------------------
+    // Array with all color names and its corresponding color codes
+    // The array ends with a NULL color name.
+    // ------------------------------------------------------------------------
+    static const HtmlColorName ColorNames[] PROGMEM;
 };
 
