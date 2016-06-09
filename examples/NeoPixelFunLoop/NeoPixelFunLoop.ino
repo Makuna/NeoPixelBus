@@ -32,7 +32,7 @@ NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoGrbFeature, NeoEsp8266Uart800KbpsMethod> strip(PixelCount, PixelPin);
 // NeoEsp8266Uart800KbpsMethod also ignores the pin parameter and uses GPI02
 //NeoPixelBus<NeoGrbFeature, NeoEsp8266BitBang800KbpsMethod> strip(PixelCount, PixelPin);
-// NeoEsp8266Uart800KbpsMethod will work with all but pin 16, but is not stable with WiFi 
+// NeoEsp8266BitBang800KbpsMethod will work with all but pin 16, but is not stable with WiFi 
 // being active
 
 // what is stored for state is specific to the need, in this case, the colors and
