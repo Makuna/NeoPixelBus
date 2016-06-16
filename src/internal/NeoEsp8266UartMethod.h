@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library helper functions for Esp8266.
+NeoPixel library helper functions for Esp8266 UART hardware
 
 Written by Michael C. Miller.
 
@@ -27,64 +27,96 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #ifdef ARDUINO_ARCH_ESP8266
+#include <Arduino.h>
 
-extern "C"
+// NeoEsp8266Uart contains all the low level details that doesn't
+// depend on the transmission speed, and therefore, it isn't a template
+class NeoEsp8266Uart
 {
-#include "eagle_soc.h"
-#include "uart_register.h"
-}
+protected:
+    NeoEsp8266Uart(uint8_t pin, uint16_t pixelCount, size_t elementSize);
 
-// due to linker overriding ICACHE_RAM_ATTR for cpp files, this function was
-// moved into a NeoPixelEsp8266.c file.
-extern "C" void ICACHE_RAM_ATTR esp8266_uart1_send_pixels(uint8_t* pixels, uint8_t* end);
+    ~NeoEsp8266Uart();
 
+    void InitializeUart(uint32_t uartBaud);
+
+    void UpdateUart();
+
+    static const uint8_t* ICACHE_RAM_ATTR FillUartFifo(const uint8_t* pixels, const uint8_t* end);
+
+    size_t    _sizePixels;   // Size of '_pixels' buffer below
+    uint8_t* _pixels;        // Holds LED color values
+    uint32_t _startTime;     // Microsecond count when last update started
+};
+
+// NeoEsp8266AsyncUart handles all transmission asynchronously using interrupts
+//
+// This UART controller uses two buffers that are swapped in every call to
+// NeoPixelBus.Show(). One buffer contains the data that is being sent
+// asynchronosly and another buffer contains the data that will be send
+// in the next call to NeoPixelBus.Show().
+//
+// Therefore, the result of NeoPixelBus.Pixels() is invalidated after
+// every call to NeoPixelBus.Show() and must not be cached.
+class NeoEsp8266AsyncUart: public NeoEsp8266Uart
+{
+protected:
+    NeoEsp8266AsyncUart(uint8_t pin, uint16_t pixelCount, size_t elementSize);
+
+    ~NeoEsp8266AsyncUart();
+
+    void InitializeUart(uint32_t uartBaud);
+
+    void UpdateUart();
+
+private:
+    static void ICACHE_RAM_ATTR IntrHandler(void* param);
+
+    uint8_t* _asyncPixels;  // Holds a copy of LED color values taken when UpdateUart began
+};
+
+// NeoEsp8266UartSpeed800Kbps contains the timing constant used to get NeoPixelBus running at 800Khz
 class NeoEsp8266UartSpeed800Kbps
 {
 public:
-    static const uint32_t ByteSendTimeUs =  10; // us it takes to send a single pixel element at 800mhz speed
+    static const uint32_t ByteSendTimeUs =  10; // us it takes to send a single pixel element at 800khz speed
     static const uint32_t UartBaud = 3200000; // 800mhz, 4 serial bytes per NeoByte
 };
 
+// NeoEsp8266UartSpeed800Kbps contains the timing constant used to get NeoPixelBus running at 400Khz
 class NeoEsp8266UartSpeed400Kbps
 {
 public:
-    static const uint32_t ByteSendTimeUs = 20; // us it takes to send a single pixel element at 400mhz speed
+    static const uint32_t ByteSendTimeUs = 20; // us it takes to send a single pixel element at 400khz speed
     static const uint32_t UartBaud = 1600000; // 400mhz, 4 serial bytes per NeoByte
 };
 
-#define UART1 1
-#define UART1_INV_MASK (0x3f << 19)
-
-template<typename T_SPEED> class NeoEsp8266UartMethodBase
+// NeoEsp8266UartMethodBase is a light shell arround NeoEsp8266Uart or NeoEsp8266AsyncUart that
+// implements the methods needed to operate as a NeoPixelBus method.
+template<typename T_SPEED, typename T_BASE>
+class NeoEsp8266UartMethodBase: public T_BASE
 {
 public:
     NeoEsp8266UartMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize)
+        : T_BASE(pin, pixelCount, elementSize)
     {
-        _sizePixels = pixelCount * elementSize;
-        _pixels = (uint8_t*)malloc(_sizePixels);
-        memset(_pixels, 0x00, _sizePixels);
-    }
-
-    ~NeoEsp8266UartMethodBase()
-    {
-        free(_pixels);
     }
 
     bool IsReadyToUpdate() const
     {
-        uint32_t delta = micros() - _endTime;
-
-        return (delta >= 50L && delta <= (4294967296L - getPixelTime()));
+        uint32_t delta = micros() - this->_startTime;
+        return delta >= getPixelTime() + 50;
     }
 
     void Initialize()
     {
-        Serial1.begin(T_SPEED::UartBaud, SERIAL_6N1, SERIAL_TX_ONLY);
+        this->InitializeUart(T_SPEED::UartBaud);
 
-        CLEAR_PERI_REG_MASK(UART_CONF0(UART1), UART1_INV_MASK);
-        SET_PERI_REG_MASK(UART_CONF0(UART1), (BIT(22)));
-
-        _endTime = micros();
+        // Inverting logic levels can generate a phantom bit in the led strip bus
+        // We need to delay 50+ microseconds the output stream to force a data
+        // latch and discard this bit. Otherwise, that bit would be prepended to
+        // the first frame corrupting it.
+        this->_startTime = micros() - getPixelTime();
     }
 
     void Update()
@@ -95,43 +127,34 @@ public:
         // subsequent round of data until the latch time has elapsed.  This
         // allows the mainline code to start generating the next frame of data
         // rather than stalling for the latch.
-        
-        while (!IsReadyToUpdate())
+        while (!this->IsReadyToUpdate())
         {
             yield();
         }
-        
-        // since uart is async buffer send, we have to calc the endtime that it will take
-        // to correctly manage the data latch in the above code
-        // add the calculated time to the current time 
-        _endTime = micros() + getPixelTime();
-
-        // esp hardware uart sending of data
-        esp8266_uart1_send_pixels(_pixels, _pixels + _sizePixels);
+        this->UpdateUart();
     }
 
     uint8_t* getPixels() const
     {
-        return _pixels;
+        return this->_pixels;
     };
 
     size_t getPixelsSize() const
     {
-        return _sizePixels;
+        return this->_sizePixels;
     };
 
 private:
     uint32_t getPixelTime() const
     {
-        return (T_SPEED::ByteSendTimeUs * _sizePixels);
+        return (T_SPEED::ByteSendTimeUs * this->_sizePixels);
     };
-
-    size_t    _sizePixels;   // Size of '_pixels' buffer below
-    uint8_t* _pixels;        // Holds LED color values
-    uint32_t _endTime;       // Latch timing reference
 };
 
-typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed800Kbps> NeoEsp8266Uart800KbpsMethod;
-typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed400Kbps> NeoEsp8266Uart400KbpsMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed800Kbps, NeoEsp8266Uart> NeoEsp8266Uart800KbpsMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed400Kbps, NeoEsp8266Uart> NeoEsp8266Uart400KbpsMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed800Kbps, NeoEsp8266AsyncUart> NeoEsp8266AsyncUart800KbpsMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed400Kbps, NeoEsp8266AsyncUart> NeoEsp8266AsyncUart400KbpsMethod;
 
 #endif
+
