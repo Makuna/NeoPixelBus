@@ -348,6 +348,11 @@ const HtmlColorName HtmlColor::ColorNames[] PROGMEM = {
 #endif
 };
 
+#ifndef pgm_read_ptr
+// ESP8266 doesn't define this macro, but it doesn't need it either.
+#define pgm_read_ptr(addr) (*reinterpret_cast<const void* const *>(addr))
+#endif
+
 bool HtmlColor::Parse(const char* name, size_t namelen)
 {
     if (name[0] == '#')
@@ -368,8 +373,8 @@ bool HtmlColor::Parse(const char* name, size_t namelen)
             }
             else
             {
-		// Convert a letter to lower case (only for ASCII letters)
-		// It's faster & smaller than tolower()
+                // Convert a letter to lower case (only for ASCII letters)
+                // It's faster & smaller than tolower()
                 c |= 32;
                 if (c >= 'a' && c <= 'f')
                 {
@@ -394,10 +399,11 @@ bool HtmlColor::Parse(const char* name, size_t namelen)
 
     for (uint8_t i = 0; i < sizeof(ColorNames)/sizeof(ColorNames[0]); ++i)
     {
-        const HtmlColorName* cn = &ColorNames[i];
-        if (strncasecmp_P(name, cn->Name, namelen) == 0 && strlen_P(cn->Name) == namelen)
+        const HtmlColorName* cptr = &ColorNames[i];
+        PGM_P cname = (PGM_P)pgm_read_ptr(&cptr->Name);
+        if (strncasecmp_P(name, cname, namelen) == 0 && strlen_P(cname) == namelen)
         {
-            Color = cn->Color;
+            Color = pgm_read_dword(&cptr->Color);
             return true;
         }
     }
@@ -413,14 +419,15 @@ size_t HtmlColor::ToString(char* buf, size_t buflen) const
 {
     for (uint8_t i = 0; i < sizeof(ColorNames) / sizeof(ColorNames[0]); ++i)
     {
-        const HtmlColorName* cn = &ColorNames[i];
-        if (cn->Color == Color)
+        const HtmlColorName* cptr = &ColorNames[i];
+        if (pgm_read_dword(&cptr->Color) == Color)
         {
-            size_t namelen = strlen_P(cn->Name);
+            PGM_P name = (PGM_P)pgm_read_ptr(&cptr->Name);
+            size_t namelen = strlen_P(name);
             if (buflen-- > 0)
             {
                 buflen = min(buflen, namelen);
-                memcpy_P(buf, cn->Name, buflen);
+                memcpy_P(buf, name, buflen);
                 buf[buflen] = 0;
             }
             return namelen;
