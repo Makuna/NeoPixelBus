@@ -28,20 +28,9 @@ License along with NeoPixel.  If not, see
 #include <Arduino.h>
 #include "RgbColor.h"
 
-#if defined(USE_CSS3_COLORS)
-#define MAX_HTML_COLOR_NAME_LEN 21
-#else
-#define MAX_HTML_COLOR_NAME_LEN 8
-#endif
-
-// ------------------------------------------------------------------------
-// HtmlColor represents an association between a name and a HTML color code
-// ------------------------------------------------------------------------
-struct HtmlColorName
-{
-    PGM_P Name;
-    uint32_t Color;
-};
+// Due to Arduino's lack of Project settings for symbols, library code (c,cpp)
+// files can't react to defines in sketch, so this must be defined here
+// #define USE_CSS3_COLORS 1
 
 // ------------------------------------------------------------------------
 // HtmlColor represents a color object that is represented by a single uint32
@@ -93,7 +82,13 @@ struct HtmlColor
     // Parse a HTML4/CSS3 color name
     //
     // name - the color name
-    // namelen - length of the name string
+    // nameSize - the max size of name to check
+    //
+    // returns - zero if failed, or the number of chars parsed
+    //
+    // It will stop parsing name when a null terminator is reached, 
+    // nameSize is reached, no match is found in the name/color pair table, or
+    // a non-alphanumeric is read like seperators or whitespace.
     //
     // It accepts all standard HTML4 names and, if USE_CSS3_COLORS macro is
     // defined, the extended color names defined in CSS3 standard also.
@@ -103,27 +98,48 @@ struct HtmlColor
     //
     // See https://www.w3.org/TR/css3-color/#SRGB
     //
-    // Name MUST be stripped of any leading or tailing whitespace.
+    // name must point to the first non-whitespace character to be parsed
+    // parsing will stop at the first non-alpha numeric
     //
     // Name MUST NOT be a PROGMEM pointer
     // ------------------------------------------------------------------------
-    bool Parse(const char* name, size_t namelen);
-    bool Parse(const char* name) { return Parse(name, strlen(name)); }
-    bool Parse(String const &name) { return Parse(name.c_str(), name.length()); }
+    size_t Parse(const char* name, size_t nameSize);
+
+    size_t Parse(const char* name)
+    { 
+        return Parse(name, strlen(name) + 1); 
+    }
+
+    size_t Parse(String const &name)
+    { 
+        return Parse(name.c_str(), name.length() + 1); 
+    }
 
     // ------------------------------------------------------------------------
     // Converts this color code to its HTML4/CSS3 name
     //
-    // buf - array of at least MAX_HTML_COLOR_NAME_LEN chars to store the name
-    // len - actual length of buf array
+    // buf - buffer to write the string
+    // bufSize - actual size of buf array
     //
-    // It returns the space needed to write the color name not including the
-    // final NUL char.
+    // It returns the number of chars required not including the NUL terminator.
     //
     // If there is not enough space in the buffer, it will write as many
     // characters as allowed and will always finish the buffer with a NUL char
     // ------------------------------------------------------------------------
-    size_t ToString(char *buf, size_t len) const;
+    size_t ToString(char *buf, size_t bufSize) const;
+
+    // ------------------------------------------------------------------------
+    // Converts this color code to its HTML4/CSS3 numerical name
+    //
+    // buf - buffer to write the string
+    // bufSize - actual size of buf array
+    //
+    // It returns the number of chars required not including the NUL terminator.
+    //
+    // If there is not enough space in the buffer, it will write as many
+    // characters as allowed and will always finish the buffer with a NUL char
+    // ------------------------------------------------------------------------
+    size_t ToNumericalString(char* buf, size_t bufSize) const;
 
     // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
@@ -151,12 +167,5 @@ struct HtmlColor
     // 0x0000ff is blue
     // ------------------------------------------------------------------------
     uint32_t Color;
-
-private:
-    // ------------------------------------------------------------------------
-    // Array with all color names and its corresponding color codes
-    // The array ends with a NULL color name.
-    // ------------------------------------------------------------------------
-    static const HtmlColorName ColorNames[] PROGMEM;
 };
 
