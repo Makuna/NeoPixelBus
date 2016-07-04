@@ -68,6 +68,8 @@ NeoBufferProgmemMethod	KEYWORD1
 NeoBuffer	KEYWORD1
 NeoVerticalSpriteSheet	KEYWORD1
 NeoBitmapFile	KEYWORD1
+HtmlShortColorNames	KEYWORD1
+HtmlColorNames	KEYWORD1
 
 #######################################
 # Methods and Functions (KEYWORD2)
