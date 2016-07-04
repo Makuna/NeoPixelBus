@@ -22,10 +22,12 @@ Neo800KbpsMethod	KEYWORD1
 Neo400KbpsMethod	KEYWORD1
 NeoAvr800KbpsMethod	KEYWORD1
 NeoAvr400KbpsMethod	KEYWORD1
-NeoEsp8266Dma800Method	KEYWORD1
-NeoEsp8266Dma400Method	KEYWORD1
-NeoEsp8266Uart800Method	KEYWORD1
-NeoEsp8266Uart400Method	KEYWORD1
+NeoEsp8266Dma800KbpsMethod	KEYWORD1
+NeoEsp8266Dma400KbpsMethod	KEYWORD1
+NeoEsp8266Uart800KbpsMethod	KEYWORD1
+NeoEsp8266Uart400KbpsMethod	KEYWORD1
+NeoEsp8266AsyncUart800KbpsMethod	KEYWORD1
+NeoEsp8266AsyncUart400KbpsMethod	KEYWORD1
 NeoEsp8266BitBang800Method	KEYWORD1
 NeoEsp8266BitBang400Method	KEYWORD1
 NeoPixelAnimator	KEYWORD1
@@ -139,6 +141,9 @@ SpriteCount	KEYWORD2
 Blt	KEYWORD2
 Width	KEYWORD2
 Height	KEYWORD2
+Parse	KEYWORD2
+ToString	KEYWORD2
+ToNumericalString	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)
