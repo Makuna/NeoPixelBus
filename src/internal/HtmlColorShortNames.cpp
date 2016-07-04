@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-This file contains the HtmlColor implementation
+HtmlShortColorNames provides a template class for access to the short name table
 
-Written by Unai Uribarri
+Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
 please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
@@ -23,36 +23,37 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
-#include "HtmlColor.h"
 
-static inline char hexdigit(uint8_t v)
+#include "HtmlColor.h"
+#include "HtmlColorNameStrings.h"
+
+static const HtmlColorPair c_ShortColorNames[] PROGMEM = {
+    { c_HtmlNameAqua, 0xffff },
+    { c_HtmlNameBlack, 0x0 },
+    { c_HtmlNameBlue, 0xff },
+    { c_HtmlNameFuchsia, 0xff00ff },
+    { c_HtmlNameGray, 0x808080 },
+    { c_HtmlNameGreen, 0x8000 },
+    { c_HtmlNameLime, 0xff00 },
+    { c_HtmlNameMaroon, 0x800000 },
+    { c_HtmlNameNavy, 0x80 },
+    { c_HtmlNameOlive, 0x808000 },
+    { c_HtmlNameOrange, 0xffa500 },
+    { c_HtmlNamePurple, 0x800080 },
+    { c_HtmlNameRed, 0xff0000 },
+    { c_HtmlNameSilver, 0xc0c0c0 },
+    { c_HtmlNameTeal, 0x8080 },
+    { c_HtmlNameWhite, 0xffffff },
+    { c_HtmlNameYellow, 0xffff00 },
+};
+
+
+const HtmlColorPair* HtmlShortColorNames::Pair(uint8_t index)
 {
-    return v + (v < 10 ? '0' : 'a' - 10);
+    return &c_ShortColorNames[index];
 }
 
-
-size_t HtmlColor::ToNumericalString(char* buf, size_t bufSize) const
+uint8_t HtmlShortColorNames::Count()
 {
-    size_t bufLen = bufSize - 1;
-
-    if (bufLen-- > 0)
-    {
-        if (bufLen > 0)
-        {
-            buf[0] = '#';
-        }
-
-        uint32_t color = Color;
-        for (uint8_t indexDigit = 6; indexDigit > 0; indexDigit--)
-        {
-            if (bufLen > indexDigit)
-            {
-                buf[indexDigit] = hexdigit(color & 0x0000000f);
-            }
-            color >>= 4;
-        }
-
-        buf[min(bufLen, 7)] = 0;
-    }
-    return 7;
+    return countof(c_ShortColorNames);
 }
