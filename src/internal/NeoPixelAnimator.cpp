@@ -68,8 +68,10 @@ bool NeoPixelAnimator::NextAvailableAnimation(uint16_t* indexAvailable, uint16_t
 
 void NeoPixelAnimator::StartAnimation(uint16_t indexAnimation, 
         uint16_t duration, 
-        AnimUpdateCallback animUpdate)
+        AnimUpdateCallback animUpdate,
+        void *controller)
 {
+    
     if (indexAnimation >= _countAnimations || animUpdate == NULL)
     {
         return;
@@ -89,6 +91,7 @@ void NeoPixelAnimator::StartAnimation(uint16_t indexAnimation,
         duration = 1;
     }
 
+    _animations[indexAnimation]._controller = controller;  // pass controller pointer into animation
     _animations[indexAnimation].StartAnimation(duration, animUpdate);
 
     _activeAnimations++;
@@ -133,7 +136,8 @@ void NeoPixelAnimator::UpdateAnimations()
                 {
                     param.state = (pAnim->_remaining == pAnim->_duration) ? AnimationState_Started : AnimationState_Progress;
                     param.progress = (float)(pAnim->_duration - pAnim->_remaining) / (float)pAnim->_duration;
-
+                    param.controller = pAnim->_controller; // set controller pointer in param
+                    
                     fnUpdate(param);
 
                     pAnim->_remaining -= delta;
@@ -142,6 +146,7 @@ void NeoPixelAnimator::UpdateAnimations()
                 {
                     param.state = AnimationState_Completed;
                     param.progress = 1.0f;
+                    param.controller = &pAnim->_controller; // set controller pointer in param
 
                     _activeAnimations--; 
                     pAnim->StopAnimation();
