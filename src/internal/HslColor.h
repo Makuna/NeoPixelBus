@@ -74,6 +74,36 @@ struct HslColor
     };
 
     // ------------------------------------------------------------------------
+    // BilinearBlend between four colors by the amount defined by 2d variable
+    // c00 - upper left quadrant color
+    // c01 - upper right quadrant color
+    // c10 - lower left quadrant color
+    // c11 - lower right quadrant color
+    // x - unit value (0.0 - 1.0) that defines the blend progress in horizontal space
+    // y - unit value (0.0 - 1.0) that defines the blend progress in vertical space
+    // ------------------------------------------------------------------------
+    template <typename T_NEOHUEBLEND> static HslColor BilinearBlend(const HslColor& c00,
+        const HslColor& c01,
+        const HslColor& c10,
+        const HslColor& c11,
+        float x,
+        float y)
+    {
+        float v00 = (1.0f - x) * (1.0f - y);
+        float v10 = x * (1.0f - y);
+        float v01 = (1.0f - x) * y;
+        float v11 = x * y;
+
+        return HslColor(
+            T_NEOHUEBLEND::HueBlend(
+                T_NEOHUEBLEND::HueBlend(c00.H, c10.H, x),
+                T_NEOHUEBLEND::HueBlend(c01.H, c11.H, x),
+                y),
+            c00.S * v00 + c10.S * v10 + c01.S * v01 + c11.S * v11,
+            c00.L * v00 + c10.L * v10 + c01.L * v01 + c11.L * v11);
+    };
+
+    // ------------------------------------------------------------------------
     // Hue, Saturation, Lightness color members 
     // ------------------------------------------------------------------------
     float H;
