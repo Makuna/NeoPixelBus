@@ -60,7 +60,6 @@ void ICACHE_RAM_ATTR bitbang_send_pixels_800(uint8_t* pixels, uint8_t* end, uint
             // do the checks here while we are waiting on time to pass
             uint32_t cyclesBit = ((subpix & mask)) ? CYCLES_800_T1H : CYCLES_800_T0H;
             uint32_t cyclesNext = cyclesStart;
-            uint32_t delta;
 
             // after we have done as much work as needed for this next bit
             // now wait for the HIGH
