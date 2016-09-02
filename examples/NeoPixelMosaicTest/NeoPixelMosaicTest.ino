@@ -36,8 +36,8 @@ NeoMosaic <MyPanelLayout> mosaic(
     TileHeight);
 
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
-//NeoPixelBus<NeoRgbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
-//NeoPixelBus<NeoRgbwFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+// for esp8266 omit the pin
+//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
 
 RgbColor red(128, 0, 0);
 RgbColor green(0, 128, 0);

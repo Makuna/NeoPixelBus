@@ -22,6 +22,13 @@ const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignore
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod> strip(PixelCount, PixelPin);
 
+// For Esp8266, the Pin is omitted and it uses GPIO3 due to DMA hardware use.  
+// There are other Esp8266 alternative methods that provide more pin options, but also have
+// other side effects.
+//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
+//
+// NeoEsp8266Uart800KbpsMethod uses GPI02 instead
+
 // You can also use one of these for Esp8266, 
 // each having their own restrictions
 //

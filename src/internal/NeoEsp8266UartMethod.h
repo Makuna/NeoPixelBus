@@ -34,7 +34,7 @@ License along with NeoPixel.  If not, see
 class NeoEsp8266Uart
 {
 protected:
-    NeoEsp8266Uart(uint8_t pin, uint16_t pixelCount, size_t elementSize);
+    NeoEsp8266Uart(uint16_t pixelCount, size_t elementSize);
 
     ~NeoEsp8266Uart();
 
@@ -61,7 +61,7 @@ protected:
 class NeoEsp8266AsyncUart: public NeoEsp8266Uart
 {
 protected:
-    NeoEsp8266AsyncUart(uint8_t pin, uint16_t pixelCount, size_t elementSize);
+    NeoEsp8266AsyncUart(uint16_t pixelCount, size_t elementSize);
 
     ~NeoEsp8266AsyncUart();
 
@@ -97,8 +97,8 @@ template<typename T_SPEED, typename T_BASE>
 class NeoEsp8266UartMethodBase: public T_BASE
 {
 public:
-    NeoEsp8266UartMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize)
-        : T_BASE(pin, pixelCount, elementSize)
+    NeoEsp8266UartMethodBase(uint16_t pixelCount, size_t elementSize)
+        : T_BASE(pixelCount, elementSize)
     {
     }
 

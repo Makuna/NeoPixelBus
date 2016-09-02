@@ -54,7 +54,7 @@ static inline void enqueue(uint8_t byte)
 static const uint8_t* esp8266_uart1_async_buf;
 static const uint8_t* esp8266_uart1_async_buf_end;
 
-NeoEsp8266Uart::NeoEsp8266Uart(uint8_t pin, uint16_t pixelCount, size_t elementSize)
+NeoEsp8266Uart::NeoEsp8266Uart(uint16_t pixelCount, size_t elementSize)
 {
     _sizePixels = pixelCount * elementSize;
     _pixels = (uint8_t*)malloc(_sizePixels);
@@ -130,8 +130,8 @@ const uint8_t* ICACHE_RAM_ATTR NeoEsp8266Uart::FillUartFifo(const uint8_t* pixel
     return pixels;
 }
 
-NeoEsp8266AsyncUart::NeoEsp8266AsyncUart(uint8_t pin, uint16_t pixelCount, size_t elementSize)
-    : NeoEsp8266Uart(pin, pixelCount, elementSize)
+NeoEsp8266AsyncUart::NeoEsp8266AsyncUart(uint16_t pixelCount, size_t elementSize)
+    : NeoEsp8266Uart(pixelCount, elementSize)
 {
     _asyncPixels = (uint8_t*)malloc(_sizePixels);
 }

@@ -91,7 +91,7 @@ const uint8_t c_I2sPin = 3; // due to I2S hardware, the pin used is restricted t
 template<typename T_SPEED> class NeoEsp8266DmaMethodBase
 {
 public:
-    NeoEsp8266DmaMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize) 
+    NeoEsp8266DmaMethodBase(uint16_t pixelCount, size_t elementSize) 
     {
         uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
 

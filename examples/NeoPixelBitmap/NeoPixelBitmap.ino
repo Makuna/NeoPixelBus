@@ -24,6 +24,8 @@ const uint16_t PixelPin = 2;
 const uint16_t AnimCount = 1; // we only need one
 
 NeoPixelBus<MyPixelColorFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+// for esp8266 omit the pin
+//NeoPixelBus<MyPixelColorFeature, Neo800KbpsMethod> strip(PixelCount);
 NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
 
 // our NeoBitmapFile will use the same color feature as NeoPixelBus and
