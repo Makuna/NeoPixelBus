@@ -54,7 +54,7 @@ public:
         SPI.begin();
 
 #if defined(ARDUINO_ARCH_ESP8266)
-        SPI.setFrequency(8000000L);
+        SPI.setFrequency(20000000L);
 #elif defined(ARDUINO_ARCH_AVR) 
         SPI.setClockDivider(SPI_CLOCK_DIV2); // 8 MHz (6 MHz on Pro Trinket 3V)
 #else

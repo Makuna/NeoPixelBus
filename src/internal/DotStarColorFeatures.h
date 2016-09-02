@@ -26,6 +26,73 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+class DotStar3Elements
+{
+public:
+    static const size_t PixelSize = 4; // still requires 4 to be sent
+
+    static uint8_t* getPixelAddress(uint8_t* pPixels, uint16_t indexPixel)
+    {
+        return pPixels + indexPixel * PixelSize;
+    }
+    static const uint8_t* getPixelAddress(const uint8_t* pPixels, uint16_t indexPixel)
+    {
+        return pPixels + indexPixel * PixelSize;
+    }
+
+    static void replicatePixel(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
+    {
+        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        while (pPixelDest < pEnd)
+        {
+            *pPixelDest++ = pPixelSrc[0];
+            *pPixelDest++ = pPixelSrc[1];
+            *pPixelDest++ = pPixelSrc[2];
+            *pPixelDest++ = pPixelSrc[3];
+        }
+    }
+
+    static void movePixelsInc(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
+    {
+        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        while (pPixelDest < pEnd)
+        {
+            *pPixelDest++ = *pPixelSrc++;
+            *pPixelDest++ = *pPixelSrc++;
+            *pPixelDest++ = *pPixelSrc++;
+            *pPixelDest++ = *pPixelSrc++;
+        }
+    }
+
+    static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
+    {
+        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        const uint8_t* pSrc = (const uint8_t*)pPixelSrc;
+        while (pPixelDest < pEnd)
+        {
+            *pPixelDest++ = pgm_read_byte(pSrc++);
+            *pPixelDest++ = pgm_read_byte(pSrc++);
+            *pPixelDest++ = pgm_read_byte(pSrc++);
+            *pPixelDest++ = pgm_read_byte(pSrc++);
+        }
+    }
+
+    static void movePixelsDec(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
+    {
+        uint8_t* pDestBack = pPixelDest + (count * PixelSize);
+        const uint8_t* pSrcBack = pPixelSrc + (count * PixelSize);
+        while (pDestBack > pPixelDest)
+        {
+            *--pDestBack = *--pSrcBack;
+            *--pDestBack = *--pSrcBack;
+            *--pDestBack = *--pSrcBack;
+            *--pDestBack = *--pSrcBack;
+        }
+    }
+
+    typedef RgbColor ColorObject;
+};
+
 class DotStar4Elements
 {
 public:
@@ -93,7 +160,7 @@ public:
     typedef RgbwColor ColorObject;
 };
 
-class DotStarBgrFeature : public DotStar4Elements
+class DotStarBgrFeature : public DotStar3Elements
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -175,17 +242,17 @@ public:
     
 };
 
-class DotStarWbgrFeature : public DotStar4Elements
+class DotStarGrbFeature : public DotStar3Elements
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        *p++ = color.W;
-        *p++ = color.B;
+        *p++ = 0xff; // upper three bits are always 111 and brightness at max
         *p++ = color.G;
-        *p = color.R;
+        *p++ = color.R;
+        *p = color.B;
     }
 
     static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
@@ -193,10 +260,10 @@ public:
         ColorObject color;
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        color.W = *p++;
-        color.B = *p++;
+        p++; // ignore the first byte
         color.G = *p++;
-        color.R = *p;
+        color.R = *p++;
+        color.B = *p;
 
         return color;
     }
@@ -206,11 +273,54 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
 
-        color.W = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p++);
+        pgm_read_byte(p++); // ignore the first byte
         color.G = pgm_read_byte(p++);
-        color.R = pgm_read_byte(p);
+        color.R = pgm_read_byte(p++);
+        color.B = pgm_read_byte(p);
 
         return color;
     }
+
 };
+
+class DotStarLgrbFeature : public DotStar4Elements
+{
+public:
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        *p++ = 0xE0 | min(color.W, 31); // upper three bits are always 111
+        *p++ = color.G;
+        *p++ = color.R;
+        *p = color.B;
+    }
+
+    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        color.W = (*p++) & 0x1F; // mask out upper three bits
+        color.G = *p++;
+        color.R = *p++;
+        color.B = *p;
+
+        return color;
+    }
+
+    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
+
+        color.W = pgm_read_byte(p++) & 0x1F; // mask out upper three bits
+        color.G = pgm_read_byte(p++);
+        color.R = pgm_read_byte(p++);
+        color.B = pgm_read_byte(p);
+
+        return color;
+    }
+
+};
+

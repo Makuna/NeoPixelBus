@@ -15,6 +15,8 @@ const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignore
 const RgbColor CylonEyeColor(HtmlColor(0x7f0000));
 
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+// for esp8266 omit the pin
+//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
 
 NeoPixelAnimator animations(2); // only ever need 2 animations
 
