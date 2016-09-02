@@ -1,14 +1,14 @@
 {
   "name": "NeoPixelBus",
-  "keywords": "NeoPixel, WS2811, WS2812, SK6812, RGB, RGBW",
-  "description": "A library that makes controlling NeoPixels (WS2811, WS2812 & SK6812) easy.  Supports most Arduino platforms.  Support for RGBW pixels.  Includes seperate RgbColor, RgbwColor, HslColor, and HsbColor objects.  Includes an animator class that helps create asyncronous animations.  For Esp8266 it has three methods of sending data, DMA, UART, and Bit Bang.",
+  "keywords": "NeoPixel, WS2811, WS2812, SK6812, DotStar, ADA102, RGB, RGBW",
+  "description": "A library that makes controlling NeoPixels (WS2811, WS2812 & SK6812) and DotStars (ADA102) easy.  Supports most Arduino platforms.  Support for RGBW pixels.  Includes seperate RgbColor, RgbwColor, HslColor, and HsbColor objects.  Includes an animator class that helps create asyncronous animations.  For Esp8266 it has three methods of sending data, DMA, UART, and Bit Bang.",
   "homepage": "https://github.com/Makuna/NeoPixelBus/wiki",
   "repository":
   {
     "type": "git",
     "url": "https://github.com/Makuna/NeoPixelBus"
   },
-  "version": "2.1.4",
+  "version": "2.2.0",
   "frameworks": "arduino",
   "platforms": "*"
 }
