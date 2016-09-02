@@ -36,6 +36,7 @@ License along with NeoPixel.  If not, see
 #include "internal/RgbwColor.h"
 
 #include "internal/NeoColorFeatures.h"
+#include "internal/DotStarColorFeatures.h"
 
 #include "internal/Layouts.h"
 #include "internal/NeoTopology.h"
@@ -52,19 +53,29 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoGamma.h"
 
 #if defined(ARDUINO_ARCH_ESP8266)
+
 #include "internal/NeoEsp8266DmaMethod.h"
 #include "internal/NeoEsp8266UartMethod.h"
 #include "internal/NeoEsp8266BitBangMethod.h"
+#include "internal/DotStarGenericMethod.h"
+
 #elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
+
 #include "internal/NeoArmMethod.h"
+#include "internal/DotStarGenericMethod.h"
+
 #elif defined(ARDUINO_ARCH_AVR)
+
 #include "internal/NeoAvrMethod.h"
+#include "internal/DotStarAvrMethod.h"
+
 #else
 #error "Platform Currently Not Supported, please add an Issue at Github/Makuna/NeoPixelBus"
 #endif
 
-
-
+#if !defined(__AVR_ATtiny85__)
+#include "internal/DotStarSpiMethod.h"
+#endif
 
 // '_state' flags for internal state
 #define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
@@ -81,9 +92,20 @@ public:
     {
     }
 
+    NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
+        _countPixels(countPixels),
+        _method(pinClock, pinData, countPixels, T_COLOR_FEATURE::PixelSize)
+    {
+    }
+
+    NeoPixelBus(uint16_t countPixels) :
+        _countPixels(countPixels),
+        _method(countPixels, T_COLOR_FEATURE::PixelSize)
+    {
+    }
+
     ~NeoPixelBus()
     {
-
     }
 
     operator NeoBufferContext<T_COLOR_FEATURE>()
