@@ -114,6 +114,10 @@ public:
         s_this = this; // store this for the ISR
     }
 
+    NeoEsp8266DmaMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize) : NeoEsp8266DmaMethodBase(pixelCount, elementSize)
+    {
+    }
+
     ~NeoEsp8266DmaMethodBase()
     {
         StopDma();
