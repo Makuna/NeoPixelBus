@@ -101,6 +101,10 @@ public:
         : T_BASE(pixelCount, elementSize)
     {
     }
+    NeoEsp8266UartMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize)
+        : T_BASE(pixelCount, elementSize)
+    {
+    }
 
     bool IsReadyToUpdate() const
     {
