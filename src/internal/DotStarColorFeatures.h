@@ -208,7 +208,7 @@ public:
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        *p++ = 0xE0 | min(color.W, 31); // upper three bits are always 111
+        *p++ = 0xE0 | (color.W < 31 ? color.W : 31); // upper three bits are always 111
         *p++ = color.B;
         *p++ = color.G;
         *p = color.R;
@@ -290,7 +290,7 @@ public:
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        *p++ = 0xE0 | min(color.W, 31); // upper three bits are always 111
+        *p++ = 0xE0 | (color.W < 31 ? color.W : 31); // upper three bits are always 111
         *p++ = color.G;
         *p++ = color.R;
         *p = color.B;

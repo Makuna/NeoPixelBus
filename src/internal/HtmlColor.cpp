@@ -52,7 +52,7 @@ size_t HtmlColor::ToNumericalString(char* buf, size_t bufSize) const
             color >>= 4;
         }
 
-        buf[min(bufLen, 7)] = 0;
+        buf[(bufLen < 7 ? bufLen : 7)] = 0;
     }
     return 7;
 }
