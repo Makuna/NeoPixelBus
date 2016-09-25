@@ -211,7 +211,7 @@ public:
     {
         if (first < _countPixels &&
             last < _countPixels &&
-            first < last)
+            first <= last)
         {
             uint8_t temp[T_COLOR_FEATURE::PixelSize];
             uint8_t* pixels = _method.getPixels();
