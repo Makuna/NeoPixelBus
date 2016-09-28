@@ -104,6 +104,7 @@ public:
         BitmapInfoHeader bmpInfoHeader;
         size_t result;
 
+        result = _file.read((uint8_t*)(&bmpHeader), sizeof(bmpHeader));
 
         if (result != sizeof(bmpHeader) ||
             bmpHeader.FileId != c_BitmapFileId ||
@@ -112,6 +113,7 @@ public:
             goto error;
         }
 
+        result = _file.read((uint8_t*)(&bmpInfoHeader), sizeof(bmpInfoHeader));
 
         if (result != sizeof(bmpInfoHeader) ||
             result != bmpInfoHeader.Size ||
