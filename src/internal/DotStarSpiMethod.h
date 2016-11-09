@@ -32,16 +32,18 @@ class DotStarSpiMethod
 {
 public:
     DotStarSpiMethod(uint16_t pixelCount, size_t elementSize) :
-        _sizePixels(pixelCount * elementSize)
+        _sizeData(pixelCount * elementSize),
+        _sizeSendBuffer(calcBufferSize(pixelCount * elementSize))
     {
-        _pixels = (uint8_t*)malloc(_sizePixels);
-        memset(_pixels, 0, _sizePixels);
+        _sendBuffer = (uint8_t*)malloc(_sizeSendBuffer);
+        memset(_sendBuffer, 0, _sizeSendBuffer);
+        setEndFrameBytes();
     }
 
     ~DotStarSpiMethod()
     {
         SPI.end();
-        free(_pixels);
+        free(_sendBuffer);
     }
 
     bool IsReadyToUpdate() const
@@ -66,43 +68,56 @@ public:
 
     void Update()
     {
-        // start frame
-        for (int startFrameByte = 0; startFrameByte < 4; startFrameByte++)
-        {
-            SPI.transfer(0x00);
-        }
-        
-        // data
-        uint8_t* data = _pixels;
-        const uint8_t* endData = _pixels + _sizePixels;
-        while (data < endData)
-        {
-            SPI.transfer(*data++);
-        }
-        
-        // end frame 
-        // one bit for every two pixels with no less than 1 byte
-        const uint16_t countEndFrameBytes = ((_sizePixels / 4) + 15) / 16;
-        for (uint16_t endFrameByte = 0; endFrameByte < countEndFrameBytes; endFrameByte++)
-        {
-            SPI.transfer(0xff);
-        }
+        // due to API inconsistencies need to call different methods on SPI
+#if defined(ARDUINO_ARCH_ESP8266)
+        SPI.writeBytes(_sendBuffer, _sizeSendBuffer);
+#else
+        SPI.transfer(_sendBuffer, _sizeSendBuffer);
+#endif
     }
 
     uint8_t* getPixels() const
     {
-        return _pixels;
+        return _sendBuffer + _countStartFrame;
     };
 
     size_t getPixelsSize() const
     {
-        return _sizePixels;
+        return _sizeData;
     };
 
 private:
-    const size_t   _sizePixels;   // Size of '_pixels' buffer below
+    const size_t _countStartFrame = 4;
+    const size_t   _sizeData; // size of actuall pixel data within _sendBuffer
+    const size_t   _sizeSendBuffer;   // Size of '_sendBuffer' buffer below
 
-    uint8_t* _pixels;       // Holds LED color values
+    uint8_t* _sendBuffer;       // Holds SPI send Buffer, including LED color values
+
+    size_t calcBufferSize(size_t sizePixels) const
+    {
+        const size_t countEndFrameBytes = calcEndFrameSize(sizePixels);
+
+        // start frame + data + end frame
+        const size_t bufferSize = _countStartFrame + sizePixels + countEndFrameBytes;
+        return bufferSize;
+    }
+
+    size_t calcEndFrameSize(size_t sizePixels) const
+    {
+        // end frame 
+        // one bit for every two pixels with no less than 1 byte
+        return ((sizePixels / 4) + 15) / 16;
+    }
+
+    void setEndFrameBytes()
+    {
+        uint8_t* pEndFrame = _sendBuffer + _countStartFrame + _sizeData;
+        uint8_t* pEndFrameStop = pEndFrame + calcEndFrameSize(_sizeData);
+        while (pEndFrame != pEndFrameStop)
+        {
+            *pEndFrame++ = 0xff;
+        }
+    }
 };
 
 
