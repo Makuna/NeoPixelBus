@@ -152,7 +152,7 @@ public:
         _state &= ~NEO_DIRTY;
     };
 
-    uint8_t* Pixels() const
+    uint8_t* Pixels() 
     {
         return _method.getPixels();
     };
@@ -307,7 +307,7 @@ public:
     
 
  
-private:
+protected:
     const uint16_t _countPixels; // Number of RGB LEDs in strip
 
     uint8_t _state;     // internal state
@@ -380,4 +380,5 @@ private:
         // intentional no dirty
     }
 };
+
 
