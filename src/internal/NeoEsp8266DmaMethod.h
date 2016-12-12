@@ -134,6 +134,7 @@ public:
 
     void Initialize()
     {
+        StopDma();
         _dmaState = NeoDmaState_Sending; // start off sending empty buffer
 
         uint8_t* is2Buffer = _i2sBuffer;
