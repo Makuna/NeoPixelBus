@@ -79,6 +79,8 @@ public:
 
     void StartAnimation(uint16_t indexAnimation, uint16_t duration, AnimUpdateCallback animUpdate);
     void StopAnimation(uint16_t indexAnimation);
+    void StopAll();
+
     void RestartAnimation(uint16_t indexAnimation)
     {
         if (indexAnimation >= _countAnimations || _animations[indexAnimation]._duration == 0)

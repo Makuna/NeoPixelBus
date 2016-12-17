@@ -108,6 +108,16 @@ void NeoPixelAnimator::StopAnimation(uint16_t indexAnimation)
     }
 }
 
+void NeoPixelAnimator::StopAll()
+{
+    for (uint16_t indexAnimation = 0; indexAnimation < _countAnimations; ++indexAnimation)
+    {
+        _animations[indexAnimation].StopAnimation();
+    }
+    _activeAnimations = 0;
+}
+
+
 void NeoPixelAnimator::UpdateAnimations()
 {
     if (_isRunning)
