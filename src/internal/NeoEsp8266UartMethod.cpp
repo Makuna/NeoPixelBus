@@ -63,14 +63,14 @@ NeoEsp8266Uart::NeoEsp8266Uart(uint16_t pixelCount, size_t elementSize)
 
 NeoEsp8266Uart::~NeoEsp8266Uart()
 {
-    free(_pixels);
-
     // Wait until the TX fifo is empty. This way we avoid broken frames
     // when destroying & creating a NeoPixelBus to change its length.
     while (getUartTxFifoLength() > 0)
     {
         yield();
     }
+
+    free(_pixels);
 }
 
 void NeoEsp8266Uart::InitializeUart(uint32_t uartBaud)
