@@ -40,6 +40,7 @@ License along with NeoPixel.  If not, see
 
 #include "internal/Layouts.h"
 #include "internal/NeoTopology.h"
+#include "internal/NeoRingTopology.h"
 #include "internal/NeoTiles.h"
 #include "internal/NeoMosaic.h"
 

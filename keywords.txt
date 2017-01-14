@@ -56,6 +56,7 @@ ColumnMajorAlternating90Layout	KEYWORD1
 ColumnMajorAlternating180Layout	KEYWORD1
 ColumnMajorAlternating270Layout	KEYWORD1
 NeoTopology	KEYWORD1
+NeoRingTopology	KEYWORD1
 NeoTiles	KEYWORD1
 NeoMosaic	KEYWORD1
 NeoGammaEquationMethod	KEYWORD1
@@ -139,6 +140,9 @@ Map	KEYWORD2
 MapProbe	KEYWORD2
 getWidth	KEYWORD2
 getHeight	KEYWORD2
+getCountOfRings	KEYWORD2
+getPixelCountAtRing	KEYWORD2
+getPixelCount	KEYWORD2
 TopologyHint	KEYWORD2
 Correct	KEYWORD2
 SpriteWidth	KEYWORD2
@@ -150,6 +154,7 @@ Height	KEYWORD2
 Parse	KEYWORD2
 ToString	KEYWORD2
 ToNumericalString	KEYWORD2
+
 
 #######################################
 # Constants (LITERAL1)
