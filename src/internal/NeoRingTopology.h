@@ -56,12 +56,12 @@ public:
         return _map(ring, pixel);
     }
 
-    uint16_t getCountOfRings() const 
+    uint8_t getCountOfRings() const 
     {
         return _ringCount() - 1; // minus one as the Rings includes the extra value
     }
 
-    uint16_t getPixelCountAtRing(uint16_t ring) const 
+    uint16_t getPixelCountAtRing(uint8_t ring) const 
     {
         if (ring >= getCountOfRings())
         {
@@ -73,16 +73,16 @@ public:
 
     uint16_t getPixelCount() const
     {
-        T_LAYOUT::Rings[_ringCount() - 1]; // the last entry is the total count
+        return T_LAYOUT::Rings[_ringCount() - 1]; // the last entry is the total count
     }
 
 private:
-    uint16_t _map(uint16_t ring, uint16_t pixel)  const
+    uint16_t _map(uint8_t ring, uint16_t pixel)  const
     {
         return T_LAYOUT::Rings[ring] + pixel;
     }
 
-    uint16_t _ringCount() const
+    uint8_t _ringCount() const
     {
         return sizeof(T_LAYOUT::Rings) / sizeof(T_LAYOUT::Rings[0]);
     }
