@@ -49,7 +49,7 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoBuffer.h"
 #include "internal/NeoSpriteSheet.h"
 #include "internal/NeoBitmapFile.h"
-
+#include "internal/NeoDib.h"
 #include "internal/NeoEase.h"
 #include "internal/NeoGamma.h"
 
