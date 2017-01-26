@@ -25,13 +25,42 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+class NeoShaderBase
+{
+public:
+    NeoShaderBase() :
+        _state(0)
+    {
+    }
+
+    bool IsDirty() const
+    {
+        return  (_state & NEO_DIRTY);
+    };
+
+    void Dirty()
+    {
+        _state |= NEO_DIRTY;
+    };
+
+    void ResetDirty()
+    {
+        _state &= ~NEO_DIRTY;
+    };
+
+protected:
+    uint8_t _state;     // internal state
+};
+
 template<typename T_COLOR_OBJECT> class NeoDib
 {
 public:
     NeoDib(uint16_t countPixels) :
-        _countPixels(countPixels)
+        _countPixels(countPixels),
+        _state(0)
     {
         _pixels = (T_COLOR_OBJECT*)malloc(PixelsSize());
+        ResetDirty();
     }
 
     ~NeoDib()
@@ -66,6 +95,7 @@ public:
         if (indexPixel < PixelCount())
         {
             _pixels[indexPixel] = color;
+            Dirty();
         }
     };
 
@@ -85,24 +115,47 @@ public:
         {
             _pixels[pixel] = color;
         }
+        Dirty();
     };
 
-    template <typename T_COLOR_FEATURE, typename T_SHADER> void Render(NeoBufferContext<T_COLOR_FEATURE> destBuffer, T_SHADER shader)
+    template <typename T_COLOR_FEATURE, typename T_SHADER> void Render(NeoBufferContext<T_COLOR_FEATURE> destBuffer, T_SHADER& shader)
     {
-        uint16_t countPixels = destBuffer.PixelCount();
-        if (countPixels > _countPixels)
+        if (IsDirty() || shader.IsDirty())
         {
-            countPixels = _countPixels;
-        }
+            uint16_t countPixels = destBuffer.PixelCount();
+            if (countPixels > _countPixels)
+            {
+                countPixels = _countPixels;
+            }
 
-        for (uint16_t indexPixel = 0; indexPixel < countPixels; indexPixel++)
-        {
-            T_COLOR_OBJECT color = shader.Apply(indexPixel, _pixels[indexPixel]);
-            T_COLOR_FEATURE::applyPixelColor(destBuffer.Pixels, indexPixel, color);
+            for (uint16_t indexPixel = 0; indexPixel < countPixels; indexPixel++)
+            {
+                T_COLOR_OBJECT color = shader.Apply(indexPixel, _pixels[indexPixel]);
+                T_COLOR_FEATURE::applyPixelColor(destBuffer.Pixels, indexPixel, color);
+            }
+
+            shader.ResetDirty();
+            ResetDirty();
         }
     }
+
+    bool IsDirty() const
+    {
+        return  (_state & NEO_DIRTY);
+    };
+
+    void Dirty()
+    {
+        _state |= NEO_DIRTY;
+    };
+
+    void ResetDirty()
+    {
+        _state &= ~NEO_DIRTY;
+    };
 
 private:
     const uint16_t _countPixels; // Number of RGB LEDs in strip
     T_COLOR_OBJECT* _pixels;
+    uint8_t _state;     // internal state
 };

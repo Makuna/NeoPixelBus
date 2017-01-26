@@ -27,6 +27,9 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
+// '_state' flags for internal state
+#define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
+
 #include "internal/NeoHueBlend.h"
 
 #include "internal/RgbColor.h"
@@ -78,8 +81,6 @@ License along with NeoPixel.  If not, see
 #include "internal/DotStarSpiMethod.h"
 #endif
 
-// '_state' flags for internal state
-#define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
 
 template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBus
 {
@@ -89,18 +90,21 @@ public:
    
     NeoPixelBus(uint16_t countPixels, uint8_t pin) :
         _countPixels(countPixels),
+        _state(0),
         _method(pin, countPixels, T_COLOR_FEATURE::PixelSize)
     {
     }
 
     NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
         _countPixels(countPixels),
+        _state(0),
         _method(pinClock, pinData, countPixels, T_COLOR_FEATURE::PixelSize)
     {
     }
 
     NeoPixelBus(uint16_t countPixels) :
         _countPixels(countPixels),
+        _state(0),
         _method(countPixels, T_COLOR_FEATURE::PixelSize)
     {
     }

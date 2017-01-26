@@ -34,10 +34,12 @@ const RgbColor White(255);
 const RgbColor Black(0);
 
 // define a custom shader object that provides brightness support
-class BrightnessShader
+// based upon the NeoShaderBase
+class BrightnessShader : public NeoShaderBase
 {
 public:
   BrightnessShader():
+    NeoShaderBase(),
     _brightness(255) // default to full bright
   {}
 
@@ -57,6 +59,7 @@ public:
   void setBrightness(uint8_t brightness)
   {
     _brightness = brightness;
+    Dirty(); // must call dirty when a property changes
   }
 
   // provide an accessor to get brightness
@@ -141,12 +144,15 @@ void loop()
   
   Serial.println(brightness);
    
-  // render the image using the shader
+  
+  // render the image using the shader and then call Show()
+  // these two should be called together in order
+  //
+
   // need to provide the type of color feature for the strip and
   // the type of our custom shader
   image.Render<NeoGrbFeature, BrightnessShader>(strip, shader);
-
-  // and just show the strip
   strip.Show();
+
 }
 
