@@ -69,7 +69,7 @@ public:
     void Update()
     {
         // due to API inconsistencies need to call different methods on SPI
-#if defined(ARDUINO_ARCH_ESP8266)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
         SPI.writeBytes(_sendBuffer, _sizeSendBuffer);
 #else
         SPI.transfer(_sendBuffer, _sizeSendBuffer);

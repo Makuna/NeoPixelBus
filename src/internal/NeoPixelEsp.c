@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library helper functions for Esp8266.
+NeoPixel library helper functions for Esp8266 and Esp32.
 
 Written by Michael C. Miller.
 
@@ -24,10 +24,17 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
-#ifdef ARDUINO_ARCH_ESP8266
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
 
 #include <Arduino.h>
+#if defined(ARDUINO_ARCH_ESP8266)
 #include <eagle_soc.h>
+#endif
+
+// ESP32 doesn't use ICACHE_RAM_ATTR
+#ifndef ICACHE_RAM_ATTR
+#define ICACHE_RAM_ATTR 
+#endif
 
 inline uint32_t _getCycleCount()
 {
@@ -71,7 +78,11 @@ void ICACHE_RAM_ATTR bitbang_send_pixels_800(uint8_t* pixels, uint8_t* end, uint
             } while ((cyclesStart - cyclesNext) < CYCLES_800);
 
             // set high
+#if defined(ARDUINO_ARCH_ESP32)
+            GPIO.out_w1ts = pinRegister;
+#else
             GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+#endif
 
             // wait for the LOW
             do
@@ -80,7 +91,11 @@ void ICACHE_RAM_ATTR bitbang_send_pixels_800(uint8_t* pixels, uint8_t* end, uint
             } while ((cyclesNext - cyclesStart) < cyclesBit);
 
             // set low
+#if defined(ARDUINO_ARCH_ESP32)
+            GPIO.out_w1tc = pinRegister;
+#else
             GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+#endif
         }
     } while (pixels < end);
 }
@@ -111,8 +126,11 @@ void ICACHE_RAM_ATTR bitbang_send_pixels_400(uint8_t* pixels, uint8_t* end, uint
                 cyclesStart = _getCycleCount();
             } while ((cyclesStart - cyclesNext) < CYCLES_400);
 
-            // set high
+#if defined(ARDUINO_ARCH_ESP32)
+            GPIO.out_w1ts = pinRegister;
+#else
             GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+#endif
 
             // wait for the LOW
             do
@@ -121,7 +139,11 @@ void ICACHE_RAM_ATTR bitbang_send_pixels_400(uint8_t* pixels, uint8_t* end, uint
             } while ((cyclesNext - cyclesStart) < cyclesBit);
 
             // set low
+#if defined(ARDUINO_ARCH_ESP32)
+            GPIO.out_w1tc = pinRegister;
+#else
             GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+#endif
         }
     } while (pixels < end);
 }
