@@ -1,6 +1,6 @@
-// NeoPixelDibTest
-// This example will provide a shader class to the NeoPixelDib that will dim and brighten
-// the pixels that are in the Dib (Device Independant Bitmap)
+// NeoPixelBufferShader
+// This example will provide a shader class to the NeoPixelBuffer that will dim and brighten
+// the pixels that are in the buffer (a device dependent bitmap)
 //
 
 #include <NeoPixelBus.h>
@@ -11,8 +11,10 @@ const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignore
 // three element GRB pixels, change to your needs
 NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 
-// the DIB object, using RgbColor and initialized with the same number of pixels as our strip
-NeoDib<RgbColor> image(PixelCount);
+// the buffer object, 
+// defined to use memory with the same feature as the strip
+// initialized with the same number of pixels as our strip
+NeoBuffer<NeoBufferMethod<NeoGrbFeature>> image(8,8,NULL);
 
 const RgbColor BrightRed(255, 0, 0);
 const RgbColor BrightGreen(0, 255, 0);
@@ -34,25 +36,32 @@ const RgbColor White(255);
 const RgbColor Black(0);
 
 // define a custom shader object that provides brightness support
-// based upon the NeoShaderBase
-class BrightnessShader : public NeoShaderBase
+// based upon the NeoBitsBase
+template<typename T_COLOR_FEATURE> class BrightnessShader : public NeoBitsBase
 {
 public:
   BrightnessShader():
-    NeoShaderBase(),
+    NeoBitsBase(),
     _brightness(255) // default to full bright
   {}
 
   // required for a shader object, it will be called for
   // every pixel
-  RgbColor Apply(uint16_t index, RgbColor original)
+  void Apply(uint16_t index, uint8_t* pDest, uint8_t* pSrc)
   {
     // we don't care what the index is so we ignore it
     //
-    // to apply our brightness shader, modify the original color and return the color we want
-    // blend from black (_brightness == 0.0) to the original color (_brightness == 1.0)
+    // to apply our brightness shader, 
+    // use the source color, modify, and apply to the destination 
     
-    return RgbColor::LinearBlend(Black, original, (float)_brightness / 255.0f);
+    // for every byte in the pixel,
+    // scale the source value by the brightness and 
+    // store it in the destination byte
+    const uint8_t* pSrcEnd = pSrc + T_COLOR_FEATURE::PixelSize;
+    while (pSrc != pSrcEnd)
+    {
+        *pDest++ = (*pSrc++ * (uint16_t(_brightness) + 1)) >> 8;
+    }
   }
 
   // provide an accessor to set brightness
@@ -72,8 +81,8 @@ private:
   uint8_t _brightness;    
 };
 
-// create an instance of our shader object
-BrightnessShader shader;
+// create an instance of our shader object with the same feature as our buffer
+BrightnessShader<NeoGrbFeature> shader;
 
 // some dimming tracking variables and settings
 int8_t delta;
@@ -97,23 +106,23 @@ void setup()
     image.ClearTo(Black); 
 
     // draw a pattern into the image
-    uint8_t index = 0;
-    image.SetPixelColor(index++, DarkRed);
-    image.SetPixelColor(index++, DarkYellow);
-    image.SetPixelColor(index++, DarkGreen);
-    image.SetPixelColor(index++, DarkCyan);
-    image.SetPixelColor(index++, DarkBlue);
-    image.SetPixelColor(index++, DarkPurple);
+    uint8_t x = 0;
+    uint8_t y = 0;
+    image.SetPixelColor(x++, y, DarkRed);
+    image.SetPixelColor(x++, y, DarkYellow);
+    image.SetPixelColor(x++, y, DarkGreen);
+    image.SetPixelColor(x++, y, DarkCyan);
+    image.SetPixelColor(x++, y, DarkBlue);
+    image.SetPixelColor(x++, y, DarkPurple);
 
-    image.SetPixelColor(index++, Black);
-    image.SetPixelColor(index++, Black);
-
-    image.SetPixelColor(index++, BrightRed);
-    image.SetPixelColor(index++, BrightYellow);
-    image.SetPixelColor(index++, BrightGreen);
-    image.SetPixelColor(index++, BrightCyan);
-    image.SetPixelColor(index++, BrightBlue);
-    image.SetPixelColor(index++, BrightPurple);
+    x = 0;
+    y = 1;
+    image.SetPixelColor(x++, y, BrightRed);
+    image.SetPixelColor(x++, y, BrightYellow);
+    image.SetPixelColor(x++, y, BrightGreen);
+    image.SetPixelColor(x++, y, BrightCyan);
+    image.SetPixelColor(x++, y, BrightBlue);
+    image.SetPixelColor(x++, y, BrightPurple);
     
     Serial.println();
     Serial.println("Running...");
@@ -151,7 +160,7 @@ void loop()
 
   // need to provide the type of color feature for the strip and
   // the type of our custom shader
-  image.Render<NeoGrbFeature, BrightnessShader>(strip, shader);
+  image.Render<BrightnessShader<NeoGrbFeature>>(strip, shader);
   strip.Show();
 
 }
