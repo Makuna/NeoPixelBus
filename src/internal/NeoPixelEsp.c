@@ -31,9 +31,9 @@ License along with NeoPixel.  If not, see
 #include <eagle_soc.h>
 #endif
 
-// ESP32 doesn't use ICACHE_RAM_ATTR
+// ESP32 doesn't define ICACHE_RAM_ATTR
 #ifndef ICACHE_RAM_ATTR
-#define ICACHE_RAM_ATTR 
+#define ICACHE_RAM_ATTR IRAM_ATTR
 #endif
 
 inline uint32_t _getCycleCount()
