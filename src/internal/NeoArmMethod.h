@@ -56,7 +56,7 @@ public:
     {
         uint32_t delta = micros() - _endTime;
 
-        return (delta >= 50L);
+        return (delta >= T_SPEED::ResetTimeUs);
     }
 
     void Initialize()
@@ -109,12 +109,22 @@ private:
 
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy 3.0 & 3.1
 
+class NeoArmMk20dxSpeedPropsWs2813
+{
+public:
+    static const uint32_t CyclesT0h = (F_CPU / 4000000);
+    static const uint32_t CyclesT1h = (F_CPU / 1250000);
+    static const uint32_t Cycles = (F_CPU / 800000);
+    static const uint32_t ResetTimeUs = 250;
+};
+
 class NeoArmMk20dxSpeedProps800Kbps
 {
 public:
     static const uint32_t CyclesT0h = (F_CPU / 4000000);
     static const uint32_t CyclesT1h = (F_CPU / 1250000);
     static const uint32_t Cycles = (F_CPU / 800000);
+    static const uint32_t ResetTimeUs = 50;
 };
 
 class NeoArmMk20dxSpeedProps400Kbps
@@ -123,11 +133,14 @@ public:
     static const uint32_t CyclesT0h = (F_CPU / 2000000);
     static const uint32_t CyclesT1h = (F_CPU / 833333);
     static const uint32_t Cycles = (F_CPU / 400000);
+    static const uint32_t ResetTimeUs = 50;
 };
 
 template<typename T_SPEEDPROPS> class NeoArmMk20dxSpeedBase
 {
 public:
+    static const uint32_t ResetTimeUs = T_SPEEDPROPS::ResetTimeUs;
+
     static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
     {
         uint8_t* p = pixels;
@@ -167,6 +180,7 @@ public:
     }
 };
 
+typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsWs2813>> NeoArmWs2813Method;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedProps400Kbps>> NeoArm400KbpsMethod;
 
@@ -176,7 +190,7 @@ typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedProps400Kbps>> N
 
 
 
-class NeoArmMk26z64Speed800Kbps
+class NeoArmMk26z64Speed800KbpsBase
 {
 public:
     static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
@@ -266,6 +280,19 @@ public:
     }
 };
 
+class NeoArmMk26z64SpeedWs2813 : public NeoArmMk26z64Speed800KbpsBase
+{
+public:
+    const static uint32_t ResetTimeUs = 250;
+};
+
+class NeoArmMk26z64Speed800Kbps : public NeoArmMk26z64Speed800KbpsBase
+{
+public:
+    const static uint32_t ResetTimeUs = 50;
+}
+
+typedef NeoArmMethodBase<NeoArmMk26z64SpeedWs2813> NeoArmWs2813Method;
 typedef NeoArmMethodBase<NeoArmMk26z64Speed800Kbps> NeoArm800KbpsMethod;
 
 #else
@@ -275,7 +302,7 @@ typedef NeoArmMethodBase<NeoArmMk26z64Speed800Kbps> NeoArm800KbpsMethod;
 #elif defined(__SAMD21G18A__) // Arduino Zero
 
 
-class NeoArmSamd21g18aSpeedProps800Kbps
+class NeoArmSamd21g18aSpeedProps800KbpsBase
 {
 public:
     static void BitPreWait()
@@ -299,6 +326,19 @@ public:
         asm("nop; nop; nop; nop; nop; nop; nop; nop; nop;");
     }
 };
+
+class NeoArmSamd21g18aSpeedPropsWs2813 : public NeoArmSamd21g18aSpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 250;
+};
+
+class NeoArmSamd21g18aSpeedProps800Kbps : public NeoArmSamd21g18aSpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 50;
+};
+
 
 class NeoArmSamd21g18aSpeedProps400Kbps
 {
@@ -325,11 +365,14 @@ public:
     {
         asm("nop; nop; nop; nop; nop; nop; nop;");
     }
+    static const uint32_t ResetTimeUs = 50;
 };
 
 template<typename T_SPEEDPROPS> class NeoArmSamd21g18aSpeedBase
 {
 public:
+    static const uint32_t ResetTimeUs = T_SPEEDPROPS::ResetTimeUs;
+
     static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
     {
         // Tried this with a timer/counter, couldn't quite get adequate
@@ -376,15 +419,15 @@ public:
     }
 };
 
+typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsWs2813>> NeoArmWs2813Method;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps400Kbps>> NeoArm400KbpsMethod;
 
 #elif defined (ARDUINO_STM32_FEATHER) // FEATHER WICED (120MHz)
 
-
-
-class NeoArmStm32SpeedProps800Kbps
+class NeoArmStm32SpeedProps800KbpsBase
 {
+public:
     static void BitT1hWait()
     {
         asm("nop; nop; nop; nop; nop; nop; nop; nop;"
@@ -432,9 +475,20 @@ class NeoArmStm32SpeedProps800Kbps
             "nop; nop; nop; nop; nop; nop; nop; nop;"
             "nop; nop; nop; nop;");
     }
-
-
 };
+
+class NeoArmStm32SpeedProps800Kbps : public NeoArmStm32SpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 50;
+};
+
+class NeoArmStm32SpeedPropsWs2813 : public NeoArmStm32SpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 250;
+};
+
 /* TODO - not found in Adafruit library
 class NeoArmStm32SpeedProps400Kbps
 {
@@ -455,6 +509,9 @@ static void BitT0lWait()
 
 template<typename T_SPEEDPROPS> class NeoArmStm32SpeedBase
 {
+public:
+    static const uint32_t ResetTimeUs = T_SPEEDPROPS::ResetTimeUs;
+
     static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
     {
         // Tried this with a timer/counter, couldn't quite get adequate
@@ -510,6 +567,7 @@ template<typename T_SPEEDPROPS> class NeoArmStm32SpeedBase
     }
 };
 
+typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropsWs2813>> NeoArmWs2813Method;
 typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedProps800Kbps>> NeoArm800KbpsMethod;
 
 #else // Other ARM architecture -- Presumed Arduino Due
@@ -518,12 +576,22 @@ typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedProps800Kbps>> Neo
 #define ARM_OTHER_SCALE  VARIANT_MCK / 2UL / 1000000UL
 #define ARM_OTHER_INST   (2UL * F_CPU / VARIANT_MCK)
 
+class NeoArmOtherSpeedPropsWs2813
+{
+public:
+    static const uint32_t CyclesT0h = ((uint32_t)(0.40 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
+    static const uint32_t CyclesT1h = ((uint32_t)(0.80 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
+    static const uint32_t Cycles = ((uint32_t)(1.25 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
+    static const uint32_t ResetTimeUs = 250;
+};
+
 class NeoArmOtherSpeedProps800Kbps
 {
 public:
     static const uint32_t CyclesT0h = ((uint32_t)(0.40 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
     static const uint32_t CyclesT1h = ((uint32_t)(0.80 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
     static const uint32_t Cycles = ((uint32_t)(1.25 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
+    static const uint32_t ResetTimeUs = 50;
 };
 
 class NeoArmOtherSpeedProps400Kbps
@@ -532,11 +600,14 @@ public:
     static const uint32_t CyclesT0h = ((uint32_t)(0.50 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
     static const uint32_t CyclesT1h = ((uint32_t)(1.20 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
     static const uint32_t Cycles = ((uint32_t)(2.50 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
+    static const uint32_t ResetTimeUs = 50;
 };
 
 template<typename T_SPEEDPROPS> class NeoArmOtherSpeedBase
 {
 public:
+    static const uint32_t ResetTimeUs = T_SPEEDPROPS::ResetTimeUs;
+
     static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
     {
         uint32_t pinMask;
@@ -608,6 +679,7 @@ public:
     }
 };
 
+typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsWs2813>> NeoArmWs2813Method;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps400Kbps>> NeoArm400KbpsMethod;
 
@@ -615,6 +687,7 @@ typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps400Kbps>> Neo
 
 
 // Arm doesn't have alternatives methods yet, so only one to make the default
+typedef NeoArmWs2813Method NeoWs2813Method;
 typedef NeoArm800KbpsMethod Neo800KbpsMethod;
 #ifdef NeoArm400KbpsMethod // this is needed due to missing 400Kbps for some platforms
 typedef NeoArm400KbpsMethod Neo400KbpsMethod;

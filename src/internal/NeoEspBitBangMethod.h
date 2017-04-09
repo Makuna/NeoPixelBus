@@ -39,6 +39,16 @@ License along with NeoPixel.  If not, see
 extern "C" void ICACHE_RAM_ATTR bitbang_send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin);
 extern "C" void ICACHE_RAM_ATTR bitbang_send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin);
 
+class NeoEspBitBangSpeedWs2813
+{
+public:
+    static void send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
+    {
+        bitbang_send_pixels_800(pixels, end, pin);
+    }
+    static const uint32_t ResetTimeUs = 250;
+};
+
 class NeoEspBitBangSpeed800Kbps
 {
 public:
@@ -46,6 +56,7 @@ public:
     {
         bitbang_send_pixels_800(pixels, end, pin);
     }
+    static const uint32_t ResetTimeUs = 50; 
 };
 
 class NeoEspBitBangSpeed400Kbps
@@ -55,6 +66,7 @@ public:
     {
         bitbang_send_pixels_400(pixels, end, pin);
     }
+    static const uint32_t ResetTimeUs = 50;
 };
 
 template<typename T_SPEED> class NeoEspBitBangMethodBase
@@ -81,7 +93,7 @@ public:
     {
         uint32_t delta = micros() - _endTime;
 
-        return (delta >= 50L);
+        return (delta >= T_SPEED::ResetTimeUs);
     }
 
     void Initialize()
@@ -134,15 +146,18 @@ private:
 
 #if defined(ARDUINO_ARCH_ESP32)
 
+typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedWs2813> NeoEsp32BitBangWs2813Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed800Kbps> NeoEsp32BitBang800KbpsMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed400Kbps> NeoEsp32BitBang400KbpsMethod;
 
 // Bitbang method is the default method for Esp32
+typedef NeoEsp32BitBangWs2813Method NeoWs2813Method;
 typedef NeoEsp32BitBang800KbpsMethod Neo800KbpsMethod;
 typedef NeoEsp32BitBang400KbpsMethod Neo400KbpsMethod;
 
 #else
 
+typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedWs2813> NeoEsp8266BitBangWs2813Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed800Kbps> NeoEsp8266BitBang800KbpsMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed400Kbps> NeoEsp8266BitBang400KbpsMethod;
 

@@ -41,7 +41,7 @@ extern "C"
     void send_pixels_16mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask);
 }
 
-class NeoAvrSpeed800Kbps
+class NeoAvrSpeed800KbpsBase
 {
 public:
     static void send_pixels(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask)
@@ -68,6 +68,19 @@ public:
 #error "CPU SPEED NOT SUPPORTED"
 #endif
     }
+    
+};
+
+class NeoAvrSpeedWs2813 :  public NeoAvrSpeed800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 250;
+};
+
+class NeoAvrSpeed800Kbps: public NeoAvrSpeed800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 50;
 };
 
 class NeoAvrSpeed400Kbps
@@ -87,6 +100,7 @@ public:
 #error "CPU SPEED NOT SUPPORTED"
 #endif
     }
+    static const uint32_t ResetTimeUs = 50;
 };
 
 template<typename T_SPEED> class NeoAvrMethodBase
@@ -118,7 +132,7 @@ public:
     {
         uint32_t delta = micros() - _endTime;
 
-        return (delta >= 50L);
+        return (delta >= T_SPEED::ResetTimeUs);
     }
 
     void Initialize()
@@ -173,10 +187,12 @@ private:
     uint8_t  _pinMask;      // Output PORT bitmask
 };
 
+typedef NeoAvrMethodBase<NeoAvrSpeedWs2813> NeoAvrWs2813Method;
 typedef NeoAvrMethodBase<NeoAvrSpeed800Kbps> NeoAvr800KbpsMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed400Kbps> NeoAvr400KbpsMethod;
 
 // AVR doesn't have alternatives yet, so there is just the default
+typedef NeoAvrWs2813Method NeoWs2813Method;
 typedef NeoAvr800KbpsMethod Neo800KbpsMethod;
 typedef NeoAvr400KbpsMethod Neo400KbpsMethod;
 
