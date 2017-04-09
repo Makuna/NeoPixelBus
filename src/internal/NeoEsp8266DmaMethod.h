@@ -63,12 +63,20 @@ struct slc_queue_item
     uint32  next_link_ptr;
 };
 
+class NeoEsp8266DmaSpeedWs2813
+{
+public:
+    const static uint32_t I2sClockDivisor = 3;
+    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t ResetTimeUs = 250;
+};
 
 class NeoEsp8266DmaSpeed800Kbps
 {
 public:
     const static uint32_t I2sClockDivisor = 3; 
     const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t ResetTimeUs = 50;
 };
 
 class NeoEsp8266DmaSpeed400Kbps
@@ -76,6 +84,7 @@ class NeoEsp8266DmaSpeed400Kbps
 public:
     const static uint32_t I2sClockDivisor = 6; 
     const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t ResetTimeUs = 50;
 };
 
 enum NeoDmaState
@@ -268,7 +277,8 @@ private:
 
     // normally 24 bytes creates the minimum 50us latch per spec, but
     // with the new logic, this latch is used to space between three states
-    uint8_t _i2sZeroes[8]; 
+    // buffer size = (24 * (speed / 50)) / 3
+    uint8_t _i2sZeroes[(24L * (T_SPEED::ResetTimeUs / 50L)) / 3L];
 
     slc_queue_item* _i2sBufDesc;  // dma block descriptors
     uint16_t _i2sBufDescCount;   // count of block descriptors in _i2sBufDesc
@@ -360,10 +370,12 @@ private:
 template<typename T_SPEED> 
 NeoEsp8266DmaMethodBase<T_SPEED>* NeoEsp8266DmaMethodBase<T_SPEED>::s_this;
 
+typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedWs2813> NeoEsp8266DmaWs2813Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed800Kbps> NeoEsp8266Dma800KbpsMethod;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed400Kbps> NeoEsp8266Dma400KbpsMethod;
 
 // Dma  method is the default method for Esp8266
+typedef NeoEsp8266DmaWs2813Method NeoWs2813Method;
 typedef NeoEsp8266Dma800KbpsMethod Neo800KbpsMethod;
 typedef NeoEsp8266Dma400KbpsMethod Neo400KbpsMethod;
 
