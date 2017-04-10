@@ -27,6 +27,12 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
+// some platforms do not define this standard progmem type for some reason
+//
+#ifndef PGM_VOID_P
+#define PGM_VOID_P const void *
+#endif
+
 // '_state' flags for internal state
 #define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
 
