@@ -41,6 +41,7 @@ struct AnimationParam
     float progress;
     uint16_t index;
     AnimationState state;
+    void *controller;  // this pointer gets passed into animation as param.controller.  It can point to any sort of control structure you want.
 };
 
 #ifdef ARDUINO_ARCH_AVR
@@ -77,7 +78,10 @@ public:
 
     bool NextAvailableAnimation(uint16_t* indexAvailable, uint16_t indexStart = 0);
 
-    void StartAnimation(uint16_t indexAnimation, uint16_t duration, AnimUpdateCallback animUpdate);
+    void StartAnimation(uint16_t indexAnimation,
+                        uint16_t duration,
+                        AnimUpdateCallback animUpdate,
+                        void *controller = NULL);
     void StopAnimation(uint16_t indexAnimation);
     void StopAll();
 
@@ -88,7 +92,7 @@ public:
             return;
         }
 
-        StartAnimation(indexAnimation, _animations[indexAnimation]._duration, (_animations[indexAnimation]._fnCallback));
+        StartAnimation(indexAnimation, _animations[indexAnimation]._duration, (_animations[indexAnimation]._fnCallback), _animations[indexAnimation]._controller); // added _controller BG
     }
 
     bool IsAnimationActive(uint16_t indexAnimation) const
@@ -163,6 +167,7 @@ private:
         uint16_t _remaining;
        
         AnimUpdateCallback _fnCallback;
+        void *_controller; // a pointer that gets passed into the animation callback.
     };
 
     uint16_t _countAnimations;
