@@ -141,7 +141,7 @@ struct RgbColor
         float x, 
         float y);
     
-    String toString(const uint16_t colorDivider);
+    String toString(const char colorDivider);
 
     // ------------------------------------------------------------------------
     // Red, Green, Blue color members (0-255) where 
