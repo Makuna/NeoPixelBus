@@ -101,6 +101,8 @@ struct HsbColor
             c00.S * v00 + c10.S * v10 + c01.S * v01 + c11.S * v11,
             c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11);
     };
+    
+    String toString(const char colorDivider) const;
 
     // ------------------------------------------------------------------------
     // Hue, Saturation, Brightness color members 
