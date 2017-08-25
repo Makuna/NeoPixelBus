@@ -70,3 +70,8 @@ HslColor::HslColor(const RgbColor& color)
     S = s;
     L = l;
 }
+
+String HslColor::toString(const char colorDivider) const
+{
+	return String(H) + colorDivider + String(S) + colorDivider + String(L);
+}
