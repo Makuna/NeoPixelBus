@@ -263,5 +263,5 @@ RgbColor RgbColor::BilinearBlend(const RgbColor& c00,
 
 String RgbColor::toString(const char colorDivider) const
 {
-	return String(R) + colorDivider + String(G) + colorDivider + String(B) + colorDivider;
+	return String(R) + colorDivider + String(G) + colorDivider + String(B);
 }
