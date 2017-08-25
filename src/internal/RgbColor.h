@@ -98,9 +98,9 @@ struct RgbColor
     // ------------------------------------------------------------------------
     uint8_t CalculateBrightness() const;
     
-    uint8_t CalculateWhite() const;
-    
     uint8_t CalculateSaturation() const;
+    
+    uint8_t CalculateWhite() const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
