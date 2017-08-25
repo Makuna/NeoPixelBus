@@ -247,3 +247,8 @@ RgbColor RgbColor::BilinearBlend(const RgbColor& c00,
         c00.G * v00 + c10.G * v10 + c01.G * v01 + c11.G * v11,
         c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11);
 }
+
+String RgbColor::toString(const uint16_t colorDivider) // or char* ??
+{
+	return String(R) + colorDivider + String(G) + colorDivider + String(B) + colorDivider;
+}
