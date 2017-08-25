@@ -73,10 +73,6 @@ struct RgbColor
 
     // ------------------------------------------------------------------------
     // Construct a RgbColor that will have its values set in latter  
-141
-        float x, 
-142
-        float y);operations
     // CAUTION:  The R,G,B members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
     RgbColor()
