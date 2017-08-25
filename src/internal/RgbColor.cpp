@@ -163,7 +163,7 @@ uint8_t RgbColor::CalculateBrightness() const
 	return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
 }
 
-uint8_t RgbwColor::CalculateSaturation() const
+uint8_t RgbColor::CalculateSaturation() const
 {
     float low = _min(R, _min(G, B));
     float high = _max(R, _max(G, B));
@@ -171,7 +171,7 @@ uint8_t RgbwColor::CalculateSaturation() const
     return (uint8_t)(round(100 * ((high - low) / high)));
 }
 
-uint8_t RgbwColor::CalculateWhite() const
+uint8_t RgbColor::CalculateWhite() const
 {
     return (uint8_t)((255 - CalculateSaturation()) / 255 * ((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
 }
@@ -261,7 +261,7 @@ RgbColor RgbColor::BilinearBlend(const RgbColor& c00,
         c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11);
 }
 
-String RgbColor::toString(const char colorDivider) // or char* ??
+String RgbColor::toString(const char colorDivider) const
 {
 	return String(R) + colorDivider + String(G) + colorDivider + String(B) + colorDivider;
 }
