@@ -163,6 +163,19 @@ uint8_t RgbColor::CalculateBrightness() const
 	return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
 }
 
+uint8_t RgbColor::CalculateSaturation() const
+{
+    float low = _min(R, _min(G, B));
+    float high = _max(R, _max(G, B));
+    
+    return (uint8_t)(round(100 * ((high - low) / high)));
+}
+
+uint8_t RgbColor::CalculateWhite() const
+{
+    return (uint8_t)((255 - CalculateSaturation()) / 255 * ((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
+}
+
 void RgbColor::Darken(uint8_t delta)
 {
 	if (R > delta)
@@ -246,4 +259,9 @@ RgbColor RgbColor::BilinearBlend(const RgbColor& c00,
         c00.R * v00 + c10.R * v10 + c01.R * v01 + c11.R * v11,
         c00.G * v00 + c10.G * v10 + c01.G * v01 + c11.G * v11,
         c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11);
+}
+
+String RgbColor::toString(const char colorDivider) const
+{
+	return String(R) + colorDivider + String(G) + colorDivider + String(B);
 }

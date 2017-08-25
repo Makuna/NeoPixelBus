@@ -103,6 +103,8 @@ struct HslColor
             c00.L * v00 + c10.L * v10 + c01.L * v01 + c11.L * v11);
     };
 
+    String toString(const char colorDivider) const;
+    
     // ------------------------------------------------------------------------
     // Hue, Saturation, Lightness color members 
     // ------------------------------------------------------------------------

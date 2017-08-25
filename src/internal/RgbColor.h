@@ -72,7 +72,7 @@ struct RgbColor
     RgbColor(const HsbColor& color);
 
     // ------------------------------------------------------------------------
-    // Construct a RgbColor that will have its values set in latter operations
+    // Construct a RgbColor that will have its values set in latter  
     // CAUTION:  The R,G,B members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
     RgbColor()
@@ -97,6 +97,10 @@ struct RgbColor
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
     uint8_t CalculateBrightness() const;
+    
+    uint8_t CalculateSaturation() const;
+    
+    uint8_t CalculateWhite() const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
@@ -136,6 +140,8 @@ struct RgbColor
         const RgbColor& c11, 
         float x, 
         float y);
+    
+    String toString(const char colorDivider) const;
 
     // ------------------------------------------------------------------------
     // Red, Green, Blue color members (0-255) where 

@@ -61,8 +61,12 @@ HsbColor::HsbColor(const RgbColor& color)
         h /= 6.0f;
     }
 
-
     H = h;
     S = s;
     B = v;
+}
+
+String HsbColor::toString(const char colorDivider) const
+{
+	return String(H) + colorDivider + String(S) + colorDivider + String(B);
 }

@@ -125,6 +125,10 @@ struct RgbwColor
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
     uint8_t CalculateBrightness() const;
+    
+    uint8_t CalculateWhite() const;
+    
+    uint8_t CalculateSaturation() const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
@@ -165,6 +169,8 @@ struct RgbwColor
         float x, 
         float y);
 
+    String toString(const char colorDivider) const;
+    
     // ------------------------------------------------------------------------
     // Red, Green, Blue, White color members (0-255) where 
     // (0,0,0,0) is black and (255,255,255, 0) and (0,0,0,255) is white
