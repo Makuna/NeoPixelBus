@@ -168,12 +168,12 @@ uint8_t RgbwColor::CalculateSaturation() const
     float low = _min(R, _min(G, B));
     float high = _max(R, _max(G, B));
     
-    return round(100 * ((high - low) / high));
+    return (uint8_t)(round(100 * ((high - low) / high)));
 }
 
 uint8_t RgbwColor::CalculateWhite() const
 {
-    return (255 - CalculateSaturation()) / 255 * (R + G + B) / 3;
+    return (uint8_t)((255 - CalculateSaturation()) / 255 * ((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
 }
 
 void RgbColor::Darken(uint8_t delta)
