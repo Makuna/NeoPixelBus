@@ -189,3 +189,8 @@ RgbwColor RgbwColor::BilinearBlend(const RgbwColor& c00,
         c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11,
         c00.W * v00 + c10.W * v10 + c01.W * v01 + c11.W * v11 );
 }
+
+String RgbwColor::toString(const char colorDivider) const
+{
+	return String(R) + colorDivider + String(G) + colorDivider + String(B) + colorDivider + String(W);
+}
