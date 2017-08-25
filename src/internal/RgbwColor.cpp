@@ -77,7 +77,7 @@ uint8_t RgbwColor::CalculateSaturation() const
 
 uint8_t RgbwColor::CalculateWhite() const
 {
-    return (255 - CalculateSaturation(RgbColor(R,G,B))) / 255 * (R + G + B) / 3;
+    return (255 - CalculateSaturation()) / 255 * (R + G + B) / 3;
 }
 
 void RgbwColor::Darken(uint8_t delta)
