@@ -31,6 +31,37 @@ License along with NeoPixel.  If not, see
 template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBrightnessBus : 
     public NeoPixelBus<T_COLOR_FEATURE, T_METHOD>
 {
+private:
+    void ConvertColor(typename T_COLOR_FEATURE::ColorObject* color)
+    {
+        if (_brightness)
+        {
+            uint8_t* ptr = (uint8_t*) color;
+            uint8_t* ptrEnd = ptr + T_COLOR_FEATURE::PixelSize;
+
+            while (ptr != ptrEnd)
+            {
+                uint16_t value = *ptr;
+                *ptr++ = (value * _brightness) >> 8;
+            }
+        }
+    }
+
+    void RecoverColor(typename T_COLOR_FEATURE::ColorObject* color)
+    {
+        if (_brightness)
+        {
+            uint8_t* ptr = (uint8_t*) color;
+            uint8_t* ptrEnd = ptr + T_COLOR_FEATURE::PixelSize;
+
+            while (ptr != ptrEnd)
+            {
+                uint16_t value = *ptr;
+                *ptr++ = (value << 8) / _brightness;
+            }
+        }
+    }
+
 public:
     NeoPixelBrightnessBus(uint16_t countPixels, uint8_t pin) :
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pin),
@@ -99,37 +130,29 @@ public:
 
     void SetPixelColor(uint16_t indexPixel, typename T_COLOR_FEATURE::ColorObject color)
     {
-        if (_brightness)
-        {
-            uint8_t* ptr = (uint8_t*)&color;
-            uint8_t* ptrEnd = ptr + T_COLOR_FEATURE::PixelSize;
-
-            while (ptr != ptrEnd)
-            {
-                uint16_t value = *ptr;
-                *ptr++ = (value * _brightness) >> 8;
-            }
-        }
+        ConvertColor(&color);
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::SetPixelColor(indexPixel, color);
     }
 
     typename T_COLOR_FEATURE::ColorObject GetPixelColor(uint16_t indexPixel) const
     {
         typename T_COLOR_FEATURE::ColorObject color = NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::GetPixelColor(indexPixel);
-
-        if (_brightness)
-        {
-            uint8_t* ptr = (uint8_t*)&color;
-            uint8_t* ptrEnd = ptr + T_COLOR_FEATURE::PixelSize;
-
-            while (ptr != ptrEnd)
-            {
-                uint16_t value = *ptr;
-                *ptr++ = (value << 8) / _brightness;
-            }
-        }
+        RecoverColor(&color);
         return color;
     }
+
+    void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
+    {
+        ConvertColor(&color);
+        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::ClearTo(color);
+    };
+
+    void ClearTo(typename T_COLOR_FEATURE::ColorObject color, uint16_t first, uint16_t last)
+    {
+        ConvertColor(&color);
+        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::ClearTo(color, first, last);
+    }
+
 
 protected:
     uint8_t _brightness;
