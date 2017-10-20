@@ -47,7 +47,7 @@ private:
         }
     }
 
-    void RecoverColor(typename T_COLOR_FEATURE::ColorObject* color)
+    void RecoverColor(typename T_COLOR_FEATURE::ColorObject* color) const
     {
         if (_brightness)
         {
