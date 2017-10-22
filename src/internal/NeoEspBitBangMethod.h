@@ -116,11 +116,23 @@ public:
             yield(); // allows for system yield if needed
         }
 
-        noInterrupts(); // Need 100% focus on instruction timing
+		// Need 100% focus on instruction timing
+#if defined(ARDUINO_ARCH_ESP32)
+		delay(1); // required
+		portMUX_TYPE updateMux = portMUX_INITIALIZER_UNLOCKED;
+
+		taskENTER_CRITICAL(&updateMux);
+#else
+        noInterrupts(); 
+#endif
 
         T_SPEED::send_pixels(_pixels, _pixels + _sizePixels, _pin);
-
+		
+#if defined(ARDUINO_ARCH_ESP32)
+		taskEXIT_CRITICAL(&updateMux);
+#else
         interrupts();
+#endif
 
         // save EOD time for latch on next call
         _endTime = micros();
