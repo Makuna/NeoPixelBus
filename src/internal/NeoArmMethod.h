@@ -290,7 +290,7 @@ class NeoArmMk26z64Speed800Kbps : public NeoArmMk26z64Speed800KbpsBase
 {
 public:
     const static uint32_t ResetTimeUs = 50;
-}
+};
 
 typedef NeoArmMethodBase<NeoArmMk26z64SpeedWs2813> NeoArmWs2813Method;
 typedef NeoArmMethodBase<NeoArmMk26z64Speed800Kbps> NeoArm800KbpsMethod;
