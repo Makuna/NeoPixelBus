@@ -6,6 +6,7 @@ Written by Michael C. Miller.
 I invest time and resources providing this open source code,
 please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
 
+Contributors: Nigel Michki <nigeil@yahoo.com>
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
 
@@ -162,5 +163,50 @@ void NeoPixelAnimator::UpdateAnimations()
 
             _animationLastTick = currentTick;
         }
+    }
+}
+
+void NeoPixelAnimator::setDuration(uint16_t indexAnimation, uint16_t newDuration)
+{
+    if(indexAnimation >= _countAnimations) { return; } //invalid animation index
+    else 
+    {
+        // get the current animation progress
+        float current_progress = getProgress(indexAnimation);
+
+        // change the duration
+        AnimationContext* pAnim;
+        pAnim = &_animations[indexAnimation];
+        pAnim->_duration = newDuration;
+
+        // _remaining time must also be reset after a duration change; use the original progress to make this change
+        setProgress(indexAnimation, current_progress);
+    }
+}
+
+// actually sets the _remaining ticks left for an animation in its AnimationContext using the progress provided here
+void NeoPixelAnimator::setProgress(uint16_t indexAnimation, float newProgress)
+{
+    if(indexAnimation >= _countAnimations) { return; } //invalid animation index
+    else 
+    {
+        AnimationContext* pAnim;
+        pAnim = &_animations[indexAnimation];
+        if(newProgress > 1 || newProgress < 0) { return; } //can't have a progress beyond the animation's duration (1) or a negative progress
+        uint16_t newRemaining = uint16_t(pAnim->_duration * (1.0 - newProgress));
+        pAnim->_remaining = newRemaining;
+    }
+}   
+
+float NeoPixelAnimator::getProgress(uint16_t indexAnimation) 
+{
+    if(indexAnimation >= _countAnimations) { return -1.0; } //invalid animation index
+    else 
+    {
+        AnimationContext* pAnim;        
+        float progress = 0;
+        pAnim = &_animations[indexAnimation];
+        progress = (float)(pAnim->_duration - pAnim->_remaining) / (float)pAnim->_duration;
+        return progress;
     }
 }

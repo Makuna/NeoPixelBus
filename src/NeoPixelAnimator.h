@@ -6,6 +6,7 @@ Written by Michael C. Miller.
 I invest time and resources providing this open source code,
 please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
 
+Contributors: Nigel Michki <nigeil@yahoo.com>
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
 
@@ -136,6 +137,12 @@ public:
     {
         _timeScale = (timeScale < 1) ? (1) : (timeScale > 32768) ? 32768 : timeScale;
     }
+
+    void setDuration(uint16_t indexAnimation, uint16_t newDuration);
+
+    void setProgress(uint16_t indexAnimation, float newProgress);
+
+    float getProgress(uint16_t indexAnimation);
 
 private:
     struct AnimationContext
