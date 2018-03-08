@@ -72,6 +72,7 @@ License along with NeoPixel.  If not, see
 #elif defined(ARDUINO_ARCH_ESP32)
 
 #include "internal/NeoEspBitBangMethod.h"
+#include "internal/NeoEspRmtMethod.h"
 #include "internal/DotStarGenericMethod.h"
 
 #elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
