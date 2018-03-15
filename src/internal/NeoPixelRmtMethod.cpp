@@ -75,9 +75,7 @@ void NeoEspRmtMethodImpl::Initialize()
     config.tx_config.carrier_level   = (rmt_carrier_level_t)1;
     config.tx_config.carrier_duty_percent = 50;
 
-    Serial.println("rmt_config");
     ESP_ERROR_CHECK(rmt_config(&config));
-    Serial.println("rmt_driver_install");
     ESP_ERROR_CHECK(rmt_driver_install(this->_rmtChannel, 0, 0));
 
 }

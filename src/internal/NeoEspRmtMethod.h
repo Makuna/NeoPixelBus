@@ -69,7 +69,7 @@ class NeoEspRmtMethodImpl
 {
 public:
 
-    NeoEspRmtMethodImpl(uint8_t pin, uint16_t pixelCount, size_t elementSize, int ledType)
+    NeoEspRmtMethodImpl(uint8_t pin, uint16_t pixelCount, size_t elementSize, int ledType, rmt_channel_t channel = RMT_CHANNEL_MAX)
         : _gpioNum(pin)
         , _sizePixels(pixelCount * elementSize)
         , _pixels(nullptr)
@@ -81,18 +81,26 @@ public:
             _pixels = (uint8_t*)malloc(_sizePixels);
             memset(_pixels, 0, _sizePixels);
 
-            // Find a free channel
-            for (int i = RMT_CHANNEL_0; i < RMT_CHANNEL_MAX; ++i)
+            if (channel != RMT_CHANNEL_MAX)
             {
-                auto c = static_cast<rmt_channel_t>(i);
-
-                if (s_channels.find(c) == s_channels.end())
+                // RMT channel has been provided, use it!
+                _rmtChannel = channel;
+            }
+            else
+            {
+                // No channel given, find a free channel
+                for (int i = RMT_CHANNEL_0; i < RMT_CHANNEL_MAX; ++i)
                 {
-                    s_channels.insert(c);
-                    _rmtChannel = c;
-                    break;
+                    auto c = static_cast<rmt_channel_t>(i);
+
+                    if (s_channels.find(c) == s_channels.end())
+                    {
+                        _rmtChannel = c;
+                        break;
+                    }
                 }
             }
+            s_channels.insert(_rmtChannel);
         }
 
     ~NeoEspRmtMethodImpl()
@@ -174,7 +182,7 @@ public:
             return _impl.getPixelsSize();
         };
 
- private:
+private:
     NeoEspRmtMethodImpl _impl;
 };
 
