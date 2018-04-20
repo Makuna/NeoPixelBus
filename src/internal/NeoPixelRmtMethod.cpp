@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "NeoEspRmtMethod.h"
 
+#if defined(ARDUINO_ARCH_ESP32)
+
 #include <driver/rmt.h>
 #include <driver/gpio.h>
 #include <stdint.h>
@@ -109,3 +111,5 @@ void NeoEspRmtMethodImpl::Update()
     // Show the pixels.
     ESP_ERROR_CHECK(rmt_write_items(this->_rmtChannel, this->_items, this->_sizePixels * 8, 1 /* wait till done */));
 }
+
+#endif // defined(ARDUINO_ARCH_ESP32)
