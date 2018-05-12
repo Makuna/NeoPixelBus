@@ -65,13 +65,20 @@ template<typename T_SPEED> class NeoEsp32I2sMethodBase
 public:
     NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize)  :
         _pin(pin),
-        _i2sBus(1)
+        _i2sBus(1) // valid values are 0 or 1, we assume the use of the least common
     {
         uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
-        uint16_t resetSize = (c_dmaBytesPer50us * T_SPEED::ResetTimeUs / 50);
+        uint16_t resetSize = (c_dmaBytesPer50us * T_SPEED::ResetTimeUs / 50 / T_SPEED::I2sSampleRateDiv);
 
         _pixelsSize = pixelCount * elementSize;
         _i2sBufferSize = pixelCount * dmaPixelSize + resetSize;
+
+        // must have a 4 byte aligned buffer for i2s since we use 16bit mode
+        uint32_t alignment = _i2sBufferSize % 4;
+        if (alignment)
+        {
+            _i2sBufferSize += 4 - alignment;
+        }
 
         _pixels = (uint8_t*)malloc(_pixelsSize);
         memset(_pixels, 0x00, _pixelsSize);
