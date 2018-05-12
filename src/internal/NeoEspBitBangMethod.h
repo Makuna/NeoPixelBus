@@ -162,11 +162,6 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedWs2813> NeoEsp32BitBangWs2813M
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed800Kbps> NeoEsp32BitBang800KbpsMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed400Kbps> NeoEsp32BitBang400KbpsMethod;
 
-// Bitbang method is the default method for Esp32
-typedef NeoEsp32BitBangWs2813Method NeoWs2813Method;
-typedef NeoEsp32BitBang800KbpsMethod Neo800KbpsMethod;
-typedef NeoEsp32BitBang400KbpsMethod Neo400KbpsMethod;
-
 #else
 
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedWs2813> NeoEsp8266BitBangWs2813Method;
