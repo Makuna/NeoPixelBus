@@ -1,5 +1,6 @@
-#ifndef _MY_I2S_h
-#define _MY_I2S_h
+#pragma once
+
+#if defined(ARDUINO_ARCH_ESP32)
 
 #ifdef __cplusplus
 extern "C" {
@@ -25,13 +26,10 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_p
 
 void i2sSetTxDataMode(uint8_t bus_num, i2s_tx_chan_mod_t chan_mod, i2s_tx_fifo_mod_t fifo_mod);
 
-void i2cSetSilenceBuf(uint8_t bus_num, uint8_t * data, size_t len);
+void i2sSetSilenceBuf(uint8_t bus_num, uint8_t* data, size_t len);
 
-size_t i2sWrite(uint8_t bus_num, uint8_t * data, size_t len, bool copy, bool free_when_sent);
+size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free_when_sent);
 bool i2sWriteDone(uint8_t bus_num);
-
-
-void i2sPrintClk(uint8_t bus_num);
 
 #ifdef __cplusplus
 }

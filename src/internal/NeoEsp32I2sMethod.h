@@ -59,13 +59,23 @@ public:
     const static uint16_t ResetTimeUs = 50;
 };
 
+class NeoEsp32I2sBusZero
+{
+public:
+    const static uint8_t I2sBusNumber = 0;
+};
 
-template<typename T_SPEED> class NeoEsp32I2sMethodBase
+class NeoEsp32I2sBusOne
+{
+public:
+    const static uint8_t I2sBusNumber = 1;
+};
+
+template<typename T_SPEED, typename T_BUS> class NeoEsp32I2sMethodBase
 {
 public:
     NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize)  :
-        _pin(pin),
-        _i2sBus(1) // valid values are 0 or 1, we assume the use of the least common
+        _pin(pin)
     {
         uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
         uint16_t resetSize = (c_dmaBytesPer50us * T_SPEED::ResetTimeUs / 50 / T_SPEED::I2sSampleRateDiv);
@@ -73,7 +83,7 @@ public:
         _pixelsSize = pixelCount * elementSize;
         _i2sBufferSize = pixelCount * dmaPixelSize + resetSize;
 
-        // must have a 4 byte aligned buffer for i2s since we use 16bit mode
+        // must have a 4 byte aligned buffer for i2s
         uint32_t alignment = _i2sBufferSize % 4;
         if (alignment)
         {
@@ -102,13 +112,13 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        return (i2sWriteDone(_i2sBus));
+        return (i2sWriteDone(T_BUS::I2sBusNumber));
     }
 
     void Initialize()
     {
-        i2sInit(_i2sBus, 16, c_dmaI2sSampleRate / T_SPEED::I2sSampleRateDiv, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, 2, 0);
-        i2sSetPins(_i2sBus, _pin, -1, -1, -1);
+        i2sInit(T_BUS::I2sBusNumber, 16, c_dmaI2sSampleRate / T_SPEED::I2sSampleRateDiv, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, 2, 0);
+        i2sSetPins(T_BUS::I2sBusNumber, _pin, -1, -1, -1);
     }
 
     void Update()
@@ -121,7 +131,7 @@ public:
 
         FillBuffers();
 
-        i2sWrite(_i2sBus, _i2sBuffer, _i2sBufferSize, false, false);
+        i2sWrite(T_BUS::I2sBusNumber, _i2sBuffer, _i2sBufferSize, false, false);
     }
 
     uint8_t* getPixels() const
@@ -136,7 +146,6 @@ public:
 
 private:
     const uint8_t _pin;            // output pin number
-    const uint8_t _i2sBus;
 
     size_t    _pixelsSize;    // Size of '_pixels' buffer 
     uint8_t*  _pixels;        // Holds LED color values
@@ -164,13 +173,17 @@ private:
     }
 };
 
-typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedWs2813> NeoEsp32I2sWs2813Method;
-typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed800Kbps> NeoEsp32I2s800KbpsMethod;
-typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed400Kbps> NeoEsp32I2s400KbpsMethod;
+typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedWs2813, NeoEsp32I2sBusZero> NeoEsp32I2s0Ws2813Method;
+typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2sBusZero> NeoEsp32I2s0800KbpsMethod;
+typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2sBusZero> NeoEsp32I2s0400KbpsMethod;
 
-// I2s  method is the default method for Esp32
-typedef NeoEsp32I2sWs2813Method NeoWs2813Method;
-typedef NeoEsp32I2s800KbpsMethod Neo800KbpsMethod;
-typedef NeoEsp32I2s400KbpsMethod Neo400KbpsMethod;
+typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedWs2813, NeoEsp32I2sBusOne> NeoEsp32I2s1Ws2813Method;
+typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2sBusOne> NeoEsp32I2s1800KbpsMethod;
+typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2sBusOne> NeoEsp32I2s1400KbpsMethod;
+
+// I2s Bus 1 method is the default method for Esp32
+typedef NeoEsp32I2s1Ws2813Method NeoWs2813Method;
+typedef NeoEsp32I2s1800KbpsMethod Neo800KbpsMethod;
+typedef NeoEsp32I2s1400KbpsMethod Neo400KbpsMethod;
 
 #endif
