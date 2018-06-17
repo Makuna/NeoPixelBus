@@ -64,7 +64,7 @@ void send_pixels_8mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pinM
     volatile uint8_t lo;            // PORT w/output bit set low
 
     volatile uint8_t n1;
-    volatile n2 = 0;  // First, next bits out
+    volatile uint8_t n2 = 0;  // First, next bits out
 
     // Squeezing an 800 KHz stream out of an 8 MHz chip requires code
     // specific to each PORT register.  At present this is only written
@@ -189,7 +189,7 @@ void send_pixels_8mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pinM
     volatile uint8_t lo;            // PORT w/output bit set low
 
     volatile uint8_t n1;
-    volatile n2 = 0;  // First, next bits out
+    volatile uint8_t n2 = 0;  // First, next bits out
 
     // Same as above, just switched to PORTB and stripped of comments.
     hi = PORTB | pinMask;
