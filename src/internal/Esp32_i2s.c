@@ -38,7 +38,7 @@
 #include "driver/gpio.h"
 #include "driver/i2s.h"
 #include "driver/dac.h"
-#include "esp32_i2s.h"
+#include "Esp32_i2s.h"
 #include "esp32-hal.h"
 
 #define I2S_BASE_CLK (160000000L)
