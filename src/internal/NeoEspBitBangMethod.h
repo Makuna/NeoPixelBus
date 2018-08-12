@@ -121,7 +121,7 @@ public:
 		delay(1); // required
 		portMUX_TYPE updateMux = portMUX_INITIALIZER_UNLOCKED;
 
-		taskENTER_CRITICAL(&updateMux);
+        portENTER_CRITICAL(&updateMux);
 #else
         noInterrupts(); 
 #endif
@@ -129,7 +129,7 @@ public:
         T_SPEED::send_pixels(_pixels, _pixels + _sizePixels, _pin);
 		
 #if defined(ARDUINO_ARCH_ESP32)
-		taskEXIT_CRITICAL(&updateMux);
+        portEXIT_CRITICAL(&updateMux);
 #else
         interrupts();
 #endif
