@@ -393,7 +393,9 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) {
     double denom = (double)1 / 63;
     int channel = 2;
 
-    double mclk, clkmdiv;
+//    double mclk;
+    double clkmdiv;
+
     int factor;
 
     if (bits == 8) {
@@ -413,11 +415,11 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) {
     clkmDecimals = ((clkmdiv - clkmInteger) / denom);
 
     if (bits == 8) {
-        mclk = rate* factor;
+//        mclk = rate* factor;
         bck = 60;
         bits = 16;
     } else {
-        mclk = (double)clkmInteger + (denom* clkmDecimals);
+//        mclk = (double)clkmInteger + (denom* clkmDecimals);
         bck = factor/(bits* channel);
     }
 
