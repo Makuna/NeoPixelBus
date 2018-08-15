@@ -117,6 +117,7 @@ StopAnimation	KEYWORD2
 RestartAnimation	KEYWORD2
 IsAnimationActive	KEYWORD2
 AnimationDuration	KEYWORD2
+ChangeAnimationDuration	KEYWORD2
 UpdateAnimations	KEYWORD2
 IsPaused	KEYWORD2
 Pause	KEYWORD2

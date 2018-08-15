@@ -109,6 +109,8 @@ public:
         return _animations[indexAnimation]._duration;
     }
 
+    void ChangeAnimationDuration(uint16_t indexAnimation, uint16_t newDuration);
+
     void UpdateAnimations();
 
     bool IsPaused()
@@ -157,6 +159,11 @@ private:
         void StopAnimation()
         {
             _remaining = 0;
+        }
+
+        float CurrentProgress()
+        {
+            return (float)(_duration - _remaining) / (float)_duration;
         }
 
         uint16_t _duration;
