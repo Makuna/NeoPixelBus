@@ -142,7 +142,7 @@ void NeoPixelAnimator::UpdateAnimations()
                 if (pAnim->_remaining > delta)
                 {
                     param.state = (pAnim->_remaining == pAnim->_duration) ? AnimationState_Started : AnimationState_Progress;
-                    param.progress = (float)(pAnim->_duration - pAnim->_remaining) / (float)pAnim->_duration;
+                    param.progress = pAnim->CurrentProgress();
 
                     fnUpdate(param);
 
@@ -163,4 +163,34 @@ void NeoPixelAnimator::UpdateAnimations()
             _animationLastTick = currentTick;
         }
     }
+}
+
+void NeoPixelAnimator::ChangeAnimationDuration(uint16_t indexAnimation, uint16_t newDuration)
+{
+    if (indexAnimation >= _countAnimations)
+    {
+        return;
+    }
+
+    AnimationContext* pAnim = &_animations[indexAnimation];
+
+    // calc the current animation progress 
+    float progress = pAnim->CurrentProgress();
+
+    // keep progress in range just in case
+    if (progress < 0.0f)
+    {
+        progress = 0.0f;
+    }
+    else if (progress > 1.0f)
+    {
+        progress = 1.0f;
+    }
+
+    // change the duration 
+    pAnim->_duration = newDuration;
+          
+    // _remaining time must also be reset after a duration change; 
+    // use the progress to recalculate it
+    pAnim->_remaining = uint16_t(pAnim->_duration * (1.0f - progress));
 }
