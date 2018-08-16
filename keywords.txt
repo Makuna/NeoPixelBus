@@ -150,6 +150,8 @@ Map	KEYWORD2
 MapProbe	KEYWORD2
 getWidth	KEYWORD2
 getHeight	KEYWORD2
+RingPixelShift	KEYWORD2
+RingPixelRotate	KEYWORD2
 getCountOfRings	KEYWORD2
 getPixelCountAtRing	KEYWORD2
 getPixelCount	KEYWORD2

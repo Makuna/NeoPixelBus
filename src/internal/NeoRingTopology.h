@@ -56,6 +56,33 @@ public:
         return _map(ring, pixel);
     }
 
+    uint16_t RingPixelShift(uint8_t ring, uint16_t pixel, int16_t shift)
+    {
+        int32_t ringPixel = pixel;
+        ringPixel += shift;
+
+        if (ringPixel < 0)
+        {
+            ringPixel = 0;
+        }
+        else 
+        {
+            uint16_t count = getPixelCountAtRing(ring);
+            if (ringPixel >= count)
+            {
+                ringPixel = count - 1;
+            }
+        }
+        return ringPixel;
+    }
+
+    uint16_t RingPixelRotate(uint8_t ring, uint16_t pixel, int16_t rotate)
+    {
+        int32_t ringPixel = pixel;
+        ringPixel += rotate;
+        return ringPixel % getPixelCountAtRing(ring);
+    }
+
     uint8_t getCountOfRings() const 
     {
         return _ringCount() - 1; // minus one as the Rings includes the extra value
