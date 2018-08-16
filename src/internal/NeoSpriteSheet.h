@@ -146,15 +146,15 @@ private:
 
     uint16_t pixelIndex(uint16_t indexSprite,
         int16_t x,
-        int16_t y)
+        int16_t y) const
     {
         uint16_t result = PixelIndex_OutOfBounds;
 
         if (indexSprite < _spriteCount &&
             x >= 0 &&
-            x < SpriteWidth() &&
+            (uint16_t)x < SpriteWidth() &&
             y >= 0 &&
-            y < SpriteHeight())
+            (uint16_t)y < SpriteHeight())
         {
             result = x + y * SpriteWidth() + indexSprite * _spriteHeight * SpriteWidth();
         }

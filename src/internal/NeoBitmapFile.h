@@ -75,12 +75,11 @@ public:
         _width(0),
         _height(0),
         _sizeRow(0),
-        _bottomToTop(true),
-        _bytesPerPixel(0)
+        _bytesPerPixel(0),
+        _bottomToTop(true)
     {
     }
-    
-
+ 
     ~NeoBitmapFile()
     {
         _file.close();
@@ -205,7 +204,7 @@ public:
         {
             for (int16_t x = 0; x < wSrc && indexPixel < destPixelCount; x++, indexPixel++)
             {
-                if (xSrc < _width)
+                if ((uint16_t)xSrc < _width)
                 {
                     if (readPixel(&color))
                     {
@@ -239,7 +238,7 @@ public:
             {
                 for (int16_t x = 0; x < wSrc; x++)
                 {
-                    if (xFile < _width)
+                    if ((uint16_t)xFile < _width)
                     {
                         if (readPixel(&color))
                         {
@@ -268,26 +267,26 @@ private:
     uint8_t _bytesPerPixel;
     bool _bottomToTop;
 
-    int16_t constrainX(int16_t x)
+    int16_t constrainX(int16_t x) const
     {
         if (x < 0)
         {
             x = 0;
         }
-        else if (x >= _width)
+        else if ((uint16_t)x >= _width)
         {
             x = _width - 1;
         }
         return x;
     };
 
-    int16_t constrainY(int16_t y)
+    int16_t constrainY(int16_t y) const
     {
         if (y < 0)
         {
             y = 0;
         }
-        else if (y >= _height)
+        else if ((uint16_t)y >= _height)
         {
             y = _height - 1;
         }

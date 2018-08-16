@@ -123,6 +123,7 @@ public:
         if (IsDirty() || shader.IsDirty())
         {
             uint16_t countPixels = destBuffer.PixelCount();
+
             if (countPixels > _countPixels)
             {
                 countPixels = _countPixels;

@@ -36,12 +36,12 @@ const RgbColor White(255);
 const RgbColor Black(0);
 
 // define a custom shader object that provides brightness support
-// based upon the NeoBitsBase
-template<typename T_COLOR_FEATURE> class BrightnessShader : public NeoBitsBase
+// based upon the NeoShaderBase
+template<typename T_COLOR_FEATURE> class BrightnessShader : public NeoShaderBase
 {
 public:
   BrightnessShader():
-    NeoBitsBase(),
+    NeoShaderBase(),
     _brightness(255) // default to full bright
   {}
 

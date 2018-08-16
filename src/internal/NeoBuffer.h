@@ -133,19 +133,38 @@ public:
         Blt(destBuffer, xDest, yDest, 0, 0, Width(), Height(), layoutMap);
     }
 
+    template <typename T_SHADER> void Render(NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature> destBuffer, T_SHADER& shader)
+    {
+        uint16_t countPixels = destBuffer.PixelCount();
+
+        if (countPixels > _method.PixelCount())
+        {
+            countPixels = _method.PixelCount();
+        }
+
+        for (uint16_t indexPixel = 0; indexPixel < countPixels; indexPixel++)
+        {
+            typename T_BUFFER_METHOD::ColorObject color;
+            
+            shader.Apply(indexPixel, (uint8_t*)(&color), _method.Pixels() + (indexPixel * _method.PixelSize()));
+
+            T_BUFFER_METHOD::ColorFeature::applyPixelColor(destBuffer.Pixels, indexPixel, color);
+        }
+    }
+
 private:
     T_BUFFER_METHOD _method;
 
     uint16_t pixelIndex(
         int16_t x,
-        int16_t y)
+        int16_t y) const
     {
         uint16_t result = PixelIndex_OutOfBounds;
 
         if (x >= 0 &&
-            x < Width() &&
+            (uint16_t)x < Width() &&
             y >= 0 &&
-            y < Height())
+            (uint16_t)y < Height())
         {
             result = x + y * Width();
         }
