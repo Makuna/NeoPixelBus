@@ -171,7 +171,7 @@ public:
         return _height;
     };
 
-    typename T_COLOR_FEATURE::ColorObject GetPixelColor(int16_t x, int16_t y) const
+    typename T_COLOR_FEATURE::ColorObject GetPixelColor(int16_t x, int16_t y) 
     {
         if (x < 0 || x >= _width || y < 0 || y >= _height)
         {
