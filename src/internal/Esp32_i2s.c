@@ -142,7 +142,7 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         }
     }
 
-    I2S[bus_num].tx_queue = xQueueCreate(I2S[bus_num].dma_count, sizeof(i2s_dma_item_t*));
+    I2S[bus_num].tx_queue = xQueueCreate(I2S[bus_num].dma_count - 3, sizeof(i2s_dma_item_t*));
     if (I2S[bus_num].tx_queue == NULL) {// memory error
         log_e("MEM ERROR!");
         free(I2S[bus_num].dma_items);
@@ -434,21 +434,13 @@ void IRAM_ATTR i2sDmaISR(void* arg)
     i2s_bus_t* dev = (i2s_bus_t*)arg;
     portBASE_TYPE hpTaskAwoken = 0;
 
-    if (dev->bus->int_st.out_dscr_err) {
-        ets_printf("out_dscr_err\n");
-    }
-    while (dev->bus->int_st.out_eof) {
+    if (dev->bus->int_st.out_eof) {
         i2s_dma_item_t* item = (i2s_dma_item_t*)dev->bus->out_eof_des_addr;
-        dev->bus->int_clr.out_eof = 1;
-
-        if (item->data != dev->silence_buf) {
-            item->data = dev->silence_buf;
-            item->blocksize = dev->silence_len;
-            item->datalen = dev->silence_len;
-        }
-        if (xQueueIsQueueFullFromISR(dev->tx_queue) == pdTRUE && xQueueReceiveFromISR(dev->tx_queue, &dummy, &hpTaskAwoken) == pdTRUE && dummy->free_ptr) {
-            free(dummy->free_ptr);
-            dummy->free_ptr = NULL;
+        item->data = dev->silence_buf;
+        item->blocksize = dev->silence_len;
+        item->datalen = dev->silence_len;
+        if (xQueueIsQueueFullFromISR(dev->tx_queue) == pdTRUE) {
+            xQueueReceiveFromISR(dev->tx_queue, &dummy, &hpTaskAwoken);
         }
         xQueueSendFromISR(dev->tx_queue, (void*)&item, &hpTaskAwoken);
     }
@@ -467,58 +459,26 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     size_t limit = I2S_DMA_MAX_DATA_LEN;
     i2s_dma_item_t* item = NULL;
 
-    if (I2S[bus_num].dma_buf_len) {
-        limit = I2S[bus_num].dma_buf_len;
-    }
-
     while (len) {
-        if (xQueueReceive(I2S[bus_num].tx_queue, &item, portMAX_DELAY) == pdFALSE) {
-            log_e("xQueueReceive failed\n");
-            break;
-        }
-        if (item->free_ptr) {
-            free(item->free_ptr);
-            item->free_ptr = NULL;
-        }
-
         toSend = len;
-
         if (toSend > limit) {
             toSend = limit;
         }
 
-        if (!copy) {
-            // data is constant. no need to copy
-            item->data = data+index;
-            item->blocksize = toSend;
-            item->datalen = toSend;
-            if (free_when_sent && (toSend == len)) {
-                // free the full data when done
-                item->free_ptr = data;
-            }
-        } else if (item->buf) {
-            // dma buffers are preallocated
-            memcpy(item->buf, data+index, toSend);
-            item->data = item->buf;
-            item->blocksize = toSend;
-            item->datalen = toSend;
-        } else {
-            // copy data to a new buffer (dma buffers are NULL)
-            uint8_t* buf = (uint8_t*)malloc(toSend);
-            if (!buf) {
-                log_e("buf = NULL; %u/%u (%u/%u)\n", index, len, toSend, esp_get_free_heap_size());
-                break;
-            }
-            memcpy(buf, data+index, toSend);
-            item->free_ptr = buf;
-            item->data = buf;
-            item->blocksize = toSend;
-            item->datalen = toSend;
+        if (xQueueReceive(I2S[bus_num].tx_queue, &item, portMAX_DELAY) == pdFALSE) {
+            log_e("xQueueReceive failed\n");
+            break;
         }
+        // data is constant. no need to copy
+        item->data = data + index;
+        item->blocksize = toSend;
+        item->datalen = toSend;
+
         len -= toSend;
         index += toSend;
     }
     return index;
 }
+
 
 #endif
