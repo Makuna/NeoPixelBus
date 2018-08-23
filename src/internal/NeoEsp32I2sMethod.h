@@ -117,7 +117,7 @@ public:
 
     void Initialize()
     {
-        i2sInit(T_BUS::I2sBusNumber, 16, c_dmaI2sSampleRate / T_SPEED::I2sSampleRateDiv, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, 2, 0);
+        i2sInit(T_BUS::I2sBusNumber, 16, c_dmaI2sSampleRate / T_SPEED::I2sSampleRateDiv, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, 4, 0);
         i2sSetPins(T_BUS::I2sBusNumber, _pin, -1, -1, -1);
     }
 
