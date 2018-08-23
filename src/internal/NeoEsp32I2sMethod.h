@@ -182,8 +182,10 @@ typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2sBusOne> NeoEsp
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2sBusOne> NeoEsp32I2s1400KbpsMethod;
 
 // I2s Bus 1 method is the default method for Esp32
+/*
 typedef NeoEsp32I2s1Ws2813Method NeoWs2813Method;
 typedef NeoEsp32I2s1800KbpsMethod Neo800KbpsMethod;
 typedef NeoEsp32I2s1400KbpsMethod Neo400KbpsMethod;
+*/
 
 #endif
