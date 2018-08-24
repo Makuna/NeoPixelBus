@@ -53,7 +53,7 @@ extern "C"
 #define CYCLES_TO_NS(n) ( (n) * NS_PER_CYCLE )
 #define CYCLES_TO_US(n) ( CYCLES_TO_NS(n) / 1000L )
 
-class NeoEspRmtSpeedWs2813
+class NeoEsp32RmtSpeedWs2813
 {
 public:
     const static uint32_t T0H = 300;
@@ -63,7 +63,7 @@ public:
     const static uint32_t ResetTimeUs = 300;
 };
 
-class NeoEspRmtSpeedSK6812
+class NeoEsp32RmtSpeedSK6812
 {
 public:
     const static uint32_t T0H = 300;
@@ -73,7 +73,7 @@ public:
     const static uint32_t ResetTimeUs = 80;
 };
 
-class NeoEspRmtSpeed800Kbps
+class NeoEsp32RmtSpeed800Kbps
 {
 public:
     const static uint32_t T0H = 300;
@@ -83,7 +83,7 @@ public:
     const static uint32_t ResetTimeUs = 300;
 };
 
-class NeoEspRmtSpeed400Kbps
+class NeoEsp32RmtSpeed400Kbps
 {
 public:
     const static uint32_t T0H = 700;
@@ -102,10 +102,10 @@ enum NeoRmtState
 };
 
 
-template<typename T_SPEED> class NeoEspRmtMethodBase
+template<typename T_SPEED> class NeoEsp32RmtMethodBase
 {
 public:
-    NeoEspRmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize) :
+    NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize) :
         _pin(pin)
     {
         _pixelsSize = pixelCount * elementSize;
@@ -118,7 +118,7 @@ public:
         memset(_rmtBuffer, 0x00, _bufferSize);
     }
 
-    ~NeoEspRmtMethodBase()
+    ~NeoEsp32RmtMethodBase()
     {
         StopRmt();
         free(_pixels);
@@ -136,7 +136,7 @@ public:
     {
         ESP_ERROR_CHECK(get_channel_free(&_channel));
 
-        Serial.printf("[NeoPixelBus] Initializing RMT on channel:%u, pin:%u\n", _channel, _pin);
+        //Serial.printf("[NeoPixelBus] Initializing RMT on channel:%u, pin:%u\n", _channel, _pin);
 
         rmt_config_t config;
         config.rmt_mode = RMT_MODE_TX;
@@ -201,7 +201,8 @@ private:
     // translate routine (called from RMT ISR) -> sample_to_rmt_fn
     static void ICACHE_RAM_ATTR u8_to_rmt(const void* src, rmt_item32_t* dest, size_t src_size, size_t wanted_num, size_t* translated_size, size_t* item_num)
     {
-        if(src == NULL || dest == NULL) {
+        if (src == NULL || dest == NULL)
+        {
             *translated_size = 0;
             *item_num = 0;
             return;
@@ -215,13 +216,21 @@ private:
         rmt_item32_t* pdest = dest;
 
         bool last = !(src_size > (wanted_num >> 3));
-        if(last) src_size--;
+        if (last)
+        {
+        	src_size--;
+        }
 
-        while (size < src_size && num < wanted_num) {
-            for(mask = 0x80; mask != 0; mask >>= 1) {
-                if(*psrc & mask) {
+        while (size < src_size && num < wanted_num)
+        {
+            for (mask = 0x80; mask != 0; mask >>= 1)
+            {
+                if (*psrc & mask)
+                {
                     pdest->val = _bit1;
-                } else {
+                }
+                else
+                {
                     pdest->val = _bit0;
                 }
                 num++;
@@ -231,7 +240,8 @@ private:
             psrc++;
         }
 
-        if(last) {
+        if (last)
+        {
           pdest->val = _rst;
           num++;
           size++;
@@ -267,7 +277,8 @@ private:
         for (uint8_t ch = 0; ch < RMT_CHANNEL_MAX; ch++)
         {
             err = rmt_write_items((rmt_channel_t)ch, &itm, 0, false);
-            if (err == ESP_FAIL) {
+            if (err == ESP_FAIL)
+            {
                 *channel = (rmt_channel_t)ch;
                 esp_log_level_set("rmt", ESP_LOG_WARN);
                 return ESP_OK;
@@ -279,15 +290,15 @@ private:
 
 };
 
-typedef NeoEspRmtMethodBase<NeoEspRmtSpeedWs2813> NeoEspRmtWs2813Method;
-typedef NeoEspRmtMethodBase<NeoEspRmtSpeedSK6812> NeoEspRmtSK6812Method;
-typedef NeoEspRmtMethodBase<NeoEspRmtSpeed800Kbps> NeoEspRmt800KbpsMethod;
-typedef NeoEspRmtMethodBase<NeoEspRmtSpeed400Kbps> NeoEspRmt400KbpsMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2813> NeoEsp32RmtWs2813Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedSK6812> NeoEsp32RmtSK6812Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps> NeoEsp32Rmt800KbpsMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps> NeoEsp32Rmt400KbpsMethod;
 
 /* define RMT method as the default method for ESP32 */
-typedef NeoEspRmtWs2813Method NeoWs2813Method;
-typedef NeoEspRmtSK6812Method NeoSK6812Method;
-typedef NeoEspRmt800KbpsMethod Neo800KbpsMethod;
-typedef NeoEspRmt400KbpsMethod Neo400KbpsMethod;
+typedef NeoEsp32RmtWs2813Method NeoWs2813Method;
+typedef NeoEsp32RmtSK6812Method NeoSK6812Method;
+typedef NeoEsp32Rmt800KbpsMethod Neo800KbpsMethod;
+typedef NeoEsp32Rmt400KbpsMethod Neo400KbpsMethod;
 
 #endif
