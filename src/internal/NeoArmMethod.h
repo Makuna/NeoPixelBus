@@ -109,21 +109,29 @@ private:
 
 #if defined(__MK20DX128__) || defined(__MK20DX256__) // Teensy 3.0 & 3.1
 
-class NeoArmMk20dxSpeedPropsWs2813
+class NeoArmMk20dxSpeedProps800KbpsBase
 {
 public:
     static const uint32_t CyclesT0h = (F_CPU / 4000000);
     static const uint32_t CyclesT1h = (F_CPU / 1250000);
     static const uint32_t Cycles = (F_CPU / 800000);
-    static const uint32_t ResetTimeUs = 250;
 };
 
-class NeoArmMk20dxSpeedProps800Kbps
+class NeoArmMk20dxSpeedPropsWs2812x : public NeoArmMk20dxSpeedProps800KbpsBase
 {
 public:
-    static const uint32_t CyclesT0h = (F_CPU / 4000000);
-    static const uint32_t CyclesT1h = (F_CPU / 1250000);
-    static const uint32_t Cycles = (F_CPU / 800000);
+    static const uint32_t ResetTimeUs = 300;
+};
+
+class NeoArmMk20dxSpeedPropsSk6812 : public NeoArmMk20dxSpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 80;
+};
+
+class NeoArmMk20dxSpeedProps800Kbps : public NeoArmMk20dxSpeedProps800KbpsBase
+{
+public:
     static const uint32_t ResetTimeUs = 50;
 };
 
@@ -180,7 +188,8 @@ public:
     }
 };
 
-typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsWs2813>> NeoArmWs2813Method;
+typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsWs2812x>> NeoArmWs2812xMethod;
+typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedProps400Kbps>> NeoArm400KbpsMethod;
 
@@ -280,10 +289,16 @@ public:
     }
 };
 
-class NeoArmMk26z64SpeedWs2813 : public NeoArmMk26z64Speed800KbpsBase
+class NeoArmMk26z64SpeedWs2812x : public NeoArmMk26z64Speed800KbpsBase
 {
 public:
-    const static uint32_t ResetTimeUs = 250;
+    const static uint32_t ResetTimeUs = 300;
+};
+
+class NeoArmMk26z64SpeedSk6812 : public NeoArmMk26z64Speed800KbpsBase
+{
+public:
+    const static uint32_t ResetTimeUs = 80;
 };
 
 class NeoArmMk26z64Speed800Kbps : public NeoArmMk26z64Speed800KbpsBase
@@ -292,7 +307,8 @@ public:
     const static uint32_t ResetTimeUs = 50;
 };
 
-typedef NeoArmMethodBase<NeoArmMk26z64SpeedWs2813> NeoArmWs2813Method;
+typedef NeoArmMethodBase<NeoArmMk26z64SpeedWs2812x> NeoArmWs2812xMethod;
+typedef NeoArmMethodBase<NeoArmMk26z64SpeedSk6812> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmMk26z64Speed800Kbps> NeoArm800KbpsMethod;
 
 #else
@@ -327,10 +343,16 @@ public:
     }
 };
 
-class NeoArmSamd21g18aSpeedPropsWs2813 : public NeoArmSamd21g18aSpeedProps800KbpsBase
+class NeoArmSamd21g18aSpeedPropsWs2812x : public NeoArmSamd21g18aSpeedProps800KbpsBase
 {
 public:
-    static const uint32_t ResetTimeUs = 250;
+    static const uint32_t ResetTimeUs = 300;
+};
+
+class NeoArmSamd21g18aSpeedPropsSk6812 : public NeoArmSamd21g18aSpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 80;
 };
 
 class NeoArmSamd21g18aSpeedProps800Kbps : public NeoArmSamd21g18aSpeedProps800KbpsBase
@@ -419,7 +441,8 @@ public:
     }
 };
 
-typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsWs2813>> NeoArmWs2813Method;
+typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsWs2812x>> NeoArmWs2812xMethod;
+typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps400Kbps>> NeoArm400KbpsMethod;
 
@@ -477,16 +500,22 @@ public:
     }
 };
 
+class NeoArmStm32SpeedPropsWs2812x : public NeoArmStm32SpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 300;
+};
+
+class NeoArmStm32SpeedPropsSk6812 : public NeoArmStm32SpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 80;
+};
+
 class NeoArmStm32SpeedProps800Kbps : public NeoArmStm32SpeedProps800KbpsBase
 {
 public:
     static const uint32_t ResetTimeUs = 50;
-};
-
-class NeoArmStm32SpeedPropsWs2813 : public NeoArmStm32SpeedProps800KbpsBase
-{
-public:
-    static const uint32_t ResetTimeUs = 250;
 };
 
 /* TODO - not found in Adafruit library
@@ -567,7 +596,8 @@ public:
     }
 };
 
-typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropsWs2813>> NeoArmWs2813Method;
+typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropsWs2812x>> NeoArmWs2812xMethod;
+typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedProps800Kbps>> NeoArm800KbpsMethod;
 
 #else // Other ARM architecture -- Presumed Arduino Due
@@ -576,21 +606,29 @@ typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedProps800Kbps>> Neo
 #define ARM_OTHER_SCALE  VARIANT_MCK / 2UL / 1000000UL
 #define ARM_OTHER_INST   (2UL * F_CPU / VARIANT_MCK)
 
-class NeoArmOtherSpeedPropsWs2813
+class NeoArmOtherSpeedProps800KbpsBase
 {
 public:
     static const uint32_t CyclesT0h = ((uint32_t)(0.40 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
     static const uint32_t CyclesT1h = ((uint32_t)(0.80 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
     static const uint32_t Cycles = ((uint32_t)(1.25 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
-    static const uint32_t ResetTimeUs = 250;
 };
 
-class NeoArmOtherSpeedProps800Kbps
+class NeoArmOtherSpeedPropsWs2812x : public NeoArmOtherSpeedProps800KbpsBase
 {
 public:
-    static const uint32_t CyclesT0h = ((uint32_t)(0.40 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
-    static const uint32_t CyclesT1h = ((uint32_t)(0.80 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
-    static const uint32_t Cycles = ((uint32_t)(1.25 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
+    static const uint32_t ResetTimeUs = 300;
+};
+
+class NeoArmOtherSpeedPropsSk6812 : public NeoArmOtherSpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 80;
+};
+
+class NeoArmOtherSpeedProps800Kbps : public NeoArmOtherSpeedProps800KbpsBase
+{
+public:
     static const uint32_t ResetTimeUs = 50;
 };
 
@@ -679,7 +717,8 @@ public:
     }
 };
 
-typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsWs2813>> NeoArmWs2813Method;
+typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsWs2812x>> NeoArmWs2812xMethod;
+typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps400Kbps>> NeoArm400KbpsMethod;
 
@@ -687,8 +726,12 @@ typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps400Kbps>> Neo
 
 
 // Arm doesn't have alternatives methods yet, so only one to make the default
-typedef NeoArmWs2813Method NeoWs2813Method;
-typedef NeoArm800KbpsMethod Neo800KbpsMethod;
+typedef NeoArmWs2812xMethod NeoWs2813Method;
+typedef NeoArmWs2812xMethod NeoWs2812xMethod;
+typedef NeoArmSk6812Method NeoSk6812Method;
+typedef NeoArmSk6812Method NeoLc8812Method;
+typedef NeoArm800KbpsMethod NeoWs2812Method;
+typedef NeoArmWs2812xMethod Neo800KbpsMethod;
 #ifdef NeoArm400KbpsMethod // this is needed due to missing 400Kbps for some platforms
 typedef NeoArm400KbpsMethod Neo400KbpsMethod;
 #endif

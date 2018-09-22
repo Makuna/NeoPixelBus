@@ -63,19 +63,28 @@ struct slc_queue_item
     uint32  next_link_ptr;
 };
 
-class NeoEsp8266DmaSpeedWs2813
+class NeoEsp8266DmaSpeed800KbpsBase
 {
 public:
     const static uint32_t I2sClockDivisor = 3;
     const static uint32_t I2sBaseClockDivisor = 16;
-    const static uint32_t ResetTimeUs = 250;
 };
 
-class NeoEsp8266DmaSpeed800Kbps
+class NeoEsp8266DmaSpeedWs2812x : public NeoEsp8266DmaSpeed800KbpsBase
 {
 public:
-    const static uint32_t I2sClockDivisor = 3; 
-    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t ResetTimeUs = 300;
+};
+
+class NeoEsp8266DmaSpeedSk6812 : public NeoEsp8266DmaSpeed800KbpsBase
+{
+public:
+    const static uint32_t ResetTimeUs = 80;
+};
+
+class NeoEsp8266DmaSpeed800Kbps : public NeoEsp8266DmaSpeed800KbpsBase
+{
+public:
     const static uint32_t ResetTimeUs = 50;
 };
 
@@ -370,13 +379,19 @@ private:
 template<typename T_SPEED> 
 NeoEsp8266DmaMethodBase<T_SPEED>* NeoEsp8266DmaMethodBase<T_SPEED>::s_this;
 
-typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedWs2813> NeoEsp8266DmaWs2813Method;
+typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedWs2812x> NeoEsp8266DmaWs2812xMethod;
+typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedSk6812> NeoEsp8266DmaSk6812Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed800Kbps> NeoEsp8266Dma800KbpsMethod;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed400Kbps> NeoEsp8266Dma400KbpsMethod;
 
 // Dma  method is the default method for Esp8266
-typedef NeoEsp8266DmaWs2813Method NeoWs2813Method;
-typedef NeoEsp8266Dma800KbpsMethod Neo800KbpsMethod;
+typedef NeoEsp8266DmaWs2812xMethod NeoWs2813Method;
+typedef NeoEsp8266DmaWs2812xMethod NeoWs2812xMethod;
+typedef NeoEsp8266Dma800KbpsMethod NeoWs2812Method;
+typedef NeoEsp8266DmaSk6812Method NeoSk6812Method;
+typedef NeoEsp8266DmaSk6812Method NeoLc8812Method;
+
+typedef NeoEsp8266DmaWs2812xMethod Neo800KbpsMethod;
 typedef NeoEsp8266Dma400KbpsMethod Neo400KbpsMethod;
 
 #endif
