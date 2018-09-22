@@ -71,10 +71,16 @@ public:
     
 };
 
-class NeoAvrSpeedWs2813 :  public NeoAvrSpeed800KbpsBase
+class NeoAvrSpeedWs2812x :  public NeoAvrSpeed800KbpsBase
 {
 public:
-    static const uint32_t ResetTimeUs = 250;
+    static const uint32_t ResetTimeUs = 300;
+};
+
+class NeoAvrSpeedSk6812 : public NeoAvrSpeed800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 80;
 };
 
 class NeoAvrSpeed800Kbps: public NeoAvrSpeed800KbpsBase
@@ -187,13 +193,19 @@ private:
     uint8_t  _pinMask;      // Output PORT bitmask
 };
 
-typedef NeoAvrMethodBase<NeoAvrSpeedWs2813> NeoAvrWs2813Method;
+
+typedef NeoAvrMethodBase<NeoAvrSpeedWs2812x> NeoAvrWs2812xMethod;
+typedef NeoAvrMethodBase<NeoAvrSpeedSk6812> NeoAvrSk6812Method;
 typedef NeoAvrMethodBase<NeoAvrSpeed800Kbps> NeoAvr800KbpsMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed400Kbps> NeoAvr400KbpsMethod;
 
 // AVR doesn't have alternatives yet, so there is just the default
-typedef NeoAvrWs2813Method NeoWs2813Method;
-typedef NeoAvr800KbpsMethod Neo800KbpsMethod;
+typedef NeoAvrWs2812xMethod NeoWs2813Method;
+typedef NeoAvrWs2812xMethod NeoWs2812xMethod;
+typedef NeoAvr800KbpsMethod NeoWs2812Method;
+typedef NeoAvrSk6812Method NeoSk6812Method;
+typedef NeoAvrSk6812Method NeoLc8812Method;
+typedef NeoAvrWs2812xMethod Neo800KbpsMethod;
 typedef NeoAvr400KbpsMethod Neo400KbpsMethod;
 
 #endif

@@ -75,25 +75,34 @@ private:
     uint8_t* _asyncPixels;  // Holds a copy of LED color values taken when UpdateUart began
 };
 
-// NeoEsp8266UartSpeedWs2813 contains the timing constants used to get NeoPixelBus running with the Ws2813
-class NeoEsp8266UartSpeedWs2813
+class NeoEsp8266UartSpeed800KbpsBase
 {
 public:
     static const uint32_t ByteSendTimeUs = 10; // us it takes to send a single pixel element at 800khz speed
     static const uint32_t UartBaud = 3200000; // 800mhz, 4 serial bytes per NeoByte
-    static const uint32_t ResetTimeUs = 250; // us between data send bursts to reset for next update
+};
+
+// NeoEsp8266UartSpeedWs2813 contains the timing constants used to get NeoPixelBus running with the Ws2813
+class NeoEsp8266UartSpeedWs2812x : public NeoEsp8266UartSpeed800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 300; // us between data send bursts to reset for next update
+};
+
+class NeoEsp8266UartSpeedSk6812 : public NeoEsp8266UartSpeed800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 80; // us between data send bursts to reset for next update
 };
 
 // NeoEsp8266UartSpeed800Kbps contains the timing constant used to get NeoPixelBus running at 800Khz
-class NeoEsp8266UartSpeed800Kbps
+class NeoEsp8266UartSpeed800Kbps : public NeoEsp8266UartSpeed800KbpsBase
 {
 public:
-    static const uint32_t ByteSendTimeUs =  10; // us it takes to send a single pixel element at 800khz speed
-    static const uint32_t UartBaud = 3200000; // 800mhz, 4 serial bytes per NeoByte
     static const uint32_t ResetTimeUs = 50; // us between data send bursts to reset for next update
 };
 
-// NeoEsp8266UartSpeed800Kbps contains the timing constant used to get NeoPixelBus running at 400Khz
+// NeoEsp8266UartSpeed400Kbps contains the timing constant used to get NeoPixelBus running at 400Khz
 class NeoEsp8266UartSpeed400Kbps
 {
 public:
@@ -166,13 +175,22 @@ private:
     };
 };
 
-typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2813, NeoEsp8266Uart> NeoEsp8266UartWs2813Method;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266Uart> NeoEsp8266UartWs2812xMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266Uart> NeoEsp8266UartSk6812Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed800Kbps, NeoEsp8266Uart> NeoEsp8266Uart800KbpsMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed400Kbps, NeoEsp8266Uart> NeoEsp8266Uart400KbpsMethod;
 
-typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2813, NeoEsp8266AsyncUart> NeoEsp8266AsyncUartWs2813Method;
+typedef NeoEsp8266UartWs2812xMethod NeoEsp8266UartWs2813Method;
+typedef NeoEsp8266Uart800KbpsMethod NeoEsp8266UartWs2812Method;
+typedef NeoEsp8266UartSk6812Method NeoEsp8266UartLc8812Method;
+
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266AsyncUart> NeoEsp8266AsyncUartWs2812xMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266AsyncUart> NeoEsp8266AsyncUartSk6812Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed800Kbps, NeoEsp8266AsyncUart> NeoEsp8266AsyncUart800KbpsMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed400Kbps, NeoEsp8266AsyncUart> NeoEsp8266AsyncUart400KbpsMethod;
 
+typedef NeoEsp8266AsyncUartWs2812xMethod NeoEsp8266AsyncUartWs2813Method;
+typedef NeoEsp8266AsyncUart800KbpsMethod NeoEsp8266AsyncUartWs2812Method;
+typedef NeoEsp8266AsyncUartSk6812Method NeoEsp8266AsyncUartLc8812Method;
 #endif
 
