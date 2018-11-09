@@ -22,7 +22,7 @@ NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 
 NeoPixelAnimator animations(AnimationChannels); // NeoPixel animation management object
 
-uint16_t effectState = 0;  // general purpose variable used to store effect state
+boolean fadeToColor = true;  // general purpose variable used to store effect state
 
 
 // what is stored for state is specific to the need, in this case, the colors.
@@ -75,7 +75,7 @@ void BlendAnimUpdate(const AnimationParam& param)
 
 void FadeInFadeOutRinseRepeat(float luminance)
 {
-    if (effectState == 0)
+    if (fadeToColor)
     {
         // Fade upto a random color
         // we use HslColor object as it allows us to easily pick a hue
@@ -89,7 +89,7 @@ void FadeInFadeOutRinseRepeat(float luminance)
 
         animations.StartAnimation(0, time, BlendAnimUpdate);
     }
-    else if (effectState == 1)
+    else 
     {
         // fade to black
         uint16_t time = random(600, 700);
@@ -101,7 +101,7 @@ void FadeInFadeOutRinseRepeat(float luminance)
     }
 
     // toggle to the next effect state
-    effectState = (effectState + 1) % 2;
+    fadeToColor = !fadeToColor;
 }
 
 void setup()
