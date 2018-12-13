@@ -71,6 +71,20 @@ public:
         }
     }
 
+    static float QuadraticCenter(float unitValue)
+    {
+        unitValue *= 2.0f;
+        if (unitValue < 1.0f)
+        {
+            return (-0.5f * (unitValue * unitValue - 2.0f));
+        }
+        else
+        {
+            unitValue -= 1.0f;
+            return (0.5f * (unitValue * unitValue + 1.0f));
+        }
+    }
+
     static float CubicIn(float unitValue)
     {
         return (unitValue * unitValue * unitValue);
@@ -96,6 +110,13 @@ public:
         }
     }
 
+    static float CubicCenter(float unitValue)
+    {
+        unitValue *= 2.0f;
+        unitValue -= 1.0f;
+        return (0.5f * (unitValue * unitValue * unitValue) + 1);
+    }
+
     static float QuarticIn(float unitValue)
     {
         return (unitValue * unitValue * unitValue * unitValue);
@@ -118,6 +139,20 @@ public:
         {
             unitValue -= 2.0f;
             return (-0.5f * (unitValue * unitValue * unitValue * unitValue - 2.0f));
+        }
+    }
+
+    static float QuarticCenter(float unitValue)
+    {
+        unitValue *= 2.0f;
+        unitValue -= 1.0f;
+        if (unitValue < 0.0f)
+        {
+              return (-0.5f * (unitValue * unitValue * unitValue * unitValue - 1.0f));
+        }
+        else
+        {
+            return (0.5f * (unitValue * unitValue * unitValue * unitValue + 1.0f));
         }
     }
 
@@ -146,6 +181,13 @@ public:
         }
     }
 
+    static float QuinticCenter(float unitValue)
+    {
+        unitValue *= 2.0f;
+        unitValue -= 1.0f;
+        return (0.5f * (unitValue * unitValue * unitValue * unitValue * unitValue + 1.0f));
+    }
+
     static float SinusoidalIn(float unitValue)
     {
         return (-cos(unitValue * HALF_PI) + 1.0f);
@@ -159,6 +201,19 @@ public:
     static float SinusoidalInOut(float unitValue)
     {
         return -0.5 * (cos(PI * unitValue) - 1.0f);
+    }
+
+    static float SinusoidalCenter(float unitValue)
+    {
+        if (unitValue < 0.5f)
+        {
+            return (0.5 * sin(PI * unitValue));
+        }
+        else
+        {
+            return (-0.5 * (cos(PI * (unitValue-0.5f)) + 1.0f));
+        }
+        
     }
 
     static float ExponentialIn(float unitValue)
@@ -182,6 +237,20 @@ public:
         {
             unitValue -= 1.0f;
             return (0.5f * (-pow(2, -10.0f * unitValue) + 2.0f));
+        }
+    }
+
+    static float ExponentialCenter(float unitValue)
+    {
+        unitValue *= 2.0f;
+        if (unitValue < 1.0f)
+        {
+            return (0.5f * (-pow(2, -10.0f * unitValue) + 1.0f));
+        }
+        else
+        {
+            unitValue -= 2.0f;
+            return (0.5f * (pow(2, 10.0f * unitValue) + 1.0f));
         }
     }
 
@@ -214,6 +283,25 @@ public:
         {
             unitValue -= 2.0f;
             return (0.5f * (sqrt(1.0f - unitValue * unitValue) + 1.0f));
+        }
+    }
+
+    static float CircularCenter(float unitValue)
+    {
+        unitValue *= 2.0f;
+        unitValue -= 1.0f;
+        if (unitValue == 0.0f)
+        {
+            return 1.0f;
+        }
+        else if (unitValue < 0.0f)
+        {
+            return (0.5f * sqrt(1.0f - unitValue * unitValue));
+        }
+        else
+        {
+            unitValue -= 2.0f;
+            return (-0.5f * (sqrt(1.0f - unitValue * unitValue) - 1.0f ) + 0.5f);
         }
     }
 
