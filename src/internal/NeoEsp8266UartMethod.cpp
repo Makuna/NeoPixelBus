@@ -39,20 +39,20 @@ extern "C"
 #define UART1_INV_MASK (0x3f << 19)
 
 // Gets the number of bytes waiting in the TX FIFO of UART1
-static inline uint8_t getUartTxFifoLength()
+static inline uint8_t ICACHE_RAM_ATTR getUartTxFifoLength()
 {
     return (U1S >> USTXC) & 0xff;
 }
 
 // Append a byte to the TX FIFO of UART1
 // You must ensure the TX FIFO isn't full
-static inline void enqueue(uint8_t byte)
+static inline void ICACHE_RAM_ATTR enqueue(uint8_t byte)
 {
     U1F = byte;
 }
 
-static const uint8_t* esp8266_uart1_async_buf;
-static const uint8_t* esp8266_uart1_async_buf_end;
+static const uint8_t* ICACHE_RAM_ATTR esp8266_uart1_async_buf;
+static const uint8_t* ICACHE_RAM_ATTR esp8266_uart1_async_buf_end;
 
 NeoEsp8266Uart::NeoEsp8266Uart(uint16_t pixelCount, size_t elementSize)
 {
@@ -188,6 +188,8 @@ void NeoEsp8266AsyncUart::UpdateUart()
     std::swap(_asyncPixels, _pixels);
 }
 
+//extern void ICACHE_RAM_ATTR uart_isr(void * arg);
+
 void ICACHE_RAM_ATTR NeoEsp8266AsyncUart::IntrHandler(void* param)
 {
     // Interrupt handler is shared between UART0 & UART1
@@ -206,6 +208,7 @@ void ICACHE_RAM_ATTR NeoEsp8266AsyncUart::IntrHandler(void* param)
 
     if (READ_PERI_REG(UART_INT_ST(UART0)))
     {
+        // uart_isr(param);
         // TODO: gdbstub uses the interrupt of UART0, but there is no way to call its
         // interrupt handler gdbstub_uart_hdlr since it's static.
         WRITE_PERI_REG(UART_INT_CLR(UART0), 0xffff);
