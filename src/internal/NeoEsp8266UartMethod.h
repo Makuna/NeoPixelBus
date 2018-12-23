@@ -29,6 +29,10 @@ License along with NeoPixel.  If not, see
 #ifdef ARDUINO_ARCH_ESP8266
 #include <Arduino.h>
 
+// this template method class is used to track the data being sent on the uart
+// when using the default serial ISR installed by the core
+// used with NeoEsp8266Uart and NeoEsp8266AsyncUart classes
+//
 class NeoEsp8266UartContext
 {
 public:
@@ -74,6 +78,10 @@ public:
     }
 };
 
+// this template method class is used to track the data being sent on the uart
+// when using our own UART ISR 
+// used with NeoEsp8266Uart and NeoEsp8266AsyncUart classes
+//
 class NeoEsp8266UartInterruptContext : NeoEsp8266UartContext
 {
 public:
@@ -100,6 +108,9 @@ private:
     static void ICACHE_RAM_ATTR Isr(void* param);
 };
 
+// this template feature class is used a base for all others and contains 
+// common methods
+//
 class UartFeatureBase
 {
 protected:
@@ -114,6 +125,9 @@ protected:
     }
 };
 
+// this template feature class is used to define the specifics for uart0
+// used with NeoEsp8266Uart and NeoEsp8266AsyncUart classes
+//
 class UartFeature0 : UartFeatureBase
 {
 public:
@@ -126,6 +140,9 @@ public:
     }
 };
 
+// this template feature class is used to define the specifics for uart1
+// used with NeoEsp8266Uart and NeoEsp8266AsyncUart classes
+//
 class UartFeature1 : UartFeatureBase
 {
 public:
@@ -138,6 +155,11 @@ public:
     }
 };
 
+// this template method class is used a base for all others and contains 
+// common properties and methods
+//
+// used by NeoEsp8266Uart and NeoEsp8266AsyncUart
+//
 class NeoEsp8266UartBase
 {
 protected:
@@ -159,6 +181,11 @@ protected:
 
 };
 
+// this template method class is used to glue uart feature and context for
+// synchronous uart method
+//
+// used by NeoEsp8266UartMethodBase
+//
 template<typename T_UARTFEATURE, typename T_UARTCONTEXT> class NeoEsp8266Uart : public NeoEsp8266UartBase
 {
 protected:
@@ -201,8 +228,8 @@ protected:
     }
 };
 
-
-// NeoEsp8266AsyncUart handles all transmission asynchronously using interrupts
+// this template method class is used to glue uart feature and context for
+// asynchronously uart method
 //
 // This UART controller uses two buffers that are swapped in every call to
 // NeoPixelBus.Show(). One buffer contains the data that is being sent
@@ -211,6 +238,9 @@ protected:
 //
 // Therefore, the result of NeoPixelBus.Pixels() is invalidated after
 // every call to NeoPixelBus.Show() and must not be cached.
+//
+// used by NeoEsp8266UartMethodBase
+//
 template<typename T_UARTFEATURE, typename T_UARTCONTEXT> class NeoEsp8266AsyncUart : public NeoEsp8266UartBase
 {
 protected:

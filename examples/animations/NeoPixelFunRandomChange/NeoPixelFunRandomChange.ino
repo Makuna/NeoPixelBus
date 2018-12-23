@@ -14,9 +14,7 @@ NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 // For Esp8266, the Pin is omitted and it uses GPIO3 due to DMA hardware use.  
 // There are other Esp8266 alternative methods that provide more pin options, but also have
 // other side effects.
-//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
-//
-// NeoEsp8266Uart800KbpsMethod uses GPI02 instead
+// for details see wiki linked here https://github.com/Makuna/NeoPixelBus/wiki/ESP8266-NeoMethods 
 
 NeoPixelAnimator animations(PixelCount); // NeoPixel animation management object
 
