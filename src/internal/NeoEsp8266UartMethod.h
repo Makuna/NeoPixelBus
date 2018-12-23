@@ -118,7 +118,7 @@ class UartFeature0 : UartFeatureBase
 {
 public:
     static const uint32_t Index = 0;
-    static void init(uint32_t baud)
+    static void Init(uint32_t baud)
     {
         // Configure the serial line with 1 start bit (0), 6 data bits and 1 stop bit (1)
         Serial.begin(baud, SERIAL_6N1, SERIAL_TX_ONLY);
@@ -172,7 +172,7 @@ protected:
     {
         // Wait until the TX fifo is empty. This way we avoid broken frames
         // when destroying & creating a NeoPixelBus to change its length.
-        while (T_UARTCONTEXT::GetTxFifoLength() > 0)
+        while (T_UARTCONTEXT::GetTxFifoLength(T_UARTFEATURE::Index) > 0)
         {
             yield();
         }
@@ -196,7 +196,7 @@ protected:
         const uint8_t* end = ptr + _sizePixels;
         while (ptr != end)
         {
-            ptr = T_UARTCONTEXT::FillUartFifo(T_UARTFEATURE::Index, ptr, end);
+            ptr = const_cast<uint8_t*>(T_UARTCONTEXT::FillUartFifo(T_UARTFEATURE::Index, ptr, end));
         }
     }
 };
