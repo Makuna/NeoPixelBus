@@ -29,10 +29,37 @@ License along with NeoPixel.  If not, see
 #include <utility>
 extern "C"
 {
-//    #include <eagle_soc.h>
     #include <ets_sys.h>
-//    #include <uart.h>
-//    #include <uart_register.h>
+}
+
+const volatile uint8_t* ICACHE_RAM_ATTR NeoEsp8266UartContext::FillUartFifo(uint8_t uartNum,
+    const volatile uint8_t* pixels,
+    const volatile uint8_t* end)
+{
+    // Remember: UARTs send less significant bit (LSB) first so
+    //      pushing ABCDEF byte will generate a 0FEDCBA1 signal,
+    //      including a LOW(0) start & a HIGH(1) stop bits.
+    // Also, we have configured UART to invert logic levels, so:
+    const uint8_t _uartData[4] = {
+        0b110111, // On wire: 1 000 100 0 [Neopixel reads 00]
+        0b000111, // On wire: 1 000 111 0 [Neopixel reads 01]
+        0b110100, // On wire: 1 110 100 0 [Neopixel reads 10]
+        0b000100, // On wire: 1 110 111 0 [NeoPixel reads 11]
+    };
+    uint8_t avail = (UART_TX_FIFO_SIZE - GetTxFifoLength(uartNum)) / 4;
+    if (end - pixels > avail)
+    {
+        end = pixels + avail;
+    }
+    while (pixels < end)
+    {
+        uint8_t subpix = *pixels++;
+        Enqueue(uartNum, _uartData[(subpix >> 6) & 0x3]);
+        Enqueue(uartNum, _uartData[(subpix >> 4) & 0x3]);
+        Enqueue(uartNum, _uartData[(subpix >> 2) & 0x3]);
+        Enqueue(uartNum, _uartData[subpix & 0x3]);
+    }
+    return pixels;
 }
 
 volatile NeoEsp8266UartInterruptContext* NeoEsp8266UartInterruptContext::s_uartInteruptContext[] = { nullptr, nullptr };

@@ -47,9 +47,10 @@ public:
         USF(uartNum) = value;
     }
 
-    static const volatile uint8_t* ICACHE_RAM_ATTR FillUartFifo(uint8_t uartNum, 
-        const volatile uint8_t* pixels, 
-        const volatile uint8_t* end)
+    static const volatile uint8_t* ICACHE_RAM_ATTR FillUartFifo(uint8_t uartNum,
+        const volatile uint8_t* pixels,
+        const volatile uint8_t* end);
+    /*
     {
         // Remember: UARTs send less significant bit (LSB) first so
         //      pushing ABCDEF byte will generate a 0FEDCBA1 signal,
@@ -75,7 +76,7 @@ public:
             Enqueue(uartNum, _uartData[subpix & 0x3]);
         }
         return pixels;
-    }
+    }*/
 };
 
 // this template method class is used to track the data being sent on the uart
