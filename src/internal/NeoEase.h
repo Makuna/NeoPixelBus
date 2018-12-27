@@ -307,6 +307,14 @@ public:
 
     static float Gamma(float unitValue)
     {
-        return pow(unitValue, 1.0f / 0.45f);
+        unitValue = unitValue * 100.0f;
+        if(unitValue <= 8)
+        {
+            return unitValue / 903.3f;
+        }
+        else
+        {
+            return pow((unitValue + 16.0f) / 116.0f, 3.0f);
+        }
     }
 };

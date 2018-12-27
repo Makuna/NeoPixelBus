@@ -30,17 +30,9 @@ License along with NeoPixel.  If not, see
 class NeoGammaEquationMethod
 {
 public:
-    static uint8_t Correct(float value)
+    static uint8_t Correct(uint8_t value)
     {
-        value = value / 255.0f * 100.0f;
-        if(value <= 8)
-        {
-            return static_cast<uint8_t>(round(value / 903.3f * 255.0f));
-        }
-        else
-        {
-            return static_cast<uint8_t>(round(pow((value + 16.0f) / 116.0f, 3.0f) * 255.0f));
-        }
+        return static_cast<uint8_t>(255.0f * NeoEase::Gamma(value / 255.0f) + 0.5f);
     }
 };
 
