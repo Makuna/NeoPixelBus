@@ -99,8 +99,11 @@ void NeoEsp8266UartInterruptContext::Attach()
 
 void NeoEsp8266UartInterruptContext::Detach()
 {
-    // uart_unsubscribeInterrupt is safe and does INT enable and disable within it
-    uart_unsubscribeInterrupt(_uartNum, Isr);
+    ETS_UART_INTR_DISABLE();
+    if (uart_unsubscribeInterrupt(_uartNum, Isr))
+    {
+        ETS_UART_INTR_ENABLE();
+    }
 }
 
 void ICACHE_RAM_ATTR NeoEsp8266UartInterruptContext::Isr(void* param)

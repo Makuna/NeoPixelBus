@@ -114,7 +114,7 @@ public:
     static const uint32_t Index = 0;
     static void Init()
     {
-        pinMode(1, SPECIAL);
+        pinMode(1, FUNCTION_0);
     }
 };
 
