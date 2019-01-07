@@ -62,109 +62,66 @@ const volatile uint8_t* ICACHE_RAM_ATTR NeoEsp8266UartContext::FillUartFifo(uint
     return pixels;
 }
 
-volatile NeoEsp8266UartInterruptContext* NeoEsp8266UartInterruptContext::s_uartInteruptContext[] = { nullptr, nullptr };
-
-void NeoEsp8266UartInterruptContext::StartSending(uint8_t uartNum, uint8_t* start, uint8_t* end)
+void NeoEsp8266UartInterruptContext::StartSending(uint8_t* start, uint8_t* end)
 {
     // send the pixels asynchronously
     _asyncBuff = start;
     _asyncBuffEnd = end;
 
     // enable the transmit interrupt
-    USIE(uartNum) |= (1 << UIFE);
+    USIE(_uartNum) |= (1 << UIFE);
 }
 
-void NeoEsp8266UartInterruptContext::Attach(uint8_t uartNum)
+void NeoEsp8266UartInterruptContext::Attach()
 {
     // Disable all interrupts
     ETS_UART_INTR_DISABLE();
 
     // Clear the RX & TX FIFOS
     const uint32_t fifoResetFlags = (1 << UCTXRST) | (1 << UCRXRST);
-    USC0(uartNum) |= fifoResetFlags;
-    USC0(uartNum) &= ~(fifoResetFlags);
+    USC0(_uartNum) |= fifoResetFlags;
+    USC0(_uartNum) &= ~(fifoResetFlags);
 
-    // attach the ISR if needed
-    if (s_uartInteruptContext[0] == nullptr &&
-        s_uartInteruptContext[1] == nullptr)
-    {
-        ETS_UART_INTR_ATTACH(Isr, s_uartInteruptContext);
-    }
-
-    // attach the context
-    s_uartInteruptContext[uartNum] = this;
+    uart_subscribeInterrupt(_uartNum, Isr, this);
 
     // Set tx fifo trigger. 80 bytes gives us 200 microsecs to refill the FIFO
-    USC1(uartNum) = (80 << UCFET);
+    USC1(_uartNum) = (80 << UCFET);
 
     // Disable RX & TX interrupts. It maybe still enabled by uart.c in the SDK
-    USIE(uartNum) &= ~((1 << UIFF) | (1 << UIFE));
+    USIE(_uartNum) &= ~((1 << UIFF) | (1 << UIFE));
 
     // Clear all pending interrupts in UART1
-    USIC(uartNum) = 0xffff;
+    USIC(_uartNum) = 0xffff;
 
     // Reenable interrupts
     ETS_UART_INTR_ENABLE();
 }
 
-void NeoEsp8266UartInterruptContext::Detach(uint8_t uartNum)
+void NeoEsp8266UartInterruptContext::Detach()
 {
-    // Disable interrupts
-    ETS_UART_INTR_DISABLE();
-
-    if (s_uartInteruptContext[uartNum] != nullptr)
-    {
-        // turn off uart
-        USC1(uartNum) = 0;
-        USIC(uartNum) = 0xffff;
-        USIE(uartNum) = 0;
-
-        s_uartInteruptContext[uartNum] = nullptr;
-
-        if (s_uartInteruptContext[0] == nullptr &&
-            s_uartInteruptContext[1] == nullptr)
-        {
-            // detach our ISR
-            ETS_UART_INTR_ATTACH(NULL, NULL);
-
-            // return so we don't enable interrupts since there is no ISR anymore
-            return;
-        }
-    }
-
-    // Reenable interrupts
-    ETS_UART_INTR_ENABLE();
+    // uart_unsubscribeInterrupt is safe and does INT enable and disable within it
+    uart_unsubscribeInterrupt(_uartNum, Isr);
 }
 
 void ICACHE_RAM_ATTR NeoEsp8266UartInterruptContext::Isr(void* param)
 {
-    // make sure this is for us
-    if (param == s_uartInteruptContext)
-    {
-        // Interrupt handler is shared between UART0 & UART1
-        // so we need to test for both
-        for (uint8_t uartNum = 0; uartNum < 2; uartNum++)
-        {
-            if (USIS(uartNum) && s_uartInteruptContext[uartNum] != nullptr)
-            {
-                // Fill the FIFO with new data
-                s_uartInteruptContext[uartNum]->_asyncBuff = FillUartFifo(
-                    uartNum,
-                    s_uartInteruptContext[uartNum]->_asyncBuff, 
-                    s_uartInteruptContext[uartNum]->_asyncBuffEnd);
+    NeoEsp8266UartInterruptContext* that = static_cast<NeoEsp8266UartInterruptContext*>(param);
 
-                // Disable TX interrupt when done
-                if (s_uartInteruptContext[uartNum]->_asyncBuff == s_uartInteruptContext[uartNum]->_asyncBuffEnd)
-                {
-                    // clear the TX FIFO Empty
-                    USIE(uartNum) &= ~(1 << UIFE);
-                }
-                
-                // Clear all interrupts flags (just in case)
-                USIC(uartNum) = 0xffff;
-            }
-        }
+    // Fill the FIFO with new data
+    that->_asyncBuff = FillUartFifo(
+        that->_uartNum,
+        that->_asyncBuff,
+        that->_asyncBuffEnd);
+
+    // Disable TX interrupt when done
+    if (that->_asyncBuff == that->_asyncBuffEnd)
+    {
+        // clear the TX FIFO Empty
+        USIE(that->_uartNum) &= ~(1 << UIFE);
     }
+                
+    // Clear all interrupts flags (just in case)
+    USIC(that->_uartNum) = 0xffff;
 }
 
 #endif
