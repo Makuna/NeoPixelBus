@@ -82,7 +82,7 @@ void NeoEsp8266UartInterruptContext::Attach()
     USC0(_uartNum) |= fifoResetFlags;
     USC0(_uartNum) &= ~(fifoResetFlags);
 
-    uart_subscribeInterrupt(_uartNum, Isr, this);
+    uart_subscribeInterrupt_unsafe(_uartNum, Isr, this);
 
     // Set tx fifo trigger. 80 bytes gives us 200 microsecs to refill the FIFO
     USC1(_uartNum) = (80 << UCFET);
@@ -100,7 +100,7 @@ void NeoEsp8266UartInterruptContext::Attach()
 void NeoEsp8266UartInterruptContext::Detach()
 {
     ETS_UART_INTR_DISABLE();
-    if (uart_unsubscribeInterrupt(_uartNum, Isr))
+    if (uart_unsubscribeInterrupt_unsafe(_uartNum, Isr))
     {
         ETS_UART_INTR_ENABLE();
     }
