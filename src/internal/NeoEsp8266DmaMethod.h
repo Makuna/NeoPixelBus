@@ -143,8 +143,6 @@ public:
 
     ~NeoEsp8266DmaMethodBase()
     {
-        digitalWrite(4, HIGH);
-
         uint8_t waits = 1;
         while (!IsReadyToUpdate())
         {
@@ -159,8 +157,6 @@ public:
         {
             yield();
         }
-
-        digitalWrite(4, LOW);
 
         StopDma();
 
