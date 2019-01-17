@@ -51,11 +51,13 @@ public:
         return true; // dot stars don't have a required delay
     }
 
+#if defined(ARDUINO_ARCH_ESP32)
     void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
         SPI.begin(sck, miso, mosi, ss);
         init();
     }
+#endif
 
     void Initialize()
     {
@@ -92,8 +94,10 @@ private:
 
     void init()
     {
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-        SPI.setFrequency(20000000L);
+#if defined(ARDUINO_ARCH_ESP8266) 
+        SPI.setFrequency(4000000L); // more than 4mhz causes CLK pulse malformation
+#elif defined(ARDUINO_ARCH_ESP32)
+        SPI.setFrequency(4000000L); // more than 4mhz causes CLK pulse malformation
 #elif defined(ARDUINO_ARCH_AVR) 
         SPI.setClockDivider(SPI_CLOCK_DIV2); // 8 MHz (6 MHz on Pro Trinket 3V)
 #else
