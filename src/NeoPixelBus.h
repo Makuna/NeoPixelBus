@@ -137,6 +137,13 @@ public:
         Dirty();
     }
 
+    // used by DotStartSpiMethod if pins can be configured
+    void Begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    {
+        _method.Initialize(sck, miso, mosi, ss);
+        Dirty();
+    }
+
     void Show()
     {
         if (!IsDirty())
