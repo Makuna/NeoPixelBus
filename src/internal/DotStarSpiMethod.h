@@ -38,12 +38,21 @@ public:
         _sendBuffer = (uint8_t*)malloc(_sizeSendBuffer);
         memset(_sendBuffer, 0, _sizeSendBuffer);
         setEndFrameBytes();
+
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#else
+        _sendSpiBuffer = (uint8_t*)malloc(_sizeSendBuffer);
+#endif
     }
 
     ~DotStarSpiMethod()
     {
         SPI.end();
         free(_sendBuffer);
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#else
+        free(_sendSpiBuffer);
+#endif
     }
 
     bool IsReadyToUpdate() const
@@ -55,24 +64,32 @@ public:
     void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
         SPI.begin(sck, miso, mosi, ss);
-        init();
     }
 #endif
 
     void Initialize()
     {
         SPI.begin();
-        init();
     }
 
     void Update()
     {
-        // due to API inconsistencies need to call different methods on SPI
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+        // ESPs have a method to write without inplace overwriting the send buffer
+        // since we don't care what gets received
+        SPI.beginTransaction(SPISettings(8000000L, MSBFIRST, SPI_MODE0));
         SPI.writeBytes(_sendBuffer, _sizeSendBuffer);
+        SPI.endTransaction();
 #else
-        SPI.transfer(_sendBuffer, _sizeSendBuffer);
+        // default ARDUINO transfer inplace overwrites the send buffer
+        // which is bad, so we have to copy and use the copy
+        memcpy(_sendSpiBuffer, _sendBuffer,  _sizeSendBuffer);
+
+        SPI.beginTransaction(SPISettings(8000000L, MSBFIRST, SPI_MODE0));
+        SPI.transfer(_sendSpiBuffer, _sizeSendBuffer);
+        SPI.endTransaction();
 #endif
+
     }
 
     uint8_t* getPixels() const
@@ -91,21 +108,10 @@ private:
     const size_t   _sizeSendBuffer;   // Size of '_sendBuffer' buffer below
 
     uint8_t* _sendBuffer;       // Holds SPI send Buffer, including LED color values
-
-    void init()
-    {
-#if defined(ARDUINO_ARCH_ESP8266) 
-        SPI.setFrequency(4000000L); // more than 4mhz causes CLK pulse malformation
-#elif defined(ARDUINO_ARCH_ESP32)
-        SPI.setFrequency(4000000L); // more than 4mhz causes CLK pulse malformation
-#elif defined(ARDUINO_ARCH_AVR) 
-        SPI.setClockDivider(SPI_CLOCK_DIV2); // 8 MHz (6 MHz on Pro Trinket 3V)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
 #else
-        SPI.setClockDivider((F_CPU + 4000000L) / 8000000L); // 8-ish MHz on Due
+    uint8_t* _sendSpiBuffer;       // Holds SPI transfer Buffer, copy of _sendBuffer
 #endif
-        SPI.setBitOrder(MSBFIRST);
-        SPI.setDataMode(SPI_MODE0);
-    }
 
     size_t calcBufferSize(size_t sizePixels) const
     {
