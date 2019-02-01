@@ -38,21 +38,12 @@ public:
         _sendBuffer = (uint8_t*)malloc(_sizeSendBuffer);
         memset(_sendBuffer, 0, _sizeSendBuffer);
         setEndFrameBytes();
-
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-#else
-        _sendSpiBuffer = (uint8_t*)malloc(_sizeSendBuffer);
-#endif
     }
 
     ~DotStarSpiMethod()
     {
         SPI.end();
         free(_sendBuffer);
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-#else
-        free(_sendSpiBuffer);
-#endif
     }
 
     bool IsReadyToUpdate() const
@@ -74,22 +65,23 @@ public:
 
     void Update()
     {
+        SPI.beginTransaction(SPISettings(20000000L, MSBFIRST, SPI_MODE0));
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
         // ESPs have a method to write without inplace overwriting the send buffer
-        // since we don't care what gets received
-        SPI.beginTransaction(SPISettings(8000000L, MSBFIRST, SPI_MODE0));
+        // since we don't care what gets received, use it for performance
         SPI.writeBytes(_sendBuffer, _sizeSendBuffer);
-        SPI.endTransaction();
+
 #else
         // default ARDUINO transfer inplace overwrites the send buffer
-        // which is bad, so we have to copy and use the copy
-        memcpy(_sendSpiBuffer, _sendBuffer,  _sizeSendBuffer);
-
-        SPI.beginTransaction(SPISettings(8000000L, MSBFIRST, SPI_MODE0));
-        SPI.transfer(_sendSpiBuffer, _sizeSendBuffer);
-        SPI.endTransaction();
+        // which is bad, so we have to send one byte at a time
+        uint8_t* out = _sendBuffer;
+        uint8_t* end = out + _sizeSendBuffer;
+        while (out < end)
+        {
+            SPI.transfer(*out++);
+        }
 #endif
-
+        SPI.endTransaction();
     }
 
     uint8_t* getPixels() const
@@ -108,10 +100,6 @@ private:
     const size_t   _sizeSendBuffer;   // Size of '_sendBuffer' buffer below
 
     uint8_t* _sendBuffer;       // Holds SPI send Buffer, including LED color values
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-#else
-    uint8_t* _sendSpiBuffer;       // Holds SPI transfer Buffer, copy of _sendBuffer
-#endif
 
     size_t calcBufferSize(size_t sizePixels) const
     {
