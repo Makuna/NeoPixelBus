@@ -43,9 +43,11 @@ License along with NeoPixel.  If not, see
 #include "internal/HsbColor.h"
 #include "internal/HtmlColor.h"
 #include "internal/RgbwColor.h"
+#include "internal/SegmentDigit.h"
 
 #include "internal/NeoColorFeatures.h"
 #include "internal/DotStarColorFeatures.h"
+#include "internal/NeoSegmentFeatures.h"
 
 #include "internal/Layouts.h"
 #include "internal/NeoTopology.h"
