@@ -27,6 +27,19 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
+enum LedSegment
+{
+    LedSegment_A,
+    LedSegment_B,
+    LedSegment_C,
+    LedSegment_D,
+    LedSegment_E,
+    LedSegment_F,
+    LedSegment_G,
+    LedSegment_Decimal,
+    LedSegment_COUNT
+};
+
 // ------------------------------------------------------------------------
 // SevenSegDigit represents a color object that is represented by the segments
 // of a 7 segment LED display digit.  It contains helpful routines to manipulate 
@@ -38,6 +51,15 @@ License along with NeoPixel.  If not, see
 // ------------------------------------------------------------------------
 struct SevenSegDigit
 {
+    // ------------------------------------------------------------------------
+    // Construct a SevenSegDigit using 
+    //   the default brightness to apply to all segments
+    // ------------------------------------------------------------------------
+    SevenSegDigit(uint8_t defaultBrightness)
+    {
+        memset(Segment, defaultBrightness, sizeof(Segment));
+    }
+
     // ------------------------------------------------------------------------
     // Construct a SevenSegDigit using 
     //   a bitmask for the segment (bit order is  ".gfedcba")
@@ -116,39 +138,16 @@ struct SevenSegDigit
     // segment members (0-255) where each represents the segment location
     // and the value defines the brightnes (0) is off and (255) is full brightness
     // ------------------------------------------------------------------------
-    const uint8_t SegmentCount = 9;
+    static const uint8_t SegmentCount = 9;
     uint8_t Segment[SegmentCount];
 
+
+    // segment decode maps from ascii to a bitmask of segments
     //
-    // https://en.wikichip.org/wiki/seven-segment_display/representing_letters
-    //
-    const uint8_t DecodeNumbers[10] = {
-        // 0     1     2     3     4     5     6     7     8     9 
-        0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F };
-
-    const uint8_t DecodeAlphaCaps[26] = {
-        // A     B     C     D     E     F     G  
-        0x77, 0x00, 0x39, 0x00, 0x79, 0x71, 0x3D,
-        // H     I     J     K     L     M     N    
-        0x76, 0x30, 0x1E, 0x00, 0x38, 0x00, 0x00,
-        // O     P     Q     R     S 
-        0x3F, 0x73, 0x00, 0x00, 0x6D,
-        // T     U     V     W     X     Y     Z  
-        0x00, 0x3E, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
-    const uint8_t DecodeAlpha[26] = {
-        // a     b     c     d     e     f     g  
-        0x00, 0x7C, 0x58, 0x5E, 0x00, 0x00, 0x00, 
-        // h     i     j     k     l     m     n 
-        0x74, 0x00, 0x00, 0x00, 0x00, 0x00, 0x54,
-        // o     p     q     r     s     
-        0x5C, 0x00, 0x67, 0x50, 0x00, 
-        // t     u     v     w     x     y     z 
-        0x78, 0x1C, 0x00, 0x00, 0x00, 0x6E, 0x00 };
-
-    const uint8_t DecodeSpecial[4] = {
-        // ,     -     .     /
-        0x80, 0x70, 0x80, 0x70 };
+    static const uint8_t DecodeNumbers[10]; // 0-9
+    static const uint8_t DecodeAlphaCaps[26]; // A-Z
+    static const uint8_t DecodeAlpha[26]; // a-z
+    static const uint8_t DecodeSpecial[4]; // , - . /
 
 protected:
     void init(uint8_t bitmask, uint8_t brightness, uint8_t defaultBrightness);

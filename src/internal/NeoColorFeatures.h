@@ -45,7 +45,7 @@ public:
         uint8_t* pEnd = pPixelDest + (count * PixelSize);
         while (pPixelDest < pEnd)
         {
-            for (uint8_t iElement = 0; iElement < PixelSize, iElement++)
+            for (uint8_t iElement = 0; iElement < PixelSize; iElement++)
             {
                 *pPixelDest++ = pPixelSrc[iElement];
             }

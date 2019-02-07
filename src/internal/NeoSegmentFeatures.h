@@ -45,7 +45,7 @@ public:
         uint8_t* pEnd = pPixelDest + (count * PixelSize);
         while (pPixelDest < pEnd)
         {
-            for (uint8_t iElement = 0; iElement < PixelSize, iElement++)
+            for (uint8_t iElement = 0; iElement < PixelSize; iElement++)
             {
                 *pPixelDest++ = pPixelSrc[iElement];
             }
@@ -94,7 +94,7 @@ public:
         uint8_t commonSize = min(PixelSize, color.SegmentCount);
         for (uint8_t iSegment = 0; iSegment < commonSize; iSegment++)
         {
-            *p++ = color.Segment[iSegment]
+            *p++ = color.Segment[iSegment];
         }
     }
 
@@ -127,4 +127,4 @@ public:
     
 };
 
-typedef NeoAbcdefgSegmentFeature SevenSegDigit; // Abcdefg order is default
+typedef NeoAbcdefgSegmentFeature SevenSegmentFeature; // Abcdefg order is default
