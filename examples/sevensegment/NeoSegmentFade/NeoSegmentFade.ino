@@ -39,19 +39,58 @@ void CycleAnimation(const AnimationParam& param)
     strip.SetPixelColor(CycleDigit, digit); 
 }
 
-SevenSegDigit StartingDigit;
-SevenSegDigit EndingDigit;
+// for the animation of fading the new number in, we use
+// two digit DIBs (Device Independant Bitmaps) of SevenSegDigit to blend with; 
+// each sized one less than the strip due to the first is a used for the cycle
+// animation.
+typedef NeoDib<SevenSegDigit> SevenSegDib;
+
+SevenSegDib StartingDigits(DigitCount - 1); 
+SevenSegDib EndingDigits(DigitCount - 1);
+
+// shader class that will do the "string" blending
+//
+class DigitBlendShader 
+{
+public:
+    // this shader always renders and doesn't track a dirty state
+    bool IsDirty() const
+    { 
+        return true;
+    }
+
+    void ResetDirty() 
+    {  
+    }
+
+    SevenSegDigit Apply(uint16_t indexDigit, SevenSegDigit digit)
+    {
+        // since we call EndingDigits.Render below, the digit argument is
+        // from the EndingDigits so no need to call GetPixelColor to get it
+        // create a digit that is a blend between the last seconds
+        // value and the next seconds value using the BlendAmount
+        SevenSegDigit blendDigit = SevenSegDigit::LinearBlend(
+            StartingDigits.GetPixelColor(indexDigit),
+            digit,
+            BlendAmount);
+
+        return blendDigit;
+    }
+
+    float BlendAmount;
+};
+
+// the instance of our shader class
+DigitBlendShader blendShader;
 
 void FadeAnimation(const AnimationParam& param)
 {
-    // create a digit that is a blend between the last second
-    // value and the next second value using the animation progress
-    SevenSegDigit digit = SevenSegDigit::LinearBlend(
-            StartingDigit,
-            EndingDigit,
-            param.progress);
-    // apply it to the strip
-    strip.SetPixelColor(SecondsDigit, digit); 
+    // set the shader property BlendAmount to the animation progress
+    blendShader.BlendAmount = param.progress;
+    // apply it to the strip at the SecondsDigit location
+    EndingDigits.Render<SevenSegmentFeature, DigitBlendShader>(strip, 
+        blendShader, 
+        SecondsDigit);
 }
 
 uint32_t lastSeconds;
@@ -61,12 +100,11 @@ void setup()
     lastSeconds = millis() / 1000;
 
     strip.Begin();
-
-    // format and display new complete value
-    String display(lastSeconds);
-    strip.SetString(SecondsDigit, display, brightness);
-
     strip.Show(); 
+
+    // init animation Dibs as cleared
+    StartingDigits.ClearTo(0);
+    EndingDigits.ClearTo(0);
 }
 
 void loop()
@@ -77,17 +115,15 @@ void loop()
     //
     if (seconds != lastSeconds)
     {
-        // set the seconds fade animation properties
-        // first retain what is already present at the last digit as
-        // a starting point for the animation
-        StartingDigit = strip.GetPixelColor(SecondsDigit);
+        // copy last animation ending digits as starting digits
+        StartingDigits = EndingDigits;
         
-        // format and display new complete value
+        // format and display new value in ending digits dib
         String display(seconds);
-        strip.SetString(SecondsDigit, display, brightness);
-
-        // then get the last digit as what to animate to
-        EndingDigit = strip.GetPixelColor(SecondsDigit); 
+        SevenSegDigit::SetString<SevenSegDib>(EndingDigits,
+            0,
+            display.c_str(),
+            brightness);
 
         // start the seconds fade animation
         animations.StartAnimation(Animation_Fade, 1000, FadeAnimation);

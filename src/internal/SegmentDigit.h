@@ -134,6 +134,53 @@ struct SevenSegDigit
     // ------------------------------------------------------------------------
     static SevenSegDigit LinearBlend(const SevenSegDigit& left, const SevenSegDigit& right, float progress);
 
+    template <typename T_SET_TARGET> 
+    static void SetString(T_SET_TARGET& target, uint16_t indexDigit, const char* str, uint8_t brightness, uint8_t defaultBrightness = 0)
+    {
+        if (str == nullptr)
+        {
+            return;
+        }
+
+        const char* pFirst = str;
+        const char* pIter = str;
+
+        // digits are right to left
+        // so find the end
+        while (*pIter != '\0')
+        {
+            pIter++;
+        }
+        pIter--;
+
+
+        while (pIter >= pFirst)
+        {
+            bool decimal = false;
+            char value = *pIter;
+
+            // check if merging a decimal is required
+            if (pIter > pFirst && (*pIter == '.' || *pIter == ','))
+            {
+                // merge a decimal as long as they aren't the same
+                if (*(pIter - 1) != *pIter)
+                {
+                    decimal = true;
+                    pIter--;
+                    value = *pIter; // use the next char
+                }
+            }
+
+            SevenSegDigit digit(value, brightness, defaultBrightness);
+            if (decimal)
+            {
+                digit.Segment[LedSegment_Decimal] = brightness;
+            }
+            target.SetPixelColor(indexDigit, digit);
+            indexDigit++;
+        }
+    }
+
     // ------------------------------------------------------------------------
     // segment members (0-255) where each represents the segment location
     // and the value defines the brightnes (0) is off and (255) is full brightness
@@ -142,7 +189,7 @@ struct SevenSegDigit
     uint8_t Segment[SegmentCount];
 
 
-    // segment decode maps from ascii to a bitmask of segments
+    // segment decode maps from ascii relative first char in map to a bitmask of segments
     //
     static const uint8_t DecodeNumbers[10]; // 0-9
     static const uint8_t DecodeAlphaCaps[26]; // A-Z

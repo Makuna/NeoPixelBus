@@ -43,53 +43,22 @@ public:
     {
     }
 
-    void SetString(uint16_t indexDigit, const char* str, uint8_t brightness, uint8_t defaultBrightness = 0)
+    void SetString(uint16_t indexDigit, 
+        const char* str, 
+        uint8_t brightness, 
+        uint8_t defaultBrightness = 0)
     {
-        if (str == nullptr)
-        {
-            return;
-        }
-
-        const char* pFirst = str;
-        const char* pIter = str;
-
-        // digits are right to left
-        // so find the end
-        while (*pIter != '\0')
-        {
-            pIter++;
-        }
-        pIter--; 
-
-
-        while (pIter >= pFirst)
-        {
-            bool decimal = false;
-            char value = *pIter;
-
-            // check if merging a decimal is required
-            if (pIter > pFirst && (*pIter == '.' || *pIter == ','))
-            {
-                // merge a decimal as long as they aren't the same
-                if (*(pIter - 1) != *pIter)
-                {
-                    decimal = true;
-                    pIter--;
-                    value = *pIter; // use the next char
-                }
-            }
-
-            typename T_COLOR_FEATURE::ColorObject digit(value, brightness, defaultBrightness);
-            if (decimal)
-            {
-                digit.Segment[LedSegment_Decimal] = brightness;
-            }
-            NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::SetPixelColor(indexDigit, digit);
-            indexDigit++;
-        }
+        T_COLOR_FEATURE::ColorObject::SetString(*this,
+            indexDigit,
+            str,
+            brightness,
+            defaultBrightness);
     }
 
-    void SetString(uint16_t indexDigit, const String& str, uint8_t brightness, uint8_t defaultBrightness = 0)
+    void SetString(uint16_t indexDigit, 
+        const String& str, 
+        uint8_t brightness, 
+        uint8_t defaultBrightness = 0)
     {
         SetString(indexDigit, str.c_str(), brightness, defaultBrightness);
     }
