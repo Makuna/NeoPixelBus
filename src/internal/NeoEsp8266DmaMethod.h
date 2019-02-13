@@ -168,7 +168,7 @@ public:
         free(_i2sBufDesc);
     }
 
-    bool IsReadyToUpdate() 
+    bool IsReadyToUpdate() const
     {
         return (_dmaState == NeoDmaState_Idle);
     }
