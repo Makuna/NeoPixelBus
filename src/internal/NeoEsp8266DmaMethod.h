@@ -48,7 +48,7 @@ extern "C"
 #include "ets_sys.h"
 #include "user_interface.h"
 
-#if !defined(__CORE_ESP8266_VERSION_H)
+#if !defined(__CORE_ESP8266_VERSION_H) || defined(ARDUINO_ESP8266_RELEASE_2_5_0)
     void rom_i2c_writeReg_Mask(uint32_t block, uint32_t host_id, uint32_t reg_add, uint32_t Msb, uint32_t Lsb, uint32_t indata);
 #endif
 }
