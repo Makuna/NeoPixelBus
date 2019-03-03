@@ -1,5 +1,6 @@
 /*-------------------------------------------------------------------------
 NeoPixelGamma class is used to correct RGB colors for human eye gamma levels
+according to CIE L*a*b lightness definition
 
 Written by Michael C. Miller.
 
