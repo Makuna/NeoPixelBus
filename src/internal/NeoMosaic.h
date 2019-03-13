@@ -159,7 +159,6 @@ private:
         uint16_t topoY = y % _topoHeight;
 
         *pTileOffset = RowMajorAlternatingLayout::Map(_mosaicWidth,
-            _mosaicHeight,
             tileX,
             tileY) * _topoWidth * _topoHeight;
 
