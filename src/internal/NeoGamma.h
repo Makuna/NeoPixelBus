@@ -1,5 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoPixelGamma class is used to correct RGB colors for human eye gamma levels
+NeoGamma class is used to correct RGB colors for human eye gamma levels equally
+across all color channels
 
 Written by Michael C. Miller.
 
