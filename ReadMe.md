@@ -17,6 +17,12 @@ For quick questions jump on Gitter and ask away.
 
 For bugs, make sure there isn't an active issue and then create one.
 
+## Why this library and not FastLED or otherlibraryY?
+See [Why this Library in the Wiki](https://github.com/Makuna/NeoPixelBus/wiki#why-this-library). 
+The main plus of this library is using the UART to do drive the pixels via DMA (i.e. without interrupts) 
+which will work better if you are using Wifi or other interrupt driven drivers.
+This driver also supports RGBW not currently supported by FastLED
+
 ## Documentation
 [See Wiki](https://github.com/Makuna/NeoPixelBus/wiki)
 
