@@ -17,6 +17,9 @@ For quick questions jump on Gitter and ask away.
 
 For bugs, make sure there isn't an active issue and then create one.
 
+## Why this library and not FastLED or some other library?
+See [Why this Library in the Wiki](https://github.com/Makuna/NeoPixelBus/wiki/Library-Comparisons). 
+
 ## Documentation
 [See Wiki](https://github.com/Makuna/NeoPixelBus/wiki)
 
