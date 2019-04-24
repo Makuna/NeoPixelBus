@@ -448,7 +448,7 @@ public:
 
 };
 
-class DotStarLrgbFeature : public DotStar4Elements
+class DotStarLrbgFeature : public DotStar4Elements
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -531,7 +531,7 @@ public:
 
 };
 
-class DotStarLrgbFeature : public DotStar4Elements
+class DotStarLgbrFeature : public DotStar4Elements
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -613,7 +613,7 @@ public:
 
 };
 
-class DotStarLrgbFeature : public DotStar4Elements
+class DotStarLbrgFeature : public DotStar4Elements
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
