@@ -48,20 +48,23 @@ extern "C"
 class NeoEsp32RmtSpeedBase
 {
 public:
-    // ClkDiv of 2 is a compromise to still allow for the 300us reset signal some require but still
-    // provides for good resolution
-    const static uint8_t RmtClockDivider = 2; 
+    // ClkDiv of 2 provides for good resolution and plenty of reset resolution; but
+    // a ClkDiv of 1 will provide enough space for the longest reset and does show
+    // little better pulse accuracy
+    const static uint8_t RmtClockDivider = 1; 
 
     inline constexpr static uint32_t FromNs(uint32_t ns)
     {
         return ns / NsPerRmtTick;
     }
+    // this is used rather than the rmt_item32_t as you can't correctly initialize
+    // it as a static constexpr within the template
     inline constexpr static uint32_t Item32Val(uint16_t nsHigh, uint16_t nsLow)
     {
-        return (FromNs(nsHigh) << 17) | (1 << 16) | (FromNs(nsLow) << 1);
+        return (FromNs(nsLow) << 16) | (1 << 15) | (FromNs(nsHigh));
     }
 
-protected:
+public:
     const static uint32_t RmtCpu = 80000000L; // 80 mhz RMT clock
     const static uint32_t NsPerSecond = 1000000000L;
     const static uint32_t RmtTicksPerSecond = (RmtCpu / RmtClockDivider);
@@ -170,7 +173,6 @@ public:
         rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 10000 / portTICK_PERIOD_MS);
 
         rmt_driver_uninstall(T_CHANNEL::RmtChannelNumber);
-        pinMode(_pin, INPUT);
 
         free(_pixelsEditing);
         free(_pixelsSending);
@@ -179,7 +181,7 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        return (ESP_OK = rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 0));
+        return (ESP_OK == rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 0));
     }
 
     void Initialize()
@@ -196,8 +198,6 @@ public:
         config.tx_config.idle_level = RMT_IDLE_LEVEL_LOW;
 
         config.tx_config.carrier_en = false;
-        config.tx_config.carrier_duty_percent = 0;
-        config.tx_config.carrier_freq_hz = 0;
         config.tx_config.carrier_level = RMT_CARRIER_LEVEL_LOW;
 
         config.clk_div = T_SPEED::RmtClockDivider;
@@ -271,15 +271,14 @@ private:
             for (uint8_t bit = 0; bit < 8; bit++)
             {
                 pdest->val = (data & 0x80) ? T_SPEED::RmtBit1 : T_SPEED::RmtBit0;
-                num++;
                 pdest++;
                 data <<= 1;
             }
-
+            num += 8;
             size++;
 
             // if this is the last byte we need to adjust the length of the last pulse
-            if (size == src_size)
+            if (size >= src_size)
             {
                 // extend the last bits LOW value to include the full reset signal length
                 pdest--;
@@ -288,7 +287,7 @@ private:
                 break; 
             }
 
-            if (num == wanted_num)
+            if (num >= wanted_num)
             {
                 // stop updating data to send
                 break;
