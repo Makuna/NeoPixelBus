@@ -184,7 +184,7 @@ protected:
         T_UARTFEATURE::Init(uartBaud);
     }
 
-    void UpdateUart()
+    void UpdateUart(bool)
     {
         // Since the UART can finish sending queued bytes in the FIFO in
         // the background, instead of waiting for the FIFO to flush
@@ -221,12 +221,12 @@ protected:
     NeoEsp8266AsyncUart(uint16_t pixelCount, size_t elementSize) :
         NeoEsp8266UartBase(pixelCount, elementSize)
     {
-        _asyncPixels = (uint8_t*)malloc(_sizePixels);
+        _pixelsSending = (uint8_t*)malloc(_sizePixels);
     }
 
     ~NeoEsp8266AsyncUart()
     {
-        // Remember: the UART interrupt can be sending data from _asyncPixels in the background
+        // Remember: the UART interrupt can be sending data from _pixelsSending in the background
         while (_context.IsSending())
         {
             yield();
@@ -234,7 +234,7 @@ protected:
         // detach context, which will disable intr, may disable ISR
         _context.Detach(T_UARTFEATURE::Index);
         
-        free(_asyncPixels);
+        free(_pixelsSending);
     }
 
     void ICACHE_RAM_ATTR InitializeUart(uint32_t uartBaud)
@@ -245,7 +245,7 @@ protected:
         _context.Attach(T_UARTFEATURE::Index);
     }
 
-    void UpdateUart()
+    void UpdateUart(bool maintainBufferConsistency)
     {
         // Instruct ESP8266 hardware uart to send the pixels asynchronously
         _context.StartSending(T_UARTFEATURE::Index, 
@@ -255,15 +255,22 @@ protected:
         // Annotate when we started to send bytes, so we can calculate when we are ready to send again
         _startTime = micros();
 
-        // Copy the pixels to the idle buffer and swap them
-        memcpy(_asyncPixels, _pixels, _sizePixels);
-        std::swap(_asyncPixels, _pixels);
+        if (maintainBufferConsistency)
+        {
+            // copy editing to sending,
+            // this maintains the contract that "colors present before will
+            // be the same after", otherwise GetPixelColor will be inconsistent
+            memcpy(_pixelsSending, _pixels, _sizePixels);
+        }
+
+        // swap so the user can modify without affecting the async operation
+        std::swap(_pixelsSending, _pixels);
     }
 
 private:
     T_UARTCONTEXT _context;
 
-    uint8_t* _asyncPixels;  // Holds a copy of LED color values taken when UpdateUart began
+    uint8_t* _pixelsSending;  // Holds a copy of LED color values taken when UpdateUart began
 };
 
 class NeoEsp8266UartSpeed800KbpsBase
@@ -334,7 +341,7 @@ public:
         this->_startTime = micros() - getPixelTime();
     }
 
-    void Update()
+    void Update(bool maintainBufferConsistency)
     {
         // Data latch = 50+ microsecond pause in the output stream.  Rather than
         // put a delay at the end of the function, the ending time is noted and
@@ -346,7 +353,7 @@ public:
         {
             yield();
         }
-        this->UpdateUart();
+        this->UpdateUart(maintainBufferConsistency);
     }
 
     uint8_t* getPixels() const

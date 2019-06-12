@@ -63,7 +63,7 @@ public:
         SPI.begin();
     }
 
-    void Update()
+    void Update(bool)
     {
         SPI.beginTransaction(SPISettings(20000000L, MSBFIRST, SPI_MODE0));
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)

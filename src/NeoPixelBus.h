@@ -145,14 +145,14 @@ public:
         Dirty();
     }
 
-    void Show()
+    void Show(bool maintainBufferConsistency = true)
     {
         if (!IsDirty())
         {
             return;
         }
 
-        _method.Update();
+        _method.Update(maintainBufferConsistency);
 
         ResetDirty();
     }
