@@ -128,7 +128,7 @@ public:
         i2sSetPins(T_BUS::I2sBusNumber, _pin, -1, -1, -1);
     }
 
-    void Update()
+    void Update(bool)
     {
         // wait for not actively sending data
         while (!IsReadyToUpdate())

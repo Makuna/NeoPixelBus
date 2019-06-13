@@ -66,7 +66,7 @@ public:
         _endTime = micros();
     }
 
-    void Update()
+    void Update(bool)
     {
         // Data latch = 50+ microsecond pause in the output stream.  Rather than
         // put a delay at the end of the function, the ending time is noted and

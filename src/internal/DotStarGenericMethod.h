@@ -60,7 +60,7 @@ public:
         digitalWrite(_pinData, LOW);
     }
 
-    void Update()
+    void Update(bool)
     {
         // start frame
         for (int startFrameByte = 0; startFrameByte < 4; startFrameByte++)

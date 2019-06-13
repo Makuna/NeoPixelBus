@@ -25,6 +25,32 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+template<typename T_COLOR_OBJECT> class NeoShaderNop
+{
+public:
+    NeoShaderNop()
+    {
+    }
+
+    bool IsDirty() const
+    {
+        return true;
+    };
+
+    void Dirty()
+    {
+    };
+
+    void ResetDirty()
+    {
+    };
+
+    T_COLOR_OBJECT Apply(uint16_t, T_COLOR_OBJECT color)
+    {
+        return color;
+    };
+};
+
 class NeoShaderBase
 {
 public:
@@ -118,7 +144,8 @@ public:
         Dirty();
     };
 
-    template <typename T_COLOR_FEATURE, typename T_SHADER> void Render(NeoBufferContext<T_COLOR_FEATURE> destBuffer, T_SHADER& shader)
+    template <typename T_COLOR_FEATURE, typename T_SHADER> void Render(NeoBufferContext<T_COLOR_FEATURE> destBuffer, 
+        T_SHADER& shader)
     {
         if (IsDirty() || shader.IsDirty())
         {

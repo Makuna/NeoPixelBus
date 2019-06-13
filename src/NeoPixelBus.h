@@ -57,8 +57,9 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoBufferMethods.h"
 #include "internal/NeoBuffer.h"
 #include "internal/NeoSpriteSheet.h"
-#include "internal/NeoBitmapFile.h"
 #include "internal/NeoDib.h"
+#include "internal/NeoBitmapFile.h"
+
 #include "internal/NeoEase.h"
 #include "internal/NeoGamma.h"
 
@@ -145,14 +146,14 @@ public:
         Dirty();
     }
 
-    void Show()
+    void Show(bool maintainBufferConsistency = true)
     {
         if (!IsDirty())
         {
             return;
         }
 
-        _method.Update();
+        _method.Update(maintainBufferConsistency);
 
         ResetDirty();
     }

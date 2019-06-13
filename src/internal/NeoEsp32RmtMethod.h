@@ -51,7 +51,7 @@ public:
     // ClkDiv of 2 provides for good resolution and plenty of reset resolution; but
     // a ClkDiv of 1 will provide enough space for the longest reset and does show
     // little better pulse accuracy
-    const static uint8_t RmtClockDivider = 1; 
+    const static uint8_t RmtClockDivider = 2; 
 
     inline constexpr static uint32_t FromNs(uint32_t ns)
     {
@@ -207,20 +207,26 @@ public:
         rmt_translator_init(T_CHANNEL::RmtChannelNumber, _translate);
     }
 
-    void Update()
+    void Update(bool maintainBufferConsistency)
     {
         // wait for not actively sending data
         // this will time out at 10 seconds, an arbitrarily long period of time
         // and do nothing if this happens
         if (ESP_OK == rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 10000 / portTICK_PERIOD_MS))
         {
-            // copy editing to sending,
-            // this maintains the contract that colors present before this will
-            // be the same as it just was using GetPixelColor
-            memcpy(_pixelsSending, _pixelsEditing, _pixelsSize);
+            // now start the RMT transmit with the editing buffer before we swap
+            rmt_write_sample(T_CHANNEL::RmtChannelNumber, _pixelsEditing, _pixelsSize, false);
 
-            // now start the RMT transmit
-            rmt_write_sample(T_CHANNEL::RmtChannelNumber, _pixelsSending, _pixelsSize, false);
+            if (maintainBufferConsistency)
+            {
+                // copy editing to sending,
+                // this maintains the contract that "colors present before will
+                // be the same after", otherwise GetPixelColor will be inconsistent
+                memcpy(_pixelsSending, _pixelsEditing, _pixelsSize);
+            }
+
+            // swap so the user can modify without affecting the async operation
+            std::swap(_pixelsSending, _pixelsEditing);
         }
     }
 
