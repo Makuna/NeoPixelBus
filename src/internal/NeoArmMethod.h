@@ -444,7 +444,7 @@ typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsSk6
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps400Kbps>> NeoArm400KbpsMethod;
 
-#elif defined (ARDUINO_STM32_FEATHER) // FEATHER WICED (120MHz)
+#elif defined(ARDUINO_STM32_FEATHER) || defined(ARDUINO_ARCH_STM32L4) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32F1)// FEATHER WICED (120MHz)
 
 class NeoArmStm32SpeedProps800KbpsBase
 {
@@ -548,11 +548,36 @@ public:
         uint8_t* end = ptr + sizePixels;
         uint8_t p = *ptr++;
         uint8_t bitMask = 0x80;
-        uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
 
-        volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
-        volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
+#if defined(ARDUINO_STM32_FEATHER)
+		uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
 
+		volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
+		volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
+
+#elif defined(ARDUINO_ARCH_STM32F4)
+		uint32_t  pinMask = BIT(pin & 0x0f);
+
+		volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
+		volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
+
+#elif defined(ARDUINO_ARCH_STM32F1)
+
+		uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
+
+		volatile uint32_t* set = &(PIN_MAP[pin].gpio_device->regs->BRR);
+		volatile uint32_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRR);
+
+#elif defined(ARDUINO_ARCH_STM32L4)
+
+		uint32_t pinMask = g_APinDescription[pin].bit;
+
+		GPIO_TypeDef* GPIO = static_cast<GPIO_TypeDef*>(g_APinDescription[pin].GPIO);
+
+		volatile uint32_t* set = &(GPIO->BRR);
+		volatile uint32_t* clr = &(GPIO->BSRR);
+
+#endif
         for (;;)
         {
             if (p & bitMask)
