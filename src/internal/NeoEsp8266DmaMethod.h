@@ -285,7 +285,7 @@ public:
         I2SC |= I2STXS; // Start transmission
     }
 
-    void ICACHE_RAM_ATTR Update()
+    void ICACHE_RAM_ATTR Update(bool)
     {
         // wait for not actively sending data
         while (!IsReadyToUpdate())
