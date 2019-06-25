@@ -195,7 +195,12 @@ public:
             _i2sBufDesc[indexDesc].sub_sof = 0;
             _i2sBufDesc[indexDesc].datalen = blockSize;
             _i2sBufDesc[indexDesc].blocksize = blockSize;
-            _i2sBufDesc[indexDesc].buf_ptr = (uint32_t)is2Buffer;
+            union {
+                uint8_t *ptr;
+                uint32_t value;
+            } ptr;
+            ptr.ptr = is2Buffer;
+            _i2sBufDesc[indexDesc].buf_ptr = ptr.value;
             _i2sBufDesc[indexDesc].unused = 0;
             _i2sBufDesc[indexDesc].next_link_ptr = (uint32_t)&(_i2sBufDesc[indexDesc + 1]);
 
@@ -361,12 +366,15 @@ private:
 
             case NeoDmaState_Sending:
                 {
-                    slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
-
+                    union {
+                        slc_queue_item *ptr;
+                        uint32_t value;
+                    } ptr;
+                    ptr.value = SLCRXEDA;
                     // the data block had actual data sent
                     // point last state block to first state block thus
                     // just looping and not sending the data blocks
-                    (finished_item + 1)->next_link_ptr = (uint32_t)(finished_item);
+                    (ptr.ptr + 1)->next_link_ptr = ptr.value;
 
                     s_this->_dmaState = NeoDmaState_Zeroing;
                 }
