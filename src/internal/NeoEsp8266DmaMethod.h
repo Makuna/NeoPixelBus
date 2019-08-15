@@ -100,6 +100,15 @@ public:
     const static uint32_t ResetTimeUs = 50;
 };
 
+class NeoEsp8266DmaSpeedApa106
+{
+public:
+	const static uint32_t I2sClockDivisor = 4; 
+	const static uint32_t I2sBaseClockDivisor = 16;
+	const static uint32_t ByteSendTimeUs = 17; // us it takes to send a single pixel element
+	const static uint32_t ResetTimeUs = 50;
+};
+
 enum NeoDmaState
 {
     NeoDmaState_Idle,
@@ -435,6 +444,7 @@ typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedWs2812x> NeoEsp8266DmaWs2812xM
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedSk6812> NeoEsp8266DmaSk6812Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed800Kbps> NeoEsp8266Dma800KbpsMethod;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed400Kbps> NeoEsp8266Dma400KbpsMethod;
+typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedApa106> NeoEsp8266DmaApa106Method;
 
 // Dma  method is the default method for Esp8266
 typedef NeoEsp8266DmaWs2812xMethod NeoWs2813Method;
@@ -442,6 +452,7 @@ typedef NeoEsp8266DmaWs2812xMethod NeoWs2812xMethod;
 typedef NeoEsp8266Dma800KbpsMethod NeoWs2812Method;
 typedef NeoEsp8266DmaSk6812Method NeoSk6812Method;
 typedef NeoEsp8266DmaSk6812Method NeoLc8812Method;
+typedef NeoEsp8266DmaApa106Method NeoApa106Method;
 
 typedef NeoEsp8266DmaWs2812xMethod Neo800KbpsMethod;
 typedef NeoEsp8266Dma400KbpsMethod Neo400KbpsMethod;

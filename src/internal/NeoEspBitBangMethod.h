@@ -176,6 +176,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed400Kbps> NeoEsp32BitBang400Kbp
 typedef NeoEsp32BitBangWs2812xMethod NeoEsp32BitBangWs2813Method;
 typedef NeoEsp32BitBang800KbpsMethod NeoEsp32BitBangWs2812Method;
 typedef NeoEsp32BitBangSk6812Method NeoEsp32BitBangLc8812Method;
+typedef NeoEsp32BitBang400KbpsMethod NeoEsp32BitBangApa106Method;
 
 #else
 
@@ -187,6 +188,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed400Kbps> NeoEsp8266BitBang400K
 typedef NeoEsp8266BitBangWs2812xMethod NeoEsp32BitBangWs2813Method;
 typedef NeoEsp8266BitBang800KbpsMethod NeoEsp32BitBangWs2812Method;
 typedef NeoEsp8266BitBangSk6812Method NeoEsp32BitBangLc8812Method;
+typedef NeoEsp8266BitBang400KbpsMethod NeoEsp32BitBangApa106Method;
 #endif
 
 // ESP bitbang doesn't have defaults and should avoided except for testing
