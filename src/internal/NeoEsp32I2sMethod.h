@@ -35,34 +35,37 @@ extern "C"
 }
 
 const uint16_t c_dmaBytesPerPixelBytes = 4;
-const uint16_t c_dmaBytesPer50us = 20;
-const uint32_t c_dmaI2sSampleRate = 100000;
+const uint16_t c_dmaResetIncrementUs = 50;
 
 class NeoEsp32I2sSpeedWs2812x
 {
 public:
-    const static uint16_t I2sSampleRateDiv = 1;
+	const static uint32_t I2sSampleRate = 100000;
+    const static uint16_t BytesPer50us = 20;
     const static uint16_t ResetTimeUs = 300;
 };
 
 class NeoEsp32I2sSpeedSk6812
 {
 public:
-    const static uint16_t I2sSampleRateDiv = 1;
+	const static uint32_t I2sSampleRate = 100000;
+	const static uint16_t BytesPer50us = 20;
     const static uint16_t ResetTimeUs = 80;
 };
 
 class NeoEsp32I2sSpeed800Kbps
 {
 public:
-    const static uint16_t I2sSampleRateDiv = 1;
+	const static uint32_t I2sSampleRate = 100000;
+	const static uint16_t BytesPer50us = 20;
     const static uint16_t ResetTimeUs = 50;
 };
 
 class NeoEsp32I2sSpeed400Kbps
 {
 public:
-    const static uint16_t I2sSampleRateDiv = 2;
+	const static uint32_t I2sSampleRate = 50000;
+	const static uint16_t BytesPer50us = 10;
     const static uint16_t ResetTimeUs = 50;
 };
 
@@ -85,7 +88,7 @@ public:
         _pin(pin)
     {
         uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
-        uint16_t resetSize = (c_dmaBytesPer50us * T_SPEED::ResetTimeUs / 50 / T_SPEED::I2sSampleRateDiv);
+        uint16_t resetSize = (T_SPEED::BytesPer50us * T_SPEED::ResetTimeUs / c_dmaResetIncrementUs);
 
         _pixelsSize = pixelCount * elementSize;
         _i2sBufferSize = pixelCount * dmaPixelSize + resetSize;
@@ -124,7 +127,7 @@ public:
 
     void Initialize()
     {
-        i2sInit(T_BUS::I2sBusNumber, 16, c_dmaI2sSampleRate / T_SPEED::I2sSampleRateDiv, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, 4, 0);
+        i2sInit(T_BUS::I2sBusNumber, 16, T_SPEED::I2sSampleRate, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, 4, 0);
         i2sSetPins(T_BUS::I2sBusNumber, _pin, -1, -1, -1);
     }
 
