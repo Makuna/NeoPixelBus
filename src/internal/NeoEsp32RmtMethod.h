@@ -106,8 +106,8 @@ public:
 class NeoEsp32RmtSpeedApa106 : public NeoEsp32RmtSpeedBase
 {
 public:
-	const static uint32_t RmtBit0 = Item32Val(400, 1400);
-	const static uint32_t RmtBit1 = Item32Val(1400, 400);
+	const static uint32_t RmtBit0 = Item32Val(400, 1250);
+	const static uint32_t RmtBit1 = Item32Val(1250, 400);
 	const static uint16_t RmtDurationReset = FromNs(50000); // 50us
 };
 
