@@ -8,6 +8,8 @@ extern "C" {
 
 #include "esp_err.h"
 
+#define I2S_DMA_MAX_DATA_LEN    4092// maximum bytes in one dma item
+
 typedef enum {
     I2S_CHAN_STEREO, I2S_CHAN_RIGHT_TO_LEFT, I2S_CHAN_LEFT_TO_RIGHT, I2S_CHAN_RIGHT_ONLY, I2S_CHAN_LEFT_ONLY
 } i2s_tx_chan_mod_t;

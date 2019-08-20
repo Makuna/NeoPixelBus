@@ -45,7 +45,7 @@
 #define ESP32_REG(addr) (*((volatile uint32_t*)(0x3FF00000+(addr))))
 
 #define I2S_DMA_QUEUE_SIZE      16
-#define I2S_DMA_MAX_DATA_LEN    4092// maximum bytes in one dma item
+
 #define I2S_DMA_SILENCE_LEN     256 // bytes
 
 typedef struct i2s_dma_item_s {
@@ -142,7 +142,7 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         }
     }
 
-    I2S[bus_num].tx_queue = xQueueCreate(I2S[bus_num].dma_count - 3, sizeof(i2s_dma_item_t*));
+    I2S[bus_num].tx_queue = xQueueCreate(I2S[bus_num].dma_count, sizeof(i2s_dma_item_t*));
     if (I2S[bus_num].tx_queue == NULL) {// memory error
         log_e("MEM ERROR!");
         free(I2S[bus_num].dma_items);
@@ -273,7 +273,7 @@ bool i2sWriteDone(uint8_t bus_num) {
     if (bus_num > 1) {
         return false;
     }
-    return (I2S[bus_num].dma_items[0].data == I2S[bus_num].silence_buf && I2S[bus_num].dma_items[1].data == I2S[bus_num].silence_buf);
+    return (I2S[bus_num].dma_items[I2S[bus_num].dma_count - 1].data == I2S[bus_num].silence_buf);
 }
 
 void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2s_tx_chan_mod_t chan_mod, i2s_tx_fifo_mod_t fifo_mod, size_t dma_count, size_t dma_len) {

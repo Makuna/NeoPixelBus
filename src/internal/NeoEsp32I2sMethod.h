@@ -35,35 +35,45 @@ extern "C"
 }
 
 const uint16_t c_dmaBytesPerPixelBytes = 4;
-const uint16_t c_dmaBytesPer50us = 20;
-const uint32_t c_dmaI2sSampleRate = 100000;
 
 class NeoEsp32I2sSpeedWs2812x
 {
 public:
-    const static uint16_t I2sSampleRateDiv = 1;
+	const static uint32_t I2sSampleRate = 100000;
+    const static uint16_t ByteSendTimeUs = 10;
     const static uint16_t ResetTimeUs = 300;
 };
 
 class NeoEsp32I2sSpeedSk6812
 {
 public:
-    const static uint16_t I2sSampleRateDiv = 1;
+	const static uint32_t I2sSampleRate = 100000;
+	const static uint16_t ByteSendTimeUs = 10;
     const static uint16_t ResetTimeUs = 80;
 };
 
 class NeoEsp32I2sSpeed800Kbps
 {
 public:
-    const static uint16_t I2sSampleRateDiv = 1;
+	const static uint32_t I2sSampleRate = 100000;
+	const static uint16_t ByteSendTimeUs = 10;
     const static uint16_t ResetTimeUs = 50;
 };
 
 class NeoEsp32I2sSpeed400Kbps
 {
 public:
-    const static uint16_t I2sSampleRateDiv = 2;
+	const static uint32_t I2sSampleRate = 50000;
+	const static uint16_t ByteSendTimeUs = 20;
     const static uint16_t ResetTimeUs = 50;
+};
+
+class NeoEsp32I2sSpeedApa106
+{
+public:
+	const static uint32_t I2sSampleRate = 76000;
+	const static uint16_t ByteSendTimeUs = 14;
+	const static uint16_t ResetTimeUs = 50;
 };
 
 class NeoEsp32I2sBusZero
@@ -85,7 +95,7 @@ public:
         _pin(pin)
     {
         uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
-        uint16_t resetSize = (c_dmaBytesPer50us * T_SPEED::ResetTimeUs / 50 / T_SPEED::I2sSampleRateDiv);
+		uint16_t resetSize = c_dmaBytesPerPixelBytes * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs;
 
         _pixelsSize = pixelCount * elementSize;
         _i2sBufferSize = pixelCount * dmaPixelSize + resetSize;
@@ -124,7 +134,8 @@ public:
 
     void Initialize()
     {
-        i2sInit(T_BUS::I2sBusNumber, 16, c_dmaI2sSampleRate / T_SPEED::I2sSampleRateDiv, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, 4, 0);
+		size_t dmaCount = (_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
+        i2sInit(T_BUS::I2sBusNumber, 16, T_SPEED::I2sSampleRate, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, dmaCount, 0);
         i2sSetPins(T_BUS::I2sBusNumber, _pin, -1, -1, -1);
     }
 
@@ -184,13 +195,13 @@ typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2sBusZero> NeoEs
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2sBusZero> NeoEsp32I2s0Sk6812Method;
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2sBusZero> NeoEsp32I2s0800KbpsMethod;
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2sBusZero> NeoEsp32I2s0400KbpsMethod;
-typedef NeoEsp32I2s0400KbpsMethod NeoEsp32I2s0Apa106Method;
+typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2sBusZero> NeoEsp32I2s0Apa106Method;
 
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2sBusOne> NeoEsp32I2s1Ws2812xMethod;
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2sBusOne> NeoEsp32I2s1Sk6812Method;
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2sBusOne> NeoEsp32I2s1800KbpsMethod;
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2sBusOne> NeoEsp32I2s1400KbpsMethod;
-typedef NeoEsp32I2s1400KbpsMethod NeoEsp32I2s1Apa106Method;
+typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2sBusOne> NeoEsp32I2s1Apa106Method;
 
 // I2s Bus 1 method is the default method for Esp32
 typedef NeoEsp32I2s1Ws2812xMethod NeoWs2813Method;
