@@ -31,7 +31,8 @@ License along with NeoPixel.  If not, see
 /*  General Reference documentation for the APIs used in this implementation
 LOW LEVEL:  (what is actually used)
 DOCS: https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/peripherals/rmt.html
-EXAMPLE: https://github.com/espressif/esp-idf/blob/826ff7186ae07dc81e960a8ea09ebfc5304bfb3b/examples/peripherals/rmt_tx/main/rmt_tx_main.c
+EXAMPLE: https://github.com/espressif/esp-idf/blob/826ff7186ae07dc81e960a8ea09ebfc5304bfb3b/examples/peripherals/rmt_tx/main/rmt_tx_main.c
+
 HIGHER LEVEL:
 NO TRANSLATE SUPPORT so this was not used
 NOTE: https://github.com/espressif/arduino-esp32/commit/50d142950d229b8fabca9b749dc4a5f2533bc426
@@ -178,9 +179,9 @@ public:
     {
         // wait until the last send finishes before destructing everything
         // arbitrary time out of 10 seconds
-        rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 10000 / portTICK_PERIOD_MS);
+        ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 10000 / portTICK_PERIOD_MS));
 
-        rmt_driver_uninstall(T_CHANNEL::RmtChannelNumber);
+        ESP_ERROR_CHECK(rmt_driver_uninstall(T_CHANNEL::RmtChannelNumber));
 
         free(_pixelsEditing);
         free(_pixelsSending);
@@ -210,9 +211,9 @@ public:
 
         config.clk_div = T_SPEED::RmtClockDivider;
 
-        rmt_config(&config);
-        rmt_driver_install(T_CHANNEL::RmtChannelNumber, 0, 0);
-        rmt_translator_init(T_CHANNEL::RmtChannelNumber, _translate);
+        ESP_ERROR_CHECK(rmt_config(&config));
+        ESP_ERROR_CHECK(rmt_driver_install(T_CHANNEL::RmtChannelNumber, 0, 0));
+        ESP_ERROR_CHECK(rmt_translator_init(T_CHANNEL::RmtChannelNumber, _translate));
     }
 
     void Update(bool maintainBufferConsistency)
@@ -220,10 +221,10 @@ public:
         // wait for not actively sending data
         // this will time out at 10 seconds, an arbitrarily long period of time
         // and do nothing if this happens
-        if (ESP_OK == rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 10000 / portTICK_PERIOD_MS))
+        if (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 10000 / portTICK_PERIOD_MS)))
         {
             // now start the RMT transmit with the editing buffer before we swap
-            rmt_write_sample(T_CHANNEL::RmtChannelNumber, _pixelsEditing, _pixelsSize, false);
+            ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_write_sample(T_CHANNEL::RmtChannelNumber, _pixelsEditing, _pixelsSize, false));
 
             if (maintainBufferConsistency)
             {
