@@ -45,12 +45,13 @@ static inline uint32_t _getCycleCount(void)
     return ccount;
 }
 
-#define CYCLES_800_T0H  (F_CPU / 2500000) // 0.4us
-#define CYCLES_800_T1H  (F_CPU / 1250000) // 0.8us
-#define CYCLES_800      (F_CPU /  800000) // 1.25us per bit
-#define CYCLES_400_T0H  (F_CPU / 2000000)
-#define CYCLES_400_T1H  (F_CPU /  833333)
-#define CYCLES_400      (F_CPU /  400000) 
+#define CYCLES_LOOPTEST   (4) // adjustment due to loop exit test instruction cycles
+#define CYCLES_800_T0H  (F_CPU / 2500000 - CYCLES_LOOPTEST) // 0.4us
+#define CYCLES_800_T1H  (F_CPU / 1250000 - CYCLES_LOOPTEST) // 0.8us
+#define CYCLES_800      (F_CPU /  800000 - CYCLES_LOOPTEST) // 1.25us per bit
+#define CYCLES_400_T0H  (F_CPU / 2000000 - CYCLES_LOOPTEST)
+#define CYCLES_400_T1H  (F_CPU /  833333 - CYCLES_LOOPTEST)
+#define CYCLES_400      (F_CPU /  400000 - CYCLES_LOOPTEST) 
 
 void ICACHE_RAM_ATTR bitbang_send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
 {
