@@ -20,6 +20,7 @@ NeoBrgFeature	KEYWORD1
 NeoRbgFeature	KEYWORD1
 DotStarBgrFeature	KEYWORD1
 DotStarLbgrFeature	KEYWORD1
+Lpd8806GrbFeature	KEYWORD1
 Neo800KbpsMethod	KEYWORD1
 Neo400KbpsMethod	KEYWORD1
 NeoWs2813Method	KEYWORD1

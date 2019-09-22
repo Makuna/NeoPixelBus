@@ -46,6 +46,7 @@ License along with NeoPixel.  If not, see
 
 #include "internal/NeoColorFeatures.h"
 #include "internal/DotStarColorFeatures.h"
+#include "internal/Lpd8806ColorFeatures.h"
 
 #include "internal/Layouts.h"
 #include "internal/NeoTopology.h"
@@ -85,15 +86,13 @@ License along with NeoPixel.  If not, see
 #elif defined(ARDUINO_ARCH_AVR)
 
 #include "internal/NeoAvrMethod.h"
-#include "internal/DotStarAvrMethod.h"
+#include "internal/DotStarGenericMethod.h"
 
 #else
 #error "Platform Currently Not Supported, please add an Issue at Github/Makuna/NeoPixelBus"
 #endif
 
-#if !defined(__AVR_ATtiny85__)
-#include "internal/DotStarSpiMethod.h"
-#endif
+
 
 
 template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBus
