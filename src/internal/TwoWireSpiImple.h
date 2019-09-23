@@ -28,7 +28,25 @@ License along with NeoPixel.  If not, see
 
 #include <SPI.h>
 
-class TwoWireSpiImple
+class SpiSpeed20Mhz
+{
+public:
+	static const uint32_t Clock = 20000000L;
+};
+
+class SpiSpeed10Mhz
+{
+public:
+	static const uint32_t Clock = 10000000L;
+};
+
+class SpiSpeed2Mhz
+{
+public:
+	static const uint32_t Clock = 2000000L;
+};
+
+template<typename T_SPISPEED> class TwoWireSpiImple
 {
 public:
 	TwoWireSpiImple(uint8_t, uint8_t) // clock and data pins ignored for hardware SPI
@@ -55,7 +73,7 @@ public:
 
 	void beginTransaction()
 	{
-		SPI.beginTransaction(SPISettings(20000000L, MSBFIRST, SPI_MODE0));
+		SPI.beginTransaction(SPISettings(T_SPISPEED::Clock, MSBFIRST, SPI_MODE0));
 	}
 
 	void endTransaction()
