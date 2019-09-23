@@ -20,6 +20,7 @@ NeoBrgFeature	KEYWORD1
 NeoRbgFeature	KEYWORD1
 DotStarBgrFeature	KEYWORD1
 DotStarLbgrFeature	KEYWORD1
+Lpd8806GrbFeature	KEYWORD1
 Neo800KbpsMethod	KEYWORD1
 Neo400KbpsMethod	KEYWORD1
 NeoWs2813Method	KEYWORD1
@@ -123,6 +124,14 @@ NeoEsp32BitBang800KbpsMethod	KEYWORD1
 NeoEsp32BitBang400KbpsMethod	KEYWORD1
 DotStarMethod	KEYWORD1
 DotStarSpiMethod	KEYWORD1
+DotStarSpi20MhzMethod	KEYWORD1
+DotStarSpi10MhzMethod	KEYWORD1
+DotStarSpi2MhzMethod	KEYWORD1
+Lpd8806Method	KEYWORD1
+Lpd8806SpiMethod	KEYWORD1
+Lpd8806Spi20MhzMethod	KEYWORD1
+Lpd8806Spi10MhzMethod	KEYWORD1
+Lpd8806Spi2MhzMethod	KEYWORD1
 NeoPixelAnimator	KEYWORD1
 AnimUpdateCallback	KEYWORD1
 AnimationParam	KEYWORD1
