@@ -7,6 +7,7 @@
 #######################################
 
 NeoPixelBus	KEYWORD1
+NeoPixelSegmentBus	KEYWORD1
 RgbwColor	KEYWORD1
 RgbColor	KEYWORD1
 HslColor	KEYWORD1
@@ -21,6 +22,7 @@ NeoRbgFeature	KEYWORD1
 DotStarBgrFeature	KEYWORD1
 DotStarLbgrFeature	KEYWORD1
 Lpd8806GrbFeature	KEYWORD1
+SevenSegmentFeature	KEYWORD1
 Neo800KbpsMethod	KEYWORD1
 Neo400KbpsMethod	KEYWORD1
 NeoWs2813Method	KEYWORD1
