@@ -45,9 +45,10 @@ public:
         uint8_t* pEnd = pPixelDest + (count * PixelSize);
         while (pPixelDest < pEnd)
         {
-            *pPixelDest++ = pPixelSrc[0];
-            *pPixelDest++ = pPixelSrc[1];
-            *pPixelDest++ = pPixelSrc[2];
+            for (uint8_t iElement = 0; iElement < PixelSize; iElement++)
+            {
+                *pPixelDest++ = pPixelSrc[iElement];
+            }
         }
     }
 
@@ -56,8 +57,6 @@ public:
         uint8_t* pEnd = pPixelDest + (count * PixelSize);
         while (pPixelDest < pEnd)
         {
-            *pPixelDest++ = *pPixelSrc++;
-            *pPixelDest++ = *pPixelSrc++;
             *pPixelDest++ = *pPixelSrc++;
         }
     }
@@ -69,8 +68,6 @@ public:
         while (pPixelDest < pEnd)
         {
             *pPixelDest++ = pgm_read_byte(pSrc++);
-            *pPixelDest++ = pgm_read_byte(pSrc++);
-            *pPixelDest++ = pgm_read_byte(pSrc++);
         }
     }
 
@@ -80,8 +77,6 @@ public:
         const uint8_t* pSrcBack = pPixelSrc + (count * PixelSize);
         while (pDestBack > pPixelDest)
         {
-            *--pDestBack = *--pSrcBack;
-            *--pDestBack = *--pSrcBack;
             *--pDestBack = *--pSrcBack;
         }
     }

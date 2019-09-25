@@ -153,7 +153,6 @@ private:
             _duration = duration;
             _remaining = duration;
             _fnCallback = animUpdate;
-            
         }
 
         void StopAnimation()
