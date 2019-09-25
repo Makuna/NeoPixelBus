@@ -45,7 +45,7 @@
 #define ESP32_REG(addr) (*((volatile uint32_t*)(0x3FF00000+(addr))))
 
 #define I2S_DMA_QUEUE_SIZE      16
-#define I2S_DMA_MAX_DATA_LEN    4092// maximum bytes in one dma item
+
 #define I2S_DMA_SILENCE_LEN     256 // bytes
 
 typedef struct i2s_dma_item_s {
@@ -104,7 +104,7 @@ bool i2sInitDmaItems(uint8_t bus_num) {
     }
 
     if (I2S[bus_num].dma_items == NULL) {
-        I2S[bus_num].dma_items = (i2s_dma_item_t*)malloc(I2S[bus_num].dma_count* sizeof(i2s_dma_item_t));
+        I2S[bus_num].dma_items = (i2s_dma_item_t*)(malloc(I2S[bus_num].dma_count* sizeof(i2s_dma_item_t)));
         if (I2S[bus_num].dma_items == NULL) {
             log_e("MEM ERROR!");
             return false;
@@ -127,7 +127,7 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         item->next = &I2S[bus_num].dma_items[i2];
         item->free_ptr = NULL;
         if (I2S[bus_num].dma_buf_len) {
-            item->buf = (uint8_t*)malloc(I2S[bus_num].dma_buf_len);
+            item->buf = (uint8_t*)(malloc(I2S[bus_num].dma_buf_len));
             if (item->buf == NULL) {
                 log_e("MEM ERROR!");
                 for(a=0; a<i; a++) {
@@ -142,7 +142,7 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         }
     }
 
-    I2S[bus_num].tx_queue = xQueueCreate(I2S[bus_num].dma_count - 3, sizeof(i2s_dma_item_t*));
+    I2S[bus_num].tx_queue = xQueueCreate(I2S[bus_num].dma_count, sizeof(i2s_dma_item_t*));
     if (I2S[bus_num].tx_queue == NULL) {// memory error
         log_e("MEM ERROR!");
         free(I2S[bus_num].dma_items);
@@ -273,7 +273,7 @@ bool i2sWriteDone(uint8_t bus_num) {
     if (bus_num > 1) {
         return false;
     }
-    return (I2S[bus_num].dma_items[0].data == I2S[bus_num].silence_buf && I2S[bus_num].dma_items[1].data == I2S[bus_num].silence_buf);
+    return (I2S[bus_num].dma_items[I2S[bus_num].dma_count - 1].data == I2S[bus_num].silence_buf);
 }
 
 void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2s_tx_chan_mod_t chan_mod, i2s_tx_fifo_mod_t fifo_mod, size_t dma_count, size_t dma_len) {
@@ -431,11 +431,11 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) {
 void IRAM_ATTR i2sDmaISR(void* arg)
 {
     i2s_dma_item_t* dummy = NULL;
-    i2s_bus_t* dev = (i2s_bus_t*)arg;
+    i2s_bus_t* dev = (i2s_bus_t*)(arg);
     portBASE_TYPE hpTaskAwoken = 0;
 
     if (dev->bus->int_st.out_eof) {
-        i2s_dma_item_t* item = (i2s_dma_item_t*)dev->bus->out_eof_des_addr;
+        i2s_dma_item_t* item = (i2s_dma_item_t*)(dev->bus->out_eof_des_addr);
         item->data = dev->silence_buf;
         item->blocksize = dev->silence_len;
         item->datalen = dev->silence_len;

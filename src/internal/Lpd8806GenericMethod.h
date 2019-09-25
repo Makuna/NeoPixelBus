@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library helper functions for DotStars using general Pins (APA102).
+NeoPixel library helper functions for LPD8806 using general Pins 
 
 Written by Michael C. Miller.
 
@@ -34,24 +34,24 @@ License along with NeoPixel.  If not, see
 #endif
 
 
-template<typename T_TWOWIRE> class DotStarMethodBase
+template<typename T_TWOWIRE> class Lpd8806MethodBase
 {
 public:
-	DotStarMethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize) :
+	Lpd8806MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize) :
         _sizePixels(pixelCount * elementSize),
-		_sizeEndFrame((pixelCount + 15) / 16), // 16 = div 2 (bit for every two pixels) div 8 (bits to bytes)
+		_sizeFrame((pixelCount + 31) / 32), 
 		_wire(pinClock, pinData)
     {
         _pixels = (uint8_t*)malloc(_sizePixels);
         memset(_pixels, 0, _sizePixels);
     }
 
-	DotStarMethodBase(uint16_t pixelCount, size_t elementSize) :
-		DotStarMethodBase(SCK, MOSI, pixelCount, elementSize)
+	Lpd8806MethodBase(uint16_t pixelCount, size_t elementSize) :
+		Lpd8806MethodBase(SCK, MOSI, pixelCount, elementSize)
 	{
 	}
 
-    ~DotStarMethodBase()
+    ~Lpd8806MethodBase()
     {
         free(_pixels);
     }
@@ -75,23 +75,23 @@ public:
 
     void Update(bool)
     {
-		const uint8_t startFrame[4] = { 0x00 };
-
 		_wire.beginTransaction();
 
         // start frame
-		_wire.transmitBytes(startFrame, sizeof(startFrame));
+		for (size_t frameByte = 0; frameByte < _sizeFrame; frameByte++)
+		{
+			_wire.transmitByte(0x00);
+		}
         
         // data
 		_wire.transmitBytes(_pixels, _sizePixels);
         
         // end frame 
-		// one bit for every two pixels with no less than 1 byte
-		for (size_t endFrameByte = 0; endFrameByte < _sizeEndFrame; endFrameByte++)
+		for (size_t frameByte = 0; frameByte < _sizeFrame; frameByte++)
 		{
 			_wire.transmitByte(0xff);
 		}
-
+	
 		_wire.endTransaction();
     }
 
@@ -107,20 +107,20 @@ public:
 
 private:
 	const size_t   _sizePixels;   // Size of '_pixels' buffer below
-	const size_t   _sizeEndFrame;
+	const size_t   _sizeFrame;
 
 	T_TWOWIRE _wire;
     uint8_t* _pixels;       // Holds LED color values
 };
 
-typedef DotStarMethodBase<TwoWireBitBangImple> DotStarMethod;
+typedef Lpd8806MethodBase<TwoWireBitBangImple> Lpd8806Method;
 
 #if !defined(__AVR_ATtiny85__)
 #include "TwoWireSpiImple.h"
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> DotStarSpi20MhzMethod;
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> DotStarSpi10MhzMethod;
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> DotStarSpi2MhzMethod;
-typedef DotStarSpi10MhzMethod DotStarSpiMethod;
+typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> Lpd8806Spi20MhzMethod;
+typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> Lpd8806Spi10MhzMethod;
+typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> Lpd8806Spi2MhzMethod;
+typedef Lpd8806Spi10MhzMethod Lpd8806SpiMethod;
 #endif
 
 

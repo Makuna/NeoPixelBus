@@ -57,7 +57,7 @@ public:
 class RowMajorLayout : public RowMajorTilePreference
 {
 public:
-    static uint16_t Map(uint16_t width, uint16_t height, uint16_t x, uint16_t y)
+    static uint16_t Map(uint16_t width, uint16_t /* height */, uint16_t x, uint16_t y)
     {
         return x + y * width;
     }
@@ -102,7 +102,7 @@ public:
 class RowMajor270Layout : public RowMajorTilePreference
 {
 public:
-    static uint16_t Map(uint16_t width, uint16_t height, uint16_t x, uint16_t y)
+    static uint16_t Map(uint16_t /* width */, uint16_t height, uint16_t x, uint16_t y)
     {
         return x * height + (height - 1 - y);
     }
@@ -136,7 +136,7 @@ public:
 class ColumnMajorLayout : public ColumnMajorTilePreference
 {
 public:
-    static uint16_t Map(uint16_t width, uint16_t height, uint16_t x, uint16_t y)
+    static uint16_t Map(uint16_t /* width */, uint16_t height, uint16_t x, uint16_t y)
     {
         return x * height + y;
     }
@@ -151,7 +151,7 @@ public:
 class ColumnMajor90Layout : public ColumnMajorTilePreference
 {
 public:
-    static uint16_t Map(uint16_t width, uint16_t height, uint16_t x, uint16_t y)
+    static uint16_t Map(uint16_t width, uint16_t /* height */, uint16_t x, uint16_t y)
     {
         return (width - 1 - x) + y * width;
     }
@@ -213,7 +213,7 @@ public:
 class RowMajorAlternatingLayout : public RowMajorAlternatingTilePreference
 {
 public:
-    static uint16_t Map(uint16_t width, uint16_t height, uint16_t x, uint16_t y)
+    static uint16_t Map(uint16_t width, uint16_t /* height */, uint16_t x, uint16_t y)
     {
         uint16_t index = y * width;
 
@@ -290,7 +290,7 @@ public:
 class RowMajorAlternating270Layout : public RowMajorAlternatingTilePreference
 {
 public:
-    static uint16_t Map(uint16_t width, uint16_t height, uint16_t x, uint16_t y)
+    static uint16_t Map(uint16_t /* width */, uint16_t height, uint16_t x, uint16_t y)
     {
         uint16_t index = x * height;
 
@@ -332,7 +332,7 @@ public:
 class ColumnMajorAlternatingLayout : public ColumnMajorAlternatingTilePreference
 {
 public:
-    static uint16_t Map(uint16_t width, uint16_t height, uint16_t x, uint16_t y)
+    static uint16_t Map(uint16_t /* width */, uint16_t height, uint16_t x, uint16_t y)
     {
         uint16_t index = x * height;
 
@@ -357,7 +357,7 @@ public:
 class ColumnMajorAlternating90Layout : public ColumnMajorAlternatingTilePreference
 {
 public:
-    static uint16_t Map(uint16_t width, uint16_t height, uint16_t x, uint16_t y)
+    static uint16_t Map(uint16_t width, uint16_t /* height */, uint16_t x, uint16_t y)
     {
         uint16_t index = y * width;
 

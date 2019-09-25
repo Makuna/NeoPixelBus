@@ -48,7 +48,9 @@ extern "C"
 #include "ets_sys.h"
 #include "user_interface.h"
 
+#if !defined(__CORE_ESP8266_VERSION_H) || defined(ARDUINO_ESP8266_RELEASE_2_5_0)
     void rom_i2c_writeReg_Mask(uint32_t block, uint32_t host_id, uint32_t reg_add, uint32_t Msb, uint32_t Lsb, uint32_t indata);
+#endif
 }
 
 struct slc_queue_item
@@ -96,6 +98,15 @@ public:
     const static uint32_t I2sBaseClockDivisor = 16;
     const static uint32_t ByteSendTimeUs = 20; // us it takes to send a single pixel element at 400khz speed
     const static uint32_t ResetTimeUs = 50;
+};
+
+class NeoEsp8266DmaSpeedApa106
+{
+public:
+	const static uint32_t I2sClockDivisor = 4; 
+	const static uint32_t I2sBaseClockDivisor = 16;
+	const static uint32_t ByteSendTimeUs = 17; // us it takes to send a single pixel element
+	const static uint32_t ResetTimeUs = 50;
 };
 
 enum NeoDmaState
@@ -168,7 +179,7 @@ public:
         free(_i2sBufDesc);
     }
 
-    bool IsReadyToUpdate() 
+    bool IsReadyToUpdate() const
     {
         return (_dmaState == NeoDmaState_Idle);
     }
@@ -283,7 +294,7 @@ public:
         I2SC |= I2STXS; // Start transmission
     }
 
-    void ICACHE_RAM_ATTR Update()
+    void ICACHE_RAM_ATTR Update(bool)
     {
         // wait for not actively sending data
         while (!IsReadyToUpdate())
@@ -433,6 +444,7 @@ typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedWs2812x> NeoEsp8266DmaWs2812xM
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedSk6812> NeoEsp8266DmaSk6812Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed800Kbps> NeoEsp8266Dma800KbpsMethod;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeed400Kbps> NeoEsp8266Dma400KbpsMethod;
+typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedApa106> NeoEsp8266DmaApa106Method;
 
 // Dma  method is the default method for Esp8266
 typedef NeoEsp8266DmaWs2812xMethod NeoWs2813Method;
@@ -440,6 +452,7 @@ typedef NeoEsp8266DmaWs2812xMethod NeoWs2812xMethod;
 typedef NeoEsp8266Dma800KbpsMethod NeoWs2812Method;
 typedef NeoEsp8266DmaSk6812Method NeoSk6812Method;
 typedef NeoEsp8266DmaSk6812Method NeoLc8812Method;
+typedef NeoEsp8266DmaApa106Method NeoApa106Method;
 
 typedef NeoEsp8266DmaWs2812xMethod Neo800KbpsMethod;
 typedef NeoEsp8266Dma400KbpsMethod Neo400KbpsMethod;

@@ -66,7 +66,7 @@ public:
         _endTime = micros();
     }
 
-    void Update()
+    void Update(bool)
     {
         // Data latch = 50+ microsecond pause in the output stream.  Rather than
         // put a delay at the end of the function, the ending time is noted and
@@ -144,6 +144,15 @@ public:
     static const uint32_t ResetTimeUs = 50;
 };
 
+class NeoArmMk20dxSpeedPropsApa106
+{
+public:
+	static const uint32_t CyclesT0h = (F_CPU / 4000000);
+	static const uint32_t CyclesT1h = (F_CPU / 913750);
+	static const uint32_t Cycles = (F_CPU / 584800);
+	static const uint32_t ResetTimeUs = 50;
+};
+
 template<typename T_SPEEDPROPS> class NeoArmMk20dxSpeedBase
 {
 public:
@@ -190,8 +199,10 @@ public:
 
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsWs2812x>> NeoArmWs2812xMethod;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsSk6812>> NeoArmSk6812Method;
+typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsApa106>> NeoArmApa106Method;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedProps400Kbps>> NeoArm400KbpsMethod;
+
 
 #elif defined(__MKL26Z64__) // Teensy-LC
 
@@ -308,6 +319,7 @@ public:
 typedef NeoArmMethodBase<NeoArmMk26z64SpeedWs2812x> NeoArmWs2812xMethod;
 typedef NeoArmMethodBase<NeoArmMk26z64SpeedSk6812> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmMk26z64Speed800Kbps> NeoArm800KbpsMethod;
+typedef NeoArm800KbpsMethod NeoArmApa106Method
 
 #else
 #error "Teensy-LC: Sorry, only 48 MHz is supported, please set Tools > CPU Speed to 48 MHz"
@@ -443,8 +455,9 @@ typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsWs2
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps400Kbps>> NeoArm400KbpsMethod;
+typedef NeoArm400KbpsMethod NeoArmApa106Method
 
-#elif defined (ARDUINO_STM32_FEATHER) // FEATHER WICED (120MHz)
+#elif defined(ARDUINO_STM32_FEATHER) || defined(ARDUINO_ARCH_STM32L4) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32F1)// FEATHER WICED (120MHz)
 
 class NeoArmStm32SpeedProps800KbpsBase
 {
@@ -548,11 +561,36 @@ public:
         uint8_t* end = ptr + sizePixels;
         uint8_t p = *ptr++;
         uint8_t bitMask = 0x80;
-        uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
 
-        volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
-        volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
+#if defined(ARDUINO_STM32_FEATHER)
+		uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
 
+		volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
+		volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
+
+#elif defined(ARDUINO_ARCH_STM32F4)
+		uint32_t  pinMask = BIT(pin & 0x0f);
+
+		volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
+		volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
+
+#elif defined(ARDUINO_ARCH_STM32F1)
+
+		uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
+
+		volatile uint32_t* set = &(PIN_MAP[pin].gpio_device->regs->BRR);
+		volatile uint32_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRR);
+
+#elif defined(ARDUINO_ARCH_STM32L4)
+
+		uint32_t pinMask = g_APinDescription[pin].bit;
+
+		GPIO_TypeDef* GPIO = static_cast<GPIO_TypeDef*>(g_APinDescription[pin].GPIO);
+
+		volatile uint32_t* set = &(GPIO->BRR);
+		volatile uint32_t* clr = &(GPIO->BSRR);
+
+#endif
         for (;;)
         {
             if (p & bitMask)
@@ -597,6 +635,7 @@ public:
 typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropsWs2812x>> NeoArmWs2812xMethod;
 typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedProps800Kbps>> NeoArm800KbpsMethod;
+typedef NeoArm800KbpsMethod NeoArmApa106Method;
 
 #else // Other ARM architecture -- Presumed Arduino Due
 
@@ -719,6 +758,7 @@ typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsWs2812x>> Neo
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps400Kbps>> NeoArm400KbpsMethod;
+typedef NeoArm400KbpsMethod NeoArmApa106Method;
 
 #endif
 
@@ -729,6 +769,7 @@ typedef NeoArmWs2812xMethod NeoWs2812xMethod;
 typedef NeoArmSk6812Method NeoSk6812Method;
 typedef NeoArmSk6812Method NeoLc8812Method;
 typedef NeoArm800KbpsMethod NeoWs2812Method;
+typedef NeoArmApa106Method NeoApa106Method;
 typedef NeoArmWs2812xMethod Neo800KbpsMethod;
 #ifdef NeoArm400KbpsMethod // this is needed due to missing 400Kbps for some platforms
 typedef NeoArm400KbpsMethod Neo400KbpsMethod;

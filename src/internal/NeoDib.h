@@ -25,6 +25,32 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+template<typename T_COLOR_OBJECT> class NeoShaderNop
+{
+public:
+    NeoShaderNop()
+    {
+    }
+
+    bool IsDirty() const
+    {
+        return true;
+    };
+
+    void Dirty()
+    {
+    };
+
+    void ResetDirty()
+    {
+    };
+
+    T_COLOR_OBJECT Apply(uint16_t, T_COLOR_OBJECT color)
+    {
+        return color;
+    };
+};
+
 class NeoShaderBase
 {
 public:

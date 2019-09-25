@@ -36,116 +36,135 @@ License along with NeoPixel.  If not, see
 #define ICACHE_RAM_ATTR IRAM_ATTR
 #endif
 
-inline uint32_t _getCycleCount()
+static uint32_t _getCycleCount(void) __attribute__((always_inline));
+
+static inline uint32_t _getCycleCount(void)
 {
     uint32_t ccount;
     __asm__ __volatile__("rsr %0,ccount":"=a" (ccount));
     return ccount;
 }
 
-#define CYCLES_800_T0H  (F_CPU / 2500000) // 0.4us
-#define CYCLES_800_T1H  (F_CPU / 1250000) // 0.8us
-#define CYCLES_800      (F_CPU /  800000) // 1.25us per bit
-#define CYCLES_400_T0H  (F_CPU / 2000000)
-#define CYCLES_400_T1H  (F_CPU /  833333)
-#define CYCLES_400      (F_CPU /  400000) 
+#define CYCLES_LOOPTEST   (4) // adjustment due to loop exit test instruction cycles
+#define CYCLES_800_T0H  (F_CPU / 2500000 - CYCLES_LOOPTEST) // 0.4us
+#define CYCLES_800_T1H  (F_CPU / 1250000 - CYCLES_LOOPTEST) // 0.8us
+#define CYCLES_800      (F_CPU /  800000 - CYCLES_LOOPTEST) // 1.25us per bit
+#define CYCLES_400_T0H  (F_CPU / 2000000 - CYCLES_LOOPTEST)
+#define CYCLES_400_T1H  (F_CPU /  833333 - CYCLES_LOOPTEST)
+#define CYCLES_400      (F_CPU /  400000 - CYCLES_LOOPTEST) 
 
 void ICACHE_RAM_ATTR bitbang_send_pixels_800(uint8_t* pixels, uint8_t* end, uint8_t pin)
 {
     const uint32_t pinRegister = _BV(pin);
-    uint8_t mask;
-    uint8_t subpix;
-    uint32_t cyclesStart;
+    uint8_t mask = 0x80;
+    uint8_t subpix = *pixels++;
+    uint32_t cyclesStart = 0; // trigger emediately
+	uint32_t cyclesNext = 0;
 
-    // trigger emediately
-    cyclesStart = _getCycleCount() - CYCLES_800;
-    do
+    for (;;)
     {
-        subpix = *pixels++;
-        for (mask = 0x80; mask != 0; mask >>= 1)
-        {
-            // do the checks here while we are waiting on time to pass
-            uint32_t cyclesBit = ((subpix & mask)) ? CYCLES_800_T1H : CYCLES_800_T0H;
-            uint32_t cyclesNext = cyclesStart;
+        // do the checks here while we are waiting on time to pass
+		uint32_t cyclesBit = CYCLES_800_T0H;
+		if (subpix & mask)
+		{
+			cyclesBit = CYCLES_800_T1H;
+		}
 
-            // after we have done as much work as needed for this next bit
-            // now wait for the HIGH
-            do
-            {
-                // cache and use this count so we don't incur another 
-                // instruction before we turn the bit high
-                cyclesStart = _getCycleCount();
-            } while ((cyclesStart - cyclesNext) < CYCLES_800);
+        // after we have done as much work as needed for this next bit
+        // now wait for the HIGH
+		while (((cyclesStart = _getCycleCount()) - cyclesNext) < CYCLES_800);
 
-            // set high
+        // set high
 #if defined(ARDUINO_ARCH_ESP32)
-            GPIO.out_w1ts = pinRegister;
+        GPIO.out_w1ts = pinRegister;
 #else
-            GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+        GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
 #endif
-
-            // wait for the LOW
-            do
-            {
-                cyclesNext = _getCycleCount();
-            } while ((cyclesNext - cyclesStart) < cyclesBit);
-
-            // set low
+		
+        // wait for the LOW
+		while ((_getCycleCount() - cyclesStart) < cyclesBit);
+		
+        // set low
 #if defined(ARDUINO_ARCH_ESP32)
-            GPIO.out_w1tc = pinRegister;
+        GPIO.out_w1tc = pinRegister;
 #else
-            GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+        GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 #endif
-        }
-    } while (pixels < end);
+		cyclesNext = cyclesStart;
+
+		// next bit
+		mask >>= 1;
+		if (mask == 0) 
+		{
+			// no more bits to send in this byte
+			// check for another byte
+			if (pixels >= end) 
+			{
+				// no more bytes to send so stop
+				break;
+			}
+			// reset mask to first bit and get the next byte
+			mask = 0x80;
+			subpix = *pixels++;
+		}
+    } 
 }
 
 void ICACHE_RAM_ATTR bitbang_send_pixels_400(uint8_t* pixels, uint8_t* end, uint8_t pin)
 {
-    const uint32_t pinRegister = _BV(pin);
-    uint8_t mask;
-    uint8_t subpix;
-    uint32_t cyclesStart;
+	const uint32_t pinRegister = _BV(pin);
+	uint8_t mask = 0x80;
+	uint8_t subpix = *pixels++;
+	uint32_t cyclesStart = 0; // trigger emediately
+	uint32_t cyclesNext = 0;
 
-    // trigger emediately
-    cyclesStart = _getCycleCount() - CYCLES_400;
-    do
-    {
-        subpix = *pixels++;
-        for (mask = 0x80; mask; mask >>= 1)
-        {
-            uint32_t cyclesBit = ((subpix & mask)) ? CYCLES_400_T1H : CYCLES_400_T0H;
-            uint32_t cyclesNext = cyclesStart;
+	for (;;)
+	{
+		// do the checks here while we are waiting on time to pass
+		uint32_t cyclesBit = CYCLES_400_T0H;
+		if (subpix & mask)
+		{
+			cyclesBit = CYCLES_400_T1H;
+		}
 
-            // after we have done as much work as needed for this next bit
-            // now wait for the HIGH
-            do
-            {
-                // cache and use this count so we don't incur another 
-                // instruction before we turn the bit high
-                cyclesStart = _getCycleCount();
-            } while ((cyclesStart - cyclesNext) < CYCLES_400);
+		// after we have done as much work as needed for this next bit
+		// now wait for the HIGH
+		while (((cyclesStart = _getCycleCount()) - cyclesNext) < CYCLES_400);
 
+		// set high
 #if defined(ARDUINO_ARCH_ESP32)
-            GPIO.out_w1ts = pinRegister;
+		GPIO.out_w1ts = pinRegister;
 #else
-            GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+		GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
 #endif
 
-            // wait for the LOW
-            do
-            {
-                cyclesNext = _getCycleCount();
-            } while ((cyclesNext - cyclesStart) < cyclesBit);
+		// wait for the LOW
+		while ((_getCycleCount() - cyclesStart) < cyclesBit);
 
-            // set low
+		// set low
 #if defined(ARDUINO_ARCH_ESP32)
-            GPIO.out_w1tc = pinRegister;
+		GPIO.out_w1tc = pinRegister;
 #else
-            GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+		GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 #endif
-        }
-    } while (pixels < end);
+		cyclesNext = cyclesStart;
+
+		// next bit
+		mask >>= 1;
+		if (mask == 0)
+		{
+			// no more bits to send in this byte
+			// check for another byte
+			if (pixels >= end)
+			{
+				// no more bytes to send so stop
+				break;
+			}
+			// reset mask to first bit and get the next byte
+			mask = 0x80;
+			subpix = *pixels++;
+		}
+	}
 }
 
 #endif

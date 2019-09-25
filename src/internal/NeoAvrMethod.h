@@ -148,7 +148,7 @@ public:
         _endTime = micros();
     }
 
-    void Update()
+    void Update(bool)
     {
         // Data latch = 50+ microsecond pause in the output stream.  Rather than
         // put a delay at the end of the function, the ending time is noted and
@@ -199,12 +199,14 @@ typedef NeoAvrMethodBase<NeoAvrSpeedSk6812> NeoAvrSk6812Method;
 typedef NeoAvrMethodBase<NeoAvrSpeed800Kbps> NeoAvr800KbpsMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed400Kbps> NeoAvr400KbpsMethod;
 
+
 // AVR doesn't have alternatives yet, so there is just the default
 typedef NeoAvrWs2812xMethod NeoWs2813Method;
 typedef NeoAvrWs2812xMethod NeoWs2812xMethod;
 typedef NeoAvr800KbpsMethod NeoWs2812Method;
 typedef NeoAvrSk6812Method NeoSk6812Method;
 typedef NeoAvrSk6812Method NeoLc8812Method;
+typedef NeoAvr400KbpsMethod NeoApa106Method;
 typedef NeoAvrWs2812xMethod Neo800KbpsMethod;
 typedef NeoAvr400KbpsMethod Neo400KbpsMethod;
 
