@@ -12,7 +12,7 @@ This is the most functional library for the Esp8266 as it provides solutions for
 Please read this best practices link before connecting your NeoPixels, it will save you a lot of time and effort.  
 [Adafruit NeoPixel Best Practices](https://learn.adafruit.com/adafruit-neopixel-uberguide/best-practices)
 
-For quick questions jump on Gitter and ask away.  
+For quick questions and support jump on Gitter and ask away.  
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Makuna/NeoPixelBus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 For bugs, make sure there isn't an active issue and then create one.
