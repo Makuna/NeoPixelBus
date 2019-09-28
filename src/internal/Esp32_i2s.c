@@ -201,7 +201,7 @@ void i2sSetDac(uint8_t bus_num, bool right, bool left) {
         return;
     }
 
-    i2sSetPins(bus_num, -1, -1, -1, -1);
+    i2sSetPins(bus_num, -1, -1, -1, -1, false);
     I2S[bus_num].bus->conf2.lcd_en = 1;
     I2S[bus_num].bus->conf.tx_right_first = 0;
     I2S[bus_num].bus->conf2.camera_en = 0;
@@ -216,7 +216,7 @@ void i2sSetDac(uint8_t bus_num, bool right, bool left) {
     }
 }
 
-void i2sSetPins(uint8_t bus_num, int8_t out, int8_t ws, int8_t bck, int8_t in) {
+void i2sSetPins(uint8_t bus_num, int8_t out, int8_t ws, int8_t bck, int8_t in, bool invert) {
     if (bus_num > 1) {
         return;
     }
@@ -228,42 +228,42 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t ws, int8_t bck, int8_t in) {
     if (ws >= 0) {
         if (I2S[bus_num].ws != ws) {
             if (I2S[bus_num].ws >= 0) {
-                gpio_matrix_out(I2S[bus_num].ws, 0x100, false, false);
+                gpio_matrix_out(I2S[bus_num].ws, 0x100, invert, false);
             }
             I2S[bus_num].ws = ws;
             pinMode(ws, OUTPUT);
-            gpio_matrix_out(ws, bus_num?I2S1O_WS_OUT_IDX:I2S0O_WS_OUT_IDX, false, false);
+            gpio_matrix_out(ws, bus_num?I2S1O_WS_OUT_IDX:I2S0O_WS_OUT_IDX, invert, false);
         }
     } else if (I2S[bus_num].ws >= 0) {
-        gpio_matrix_out(I2S[bus_num].ws, 0x100, false, false);
+        gpio_matrix_out(I2S[bus_num].ws, 0x100, invert, false);
         I2S[bus_num].ws = -1;
     }
 
     if (bck >= 0) {
         if (I2S[bus_num].bck != bck) {
             if (I2S[bus_num].bck >= 0) {
-                gpio_matrix_out(I2S[bus_num].bck, 0x100, false, false);
+                gpio_matrix_out(I2S[bus_num].bck, 0x100, invert, false);
             }
             I2S[bus_num].bck = bck;
             pinMode(bck, OUTPUT);
-            gpio_matrix_out(bck, bus_num?I2S1O_BCK_OUT_IDX:I2S0O_BCK_OUT_IDX, false, false);
+            gpio_matrix_out(bck, bus_num?I2S1O_BCK_OUT_IDX:I2S0O_BCK_OUT_IDX, invert, false);
         }
     } else if (I2S[bus_num].bck >= 0) {
-        gpio_matrix_out(I2S[bus_num].bck, 0x100, false, false);
+        gpio_matrix_out(I2S[bus_num].bck, 0x100, invert, false);
         I2S[bus_num].bck = -1;
     }
 
     if (out >= 0) {
         if (I2S[bus_num].out != out) {
             if (I2S[bus_num].out >= 0) {
-                gpio_matrix_out(I2S[bus_num].out, 0x100, false, false);
+                gpio_matrix_out(I2S[bus_num].out, 0x100, invert, false);
             }
             I2S[bus_num].out = out;
             pinMode(out, OUTPUT);
-            gpio_matrix_out(out, bus_num?I2S1O_DATA_OUT23_IDX:I2S0O_DATA_OUT23_IDX, false, false);
+            gpio_matrix_out(out, bus_num?I2S1O_DATA_OUT23_IDX:I2S0O_DATA_OUT23_IDX, invert, false);
         }
     } else if (I2S[bus_num].out >= 0) {
-        gpio_matrix_out(I2S[bus_num].out, 0x100, false, false);
+        gpio_matrix_out(I2S[bus_num].out, 0x100, invert, false);
         I2S[bus_num].out = -1;
     }
 
