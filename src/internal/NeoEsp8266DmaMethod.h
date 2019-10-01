@@ -533,6 +533,7 @@ typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaInvertedSpeedApa106> NeoEsp8266DmaI
 typedef NeoEsp8266DmaWs2812xMethod NeoWs2813Method;
 typedef NeoEsp8266DmaWs2812xMethod NeoWs2812xMethod;
 typedef NeoEsp8266Dma800KbpsMethod NeoWs2812Method;
+typedef NeoEsp8266DmaWs2812xMethod NeoWs2811Method;
 typedef NeoEsp8266DmaSk6812Method NeoSk6812Method;
 typedef NeoEsp8266DmaSk6812Method NeoLc8812Method;
 typedef NeoEsp8266DmaApa106Method NeoApa106Method;
@@ -544,6 +545,7 @@ typedef NeoEsp8266Dma400KbpsMethod Neo400KbpsMethod;
 typedef NeoEsp8266DmaInvertedWs2812xMethod NeoWs2813InvertedMethod;
 typedef NeoEsp8266DmaInvertedWs2812xMethod NeoWs2812xInvertedMethod;
 typedef NeoEsp8266DmaInverted800KbpsMethod NeoWs2812InvertedMethod;
+typedef NeoEsp8266DmaInvertedWs2812xMethod NeoWs2811InvertedMethod;
 typedef NeoEsp8266DmaInvertedSk6812Method NeoSk6812InvertedMethod;
 typedef NeoEsp8266DmaInvertedSk6812Method NeoLc8812InvertedMethod;
 typedef NeoEsp8266DmaInvertedApa106Method NeoApa106InvertedMethod;
