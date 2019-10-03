@@ -231,6 +231,7 @@ typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2sBusOne, NeoEsp3
 typedef NeoEsp32I2s1Ws2812xMethod NeoWs2813Method;
 typedef NeoEsp32I2s1Ws2812xMethod NeoWs2812xMethod;
 typedef NeoEsp32I2s1800KbpsMethod NeoWs2812Method;
+typedef NeoEsp32I2s1Ws2812xMethod NeoWs2811Method;
 typedef NeoEsp32I2s1Sk6812Method NeoSk6812Method;
 typedef NeoEsp32I2s1Sk6812Method NeoLc8812Method;
 typedef NeoEsp32I2s1Apa106Method NeoApa106Method;
@@ -240,6 +241,7 @@ typedef NeoEsp32I2s1400KbpsMethod Neo400KbpsMethod;
 
 typedef NeoEsp32I2s1Ws2812xInvertedMethod NeoWs2813InvertedMethod;
 typedef NeoEsp32I2s1Ws2812xInvertedMethod NeoWs2812xInvertedMethod;
+typedef NeoEsp32I2s1Ws2812xInvertedMethod NeoWs2811InvertedMethod;
 typedef NeoEsp32I2s1800KbpsInvertedMethod NeoWs2812InvertedMethod;
 typedef NeoEsp32I2s1Sk6812InvertedMethod NeoSk6812InvertedMethod;
 typedef NeoEsp32I2s1Sk6812InvertedMethod NeoLc8812InvertedMethod;
