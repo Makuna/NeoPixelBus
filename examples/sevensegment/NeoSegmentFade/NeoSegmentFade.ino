@@ -18,7 +18,7 @@ const uint16_t SecondsDigit = 1;
 
 #define brightness 128
 
-NeoPixelSegmentBus<SevenSegmentFeature, Neo800KbpsMethod> strip(DigitCount, BusPin);
+NeoPixelSegmentBus<SevenSegmentFeature, NeoWs2811Method> strip(DigitCount, BusPin);
 
 enum Animation
 {
