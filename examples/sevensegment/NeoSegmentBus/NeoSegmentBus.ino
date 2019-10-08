@@ -14,7 +14,7 @@ const uint8_t BusPin = 2;  // make sure to set this to the correct pin, ignored 
 
 #define brightness 128
 
-NeoPixelSegmentBus<SevenSegmentFeature, Neo800KbpsMethod> strip(DigitCount, BusPin);
+NeoPixelSegmentBus<SevenSegmentFeature, NeoWs2811Method> strip(DigitCount, BusPin);
 
 void setup()
 {
