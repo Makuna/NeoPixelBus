@@ -507,7 +507,29 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedApa106, NeoEsp32RmtChannel
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed800Kbps, NeoEsp32RmtChannel7> NeoEsp32Rmt7800KbpsInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps, NeoEsp32RmtChannel7> NeoEsp32Rmt7400KbpsInvertedMethod;
 
-// RMT is NOT the default method for Esp32, 
-// you are required to use a specific channel listed above
+// due to a core issue where requests to send aren't consistent with I2s, RMT ch6 is temporarily the default
+// RMT channel 6 method is the default method for Esp32
+typedef NeoEsp32Rmt6Ws2812xMethod NeoWs2813Method;
+typedef NeoEsp32Rmt6Ws2812xMethod NeoWs2812xMethod;
+typedef NeoEsp32Rmt6800KbpsMethod NeoWs2812Method;
+typedef NeoEsp32Rmt6Ws2812xMethod NeoWs2811Method;
+typedef NeoEsp32Rmt6Sk6812Method NeoSk6812Method;
+typedef NeoEsp32Rmt6Sk6812Method NeoLc8812Method;
+typedef NeoEsp32Rmt6Apa106Method NeoApa106Method;
+
+typedef NeoEsp32Rmt6Ws2812xMethod Neo800KbpsMethod;
+typedef NeoEsp32Rmt6400KbpsMethod Neo400KbpsMethod;
+
+typedef NeoEsp32Rmt6Ws2812xInvertedMethod NeoWs2813InvertedMethod;
+typedef NeoEsp32Rmt6Ws2812xInvertedMethod NeoWs2812xInvertedMethod;
+typedef NeoEsp32Rmt6Ws2812xInvertedMethod NeoWs2811InvertedMethod;
+typedef NeoEsp32Rmt6800KbpsInvertedMethod NeoWs2812InvertedMethod;
+typedef NeoEsp32Rmt6Sk6812InvertedMethod NeoSk6812InvertedMethod;
+typedef NeoEsp32Rmt6Sk6812InvertedMethod NeoLc8812InvertedMethod;
+typedef NeoEsp32Rmt6Apa106InvertedMethod NeoApa106InvertedMethod;
+
+typedef NeoEsp32Rmt6Ws2812xInvertedMethod Neo800KbpsInvertedMethod;
+typedef NeoEsp32Rmt6400KbpsInvertedMethod Neo400KbpsInvertedMethod;
+
 
 #endif
