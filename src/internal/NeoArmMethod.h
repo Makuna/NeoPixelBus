@@ -455,7 +455,7 @@ typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsWs2
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps400Kbps>> NeoArm400KbpsMethod;
-typedef NeoArm400KbpsMethod NeoArmApa106Method
+typedef NeoArm400KbpsMethod NeoArmApa106Method;
 
 #elif defined(ARDUINO_STM32_FEATHER) || defined(ARDUINO_ARCH_STM32L4) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32F1)// FEATHER WICED (120MHz)
 
