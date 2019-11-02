@@ -37,15 +37,6 @@ License along with NeoPixel.  If not, see
 #define ICACHE_RAM_ATTR IRAM_ATTR
 #endif
 
-static uint32_t _getCycleCount(void) __attribute__((always_inline));
-
-static inline uint32_t _getCycleCount(void)
-{
-	uint32_t ccount;
-	__asm__ __volatile__("rsr %0,ccount":"=a" (ccount));
-	return ccount;
-}
-
 #define CYCLES_LOOPTEST   (4) // adjustment due to loop exit test instruction cycles
 
 class NeoEspSpeedWs2811
@@ -123,7 +114,7 @@ public:
 template<typename T_SPEED, typename T_PINSET> class NeoEspBitBangBase
 {
 public:
-	static void ICACHE_RAM_ATTR send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
+    __attribute__((noinline)) static const void ICACHE_RAM_ATTR send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
 	{
 		const uint32_t pinRegister = _BV(pin);
 		uint8_t mask = 0x80;
@@ -142,13 +133,13 @@ public:
 
 			// after we have done as much work as needed for this next bit
 			// now wait for the HIGH
-			while (((cyclesStart = _getCycleCount()) - cyclesNext) < T_SPEED::Period);
+			while (((cyclesStart = getCycleCount()) - cyclesNext) < T_SPEED::Period);
 
 			// set pin state
 			T_PINSET::setPin(pinRegister);
 
 			// wait for the LOW
-			while ((_getCycleCount() - cyclesStart) < cyclesBit);
+			while ((getCycleCount() - cyclesStart) < cyclesBit);
 
 			// reset pin start
 			T_PINSET::resetPin(pinRegister);
@@ -173,6 +164,13 @@ public:
 		}
 	}
 
+protected:
+    static inline uint32_t getCycleCount(void)
+    {
+        uint32_t ccount;
+        __asm__ __volatile__("rsr %0,ccount":"=a" (ccount));
+        return ccount;
+    }
 };
 
 class NeoEspBitBangSpeedWs2811 : public NeoEspBitBangBase<NeoEspSpeedWs2811, NeoEspPinset>
