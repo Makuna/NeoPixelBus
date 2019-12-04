@@ -67,6 +67,12 @@ uint8_t RgbwColor::CalculateBrightness() const
     }
 }
 
+RgbwColor RgbwColor::Dim(uint8_t ratio) const
+{
+    // specifically avoids float math
+    return RgbwColor(R * ratio / 255, G * ratio / 255, B * ratio / 255, W * ratio / 255);
+}
+
 void RgbwColor::Darken(uint8_t delta)
 {
     if (R > delta)

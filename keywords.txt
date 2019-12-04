@@ -349,6 +349,7 @@ SetPixelColor	KEYWORD2
 GetPixelColor	KEYWORD2
 SwapPixelColor	KEYWORD2
 CalculateBrightness	KEYWORD2
+Dim	KEYWORD2
 Darken	KEYWORD2
 Lighten	KEYWORD2
 LinearBlend	KEYWORD2
