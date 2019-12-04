@@ -163,6 +163,12 @@ uint8_t RgbColor::CalculateBrightness() const
 	return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
 }
 
+RgbColor RgbColor::Dim(uint8_t ratio) const
+{
+    // specifically avoids float math
+    return RgbColor(R * ratio / 255, G * ratio / 255, B * ratio / 255);
+}
+
 void RgbColor::Darken(uint8_t delta)
 {
 	if (R > delta)
