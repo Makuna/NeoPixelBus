@@ -81,6 +81,10 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoEsp32RmtMethod.h"
 #include "internal/NeoEspBitBangMethod.h"
 
+#elif defined(ARDUINO_ARCH_NRF52840) // must be before __arm__
+
+#include "internal/NeoNrf52xMethod.h"
+
 #elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
 
 #include "internal/NeoArmMethod.h"
