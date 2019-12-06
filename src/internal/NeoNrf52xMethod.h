@@ -31,8 +31,8 @@ License along with NeoPixel.  If not, see
 
 #if defined(ARDUINO_ARCH_NRF52840)
 
-const uint16_t c_dmaBytesPerPixelByte = 8 * sizeof(uint16_t); // bits * bytes to represent pulse
-const uint16_t c_dmaBytesForReset = 2 * sizeof(uint16_t); // two pulses to extend reset
+const uint16_t c_dmaBytesPerPixelByte = 8 * sizeof(nrf_pwm_values_common_t); // bits * bytes to represent pulse
+const uint16_t c_dmaBytesForReset = 2 * sizeof(nrf_pwm_values_common_t); // two pulses to extend reset
 
 // count 1 = 0.0625us, so max count (32768) is 2048us
 class NeoNrf52xPwmSpeedWs2812x
@@ -63,6 +63,17 @@ public:
     const static nrf_pwm_values_common_t Bit1 = 14UL | 0x8000; // ~0.9us
     const static uint16_t CountReset = 800; // 50 us
     const static PinStatus IdleLevel = LOW;
+};
+
+
+class NeoNrf52xPwmInvertedSpeedWs2812x
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 6UL; // ~0.4us
+    const static nrf_pwm_values_common_t Bit1 = 13UL; // ~0.8us
+    const static uint32_t CountReset = 4800; // 300us
+    const static PinStatus IdleLevel = HIGH;
 };
 
 class NeoNrf52xPwm0
@@ -115,7 +126,11 @@ public:
         _pixels = static_cast<uint8_t*>(malloc(_pixelsSize));
         memset(_pixels, 0, _pixelsSize);
 
-        _dmaBufferSize = c_dmaBytesPerPixelByte * _pixelsSize + c_dmaBytesForReset;
+        // resetSize is the number of nrf_pwm_values_common_t needed to
+        // represet the T_SPEED::CountReset
+        size_t resetSize = (T_SPEED::CountReset / T_SPEED::CountTop - 2) * sizeof(nrf_pwm_values_common_t);
+
+        _dmaBufferSize = c_dmaBytesPerPixelByte * _pixelsSize + resetSize;
         _dmaBuffer = static_cast<uint8_t*>(malloc(_dmaBufferSize));
         memset(_dmaBuffer, 0, _dmaBufferSize);
     }
@@ -189,7 +204,7 @@ private:
 
     size_t   _pixelsSize;    // Size of '_pixels' buffer below
     uint8_t* _pixels;        // Holds LED color values
-    uint32_t _dmaBufferSize; // total size of _dmaBuffer
+    size_t   _dmaBufferSize; // total size of _dmaBuffer
     uint8_t* _dmaBuffer;     // Holds pixel data in native format for PWM hardware
 
     void dmaInit()
@@ -221,6 +236,7 @@ private:
     void FillBuffer()
     {
         nrf_pwm_values_common_t* pDma = reinterpret_cast<nrf_pwm_values_common_t*>(_dmaBuffer);
+        nrf_pwm_values_common_t* pDmaEnd = reinterpret_cast<nrf_pwm_values_common_t*>(_dmaBuffer + _dmaBufferSize);
         uint8_t* pPixelsEnd = _pixels + _pixelsSize;
         for (uint8_t* pPixel = _pixels; pPixel < pPixelsEnd; pPixel++)
         {
@@ -232,19 +248,23 @@ private:
                 data <<= 1;
             }
         }
-        // use T_SPEED::CountReset to define how many of these there should be
 
-        // is this really needed?  The count is already part of the PWM structure
-        // so this seems invalid, or does this cause the output signal to clear (no pulse)
-        // and thus gets repeated at the end
-        *(pDma++) = 0x8000; // end sequence
-        *(pDma++) = 0x8000;
+        // fill the rest with max counting values to provide 
+        // the required reset time
+        const uint16_t ResetCount = T_SPEED::CountTop | ((T_SPEED::IdleLevel) ? 0x8000 : 0);
+        while (pDma < pDmaEnd)
+        {
+            *(pDma++) = ResetCount; 
+        }
     }
 };
 
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2811Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0400KbpsMethod;
+
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2812xInvertedMethod;
+
 
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm1> NeoNrf52xPwm1Ws2812xMethod;
 
