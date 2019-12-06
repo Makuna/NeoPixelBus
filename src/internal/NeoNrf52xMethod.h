@@ -129,10 +129,8 @@ public:
         _pixels = static_cast<uint8_t*>(malloc(_pixelsSize));
         memset(_pixels, 0, _pixelsSize);
 
-        _dmaBufferSize = c_dmaBytesPerPixelByte * _pixelsSize + 2 * sizeof(nrf_pwm_values_common_t);
+        _dmaBufferSize = c_dmaBytesPerPixelByte * _pixelsSize + sizeof(nrf_pwm_values_common_t);
         _dmaBuffer = static_cast<nrf_pwm_values_common_t*>(malloc(_dmaBufferSize));
-        
-        _dmaReset = static_cast<nrf_pwm_values_common_t*>(malloc(2 * sizeof(nrf_pwm_values_common_t)));
     }
 
     ~NeoNrf52xMethodBase()
@@ -148,7 +146,6 @@ public:
 
         free(_pixels);
         free(_dmaBuffer);
-        free(_dmaReset);
     }
 
     bool IsReadyToUpdate() const
@@ -204,9 +201,6 @@ private:
     size_t   _dmaBufferSize; // total size of _dmaBuffer
     nrf_pwm_values_common_t* _dmaBuffer;     // Holds pixel data in native format for PWM hardware
 
-    nrf_pwm_values_common_t* _dmaReset;
-    
-
     void dmaInit()
     {
         T_BUS::Pwm()->PSEL.OUT[0] = digitalPinToPinName(_pin);
@@ -221,13 +215,16 @@ private:
         T_BUS::Pwm()->LOOP = 1; // single fire
         nrf_pwm_decoder_set(T_BUS::Pwm(), NRF_PWM_LOAD_COMMON, NRF_PWM_STEP_AUTO);
 
+        // sequence zero is the primary data with a BitReset entry on the end for
+        // the delay repeating
         T_BUS::Pwm()->SEQ[0].PTR = reinterpret_cast<uint32_t>(_dmaBuffer);
         T_BUS::Pwm()->SEQ[0].CNT = _dmaBufferSize / sizeof(nrf_pwm_values_common_t);
         T_BUS::Pwm()->SEQ[0].REFRESH = 0; // ignored
         T_BUS::Pwm()->SEQ[0].ENDDELAY = T_SPEED::CountReset; // ignored still?
 
-        T_BUS::Pwm()->SEQ[1].PTR = reinterpret_cast<uint32_t>(_dmaReset);
-        T_BUS::Pwm()->SEQ[1].CNT = 2;
+        // sequence one is pointing to the BitReset entry at the end of the primary data
+        T_BUS::Pwm()->SEQ[1].PTR = reinterpret_cast<uint32_t>(_dmaBuffer + (T_BUS::Pwm()->SEQ[0].CNT - 1));
+        T_BUS::Pwm()->SEQ[1].CNT = 1;
         T_BUS::Pwm()->SEQ[1].REFRESH = 0; // ignored
         T_BUS::Pwm()->SEQ[1].ENDDELAY = 0; // ignored
 
@@ -268,9 +265,6 @@ private:
         {
             *(pDma++) = T_SPEED::BitReset;
         }
-
-        _dmaReset[0] = T_SPEED::BitReset;
-        _dmaReset[1] = T_SPEED::BitReset;
     }
 
     void dmaStart()
