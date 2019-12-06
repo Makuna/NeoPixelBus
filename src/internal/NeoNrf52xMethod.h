@@ -137,9 +137,6 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        // return (T_BUS::Pwm()->EVENTS_STOPPED);
-        // return (T_BUS::Pwm()->EVENTS_LOOPSDONE);
-        
         return (T_BUS::Pwm()->EVENTS_SEQEND[0]);
     }
 
@@ -148,6 +145,13 @@ public:
         digitalWrite(_pin, T_SPEED::IdleLevel);
 
         dmaInit();
+
+        // must force a first update so the EVENTS_SEQEND gets set as
+        // you can't set it manually
+        FillBuffer();
+
+        // start the data send
+        T_BUS::Pwm()->TASKS_SEQSTART[0] = 1;
     }
 
     void Update(bool)
@@ -195,13 +199,14 @@ private:
         T_BUS::Pwm()->COUNTERTOP = T_SPEED::CountTop;
         T_BUS::Pwm()->LOOP = 0; // single fire
         nrf_pwm_decoder_set(T_BUS::Pwm(), NRF_PWM_LOAD_COMMON, NRF_PWM_STEP_AUTO);
-        // T_BUS::Pwm()->EVENTS_SEQEND[0] = 0;
-        //nrf_pwm_shorts_enable(T_BUS::Pwm(), NRF_PWM_SHORT_LOOPSDONE_STOP_MASK);
+
+        // T_BUS::Pwm()->EVENTS_SEQEND[0] = 0; 
+        // nrf_pwm_shorts_enable(T_BUS::Pwm(), NRF_PWM_SHORT_LOOPSDONE_STOP_MASK);
 
         T_BUS::Pwm()->SEQ[0].PTR = reinterpret_cast<uint32_t>(_dmaBuffer);
         T_BUS::Pwm()->SEQ[0].CNT = _dmaBufferSize / sizeof(uint16_t);
         T_BUS::Pwm()->SEQ[0].REFRESH = 0; // ignored
-        T_BUS::Pwm()->SEQ[0].ENDDELAY = T_SPEED::CountReset; // ignored ?
+        T_BUS::Pwm()->SEQ[0].ENDDELAY = 0; // ignored !
         T_BUS::Pwm()->PSEL.OUT[0] = digitalPinToPinName(_pin);
         T_BUS::Pwm()->ENABLE = 1;
     }
@@ -227,6 +232,8 @@ private:
                 data <<= 1;
             }
         }
+        // use T_SPEED::CountReset to define how many of these there should be
+
         // is this really needed?  The count is already part of the PWM structure
         // so this seems invalid, or does this cause the output signal to clear (no pulse)
         // and thus gets repeated at the end
@@ -239,5 +246,12 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm0> NeoNrf52xPwm
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0400KbpsMethod;
 
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm1> NeoNrf52xPwm1Ws2812xMethod;
+
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm2> NeoNrf52xPwm2Ws2812xMethod;
+
+#if defined(NRF_PWM3)
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm3> NeoNrf52xPwm3Ws2812xMethod;
+#endif
 
 #endif
