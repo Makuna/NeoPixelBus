@@ -75,7 +75,7 @@ public:
     const static nrf_pwm_values_common_t Bit0 = 6; // ~0.4us
     const static nrf_pwm_values_common_t Bit1 = 13; // ~0.8us
     const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
-    const static uint32_t CountReset = 4800; // 300us
+    const static uint32_t CountReset = 240; // 300us /1.25us
     const static PinStatus IdleLevel = HIGH;
 };
 
@@ -150,7 +150,7 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        return (T_BUS::Pwm()->EVENTS_LOOPSDONE);
+        return (T_BUS::Pwm()->EVENTS_STOPPED);
     }
 
     void Initialize()
@@ -203,6 +203,7 @@ private:
 
     void dmaInit()
     {
+        // only use channel zero
         T_BUS::Pwm()->PSEL.OUT[0] = digitalPinToPinName(_pin);
         T_BUS::Pwm()->PSEL.OUT[1] = NC;
         T_BUS::Pwm()->PSEL.OUT[2] = NC;
@@ -212,8 +213,8 @@ private:
         T_BUS::Pwm()->MODE = NRF_PWM_MODE_UP;
         T_BUS::Pwm()->PRESCALER = NRF_PWM_CLK_16MHz;
         T_BUS::Pwm()->COUNTERTOP = T_SPEED::CountTop;
-        T_BUS::Pwm()->LOOP = 1; // single fire
-        nrf_pwm_decoder_set(T_BUS::Pwm(), NRF_PWM_LOAD_COMMON, NRF_PWM_STEP_AUTO);
+        T_BUS::Pwm()->LOOP = 1; // single fire so events get set
+        T_BUS::Pwm()->DECODER = NRF_PWM_LOAD_COMMON;
 
         // sequence zero is the primary data with a BitReset entry on the end for
         // the delay repeating
@@ -228,12 +229,11 @@ private:
         T_BUS::Pwm()->SEQ[1].REFRESH = 0; // ignored
         T_BUS::Pwm()->SEQ[1].ENDDELAY = 0; // ignored
 
-        T_BUS::Pwm()->SHORTS = 0;
+        // stop when the look finishes
+        T_BUS::Pwm()->SHORTS = PWM_SHORTS_LOOPSDONE_STOP_Msk;
         T_BUS::Pwm()->INTEN = 0;
-        T_BUS::Pwm()->EVENTS_LOOPSDONE = 0;
-        T_BUS::Pwm()->EVENTS_SEQEND[0] = 0;
-        T_BUS::Pwm()->EVENTS_SEQEND[1] = 0;
-        T_BUS::Pwm()->EVENTS_STOPPED = 0;
+
+        dmaResetEvents();
     }
 
     void dmaDeinit()
@@ -267,12 +267,17 @@ private:
         }
     }
 
-    void dmaStart()
+    void dmaResetEvents()
     {
         T_BUS::Pwm()->EVENTS_LOOPSDONE = 0;
         T_BUS::Pwm()->EVENTS_SEQEND[0] = 0;
         T_BUS::Pwm()->EVENTS_SEQEND[1] = 0;
         T_BUS::Pwm()->EVENTS_STOPPED = 0;
+    }
+
+    void dmaStart()
+    {
+        dmaResetEvents();
         T_BUS::Pwm()->TASKS_SEQSTART[0] = 1;
     }
 };
