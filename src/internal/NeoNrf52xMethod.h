@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library helper functions for Nrf52* MCUs.
+NeoPixel library helper classes for Nrf52* MCUs.
 Nano 33 BLE
 
 Written by Michael C. Miller.
@@ -33,7 +33,20 @@ License along with NeoPixel.  If not, see
 
 const uint16_t c_dmaBytesPerPixelByte = 8 * sizeof(nrf_pwm_values_common_t); // bits * bytes to represent pulse
 
+// for Bit* variables
 // count 1 = 0.0625us, so max count (32768) is 2048us
+
+class NeoNrf52xPwmSpeedWs2811
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 5 | 0x8000; // ~0.3us
+    const static nrf_pwm_values_common_t Bit1 = 14 | 0x8000; // ~0.9us
+    const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
+    const static uint16_t CountReset = 240; // 300 us / 1.25us
+    const static PinStatus IdleLevel = LOW;
+};
+
 class NeoNrf52xPwmSpeedWs2812x
 {
 public:
@@ -42,6 +55,28 @@ public:
     const static nrf_pwm_values_common_t Bit1 = 13 | 0x8000; // ~0.8us
     const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
     const static uint32_t CountReset = 240 ; // 300us / 1.25us pulse width
+    const static PinStatus IdleLevel = LOW;
+};
+
+class NeoNrf52xPwmSpeedSk6812
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 6 | 0x8000; // ~0.4us
+    const static nrf_pwm_values_common_t Bit1 = 13 | 0x8000; // ~0.8us
+    const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
+    const static uint32_t CountReset = 64; // 80us / 1.25us pulse width
+    const static PinStatus IdleLevel = LOW;
+};
+
+class NeoNrf52xPwmSpeed800Kbps
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 6 | 0x8000; // ~0.4us
+    const static nrf_pwm_values_common_t Bit1 = 13 | 0x8000; // ~0.8us
+    const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
+    const static uint32_t CountReset = 40; // 50us / 1.25us pulse width
     const static PinStatus IdleLevel = LOW;
 };
 
@@ -56,17 +91,27 @@ public:
     const static PinStatus IdleLevel = LOW;
 };
 
-class NeoNrf52xPwmSpeedWs2811
+class NeoNrf52xPwmSpeedApa106
 {
 public:
-    const static uint32_t CountTop = 20UL; // 1.25us
-    const static nrf_pwm_values_common_t Bit0 = 5 | 0x8000; // ~0.3us
-    const static nrf_pwm_values_common_t Bit1 = 14 | 0x8000; // ~0.9us
+    const static uint32_t CountTop = 26UL; // 1.65us
+    const static nrf_pwm_values_common_t Bit0 = 6 | 0x8000; // ~0.4us
+    const static nrf_pwm_values_common_t Bit1 = 20 | 0x8000; // ~1.25us
     const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
-    const static uint16_t CountReset = 40; // 50 us / 1.25us
+    const static uint32_t CountReset = 40; // 50us / 1.25us pulse width
     const static PinStatus IdleLevel = LOW;
 };
 
+class NeoNrf52xPwmInvertedSpeedWs2811
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 5; // ~0.3us
+    const static nrf_pwm_values_common_t Bit1 = 14; // ~0.9us
+    const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
+    const static uint16_t CountReset = 240; // 300 us / 1.25us
+    const static PinStatus IdleLevel = HIGH;
+};
 
 class NeoNrf52xPwmInvertedSpeedWs2812x
 {
@@ -75,7 +120,51 @@ public:
     const static nrf_pwm_values_common_t Bit0 = 6; // ~0.4us
     const static nrf_pwm_values_common_t Bit1 = 13; // ~0.8us
     const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
-    const static uint32_t CountReset = 240; // 300us /1.25us
+    const static uint32_t CountReset = 240; // 300us / 1.25us pulse width
+    const static PinStatus IdleLevel = HIGH;
+};
+
+class NeoNrf52xPwmInvertedSpeedSk6812
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 6; // ~0.4us
+    const static nrf_pwm_values_common_t Bit1 = 13; // ~0.8us
+    const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
+    const static uint32_t CountReset = 64; // 80us / 1.25us pulse width
+    const static PinStatus IdleLevel = HIGH;
+};
+
+class NeoNrf52xPwmInvertedSpeed800Kbps
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 6; // ~0.4us
+    const static nrf_pwm_values_common_t Bit1 = 13; // ~0.8us
+    const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
+    const static uint32_t CountReset = 40; // 50us / 1.25us pulse width
+    const static PinStatus IdleLevel = HIGH;
+};
+
+class NeoNrf52xPwmInvertedSpeed400Kbps
+{
+public:
+    const static uint32_t CountTop = 40UL; // 2.5us
+    const static nrf_pwm_values_common_t Bit0 = 13; // ~0.8us
+    const static nrf_pwm_values_common_t Bit1 = 26; // ~1.6us
+    const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
+    const static uint16_t CountReset = 20; // 50 us / 2.5us
+    const static PinStatus IdleLevel = HIGH;
+};
+
+class NeoNrf52xPwmInvertedSpeedApa106
+{
+public:
+    const static uint32_t CountTop = 26UL; // 1.65us
+    const static nrf_pwm_values_common_t Bit0 = 6; // ~0.4us
+    const static nrf_pwm_values_common_t Bit1 = 20; // ~1.25us
+    const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
+    const static uint32_t CountReset = 40; // 50us / 1.25us pulse width
     const static PinStatus IdleLevel = HIGH;
 };
 
