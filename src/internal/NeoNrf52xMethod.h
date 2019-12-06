@@ -38,8 +38,9 @@ class NeoNrf52xPwmSpeedWs2812x
 {
 public:
     const static uint32_t CountTop = 20UL; // 1.25us
-    const static nrf_pwm_values_common_t Bit0 = 6UL | 0x8000; // ~0.4us
-    const static nrf_pwm_values_common_t Bit1 = 13UL | 0x8000; // ~0.8us
+    const static nrf_pwm_values_common_t Bit0 = 6 | 0x8000; // ~0.4us
+    const static nrf_pwm_values_common_t Bit1 = 13 | 0x8000; // ~0.8us
+    const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
     const static uint32_t CountReset = 240 ; // 300us / 1.25us pulse width
     const static PinStatus IdleLevel = LOW;
 };
@@ -48,8 +49,9 @@ class NeoNrf52xPwmSpeed400Kbps
 {
 public:
     const static uint32_t CountTop = 40UL; // 2.5us
-    const static nrf_pwm_values_common_t Bit0 = 13UL | 0x8000; // ~0.8us
-    const static nrf_pwm_values_common_t Bit1 = 26UL | 0x8000; // ~1.6us
+    const static nrf_pwm_values_common_t Bit0 = 13 | 0x8000; // ~0.8us
+    const static nrf_pwm_values_common_t Bit1 = 26 | 0x8000; // ~1.6us
+    const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
     const static uint16_t CountReset = 20; // 50 us / 2.5us
     const static PinStatus IdleLevel = LOW;
 };
@@ -58,8 +60,9 @@ class NeoNrf52xPwmSpeedWs2811
 {
 public:
     const static uint32_t CountTop = 20UL; // 1.25us
-    const static nrf_pwm_values_common_t Bit0 = 5UL | 0x8000; // ~0.3us
-    const static nrf_pwm_values_common_t Bit1 = 14UL | 0x8000; // ~0.9us
+    const static nrf_pwm_values_common_t Bit0 = 5 | 0x8000; // ~0.3us
+    const static nrf_pwm_values_common_t Bit1 = 14 | 0x8000; // ~0.9us
+    const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
     const static uint16_t CountReset = 40; // 50 us / 1.25us
     const static PinStatus IdleLevel = LOW;
 };
@@ -69,8 +72,9 @@ class NeoNrf52xPwmInvertedSpeedWs2812x
 {
 public:
     const static uint32_t CountTop = 20UL; // 1.25us
-    const static nrf_pwm_values_common_t Bit0 = 6UL; // ~0.4us
-    const static nrf_pwm_values_common_t Bit1 = 13UL; // ~0.8us
+    const static nrf_pwm_values_common_t Bit0 = 6; // ~0.4us
+    const static nrf_pwm_values_common_t Bit1 = 13; // ~0.8us
+    const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
     const static uint32_t CountReset = 4800; // 300us
     const static PinStatus IdleLevel = HIGH;
 };
@@ -258,16 +262,15 @@ private:
             }
         }
 
-        // fill the rest with zero counting values to provide 
-        // the required repeated idle value
-        const uint16_t ResetCount = ((T_SPEED::IdleLevel) ? 0x0000 : 0x8000);
+        // fill the rest with BitReset as it will get repeated when delaying or
+        // at the end before being stopped
         while (pDma < pDmaEnd)
         {
-            *(pDma++) = ResetCount;
+            *(pDma++) = T_SPEED::BitReset;
         }
 
-        _dmaReset[0] = ResetCount;
-        _dmaReset[1] = ResetCount;
+        _dmaReset[0] = T_SPEED::BitReset;
+        _dmaReset[1] = T_SPEED::BitReset;
     }
 
     void dmaStart()
