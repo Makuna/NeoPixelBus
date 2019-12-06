@@ -32,7 +32,6 @@ License along with NeoPixel.  If not, see
 #if defined(ARDUINO_ARCH_NRF52840)
 
 const uint16_t c_dmaBytesPerPixelByte = 8 * sizeof(nrf_pwm_values_common_t); // bits * bytes to represent pulse
-const uint16_t c_dmaBytesForReset = 2 * sizeof(nrf_pwm_values_common_t); // two pulses to extend reset
 
 // count 1 = 0.0625us, so max count (32768) is 2048us
 class NeoNrf52xPwmSpeedWs2812x
@@ -41,7 +40,7 @@ public:
     const static uint32_t CountTop = 20UL; // 1.25us
     const static nrf_pwm_values_common_t Bit0 = 6UL | 0x8000; // ~0.4us
     const static nrf_pwm_values_common_t Bit1 = 13UL | 0x8000; // ~0.8us
-    const static uint32_t CountReset = 4800; // 300us
+    const static uint32_t CountReset = 240 ; // 300us / 1.25us pulse width
     const static PinStatus IdleLevel = LOW;
 };
 
@@ -51,7 +50,7 @@ public:
     const static uint32_t CountTop = 40UL; // 2.5us
     const static nrf_pwm_values_common_t Bit0 = 13UL | 0x8000; // ~0.8us
     const static nrf_pwm_values_common_t Bit1 = 26UL | 0x8000; // ~1.6us
-    const static uint16_t CountReset = 800; // 50 us
+    const static uint16_t CountReset = 20; // 50 us / 2.5us
     const static PinStatus IdleLevel = LOW;
 };
 
@@ -61,7 +60,7 @@ public:
     const static uint32_t CountTop = 20UL; // 1.25us
     const static nrf_pwm_values_common_t Bit0 = 5UL | 0x8000; // ~0.3us
     const static nrf_pwm_values_common_t Bit1 = 14UL | 0x8000; // ~0.9us
-    const static uint16_t CountReset = 800; // 50 us
+    const static uint16_t CountReset = 40; // 50 us / 1.25us
     const static PinStatus IdleLevel = LOW;
 };
 
@@ -126,13 +125,10 @@ public:
         _pixels = static_cast<uint8_t*>(malloc(_pixelsSize));
         memset(_pixels, 0, _pixelsSize);
 
-        // resetSize is the number of nrf_pwm_values_common_t needed to
-        // represet the T_SPEED::CountReset
-        size_t resetSize = (T_SPEED::CountReset / T_SPEED::CountTop - 2) * sizeof(nrf_pwm_values_common_t);
-
-        _dmaBufferSize = c_dmaBytesPerPixelByte * _pixelsSize + resetSize;
-        _dmaBuffer = static_cast<uint8_t*>(malloc(_dmaBufferSize));
-        memset(_dmaBuffer, 0, _dmaBufferSize);
+        _dmaBufferSize = c_dmaBytesPerPixelByte * _pixelsSize + 2 * sizeof(nrf_pwm_values_common_t);
+        _dmaBuffer = static_cast<nrf_pwm_values_common_t*>(malloc(_dmaBufferSize));
+        
+        _dmaReset = static_cast<nrf_pwm_values_common_t*>(malloc(2 * sizeof(nrf_pwm_values_common_t)));
     }
 
     ~NeoNrf52xMethodBase()
@@ -148,11 +144,12 @@ public:
 
         free(_pixels);
         free(_dmaBuffer);
+        free(_dmaReset);
     }
 
     bool IsReadyToUpdate() const
     {
-        return (T_BUS::Pwm()->EVENTS_SEQEND[0]);
+        return (T_BUS::Pwm()->EVENTS_LOOPSDONE);
     }
 
     void Initialize()
@@ -164,9 +161,7 @@ public:
         // must force a first update so the EVENTS_SEQEND gets set as
         // you can't set it manually
         FillBuffer();
-
-        // start the data send
-        T_BUS::Pwm()->TASKS_SEQSTART[0] = 1;
+        dmaStart();
     }
 
     void Update(bool)
@@ -183,10 +178,7 @@ public:
         }
 
         FillBuffer();
-        
-        // start the data send
-        T_BUS::Pwm()->EVENTS_SEQEND[0] = 0;
-        T_BUS::Pwm()->TASKS_SEQSTART[0] = 1;
+        dmaStart();
     }
 
     uint8_t* getPixels() const
@@ -204,40 +196,57 @@ private:
 
     size_t   _pixelsSize;    // Size of '_pixels' buffer below
     uint8_t* _pixels;        // Holds LED color values
+
     size_t   _dmaBufferSize; // total size of _dmaBuffer
-    uint8_t* _dmaBuffer;     // Holds pixel data in native format for PWM hardware
+    nrf_pwm_values_common_t* _dmaBuffer;     // Holds pixel data in native format for PWM hardware
+
+    nrf_pwm_values_common_t* _dmaReset;
+    
 
     void dmaInit()
     {
+        T_BUS::Pwm()->PSEL.OUT[0] = digitalPinToPinName(_pin);
+        T_BUS::Pwm()->PSEL.OUT[1] = NC;
+        T_BUS::Pwm()->PSEL.OUT[2] = NC;
+        T_BUS::Pwm()->PSEL.OUT[3] = NC;
+
+        T_BUS::Pwm()->ENABLE = 1;
         T_BUS::Pwm()->MODE = NRF_PWM_MODE_UP;
         T_BUS::Pwm()->PRESCALER = NRF_PWM_CLK_16MHz;
         T_BUS::Pwm()->COUNTERTOP = T_SPEED::CountTop;
-        T_BUS::Pwm()->LOOP = 0; // single fire
+        T_BUS::Pwm()->LOOP = 1; // single fire
         nrf_pwm_decoder_set(T_BUS::Pwm(), NRF_PWM_LOAD_COMMON, NRF_PWM_STEP_AUTO);
 
-        // T_BUS::Pwm()->EVENTS_SEQEND[0] = 0; 
-        // nrf_pwm_shorts_enable(T_BUS::Pwm(), NRF_PWM_SHORT_LOOPSDONE_STOP_MASK);
-
         T_BUS::Pwm()->SEQ[0].PTR = reinterpret_cast<uint32_t>(_dmaBuffer);
-        T_BUS::Pwm()->SEQ[0].CNT = _dmaBufferSize / sizeof(uint16_t);
+        T_BUS::Pwm()->SEQ[0].CNT = _dmaBufferSize / sizeof(nrf_pwm_values_common_t);
         T_BUS::Pwm()->SEQ[0].REFRESH = 0; // ignored
-        T_BUS::Pwm()->SEQ[0].ENDDELAY = 0; // ignored !
-        T_BUS::Pwm()->PSEL.OUT[0] = digitalPinToPinName(_pin);
-        T_BUS::Pwm()->ENABLE = 1;
+        T_BUS::Pwm()->SEQ[0].ENDDELAY = T_SPEED::CountReset; // ignored still?
+
+        T_BUS::Pwm()->SEQ[1].PTR = reinterpret_cast<uint32_t>(_dmaReset);
+        T_BUS::Pwm()->SEQ[1].CNT = 2;
+        T_BUS::Pwm()->SEQ[1].REFRESH = 0; // ignored
+        T_BUS::Pwm()->SEQ[1].ENDDELAY = 0; // ignored
+
+        T_BUS::Pwm()->SHORTS = 0;
+        T_BUS::Pwm()->INTEN = 0;
+        T_BUS::Pwm()->EVENTS_LOOPSDONE = 0;
+        T_BUS::Pwm()->EVENTS_SEQEND[0] = 0;
+        T_BUS::Pwm()->EVENTS_SEQEND[1] = 0;
+        T_BUS::Pwm()->EVENTS_STOPPED = 0;
     }
 
     void dmaDeinit()
     {
-        T_BUS::Pwm()->EVENTS_SEQEND[0] = 0;
         T_BUS::Pwm()->ENABLE = 0;
         T_BUS::Pwm()->PSEL.OUT[0] = NC;
     }
 
     void FillBuffer()
     {
-        nrf_pwm_values_common_t* pDma = reinterpret_cast<nrf_pwm_values_common_t*>(_dmaBuffer);
-        nrf_pwm_values_common_t* pDmaEnd = reinterpret_cast<nrf_pwm_values_common_t*>(_dmaBuffer + _dmaBufferSize);
+        nrf_pwm_values_common_t* pDma = _dmaBuffer;
+        nrf_pwm_values_common_t* pDmaEnd = _dmaBuffer + (_dmaBufferSize / sizeof(nrf_pwm_values_common_t));
         uint8_t* pPixelsEnd = _pixels + _pixelsSize;
+
         for (uint8_t* pPixel = _pixels; pPixel < pPixelsEnd; pPixel++)
         {
             uint8_t data = *pPixel;
@@ -249,13 +258,25 @@ private:
             }
         }
 
-        // fill the rest with max counting values to provide 
-        // the required reset time
-        const uint16_t ResetCount = T_SPEED::CountTop | ((T_SPEED::IdleLevel) ? 0x8000 : 0);
+        // fill the rest with zero counting values to provide 
+        // the required repeated idle value
+        const uint16_t ResetCount = ((T_SPEED::IdleLevel) ? 0x0000 : 0x8000);
         while (pDma < pDmaEnd)
         {
-            *(pDma++) = ResetCount; 
+            *(pDma++) = ResetCount;
         }
+
+        _dmaReset[0] = ResetCount;
+        _dmaReset[1] = ResetCount;
+    }
+
+    void dmaStart()
+    {
+        T_BUS::Pwm()->EVENTS_LOOPSDONE = 0;
+        T_BUS::Pwm()->EVENTS_SEQEND[0] = 0;
+        T_BUS::Pwm()->EVENTS_SEQEND[1] = 0;
+        T_BUS::Pwm()->EVENTS_STOPPED = 0;
+        T_BUS::Pwm()->TASKS_SEQSTART[0] = 1;
     }
 };
 
