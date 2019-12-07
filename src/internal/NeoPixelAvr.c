@@ -34,7 +34,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 // must also check for arm due to Teensy incorrectly having ARDUINO_ARCH_AVR set
-#if defined(ARDUINO_ARCH_AVR) && !defined(__arm__)
+#if (defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)) && !defined(__arm__)
 
 #include <Arduino.h>
 
