@@ -26,7 +26,7 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-#ifdef ARDUINO_ARCH_AVR
+#if defined(NEOPIXEBUS_NO_STL)
 
 typedef float(*AnimEaseFunction)(float unitValue);
 

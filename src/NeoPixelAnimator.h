@@ -43,7 +43,7 @@ struct AnimationParam
     AnimationState state;
 };
 
-#ifdef ARDUINO_ARCH_AVR
+#if defined(NEOPIXEBUS_NO_STL)
 
 typedef void(*AnimUpdateCallback)(const AnimationParam& param);
 

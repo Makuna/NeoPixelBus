@@ -27,6 +27,14 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
+// some platforms do not come with STL or properly defined one, specifically functional
+// if you see...
+// undefined reference to `std::__throw_bad_function_call()'
+// ...then that platform should be added here so NEOPIXEBUS_NO_STL gets defined
+#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR) || defined(STM32L432xx) || defined(STM32L476xx) || defined(ARDUINO_ARCH_SAM)
+#define NEOPIXEBUS_NO_STL 1
+#endif
+
 // some platforms do not define this standard progmem type for some reason
 //
 #ifndef PGM_VOID_P
@@ -89,7 +97,7 @@ License along with NeoPixel.  If not, see
 
 #include "internal/NeoArmMethod.h"
 
-#elif defined(ARDUINO_ARCH_AVR)
+#elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 
 #include "internal/NeoAvrMethod.h"
 
