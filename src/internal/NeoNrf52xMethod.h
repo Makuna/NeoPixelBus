@@ -318,7 +318,7 @@ private:
         T_BUS::Pwm()->SEQ[1].REFRESH = 0; // ignored
         T_BUS::Pwm()->SEQ[1].ENDDELAY = 0; // ignored
 
-        // stop when the look finishes
+        // stop when the loop finishes
         T_BUS::Pwm()->SHORTS = PWM_SHORTS_LOOPSDONE_STOP_Msk;
         T_BUS::Pwm()->INTEN = 0;
 
