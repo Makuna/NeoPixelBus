@@ -46,10 +46,12 @@ public:
         memset(_pixels, 0, _sizePixels);
     }
 
+#if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
 	DotStarMethodBase(uint16_t pixelCount, size_t elementSize) :
 		DotStarMethodBase(SCK, MOSI, pixelCount, elementSize)
 	{
 	}
+#endif
 
     ~DotStarMethodBase()
     {
@@ -115,7 +117,7 @@ private:
 
 typedef DotStarMethodBase<TwoWireBitBangImple> DotStarMethod;
 
-#if !defined(__AVR_ATtiny85__)
+#if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
 #include "TwoWireSpiImple.h"
 typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> DotStarSpi20MhzMethod;
 typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> DotStarSpi10MhzMethod;
