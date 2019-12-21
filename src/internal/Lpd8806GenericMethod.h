@@ -46,10 +46,13 @@ public:
         memset(_pixels, 0, _sizePixels);
     }
 
+#if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
 	Lpd8806MethodBase(uint16_t pixelCount, size_t elementSize) :
 		Lpd8806MethodBase(SCK, MOSI, pixelCount, elementSize)
 	{
 	}
+#endif
+
 
     ~Lpd8806MethodBase()
     {
@@ -115,7 +118,7 @@ private:
 
 typedef Lpd8806MethodBase<TwoWireBitBangImple> Lpd8806Method;
 
-#if !defined(__AVR_ATtiny85__)
+#if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
 #include "TwoWireSpiImple.h"
 typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> Lpd8806Spi20MhzMethod;
 typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> Lpd8806Spi10MhzMethod;
