@@ -78,6 +78,7 @@ License along with NeoPixel.  If not, see
 
 #include "internal/DotStarGenericMethod.h"
 #include "internal/Lpd8806GenericMethod.h"
+#include "internal/Ws2801GenericMethod.h"
 
 #if defined(ARDUINO_ARCH_ESP8266)
 
