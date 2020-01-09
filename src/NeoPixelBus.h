@@ -120,21 +120,21 @@ public:
     NeoPixelBus(uint16_t countPixels, uint8_t pin) :
         _countPixels(countPixels),
         _state(0),
-        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize)
+        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
     {
     }
 
     NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
         _countPixels(countPixels),
         _state(0),
-        _method(pinClock, pinData, countPixels, T_COLOR_FEATURE::PixelSize)
+        _method(pinClock, pinData, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
     {
     }
 
     NeoPixelBus(uint16_t countPixels) :
         _countPixels(countPixels),
         _state(0),
-        _method(countPixels, T_COLOR_FEATURE::PixelSize)
+        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
     {
     }
 
@@ -145,7 +145,7 @@ public:
     operator NeoBufferContext<T_COLOR_FEATURE>()
     {
         Dirty(); // we assume you are playing with bits
-        return NeoBufferContext<T_COLOR_FEATURE>(_method.getPixels(), _method.getPixelsSize());
+        return NeoBufferContext<T_COLOR_FEATURE>(_pixels(), _method.getDataSize());
     }
 
     void Begin()
@@ -195,12 +195,12 @@ public:
 
     uint8_t* Pixels() 
     {
-        return _method.getPixels();
+        return _pixels();
     };
 
     size_t PixelsSize() const
     {
-        return _method.getPixelsSize();
+        return _method.getDataSize() - T_COLOR_FEATURE::SettingsSize;
     };
 
     size_t PixelSize() const
@@ -217,7 +217,7 @@ public:
     {
         if (indexPixel < _countPixels)
         {
-            T_COLOR_FEATURE::applyPixelColor(_method.getPixels(), indexPixel, color);
+            T_COLOR_FEATURE::applyPixelColor(_pixels(), indexPixel, color);
             Dirty();
         }
     };
@@ -226,7 +226,7 @@ public:
     {
         if (indexPixel < _countPixels)
         {
-            return T_COLOR_FEATURE::retrievePixelColor(_method.getPixels(), indexPixel);
+            return T_COLOR_FEATURE::retrievePixelColor(_pixels(), indexPixel);
         }
         else
         {
@@ -239,7 +239,7 @@ public:
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
     {
         uint8_t temp[T_COLOR_FEATURE::PixelSize]; 
-        uint8_t* pixels = _method.getPixels();
+        uint8_t* pixels = _pixels();
 
         T_COLOR_FEATURE::applyPixelColor(temp, 0, color);
 
@@ -255,7 +255,7 @@ public:
             first <= last)
         {
             uint8_t temp[T_COLOR_FEATURE::PixelSize];
-            uint8_t* pixels = _method.getPixels();
+            uint8_t* pixels = _pixels();
             uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, first);
 
             T_COLOR_FEATURE::applyPixelColor(temp, 0, color);
@@ -354,6 +354,12 @@ public:
         SetPixelColor(indexPixelOne, colorTwo);
         SetPixelColor(indexPixelTwo, colorOne);
     };
+
+    void SetPixelSettings(typename T_COLOR_FEATURE::SettingsObject settings)
+    {
+        T_METHOD::setPixelSettings(settings);
+        Dirty();
+    };
  
 protected:
     const uint16_t _countPixels; // Number of RGB LEDs in strip
@@ -361,11 +367,17 @@ protected:
     uint8_t _state;     // internal state
     T_METHOD _method;
 
+    uint8_t* _pixels()
+    {
+        // pixels are after the settings
+        return (_method.getData() + T_COLOR_FEATURE::SettingsSize);
+    }
+
     void _rotateLeft(uint16_t rotationCount, uint16_t first, uint16_t last)
     {
         // store in temp
         uint8_t temp[rotationCount * T_COLOR_FEATURE::PixelSize];
-        uint8_t* pixels = _method.getPixels();
+        uint8_t* pixels = _pixels();
 
         uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, first);
 
@@ -386,7 +398,7 @@ protected:
         uint16_t front = first + shiftCount;
         uint16_t count = last - front + 1;
 
-        uint8_t* pixels = _method.getPixels();
+        uint8_t* pixels = _pixels();
         uint8_t* pFirst = T_COLOR_FEATURE::getPixelAddress(pixels, first);
         uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, front);
 
@@ -399,7 +411,7 @@ protected:
     {
         // store in temp
         uint8_t temp[rotationCount * T_COLOR_FEATURE::PixelSize];
-        uint8_t* pixels = _method.getPixels();
+        uint8_t* pixels = _pixels();
 
         uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, last - (rotationCount - 1));
 
@@ -420,7 +432,7 @@ protected:
         uint16_t front = first + shiftCount;
         uint16_t count = last - front + 1;
 
-        uint8_t* pixels = _method.getPixels();
+        uint8_t* pixels = _pixels();
         uint8_t* pFirst = T_COLOR_FEATURE::getPixelAddress(pixels, first);
         uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, front);
 

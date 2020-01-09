@@ -55,10 +55,10 @@ License along with NeoPixel.  If not, see
 #if (F_CPU >= 7400000UL) && (F_CPU <= 9500000UL)  // 8Mhz CPU
 
 #ifdef PORTD // PORTD isn't present on ATtiny85, etc.
-void send_pixels_8mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pinMask)
+void send_data_8mhz_800_PortD(uint8_t* data, size_t sizeData, uint8_t pinMask)
 {
-    volatile size_t i = sizePixels; // Loop counter
-    volatile uint8_t* ptr = pixels; // Pointer to next byte
+    volatile size_t i = sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
@@ -180,10 +180,10 @@ void send_pixels_8mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pinM
 }
 #endif
 
-void send_pixels_8mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pinMask)
+void send_data_8mhz_800_PortB(uint8_t* data, size_t sizeData, uint8_t pinMask)
 {
-    volatile size_t i = sizePixels; // Loop counter
-    volatile uint8_t* ptr = pixels; // Pointer to next byte
+    volatile size_t i = sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
@@ -271,10 +271,10 @@ void send_pixels_8mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pinM
         [lo] "r" (lo));
 }
 
-void send_pixels_8mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask)
+void send_data_8mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
 {
-    volatile size_t i = sizePixels; // Loop counter
-    volatile uint8_t* ptr = pixels; // Pointer to next byte
+    volatile size_t i = sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
@@ -331,10 +331,10 @@ void send_pixels_8mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* 
 #elif (F_CPU >= 11100000UL) && (F_CPU <= 14300000UL)  // 12Mhz CPU
 
 #ifdef PORTD // PORTD isn't present on ATtiny85, etc.
-void send_pixels_12mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pinMask)
+void send_data_12mhz_800_PortD(uint8_t* data, size_t sizeData, uint8_t pinMask)
 {
-    volatile size_t i = sizePixels; // Loop counter
-    volatile uint8_t* ptr = pixels; // Pointer to next byte
+    volatile size_t i = sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
@@ -404,10 +404,10 @@ void send_pixels_12mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pin
 }
 #endif
 
-void send_pixels_12mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pinMask)
+void send_data_12mhz_800_PortB(uint8_t* data, size_t sizeData, uint8_t pinMask)
 {
-    volatile uint16_t i = (uint16_t)sizePixels; // Loop counter
-    volatile uint8_t* ptr = pixels; // Pointer to next byte
+    volatile uint16_t i = (uint16_t)sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
@@ -466,10 +466,10 @@ void send_pixels_12mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pin
         [lo] "r" (lo));
 }
 
-void send_pixels_12mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask)
+void send_data_12mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
 {
-    volatile uint16_t i = (uint16_t)sizePixels; // Loop counter
-    volatile uint8_t* ptr = pixels; // Pointer to next byte
+    volatile uint16_t i = (uint16_t)sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
@@ -522,10 +522,10 @@ void send_pixels_12mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t*
 
 #elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000L)  // 16Mhz CPU
 
-void send_pixels_16mhz_800(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask)
+void send_data_16mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
 {
-    volatile uint16_t i = (uint16_t)sizePixels; // Loop counter
-    volatile uint8_t* ptr = pixels; // Pointer to next byte
+    volatile uint16_t i = (uint16_t)sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
@@ -577,10 +577,10 @@ void send_pixels_16mhz_800(uint8_t* pixels, size_t sizePixels, volatile uint8_t*
         [lo]     "r" (lo));
 }
 
-void send_pixels_16mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask)
+void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
 {
-    volatile size_t i = sizePixels; // Loop counter
-    volatile uint8_t* ptr = pixels; // Pointer to next byte
+    volatile size_t i = sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
     volatile uint8_t b = *ptr++;    // Current byte value
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
