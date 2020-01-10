@@ -117,6 +117,15 @@ public:
     const static uint16_t RmtDurationReset = FromNs(80000); // 80us
 };
 
+// normal is inverted signal
+class NeoEsp32RmtSpeedTm1814 : public NeoEsp32RmtInvertedSpeedBase
+{
+public:
+    const static uint32_t RmtBit0 = Item32Val(360, 890);
+    const static uint32_t RmtBit1 = Item32Val(720, 530);
+    const static uint16_t RmtDurationReset = FromNs(200000); // 200us
+};
+
 class NeoEsp32RmtSpeed800Kbps : public NeoEsp32RmtSpeedBase
 {
 public:
@@ -163,6 +172,15 @@ public:
 	const static uint32_t RmtBit0 = Item32Val(400, 850);
 	const static uint32_t RmtBit1 = Item32Val(800, 450);
 	const static uint16_t RmtDurationReset = FromNs(80000); // 80us
+};
+
+// normal is inverted signal
+class NeoEsp32RmtInvertedSpeedTm1814 : public NeoEsp32RmtSpeedBase
+{
+public:
+    const static uint32_t RmtBit0 = Item32Val(360, 890);
+    const static uint32_t RmtBit1 = Item32Val(720, 530);
+    const static uint16_t RmtDurationReset = FromNs(200000); // 200us
 };
 
 class NeoEsp32RmtInvertedSpeed800Kbps : public NeoEsp32RmtInvertedSpeedBase
@@ -240,15 +258,14 @@ public:
 template<typename T_SPEED, typename T_CHANNEL> class NeoEsp32RmtMethodBase
 {
 public:
-    NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize)  :
+    NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
+        _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        _pixelsSize = pixelCount * elementSize;
+        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
+        memset(_dataEditing, 0x00, _sizeData);
 
-        _pixelsEditing = static_cast<uint8_t*>(malloc(_pixelsSize));
-        memset(_pixelsEditing, 0x00, _pixelsSize);
-
-        _pixelsSending = static_cast<uint8_t*>(malloc(_pixelsSize));
+        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
         // no need to initialize it, it gets overwritten on every send
     }
 
@@ -260,8 +277,8 @@ public:
 
         ESP_ERROR_CHECK(rmt_driver_uninstall(T_CHANNEL::RmtChannelNumber));
 
-        free(_pixelsEditing);
-        free(_pixelsSending);
+        free(_dataEditing);
+        free(_dataSending);
     }
 
 
@@ -301,37 +318,38 @@ public:
         if (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 10000 / portTICK_PERIOD_MS)))
         {
             // now start the RMT transmit with the editing buffer before we swap
-            ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_write_sample(T_CHANNEL::RmtChannelNumber, _pixelsEditing, _pixelsSize, false));
+            ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_write_sample(T_CHANNEL::RmtChannelNumber, _dataEditing, _sizeData, false));
 
             if (maintainBufferConsistency)
             {
                 // copy editing to sending,
                 // this maintains the contract that "colors present before will
                 // be the same after", otherwise GetPixelColor will be inconsistent
-                memcpy(_pixelsSending, _pixelsEditing, _pixelsSize);
+                memcpy(_dataSending, _dataEditing, _sizeData);
             }
 
             // swap so the user can modify without affecting the async operation
-            std::swap(_pixelsSending, _pixelsEditing);
+            std::swap(_dataSending, _dataEditing);
         }
     }
 
-    uint8_t* getPixels() const
+    uint8_t* getData() const
     {
-        return _pixelsEditing;
+        return _dataEditing;
     };
 
-    size_t getPixelsSize() const
+    size_t getDataSize() const
     {
-        return _pixelsSize;
+        return _sizeData;
     }
 
 private:
+    const size_t  _sizeData;      // Size of '_data*' buffers 
     const uint8_t _pin;            // output pin number
 
-    size_t    _pixelsSize;      // Size of '_pixels' buffer 
-    uint8_t*  _pixelsEditing;   // Holds LED color values exposed for get and set
-    uint8_t*  _pixelsSending;   // Holds LED color values used to async send using RMT
+    // Holds data stream which include LED color values and other settings as needed
+    uint8_t*  _dataEditing;   // exposed for get and set
+    uint8_t*  _dataSending;   // used for async send using RMT
 
 
     // stranslate NeoPixelBuffer into RMT buffer

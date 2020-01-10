@@ -55,6 +55,7 @@ License along with NeoPixel.  If not, see
 #include "internal/RgbwColor.h"
 #include "internal/SegmentDigit.h"
 
+#include "internal/NeoSettings.h"
 #include "internal/NeoColorFeatures.h"
 #include "internal/NeoTm1814ColorFeatures.h"
 #include "internal/DotStarColorFeatures.h"
@@ -362,6 +363,19 @@ public:
         Dirty();
     };
  
+    uint32_t CalcTotalMilliAmps(const typename T_COLOR_FEATURE::ColorObject::CurrentSettings& settings)
+    {
+        uint32_t total = 0; // in 1/10th milliamps
+
+        for (uint16_t index = 0; index < _countPixels; index++)
+        {
+            auto color = GetPixelColor(index);
+            total += color.CalcTotalOneTenthMilliAmps(settings);
+        }
+
+        return total / 10; // return millamps
+    }
+
 protected:
     const uint16_t _countPixels; // Number of RGB LEDs in strip
 
@@ -370,8 +384,8 @@ protected:
 
     uint8_t* _pixels()
     {
-        // pixels are after the settings
-        return (_method.getData() + T_COLOR_FEATURE::SettingsSize);
+        // get pixels data within the data stream
+        return T_COLOR_FEATURE::pixels(_method.getData());
     }
 
     void _rotateLeft(uint16_t rotationCount, uint16_t first, uint16_t last)

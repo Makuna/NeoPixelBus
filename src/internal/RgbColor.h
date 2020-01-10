@@ -145,6 +145,17 @@ struct RgbColor
         float x, 
         float y);
 
+    uint32_t CalcTotalOneTenthMilliAmps(const CurrentSettings& settings)
+    {
+        uint32_t total = 0;
+
+        total += R * settings.RedCurrent / 255;
+        total += G * settings.GreenCurrent / 255;
+        total += B * settings.BlueCurrent / 255;
+
+        return total;
+    }
+
     // ------------------------------------------------------------------------
     // Red, Green, Blue color members (0-255) where 
     // (0,0,0) is black and (255,255,255) is white
@@ -152,5 +163,7 @@ struct RgbColor
     uint8_t R;
     uint8_t G;
     uint8_t B;
+
+    typedef NeoRgbCurrentSettings CurrentSettings;
 };
 

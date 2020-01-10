@@ -26,21 +26,13 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class NeoTm1814Settings
+class NeoTm1814Settings : public NeoRgbwCurrentSettings
 {
 public:
     NeoTm1814Settings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white)  :
-        RedCurrent(red),
-        GreenCurrent(green),
-        BlueCurrent(blue),
-        WhiteCurrent(white)
+        NeoRgbwCurrentSettings(red, green, bllue, white)
     {
     }
-
-    uint16_t RedCurrent;   // in 1/10th ma
-    uint16_t GreenCurrent; // in 1/10th ma
-    uint16_t BlueCurrent;  // in 1/10th ma
-    uint16_t WhiteCurrent; // in 1/10th ma
 
     const static uint16_t MinCurrent = 65;
     const static uint16_t MaxCurrent = 380;
@@ -83,7 +75,13 @@ public:
             *pSet++ = ~(*pC1++);
         }
     }
+
+    static uint8_t* pixels(uint8_t* pData)
+    {
+        return pData + SettingsSize;
+    }
 };
+
 
 class NeoWrgbTm1814Feature : public Neo4ElementsTm1814Settings
 {

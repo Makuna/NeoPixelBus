@@ -147,9 +147,6 @@ public:
     typedef RgbwColor ColorObject;
 };
 
-class NeoNoSettings
-{
-};
 
 class Neo3ElementsNoSettings : public Neo3Elements
 {
@@ -159,6 +156,11 @@ public:
 
     static void applySettings(uint8_t* pData, const SettingsObject& settings)
     {
+    }
+
+    static uint8_t* pixels(uint8_t* pData)
+    {
+        return pData;
     }
 };
 
@@ -170,6 +172,11 @@ public:
 
     static void applySettings(uint8_t* pData, const SettingsObject& settings)
     {
+    }
+
+    static uint8_t* pixels(uint8_t* pData)
+    {
+        return pData;
     }
 };
 

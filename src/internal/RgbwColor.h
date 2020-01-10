@@ -173,6 +173,18 @@ struct RgbwColor
         float x, 
         float y);
 
+    uint16_t CalcTotalOneTenthMilliAmps(const CurrentSettings& settings)
+    {
+        uint16_t total = 0;
+
+        total += R * settings.RedCurrent / 255;
+        total += G * settings.GreenCurrent / 255;
+        total += B * settings.BlueCurrent / 255;
+        total += W * settings.WhiteCurrent / 255;
+
+        return total;
+    }
+
     // ------------------------------------------------------------------------
     // Red, Green, Blue, White color members (0-255) where 
     // (0,0,0,0) is black and (255,255,255, 0) and (0,0,0,255) is white
@@ -182,5 +194,7 @@ struct RgbwColor
     uint8_t G;
     uint8_t B;
     uint8_t W;
+
+    typedef NeoRgbwCurrentSettings CurrentSettings;
 };
 
