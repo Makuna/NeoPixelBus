@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixelFeatures provides feature classes to describe color order and
+NeoColorFeatures provides feature classes to describe color order and
 color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
@@ -156,6 +156,10 @@ class Neo3ElementsNoSettings : public Neo3Elements
 public:
     typedef NeoNoSettings SettingsObject;
     static const size_t SettingsSize = 0;
+
+    static void applySettings(uint8_t* pData, const SettingsObject& settings)
+    {
+    }
 };
 
 class Neo4ElementsNoSettings : public Neo4Elements
@@ -163,6 +167,10 @@ class Neo4ElementsNoSettings : public Neo4Elements
 public:
     typedef NeoNoSettings SettingsObject;
     static const size_t SettingsSize = 0;
+
+    static void applySettings(uint8_t* pData, const SettingsObject& settings)
+    {
+    }
 };
 
 class NeoGrbFeature : public Neo3ElementsNoSettings

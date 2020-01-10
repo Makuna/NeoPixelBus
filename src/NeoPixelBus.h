@@ -56,6 +56,7 @@ License along with NeoPixel.  If not, see
 #include "internal/SegmentDigit.h"
 
 #include "internal/NeoColorFeatures.h"
+#include "internal/NeoTm1814ColorFeatures.h"
 #include "internal/DotStarColorFeatures.h"
 #include "internal/Lpd8806ColorFeatures.h"
 #include "internal/NeoSegmentFeatures.h"
@@ -355,9 +356,9 @@ public:
         SetPixelColor(indexPixelTwo, colorOne);
     };
 
-    void SetPixelSettings(typename T_COLOR_FEATURE::SettingsObject settings)
+    void SetPixelSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
     {
-        T_METHOD::setPixelSettings(settings);
+        T_COLOR_FEATURE::applySettings(_method.getData(), settings);
         Dirty();
     };
  
