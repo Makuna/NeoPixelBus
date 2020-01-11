@@ -38,6 +38,8 @@ struct HsbColor;
 // ------------------------------------------------------------------------
 struct RgbwColor
 {
+    typedef NeoRgbwCurrentSettings SettingsObject;
+
     // ------------------------------------------------------------------------
     // Construct a RgbwColor using R, G, B, W values (0-255)
     // ------------------------------------------------------------------------
@@ -173,9 +175,9 @@ struct RgbwColor
         float x, 
         float y);
 
-    uint16_t CalcTotalOneTenthMilliAmps(const CurrentSettings& settings)
+    uint16_t CalcTotalOneTenthMilliAmps(const SettingsObject& settings)
     {
-        uint16_t total = 0;
+        auto total = 0;
 
         total += R * settings.RedCurrent / 255;
         total += G * settings.GreenCurrent / 255;
@@ -195,6 +197,6 @@ struct RgbwColor
     uint8_t B;
     uint8_t W;
 
-    typedef NeoRgbwCurrentSettings CurrentSettings;
+
 };
 

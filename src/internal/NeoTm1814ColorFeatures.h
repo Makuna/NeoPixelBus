@@ -30,7 +30,7 @@ class NeoTm1814Settings : public NeoRgbwCurrentSettings
 {
 public:
     NeoTm1814Settings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white)  :
-        NeoRgbwCurrentSettings(red, green, bllue, white)
+        NeoRgbwCurrentSettings(red, green, blue, white)
     {
     }
 

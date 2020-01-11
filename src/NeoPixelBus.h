@@ -48,6 +48,8 @@ License along with NeoPixel.  If not, see
 
 #include "internal/NeoHueBlend.h"
 
+#include "internal/NeoSettings.h"
+
 #include "internal/RgbColor.h"
 #include "internal/HslColor.h"
 #include "internal/HsbColor.h"
@@ -55,7 +57,6 @@ License along with NeoPixel.  If not, see
 #include "internal/RgbwColor.h"
 #include "internal/SegmentDigit.h"
 
-#include "internal/NeoSettings.h"
 #include "internal/NeoColorFeatures.h"
 #include "internal/NeoTm1814ColorFeatures.h"
 #include "internal/DotStarColorFeatures.h"
@@ -363,7 +364,7 @@ public:
         Dirty();
     };
  
-    uint32_t CalcTotalMilliAmps(const typename T_COLOR_FEATURE::ColorObject::CurrentSettings& settings)
+    uint32_t CalcTotalMilliAmps(const typename T_COLOR_FEATURE::ColorObject::SettingsObject& settings)
     {
         uint32_t total = 0; // in 1/10th milliamps
 
