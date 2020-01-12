@@ -26,6 +26,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #include <Arduino.h>
+#include "NeoSettings.h"
 
 struct HslColor;
 struct HsbColor;
@@ -38,6 +39,8 @@ struct HtmlColor;
 // ------------------------------------------------------------------------
 struct RgbColor
 {
+    typedef NeoRgbCurrentSettings SettingsObject;
+
     // ------------------------------------------------------------------------
     // Construct a RgbColor using R, G, B values (0-255)
     // ------------------------------------------------------------------------
@@ -144,6 +147,17 @@ struct RgbColor
         const RgbColor& c11, 
         float x, 
         float y);
+
+    uint32_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
+    {
+        auto total = 0;
+
+        total += R * settings.RedTenthMilliAmpere / 255;
+        total += G * settings.GreenTenthMilliAmpere / 255;
+        total += B * settings.BlueTenthMilliAmpere / 255;
+
+        return total;
+    }
 
     // ------------------------------------------------------------------------
     // Red, Green, Blue color members (0-255) where 

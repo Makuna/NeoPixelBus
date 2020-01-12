@@ -31,39 +31,39 @@ License along with NeoPixel.  If not, see
 
 extern "C"
 {
-    void send_pixels_8mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pinMask);
-    void send_pixels_8mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pinMask);
-    void send_pixels_8mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask);
-    void send_pixels_12mhz_800_PortD(uint8_t* pixels, size_t sizePixels, uint8_t pinMask);
-    void send_pixels_12mhz_800_PortB(uint8_t* pixels, size_t sizePixels, uint8_t pinMask);
-    void send_pixels_12mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask);
-    void send_pixels_16mhz_800(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask);
-    void send_pixels_16mhz_400(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask);
+    void send_data_8mhz_800_PortD(uint8_t* data, size_t sizeData, uint8_t pinMask);
+    void send_data_8mhz_800_PortB(uint8_t* data, size_t sizeData, uint8_t pinMask);
+    void send_data_8mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
+    void send_data_12mhz_800_PortD(uint8_t* data, size_t sizeData, uint8_t pinMask);
+    void send_data_12mhz_800_PortB(uint8_t* data, size_t sizeData, uint8_t pinMask);
+    void send_data_12mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
+    void send_data_16mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
+    void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
 }
 
 class NeoAvrSpeed800KbpsBase
 {
 public:
-    static void send_pixels(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask)
+    static void send_data(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
     {
 #if (F_CPU >= 7400000UL) && (F_CPU <= 9500000UL)  // 8Mhz CPU
 #ifdef PORTD // PORTD isn't present on ATtiny85, etc.
         if (port == &PORTD)
-            send_pixels_8mhz_800_PortD(pixels, sizePixels, pinMask);
+            send_data_8mhz_800_PortD(data, sizeData, pinMask);
         else if (port == &PORTB)
 #endif // PORTD
-            send_pixels_8mhz_800_PortB(pixels, sizePixels, pinMask);
+            send_data_8mhz_800_PortB(data, sizeData, pinMask);
 
 #elif (F_CPU >= 11100000UL) && (F_CPU <= 14300000UL)  // 12Mhz CPU
 #ifdef PORTD // PORTD 
         if (port == &PORTD)
-            send_pixels_12mhz_800_PortD(pixels, sizePixels, pinMask);
+            send_data_12mhz_800_PortD(data, sizeData, pinMask);
         else if (port == &PORTB)
 #endif // PORTD
-            send_pixels_12mhz_800_PortB(pixels, sizePixels, pinMask);
+            send_data_12mhz_800_PortB(data, sizeData, pinMask);
 
 #elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000L)  // 16Mhz CPU
-        send_pixels_16mhz_800(pixels, sizePixels, port, pinMask);
+        send_data_16mhz_800(data, sizeData, port, pinMask);
 #else
 #error "CPU SPEED NOT SUPPORTED"
 #endif
@@ -92,16 +92,16 @@ public:
 class NeoAvrSpeed400Kbps
 {
 public:
-    static void send_pixels(uint8_t* pixels, size_t sizePixels, volatile uint8_t* port, uint8_t pinMask)
+    static void send_data(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
     {
 #if (F_CPU >= 7400000UL) && (F_CPU <= 9500000UL)  // 8Mhz CPU
-        send_pixels_8mhz_400(pixels, sizePixels, port, pinMask);
+        send_data_8mhz_400(data, sizeData, port, pinMask);
 
 #elif (F_CPU >= 11100000UL) && (F_CPU <= 14300000UL)  // 12Mhz CPU
-        send_pixels_12mhz_400(pixels, sizePixels, port, pinMask);
+        send_data_12mhz_400(data, sizeData, port, pinMask);
 
 #elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000L)  // 16Mhz CPU
-        send_pixels_16mhz_400(pixels, sizePixels, port, pinMask);
+        send_data_16mhz_400(data, sizeData, port, pinMask);
 #else
 #error "CPU SPEED NOT SUPPORTED"
 #endif
@@ -112,16 +112,16 @@ public:
 template<typename T_SPEED> class NeoAvrMethodBase
 {
 public:
-    NeoAvrMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize) :
+    NeoAvrMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin),
         _port(NULL),
         _pinMask(0)
     {
         pinMode(pin, OUTPUT);
 
-        _sizePixels = pixelCount * elementSize;
-        _pixels = (uint8_t*)malloc(_sizePixels);
-        memset(_pixels, 0, _sizePixels);
+        _data = (uint8_t*)malloc(_sizeData);
+        memset(_data, 0, _sizeData);
 
         _port = portOutputRegister(digitalPinToPort(pin));
         _pinMask = digitalPinToBitMask(pin);
@@ -131,7 +131,7 @@ public:
     {
         pinMode(_pin, INPUT);
 
-        free(_pixels);
+        free(_data);
     }
 
     bool IsReadyToUpdate() const
@@ -165,7 +165,7 @@ public:
 
         noInterrupts(); // Need 100% focus on instruction timing
 
-        T_SPEED::send_pixels(_pixels, _sizePixels, _port, _pinMask);
+        T_SPEED::send_data(_data, _sizeData, _port, _pinMask);
 
         interrupts();
 
@@ -173,22 +173,23 @@ public:
         _endTime = micros();
     }
 
-    uint8_t* getPixels() const
+    uint8_t* getData() const
     {
-        return _pixels;
+        return _data;
     };
 
-    size_t getPixelsSize() const
+    size_t getDataSize() const
     {
-        return _sizePixels;
+        return _sizeData;
     };
 
 private:
-    uint32_t _endTime;       // Latch timing reference
-    size_t    _sizePixels;   // Size of '_pixels' buffer below
-    uint8_t* _pixels;        // Holds LED color values
-    uint8_t _pin;            // output pin number
+    const size_t  _sizeData;     // size of _data below       
+    const uint8_t _pin;         // output pin number
 
+    uint32_t _endTime;       // Latch timing reference
+    uint8_t* _data;        // Holds data stream which include LED color values and other settings as needed
+    
     volatile uint8_t* _port;         // Output PORT register
     uint8_t  _pinMask;      // Output PORT bitmask
 };
