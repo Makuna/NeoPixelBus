@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoSettings provides settings classes to describe settings used
+NeoSettings provides settings classes to describe settings
 
 Written by Michael C. Miller.
 
@@ -33,30 +33,30 @@ class NeoRgbCurrentSettings
 {
 public:
     NeoRgbCurrentSettings(uint16_t red, uint16_t green, uint16_t blue) :
-        RedCurrent(red),
-        GreenCurrent(green),
-        BlueCurrent(blue)
+        RedTenthMilliAmpere(red),
+        GreenTenthMilliAmpere(green),
+        BlueTenthMilliAmpere(blue)
     {
     }
 
-    uint16_t RedCurrent;   // in 1/10th ma
-    uint16_t GreenCurrent; // in 1/10th ma
-    uint16_t BlueCurrent;  // in 1/10th ma
+    uint16_t RedTenthMilliAmpere;   // in 1/10th ma
+    uint16_t GreenTenthMilliAmpere; // in 1/10th ma
+    uint16_t BlueTenthMilliAmpere;  // in 1/10th ma
 };
 
 class NeoRgbwCurrentSettings
 {
 public:
     NeoRgbwCurrentSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white) :
-        RedCurrent(red),
-        GreenCurrent(green),
-        BlueCurrent(blue),
+        RedTenthMilliAmpere(red),
+        GreenTenthMilliAmpere(green),
+        BlueTenthMilliAmpere(blue),
         WhiteCurrent(white)
     {
     }
 
-    uint16_t RedCurrent;   // in 1/10th ma
-    uint16_t GreenCurrent; // in 1/10th ma
-    uint16_t BlueCurrent;  // in 1/10th ma
+    uint16_t RedTenthMilliAmpere;   // in 1/10th ma
+    uint16_t GreenTenthMilliAmpere; // in 1/10th ma
+    uint16_t BlueTenthMilliAmpere;  // in 1/10th ma
     uint16_t WhiteCurrent; // in 1/10th ma
 };

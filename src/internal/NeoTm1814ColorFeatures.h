@@ -63,9 +63,9 @@ public:
 
         // C1
         *pSet++ = (SettingsObject::LimitCurrent(settings.WhiteCurrent) - SettingsObject::MinCurrent) / 5;
-        *pSet++ = (SettingsObject::LimitCurrent(settings.RedCurrent) - SettingsObject::MinCurrent) / 5;
-        *pSet++ = (SettingsObject::LimitCurrent(settings.GreenCurrent) - SettingsObject::MinCurrent) / 5;
-        *pSet++ = (SettingsObject::LimitCurrent(settings.BlueCurrent) - SettingsObject::MinCurrent) / 5;
+        *pSet++ = (SettingsObject::LimitCurrent(settings.RedTenthMilliAmpere) - SettingsObject::MinCurrent) / 5;
+        *pSet++ = (SettingsObject::LimitCurrent(settings.GreenTenthMilliAmpere) - SettingsObject::MinCurrent) / 5;
+        *pSet++ = (SettingsObject::LimitCurrent(settings.BlueTenthMilliAmpere) - SettingsObject::MinCurrent) / 5;
         
         uint8_t* pC1 = pData;
 

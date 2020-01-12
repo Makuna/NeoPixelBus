@@ -364,14 +364,14 @@ public:
         Dirty();
     };
  
-    uint32_t CalcTotalMilliAmps(const typename T_COLOR_FEATURE::ColorObject::SettingsObject& settings)
+    uint32_t CalcTotalMilliAmpere(const typename T_COLOR_FEATURE::ColorObject::SettingsObject& settings)
     {
         uint32_t total = 0; // in 1/10th milliamps
 
         for (uint16_t index = 0; index < _countPixels; index++)
         {
             auto color = GetPixelColor(index);
-            total += color.CalcTotalOneTenthMilliAmps(settings);
+            total += color.CalcTotalTenthMilliAmpere(settings);
         }
 
         return total / 10; // return millamps

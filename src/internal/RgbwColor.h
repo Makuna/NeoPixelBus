@@ -175,13 +175,13 @@ struct RgbwColor
         float x, 
         float y);
 
-    uint16_t CalcTotalOneTenthMilliAmps(const SettingsObject& settings)
+    uint16_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
     {
         auto total = 0;
 
-        total += R * settings.RedCurrent / 255;
-        total += G * settings.GreenCurrent / 255;
-        total += B * settings.BlueCurrent / 255;
+        total += R * settings.RedTenthMilliAmpere / 255;
+        total += G * settings.GreenTenthMilliAmpere / 255;
+        total += B * settings.BlueTenthMilliAmpere / 255;
         total += W * settings.WhiteCurrent / 255;
 
         return total;
