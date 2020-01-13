@@ -148,7 +148,7 @@ public:
     operator NeoBufferContext<T_COLOR_FEATURE>()
     {
         Dirty(); // we assume you are playing with bits
-        return NeoBufferContext<T_COLOR_FEATURE>(_pixels(), _method.getDataSize());
+        return NeoBufferContext<T_COLOR_FEATURE>(_pixels(), PixelsSize());
     }
 
     void Begin()
