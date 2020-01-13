@@ -31,7 +31,7 @@ License along with NeoPixel.  If not, see
 
 #if defined(ARDUINO_ARCH_NRF52840)
 
-const uint16_t c_dmaBytesPerPixelByte = 8 * sizeof(nrf_pwm_values_common_t); // bits * bytes to represent pulse
+const uint16_t c_dmaBytesPerDataByte = 8 * sizeof(nrf_pwm_values_common_t); // bits * bytes to represent pulse
 
 // for Bit* variables
 // count 1 = 0.0625us, so max count (32768) is 2048us
@@ -67,6 +67,17 @@ public:
     const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
     const static uint32_t CountReset = 64; // 80us / 1.25us pulse width
     const static PinStatus IdleLevel = LOW;
+};
+
+class NeoNrf52xPwmSpeedTm1814
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 5; // ~0.3us
+    const static nrf_pwm_values_common_t Bit1 = 12; // ~0.7us
+    const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
+    const static uint32_t CountReset = 160; // 200us / 1.25us pulse width
+    const static PinStatus IdleLevel = HIGH;
 };
 
 class NeoNrf52xPwmSpeed800Kbps
@@ -133,6 +144,17 @@ public:
     const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
     const static uint32_t CountReset = 64; // 80us / 1.25us pulse width
     const static PinStatus IdleLevel = HIGH;
+};
+
+class NeoNrf52xPwmInvertedSpeedTm1814
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 5 | 0x8000; // ~0.3us
+    const static nrf_pwm_values_common_t Bit1 = 12 | 0x8000; // ~0.7us
+    const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
+    const static uint32_t CountReset = 160; // 200us / 1.25us pulse width
+    const static PinStatus IdleLevel = LOW;
 };
 
 class NeoNrf52xPwmInvertedSpeed800Kbps
@@ -209,16 +231,16 @@ public:
 template<typename T_SPEED, typename T_BUS> class NeoNrf52xMethodBase
 {
 public:
-    NeoNrf52xMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize) :
+    NeoNrf52xMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
         pinMode(pin, OUTPUT);
 
-        _pixelsSize = pixelCount * elementSize;
-        _pixels = static_cast<uint8_t*>(malloc(_pixelsSize));
-        memset(_pixels, 0, _pixelsSize);
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        memset(_data, 0, _sizeData);
 
-        _dmaBufferSize = c_dmaBytesPerPixelByte * _pixelsSize + sizeof(nrf_pwm_values_common_t);
+        _dmaBufferSize = c_dmaBytesPerDataByte * _sizeData + sizeof(nrf_pwm_values_common_t);
         _dmaBuffer = static_cast<nrf_pwm_values_common_t*>(malloc(_dmaBufferSize));
     }
 
@@ -233,7 +255,7 @@ public:
 
         pinMode(_pin, INPUT);
 
-        free(_pixels);
+        free(_data);
         free(_dmaBuffer);
     }
 
@@ -271,22 +293,21 @@ public:
         dmaStart();
     }
 
-    uint8_t* getPixels() const
+    uint8_t* getData() const
     {
-        return _pixels;
+        return _data;
     };
 
-    size_t getPixelsSize() const
+    size_t getDataSize() const
     {
-        return _pixelsSize;
+        return _sizeData;
     };
 
 private:
+    const size_t   _sizeData;    // Size of '_data' buffer below
     const uint8_t _pin;      // output pin number
 
-    size_t   _pixelsSize;    // Size of '_pixels' buffer below
-    uint8_t* _pixels;        // Holds LED color values
-
+    uint8_t* _data;        // Holds LED color values
     size_t   _dmaBufferSize; // total size of _dmaBuffer
     nrf_pwm_values_common_t* _dmaBuffer;     // Holds pixel data in native format for PWM hardware
 
@@ -335,11 +356,11 @@ private:
     {
         nrf_pwm_values_common_t* pDma = _dmaBuffer;
         nrf_pwm_values_common_t* pDmaEnd = _dmaBuffer + (_dmaBufferSize / sizeof(nrf_pwm_values_common_t));
-        uint8_t* pPixelsEnd = _pixels + _pixelsSize;
+        uint8_t* pEnd = _data + _sizeData;
 
-        for (uint8_t* pPixel = _pixels; pPixel < pPixelsEnd; pPixel++)
+        for (uint8_t* pData = _data; pData < pEnd; pData++)
         {
-            uint8_t data = *pPixel;
+            uint8_t data = *pData;
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
@@ -375,6 +396,7 @@ private:
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2811Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwm0> NeoNrf52xPwm0Sk6812Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1814, NeoNrf52xPwm0> NeoNrf52xPwm0Tm1814Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedApa106, NeoNrf52xPwm0> NeoNrf52xPwm0Apa106Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed800Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0800KbpsMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0400KbpsMethod;
@@ -382,6 +404,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm0> NeoNrf52xPw
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm1> NeoNrf52xPwm1Ws2811Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm1> NeoNrf52xPwm1Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwm1> NeoNrf52xPwm1Sk6812Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1814, NeoNrf52xPwm1> NeoNrf52xPwm1Tm1814Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedApa106, NeoNrf52xPwm1> NeoNrf52xPwm1Apa106Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed800Kbps, NeoNrf52xPwm1> NeoNrf52xPwm1800KbpsMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm1> NeoNrf52xPwm1400KbpsMethod;
@@ -389,6 +412,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm1> NeoNrf52xPw
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm2> NeoNrf52xPwm2Ws2811Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm2> NeoNrf52xPwm2Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwm2> NeoNrf52xPwm2Sk6812Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1814, NeoNrf52xPwm2> NeoNrf52xPwm2Tm1814Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedApa106, NeoNrf52xPwm2> NeoNrf52xPwm2Apa106Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed800Kbps, NeoNrf52xPwm2> NeoNrf52xPwm2800KbpsMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm2> NeoNrf52xPwm2400KbpsMethod;
@@ -397,6 +421,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm2> NeoNrf52xPw
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm3> NeoNrf52xPwm3Ws2811Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm3> NeoNrf52xPwm3Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwm3> NeoNrf52xPwm3Sk6812Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1814, NeoNrf52xPwm3> NeoNrf52xPwm3Tm1814Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedApa106, NeoNrf52xPwm3> NeoNrf52xPwm3Apa106Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed800Kbps, NeoNrf52xPwm3> NeoNrf52xPwm3800KbpsMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm3> NeoNrf52xPwm3400KbpsMethod;
@@ -406,6 +431,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm3> NeoNrf52xPw
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2811InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2812xInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwm0> NeoNrf52xPwm0Sk6812InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1814, NeoNrf52xPwm0> NeoNrf52xPwm0Tm1814InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedApa106, NeoNrf52xPwm0> NeoNrf52xPwm0Apa106InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed800Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0800KbpsInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0400KbpsInvertedMethod;
@@ -413,6 +439,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm0> Neo
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwm1> NeoNrf52xPwm1Ws2811InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm1> NeoNrf52xPwm1Ws2812xInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwm1> NeoNrf52xPwm1Sk6812InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1814, NeoNrf52xPwm1> NeoNrf52xPwm1Tm1814InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedApa106, NeoNrf52xPwm1> NeoNrf52xPwm1Apa106InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed800Kbps, NeoNrf52xPwm1> NeoNrf52xPwm1800KbpsInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm1> NeoNrf52xPwm1400KbpsInvertedMethod;
@@ -420,6 +447,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm1> Neo
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwm2> NeoNrf52xPwm2Ws2811InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm2> NeoNrf52xPwm2Ws2812xInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwm2> NeoNrf52xPwm2Sk6812InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1814, NeoNrf52xPwm2> NeoNrf52xPwm2Tm1814InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedApa106, NeoNrf52xPwm2> NeoNrf52xPwm2Apa106InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed800Kbps, NeoNrf52xPwm2> NeoNrf52xPwm2800KbpsInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm2> NeoNrf52xPwm2400KbpsInvertedMethod;
@@ -428,6 +456,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm2> Neo
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwm3> NeoNrf52xPwm3Ws2811InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm3> NeoNrf52xPwm3Ws2812xInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwm3> NeoNrf52xPwm3Sk6812InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1814, NeoNrf52xPwm3> NeoNrf52xPwm3Tm1814InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedApa106, NeoNrf52xPwm3> NeoNrf52xPwm3Apa106InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed800Kbps, NeoNrf52xPwm3> NeoNrf52xPwm3800KbpsInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm3> NeoNrf52xPwm3400KbpsInvertedMethod;
@@ -439,6 +468,7 @@ typedef NeoNrf52xPwm2Ws2812xMethod NeoWs2812xMethod;
 typedef NeoNrf52xPwm2800KbpsMethod NeoWs2812Method;
 typedef NeoNrf52xPwm2Ws2812xMethod NeoWs2811Method;
 typedef NeoNrf52xPwm2Sk6812Method NeoSk6812Method;
+typedef NeoNrf52xPwm2Tm1814Method NeoTm1814Method;
 typedef NeoNrf52xPwm2Sk6812Method NeoLc8812Method;
 typedef NeoNrf52xPwm2Apa106Method NeoApa106Method;
 
@@ -450,6 +480,7 @@ typedef NeoNrf52xPwm2Ws2812xInvertedMethod NeoWs2812xInvertedMethod;
 typedef NeoNrf52xPwm2Ws2812xInvertedMethod NeoWs2811InvertedMethod;
 typedef NeoNrf52xPwm2800KbpsInvertedMethod NeoWs2812InvertedMethod;
 typedef NeoNrf52xPwm2Sk6812InvertedMethod NeoSk6812InvertedMethod;
+typedef NeoNrf52xPwm2Tm1814InvertedMethod NeoTm1814InvertedMethod;
 typedef NeoNrf52xPwm2Sk6812InvertedMethod NeoLc8812InvertedMethod;
 typedef NeoNrf52xPwm2Apa106InvertedMethod NeoApa106InvertedMethod;
 

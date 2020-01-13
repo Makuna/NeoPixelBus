@@ -83,6 +83,12 @@ public:
     static const uint32_t ResetTimeUs = 80;
 };
 
+class NeoAvrSpeedTm1814 : public NeoAvrSpeed800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 200;
+};
+
 class NeoAvrSpeed800Kbps: public NeoAvrSpeed800KbpsBase
 {
 public:
@@ -120,7 +126,7 @@ public:
     {
         pinMode(pin, OUTPUT);
 
-        _data = (uint8_t*)malloc(_sizeData);
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
         memset(_data, 0, _sizeData);
 
         _port = portOutputRegister(digitalPinToPort(pin));
@@ -197,6 +203,7 @@ private:
 
 typedef NeoAvrMethodBase<NeoAvrSpeedWs2812x> NeoAvrWs2812xMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeedSk6812> NeoAvrSk6812Method;
+typedef NeoAvrMethodBase<NeoAvrSpeedTm1814> NeoAvrTm1814InvertedMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed800Kbps> NeoAvr800KbpsMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed400Kbps> NeoAvr400KbpsMethod;
 
@@ -212,5 +219,6 @@ typedef NeoAvr400KbpsMethod NeoApa106Method;
 typedef NeoAvrWs2812xMethod Neo800KbpsMethod;
 typedef NeoAvr400KbpsMethod Neo400KbpsMethod;
 
+typedef NeoAvrTm1814InvertedMethod NeoTm1814InvertedMethod;
 #endif
 

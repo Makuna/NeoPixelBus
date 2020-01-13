@@ -37,25 +37,25 @@ License along with NeoPixel.  If not, see
 template<typename T_TWOWIRE> class DotStarMethodBase
 {
 public:
-	DotStarMethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize) :
-        _sizePixels(pixelCount * elementSize),
+	DotStarMethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        _sizeData(pixelCount * elementSize + settingsSize),
 		_sizeEndFrame((pixelCount + 15) / 16), // 16 = div 2 (bit for every two pixels) div 8 (bits to bytes)
 		_wire(pinClock, pinData)
     {
-        _pixels = (uint8_t*)malloc(_sizePixels);
-        memset(_pixels, 0, _sizePixels);
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        memset(_data, 0, _sizeData);
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
-	DotStarMethodBase(uint16_t pixelCount, size_t elementSize) :
-		DotStarMethodBase(SCK, MOSI, pixelCount, elementSize)
+	DotStarMethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+		DotStarMethodBase(SCK, MOSI, pixelCount, elementSize, settingsSize)
 	{
 	}
 #endif
 
     ~DotStarMethodBase()
     {
-        free(_pixels);
+        free(_data);
     }
 
     bool IsReadyToUpdate() const
@@ -85,7 +85,7 @@ public:
 		_wire.transmitBytes(startFrame, sizeof(startFrame));
         
         // data
-		_wire.transmitBytes(_pixels, _sizePixels);
+		_wire.transmitBytes(_data, _sizeData);
         
         // end frame 
 		// one bit for every two pixels with no less than 1 byte
@@ -97,22 +97,22 @@ public:
 		_wire.endTransaction();
     }
 
-    uint8_t* getPixels() const
+    uint8_t* getData() const
     {
-        return _pixels;
+        return _data;
     };
 
-    size_t getPixelsSize() const
+    size_t getDataSize() const
     {
-        return _sizePixels;
+        return _sizeData;
     };
 
 private:
-	const size_t   _sizePixels;   // Size of '_pixels' buffer below
+	const size_t   _sizeData;   // Size of '_data' buffer below
 	const size_t   _sizeEndFrame;
 
 	T_TWOWIRE _wire;
-    uint8_t* _pixels;       // Holds LED color values
+    uint8_t* _data;       // Holds LED color values
 };
 
 typedef DotStarMethodBase<TwoWireBitBangImple> DotStarMethod;

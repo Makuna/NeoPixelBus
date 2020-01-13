@@ -160,7 +160,40 @@ public:
     typedef RgbwColor ColorObject;
 };
 
-class DotStarBgrFeature : public DotStar3Elements
+
+class DotStar3ElementsNoSettings : public DotStar3Elements
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    static const size_t SettingsSize = 0;
+
+    static void applySettings(uint8_t* pData, const SettingsObject& settings)
+    {
+    }
+
+    static uint8_t* pixels(uint8_t* pData)
+    {
+        return pData;
+    }
+};
+
+class DotStar4ElementsNoSettings : public DotStar4Elements
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    static const size_t SettingsSize = 0;
+
+    static void applySettings(uint8_t* pData, const SettingsObject& settings)
+    {
+    }
+
+    static uint8_t* pixels(uint8_t* pData)
+    {
+        return pData;
+    }
+};
+
+class DotStarBgrFeature : public DotStar3ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -201,7 +234,7 @@ public:
 
 };
 
-class DotStarLbgrFeature : public DotStar4Elements
+class DotStarLbgrFeature : public DotStar4ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -242,7 +275,7 @@ public:
     
 };
 
-class DotStarGrbFeature : public DotStar3Elements
+class DotStarGrbFeature : public DotStar3ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -283,7 +316,7 @@ public:
 
 };
 
-class DotStarLgrbFeature : public DotStar4Elements
+class DotStarLgrbFeature : public DotStar4ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -325,7 +358,7 @@ public:
 };
 
 /* RGB Feature -- Some APA102s ship in RGB order */
-class DotStarRgbFeature : public DotStar3Elements
+class DotStarRgbFeature : public DotStar3ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -366,7 +399,7 @@ public:
 
 };
 
-class DotStarLrgbFeature : public DotStar4Elements
+class DotStarLrgbFeature : public DotStar4ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -407,7 +440,7 @@ public:
 
 };
 /* RBG Feature -- Some APA102s ship in RBG order */
-class DotStarRbgFeature : public DotStar3Elements
+class DotStarRbgFeature : public DotStar3ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -448,7 +481,7 @@ public:
 
 };
 
-class DotStarLrbgFeature : public DotStar4Elements
+class DotStarLrbgFeature : public DotStar4ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -490,7 +523,7 @@ public:
 };
 
 /* GBR Feature -- Some APA102s ship in GBR order */
-class DotStarGbrFeature : public DotStar3Elements
+class DotStarGbrFeature : public DotStar3ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -531,7 +564,7 @@ public:
 
 };
 
-class DotStarLgbrFeature : public DotStar4Elements
+class DotStarLgbrFeature : public DotStar4ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -572,7 +605,7 @@ public:
 
 };
 /* BRG Feature -- Some APA102s ship in BRG order */
-class DotStarBrgFeature : public DotStar3Elements
+class DotStarBrgFeature : public DotStar3ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -613,7 +646,7 @@ public:
 
 };
 
-class DotStarLbrgFeature : public DotStar4Elements
+class DotStarLbrgFeature : public DotStar4ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
