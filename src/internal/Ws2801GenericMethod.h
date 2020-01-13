@@ -37,24 +37,24 @@ License along with NeoPixel.  If not, see
 template<typename T_TWOWIRE> class Ws2801MethodBase
 {
 public:
-	Ws2801MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize) :
-        _sizePixels(pixelCount * elementSize),
+	Ws2801MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        _sizeData(pixelCount * elementSize + settingsSize),
 		_wire(pinClock, pinData)
     {
-        _pixels = (uint8_t*)malloc(_sizePixels);
-        memset(_pixels, 0, _sizePixels);
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        memset(_data, 0, _sizeData);
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
-	Ws2801MethodBase(uint16_t pixelCount, size_t elementSize) :
-		Ws2801MethodBase(SCK, MOSI, pixelCount, elementSize)
+	Ws2801MethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+		Ws2801MethodBase(SCK, MOSI, pixelCount, elementSize, settingsSize)
 	{
 	}
 #endif
 
     ~Ws2801MethodBase()
     {
-        free(_pixels);
+        free(_data);
     }
 
     bool IsReadyToUpdate() const
@@ -90,7 +90,7 @@ public:
 		_wire.beginTransaction();
         
         // data
-		_wire.transmitBytes(_pixels, _sizePixels);
+		_wire.transmitBytes(_data, _sizeData);
         
 		_wire.endTransaction();
 
@@ -98,22 +98,22 @@ public:
         _endTime = micros();
     }
 
-    uint8_t* getPixels() const
+    uint8_t* getData() const
     {
-        return _pixels;
+        return _data;
     };
 
-    size_t getPixelsSize() const
+    size_t getDataSize() const
     {
-        return _sizePixels;
+        return _sizeData;
     };
 
 private:
-    uint32_t _endTime;       // Latch timing reference
-	const size_t  _sizePixels;   // Size of '_pixels' buffer below
+    const size_t  _sizeData;   // Size of '_data' buffer below
 
-	T_TWOWIRE _wire;
-    uint8_t* _pixels;       // Holds LED color values
+    uint32_t _endTime;       // Latch timing reference
+    T_TWOWIRE _wire;
+    uint8_t* _data;       // Holds LED color values
 };
 
 typedef Ws2801MethodBase<TwoWireBitBangImple> NeoWs2801Method;

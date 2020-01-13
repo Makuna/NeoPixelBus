@@ -33,7 +33,7 @@ extern "C"
 }
 
 const volatile uint8_t* ICACHE_RAM_ATTR NeoEsp8266UartContext::FillUartFifo(uint8_t uartNum,
-    const volatile uint8_t* pixels,
+    const volatile uint8_t* start,
     const volatile uint8_t* end)
 {
     // Remember: UARTs send less significant bit (LSB) first so
@@ -47,19 +47,19 @@ const volatile uint8_t* ICACHE_RAM_ATTR NeoEsp8266UartContext::FillUartFifo(uint
         0b000100, // On wire: 1 110 111 0 [NeoPixel reads 11]
     };
     uint8_t avail = (UART_TX_FIFO_SIZE - GetTxFifoLength(uartNum)) / 4;
-    if (end - pixels > avail)
+    if (end - start > avail)
     {
-        end = pixels + avail;
+        end = start + avail;
     }
-    while (pixels < end)
+    while (start < end)
     {
-        uint8_t subpix = *pixels++;
+        uint8_t subpix = *start++;
         Enqueue(uartNum, _uartData[(subpix >> 6) & 0x3]);
         Enqueue(uartNum, _uartData[(subpix >> 4) & 0x3]);
         Enqueue(uartNum, _uartData[(subpix >> 2) & 0x3]);
         Enqueue(uartNum, _uartData[subpix & 0x3]);
     }
-    return pixels;
+    return start;
 }
 
 volatile NeoEsp8266UartInterruptContext* NeoEsp8266UartInterruptContext::s_uartInteruptContext[] = { nullptr, nullptr };

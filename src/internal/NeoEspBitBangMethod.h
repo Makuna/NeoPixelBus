@@ -47,6 +47,14 @@ public:
 	const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 };
 
+class NeoEspSpeedTm1814
+{
+public:
+    const static uint32_t T0H = (F_CPU / 2916666 - CYCLES_LOOPTEST); // 0.35us
+    const static uint32_t T1H = (F_CPU / 1666666 - CYCLES_LOOPTEST); // 0.75us
+    const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
+};
+
 class NeoEspSpeed800Mhz
 {
 public:
@@ -191,6 +199,13 @@ public:
     static const uint32_t ResetTimeUs = 80;
 };
 
+// normal is inverted signal
+class NeoEspBitBangSpeedTm1814 : public NeoEspBitBangBase<NeoEspSpeedTm1814, NeoEspPinsetInverted>
+{
+public:
+    static const uint32_t ResetTimeUs = 200;
+};
+
 class NeoEspBitBangSpeed800Kbps : public NeoEspBitBangBase<NeoEspSpeed800Mhz, NeoEspPinset>
 {
 public:
@@ -222,6 +237,13 @@ public:
 	static const uint32_t ResetTimeUs = 80;
 };
 
+// normal is inverted signal, so inverted is normal
+class NeoEspBitBangInvertedSpeedTm1814 : public NeoEspBitBangBase<NeoEspSpeedTm1814, NeoEspPinset>
+{
+public:
+    static const uint32_t ResetTimeUs = 200;
+};
+
 class NeoEspBitBangInvertedSpeed800Kbps : public NeoEspBitBangBase<NeoEspSpeed800Mhz, NeoEspPinsetInverted>
 {
 public:
@@ -237,21 +259,21 @@ public:
 template<typename T_SPEED, typename T_PINSET> class NeoEspBitBangMethodBase
 {
 public:
-    NeoEspBitBangMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize) :
+    NeoEspBitBangMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
         pinMode(pin, OUTPUT);
 
-        _sizePixels = pixelCount * elementSize;
-        _pixels = (uint8_t*)malloc(_sizePixels);
-        memset(_pixels, 0, _sizePixels);
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        memset(_data, 0, _sizeData);
     }
 
     ~NeoEspBitBangMethodBase()
     {
         pinMode(_pin, INPUT);
 
-        free(_pixels);
+        free(_data);
     }
 
     bool IsReadyToUpdate() const
@@ -291,7 +313,7 @@ public:
         noInterrupts(); 
 #endif
 
-        T_SPEED::send_pixels(_pixels, _pixels + _sizePixels, _pin);
+        T_SPEED::send_pixels(_data, _data + _sizeData, _pin);
 		
 #if defined(ARDUINO_ARCH_ESP32)
         portEXIT_CRITICAL(&updateMux);
@@ -303,21 +325,22 @@ public:
         _endTime = micros();
     }
 
-    uint8_t* getPixels() const
+    uint8_t* getData() const
     {
-        return _pixels;
+        return _data;
     };
 
-    size_t getPixelsSize() const
+    size_t getDataSize() const
     {
-        return _sizePixels;
+        return _sizeData;
     };
 
 private:
+    const size_t  _sizeData;   // Size of '_data' buffer below
+    const uint8_t _pin;            // output pin number
+
     uint32_t _endTime;       // Latch timing reference
-    size_t    _sizePixels;   // Size of '_pixels' buffer below
-    uint8_t* _pixels;        // Holds LED color values
-    uint8_t _pin;            // output pin number
+    uint8_t* _data;        // Holds LED color values
 };
 
 
@@ -326,6 +349,7 @@ private:
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedWs2811, NeoEspPinset> NeoEsp32BitBangWs2811Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedWs2812x, NeoEspPinset> NeoEsp32BitBangWs2812xMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedSk6812, NeoEspPinset> NeoEsp32BitBangSk6812Method;
+typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedTm1814, NeoEspPinsetInverted> NeoEsp32BitBangTm1814Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed800Kbps, NeoEspPinset> NeoEsp32BitBang800KbpsMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed400Kbps, NeoEspPinset> NeoEsp32BitBang400KbpsMethod;
 
@@ -337,6 +361,7 @@ typedef NeoEsp32BitBang400KbpsMethod NeoEsp32BitBangApa106Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeedWs2811, NeoEspPinsetInverted> NeoEsp32BitBangWs2811InvertedMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeedWs2812x, NeoEspPinsetInverted> NeoEsp32BitBangWs2812xInvertedMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeedSk6812, NeoEspPinsetInverted> NeoEsp32BitBangSk6812InvertedMethod;
+typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeedTm1814, NeoEspPinset> NeoEsp32BitBangTm1814InvertedMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeed800Kbps, NeoEspPinsetInverted> NeoEsp32BitBang800KbpsInvertedMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeed400Kbps, NeoEspPinsetInverted> NeoEsp32BitBang400KbpsInvertedMethod;
 
@@ -350,6 +375,7 @@ typedef NeoEsp32BitBang400KbpsInvertedMethod NeoEsp32BitBangApa106InvertedMethod
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedWs2811, NeoEspPinset> NeoEsp8266BitBangWs2811Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedWs2812x, NeoEspPinset> NeoEsp8266BitBangWs2812xMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedSk6812, NeoEspPinset> NeoEsp8266BitBangSk6812Method;
+typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedTm1814, NeoEspPinsetInverted> NeoEsp8266BitBangTm1814Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed800Kbps, NeoEspPinset> NeoEsp8266BitBang800KbpsMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeed400Kbps, NeoEspPinset> NeoEsp8266BitBang400KbpsMethod;
 
@@ -361,6 +387,7 @@ typedef NeoEsp8266BitBang400KbpsMethod NeoEsp8266BitBangApa106Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeedWs2811, NeoEspPinsetInverted> NeoEsp8266BitBangWs2811InvertedMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeedWs2812x, NeoEspPinsetInverted> NeoEsp8266BitBangWs2812xInvertedMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeedSk6812, NeoEspPinsetInverted> NeoEsp8266BitBangSk6812InvertedMethod;
+typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeedTm1814, NeoEspPinset> NeoEsp8266BitBangTm1814InvertedMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeed800Kbps, NeoEspPinsetInverted> NeoEsp8266BitBang800KbpsInvertedMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangInvertedSpeed400Kbps, NeoEspPinsetInverted> NeoEsp8266BitBang400KbpsInvertedMethod;
 
