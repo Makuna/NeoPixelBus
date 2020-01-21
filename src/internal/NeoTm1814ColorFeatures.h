@@ -80,6 +80,11 @@ public:
     {
         return pData + SettingsSize;
     }
+
+    static const uint8_t* pixels(const uint8_t* pData)
+    {
+        return pData;
+    }
 };
 
 
@@ -96,10 +101,10 @@ public:
         *p = color.B;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.W = *p++;
         color.R = *p++;

@@ -175,6 +175,11 @@ public:
     {
         return pData;
     }
+
+    static const uint8_t* pixels(const uint8_t* pData)
+    {
+        return pData;
+    }
 };
 
 class DotStar4ElementsNoSettings : public DotStar4Elements
@@ -188,6 +193,11 @@ public:
     }
 
     static uint8_t* pixels(uint8_t* pData)
+    {
+        return pData;
+    }
+
+    static const uint8_t* pixels(const uint8_t* pData)
     {
         return pData;
     }
@@ -206,10 +216,10 @@ public:
         *p = color.R;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         p++; // ignore the first byte
         color.B = *p++;
@@ -247,10 +257,10 @@ public:
         *p = color.R;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.W = (*p++) & 0x1F; // mask out upper three bits
         color.B = *p++;
@@ -288,10 +298,10 @@ public:
         *p = color.B;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         p++; // ignore the first byte
         color.G = *p++;
@@ -329,10 +339,10 @@ public:
         *p = color.B;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.W = (*p++) & 0x1F; // mask out upper three bits
         color.G = *p++;
@@ -371,10 +381,10 @@ public:
         *p = color.B;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         p++; // ignore the first byte
         color.R = *p++;
@@ -412,10 +422,10 @@ public:
         *p = color.B;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.W = (*p++) & 0x1F; // mask out upper three bits
         color.R = *p++;
@@ -453,10 +463,10 @@ public:
         *p = color.G;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         p++; // ignore the first byte
         color.R = *p++;
@@ -494,10 +504,10 @@ public:
         *p = color.G;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.W = (*p++) & 0x1F; // mask out upper three bits
         color.R = *p++;
@@ -536,10 +546,10 @@ public:
         *p = color.R;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         p++; // ignore the first byte
         color.G = *p++;
@@ -577,10 +587,10 @@ public:
         *p = color.R;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.W = (*p++) & 0x1F; // mask out upper three bits
         color.G = *p++;
@@ -618,10 +628,10 @@ public:
         *p = color.G;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         p++; // ignore the first byte
         color.B = *p++;
@@ -659,10 +669,10 @@ public:
         *p = color.G;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.W = (*p++) & 0x1F; // mask out upper three bits
         color.B = *p++;

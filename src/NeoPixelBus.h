@@ -389,6 +389,12 @@ protected:
         return T_COLOR_FEATURE::pixels(_method.getData());
     }
 
+    const uint8_t* _pixels() const
+    {
+        // get pixels data within the data stream
+        return T_COLOR_FEATURE::pixels(_method.getData());
+    }
+
     void _rotateLeft(uint16_t rotationCount, uint16_t first, uint16_t last)
     {
         // store in temp
