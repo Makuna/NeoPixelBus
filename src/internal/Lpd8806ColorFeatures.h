@@ -101,10 +101,10 @@ public:
 		*p = (color.G >> 1) | 0x80;
 	}
 
-	static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+	static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
 	{
 		ColorObject color;
-		uint8_t* p = getPixelAddress(pPixels, indexPixel);
+		const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
 		color.B = (*p++) << 1;
 		color.R = (*p++) << 1;
@@ -139,10 +139,10 @@ public:
         *p = (color.B >> 1) | 0x80;
     }
 
-    static ColorObject retrievePixelColor(uint8_t* pPixels, uint16_t indexPixel)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         color.G = (*p++) << 1;
         color.R = (*p++) << 1;
