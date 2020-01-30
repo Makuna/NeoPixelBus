@@ -93,7 +93,7 @@ public:
     static float CubicOut(float unitValue)
     {
         unitValue -= 1.0f;
-        return (unitValue * unitValue * unitValue + 1);
+        return (unitValue * unitValue * unitValue + 1.0f);
     }
 
     static float CubicInOut(float unitValue)
@@ -114,7 +114,7 @@ public:
     {
         unitValue *= 2.0f;
         unitValue -= 1.0f;
-        return (0.5f * (unitValue * unitValue * unitValue) + 1);
+        return (0.5f * (unitValue * unitValue * unitValue + 1.0f));
     }
 
     static float QuarticIn(float unitValue)
@@ -125,7 +125,7 @@ public:
     static float QuarticOut(float unitValue)
     {
         unitValue -= 1.0f;
-        return -(unitValue * unitValue * unitValue * unitValue - 1);
+        return -(unitValue * unitValue * unitValue * unitValue - 1.0f);
     }
 
     static float QuarticInOut(float unitValue)
@@ -200,18 +200,18 @@ public:
 
     static float SinusoidalInOut(float unitValue)
     {
-        return -0.5 * (cos(PI * unitValue) - 1.0f);
+        return -0.5f * (cos(PI * unitValue) - 1.0f);
     }
 
     static float SinusoidalCenter(float unitValue)
     {
         if (unitValue < 0.5f)
         {
-            return (0.5 * sin(PI * unitValue));
+            return (0.5f * sin(PI * unitValue));
         }
         else
         {
-            return (-0.5 * (cos(PI * (unitValue-0.5f)) + 1.0f));
+            return (-0.5f * (cos(PI * (unitValue-0.5f)) + 1.0f));
         }
         
     }
@@ -277,7 +277,7 @@ public:
         unitValue *= 2.0f;
         if (unitValue < 1.0f)
         {
-            return (-0.5f * (sqrt(1.0f - unitValue * unitValue) - 1));
+            return (-0.5f * (sqrt(1.0f - unitValue * unitValue) - 1.0f));
         }
         else
         {
@@ -290,18 +290,19 @@ public:
     {
         unitValue *= 2.0f;
         unitValue -= 1.0f;
-        if (unitValue == 0.0f)
-        {
-            return 1.0f;
-        }
-        else if (unitValue < 0.0f)
+
+        if (unitValue < 0.0f)
         {
             return (0.5f * sqrt(1.0f - unitValue * unitValue));
         }
-        else
+        else if (unitValue > 0.0f)
         {
             unitValue -= 2.0f;
             return (-0.5f * (sqrt(1.0f - unitValue * unitValue) - 1.0f ) + 0.5f);
+        }
+        else
+        {
+            return 1.0f;
         }
     }
 
