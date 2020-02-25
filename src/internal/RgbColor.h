@@ -110,6 +110,14 @@ struct RgbColor
     RgbColor Dim(uint8_t ratio) const;
 
     // ------------------------------------------------------------------------
+    // Brighten will return a new color that is blended to white with the given ratio
+    // ratio - (0-255) where 255 will return the original color and 0 will return white
+    // 
+    // NOTE: This is a simple linear blend
+    // ------------------------------------------------------------------------
+    RgbColor Brighten(uint8_t ratio) const;
+
+    // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to dim the color
@@ -166,5 +174,23 @@ struct RgbColor
     uint8_t R;
     uint8_t G;
     uint8_t B;
+
+private:
+    inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)
+    {
+        return (value * (ratio + 1)) >> 8;
+    }
+
+    inline static uint8_t _elementBrighten(uint8_t value, uint8_t ratio)
+    { 
+        uint16_t element = (value << 8) / (ratio + 1);
+
+        if (element > 255)
+        {
+            element = 255;
+        }
+
+        return element;
+    }
 };
 
