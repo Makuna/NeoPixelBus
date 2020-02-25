@@ -34,32 +34,12 @@ template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBrightnessBu
 private:
     void ConvertColor(typename T_COLOR_FEATURE::ColorObject* color)
     {
-        if (_brightness)
-        {
-            uint8_t* ptr = (uint8_t*) color;
-            uint8_t* ptrEnd = ptr + T_COLOR_FEATURE::PixelSize;
-
-            while (ptr != ptrEnd)
-            {
-                uint16_t value = *ptr;
-                *ptr++ = (value * _brightness) >> 8;
-            }
-        }
+        *color = color->Dim(_brightness);
     }
 
     void RecoverColor(typename T_COLOR_FEATURE::ColorObject* color) const
     {
-        if (_brightness)
-        {
-            uint8_t* ptr = (uint8_t*) color;
-            uint8_t* ptrEnd = ptr + T_COLOR_FEATURE::PixelSize;
-
-            while (ptr != ptrEnd)
-            {
-                uint16_t value = *ptr;
-                *ptr++ = (value << 8) / _brightness;
-            }
-        }
+        *color = color->Brighten(_brightness);
     }
 
 public:
@@ -110,14 +90,13 @@ public:
 
             // re-scale existing pixels
             //
-            uint8_t* ptr = this->Pixels();
-            uint8_t* ptrEnd = ptr + this->PixelsSize();
-            while (ptr != ptrEnd)
+            for (uint16_t indexPixel = 0; indexPixel < NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::PixelCount(); indexPixel++)
             {
-                uint16_t value = *ptr;
-                *ptr++ = (value * scale) >> 8;
+                typename T_COLOR_FEATURE::ColorObject color = NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::GetPixelColor(indexPixel);
+                color = color.Dim(scale);
+                NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::SetPixelColor(indexPixel, color);
             }
-
+ 
             _brightness = newBrightness;
             this->Dirty();
         }
