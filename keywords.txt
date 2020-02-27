@@ -435,6 +435,7 @@ IsDirty	KEYWORD2
 Dirty	KEYWORD2
 ResetDirty	KEYWORD2
 Pixels	KEYWORD2
+PixelSize	KEYWORD2
 PixelsSize	KEYWORD2
 PixelCount	KEYWORD2
 SetPixelColor	KEYWORD2
@@ -442,6 +443,7 @@ GetPixelColor	KEYWORD2
 SwapPixelColor	KEYWORD2
 CalculateBrightness	KEYWORD2
 Dim	KEYWORD2
+Brighten	KEYWORD2
 Darken	KEYWORD2
 Lighten	KEYWORD2
 SetPixelSettings	KEYWORD2
