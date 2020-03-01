@@ -7,7 +7,7 @@
     "type": "git",
     "url": "https://github.com/Makuna/NeoPixelBus"
   },
-  "version": "2.5.6",
+  "version": "2.5.7",
   "frameworks": "arduino",
   "platforms": "*"
 }
