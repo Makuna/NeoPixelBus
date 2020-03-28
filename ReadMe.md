@@ -4,7 +4,7 @@
 
 Arduino NeoPixel library
 
-A library to control one wire protocol RGB and RGBW leds like APA106, SK6812, WS2811, WS2812 and WS2813 that are commonly refered to as NeoPixels and two wire protocol RGB like Lpd8806 and APA102 commonly refered to as DotStars.
+A library to control one wire protocol RGB and RGBW leds like APA106, SK6812, WS2811, WS2812 and WS2813 that are commonly refered to as NeoPixels and two wire protocol RGB like Lpd8806, APA102 and SK9822 commonly refered to as DotStars.
 Supports most Arduino platforms.  
 
 Please read this best practices link before connecting your NeoPixels, it will save you a lot of time and effort.  
