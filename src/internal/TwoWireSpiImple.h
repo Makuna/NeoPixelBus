@@ -28,6 +28,12 @@ License along with NeoPixel.  If not, see
 
 #include <SPI.h>
 
+class SpiSpeed40Mhz
+{
+public:
+    static const uint32_t Clock = 40000000L;
+};
+
 class SpiSpeed20Mhz
 {
 public:
