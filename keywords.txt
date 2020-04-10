@@ -26,7 +26,7 @@ DotStarBgrFeature	KEYWORD1
 DotStarLbgrFeature	KEYWORD1
 Lpd8806GrbFeature	KEYWORD1
 P9813BgrFeature	KEYWORD1
-SM16716RgbFeature SM16716RgbFeature
+SM16716RgbFeature KEYWORD1
 SevenSegmentFeature	KEYWORD1
 Neo800KbpsMethod	KEYWORD1
 Neo400KbpsMethod	KEYWORD1
