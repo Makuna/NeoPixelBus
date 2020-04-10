@@ -26,6 +26,7 @@ DotStarBgrFeature	KEYWORD1
 DotStarLbgrFeature	KEYWORD1
 Lpd8806GrbFeature	KEYWORD1
 P9813BgrFeature	KEYWORD1
+SM16716RgbFeature SM16716RgbFeature
 SevenSegmentFeature	KEYWORD1
 Neo800KbpsMethod	KEYWORD1
 Neo400KbpsMethod	KEYWORD1
@@ -383,6 +384,7 @@ P9813SpiMethod	KEYWORD1
 P9813Spi20MhzMethod	KEYWORD1
 P9813Spi10MhzMethod	KEYWORD1
 P9813Spi2MhzMethod	KEYWORD1
+SM16716BitBangMethod KEYWORD1
 NeoPixelAnimator	KEYWORD1
 AnimUpdateCallback	KEYWORD1
 AnimationParam	KEYWORD1
