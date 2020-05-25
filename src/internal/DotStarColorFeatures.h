@@ -167,7 +167,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     static const size_t SettingsSize = 0;
 
-    static void applySettings(uint8_t* pData, const SettingsObject& settings)
+    static void applySettings(uint8_t*, const SettingsObject&)
     {
     }
 
@@ -188,7 +188,7 @@ public:
     typedef NeoNoSettings SettingsObject;
     static const size_t SettingsSize = 0;
 
-    static void applySettings(uint8_t* pData, const SettingsObject& settings)
+    static void applySettings(uint8_t*, const SettingsObject&)
     {
     }
 
