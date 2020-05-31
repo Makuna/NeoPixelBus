@@ -76,7 +76,7 @@ class NeoEspPinset
 public:
 	const static uint8_t IdleLevel = LOW;
 
-	inline const static void setPin(const uint32_t pinRegister)
+	inline static void setPin(const uint32_t pinRegister)
 	{
 #if defined(ARDUINO_ARCH_ESP32)
 		GPIO.out_w1ts = pinRegister;
@@ -85,7 +85,7 @@ public:
 #endif
 	}
 
-	inline const static void resetPin(const uint32_t pinRegister)
+	inline static void resetPin(const uint32_t pinRegister)
 	{
 #if defined(ARDUINO_ARCH_ESP32)
 		GPIO.out_w1tc = pinRegister;
@@ -100,7 +100,7 @@ class NeoEspPinsetInverted
 public:
 	const static uint8_t IdleLevel = HIGH;
 
-	inline const static void setPin(const uint32_t pinRegister)
+	inline static void setPin(const uint32_t pinRegister)
 	{
 #if defined(ARDUINO_ARCH_ESP32)
 		GPIO.out_w1tc = pinRegister;
@@ -109,7 +109,7 @@ public:
 #endif
 	}
 
-	inline const static void resetPin(const uint32_t pinRegister)
+	inline static void resetPin(const uint32_t pinRegister)
 	{
 #if defined(ARDUINO_ARCH_ESP32)
 		GPIO.out_w1ts = pinRegister;
@@ -122,7 +122,7 @@ public:
 template<typename T_SPEED, typename T_PINSET> class NeoEspBitBangBase
 {
 public:
-    __attribute__((noinline)) static const void ICACHE_RAM_ATTR send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
+    __attribute__((noinline)) static void ICACHE_RAM_ATTR send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
 	{
 		const uint32_t pinRegister = _BV(pin);
 		uint8_t mask = 0x80;
