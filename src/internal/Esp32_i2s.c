@@ -27,7 +27,6 @@
 #include "freertos/queue.h"
 
 #include "esp_intr.h"
-#include "rom/ets_sys.h"
 #include "soc/gpio_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/io_mux_reg.h"
@@ -87,16 +86,23 @@ typedef struct {
 
 static uint8_t i2s_silence_buf[I2S_DMA_SILENCE_LEN];
 
-static i2s_bus_t I2S[2] = {
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+// (I2S_NUM_MAX == 2)
+static i2s_bus_t I2S[I2S_NUM_MAX] = {
     {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_LEN, NULL, I2S_DMA_QUEUE_SIZE, 0, 0},
     {&I2S1, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_LEN, NULL, I2S_DMA_QUEUE_SIZE, 0, 0}
 };
+#else
+static i2s_bus_t I2S[I2S_NUM_MAX] = {
+    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_LEN, NULL, I2S_DMA_QUEUE_SIZE, 0, 0}
+};
+#endif
 
 void IRAM_ATTR i2sDmaISR(void* arg);
 bool i2sInitDmaItems(uint8_t bus_num);
 
 bool i2sInitDmaItems(uint8_t bus_num) {
-    if (bus_num > 1) {
+    if (bus_num >= I2S_NUM_MAX) {
         return false;
     }
     if (I2S[bus_num].tx_queue) {// already set
@@ -153,7 +159,7 @@ bool i2sInitDmaItems(uint8_t bus_num) {
 }
 
 void i2sSetSilenceBuf(uint8_t bus_num, uint8_t* data, size_t len) {
-    if (bus_num > 1 || !data || !len) {
+    if (bus_num >= I2S_NUM_MAX || !data || !len) {
         return;
     }
     I2S[bus_num].silence_buf = data;
@@ -161,7 +167,7 @@ void i2sSetSilenceBuf(uint8_t bus_num, uint8_t* data, size_t len) {
 }
 
 esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits) {
-    if (bus_num > 1 || div_a > 63 || div_b > 63 || bck > 63) {
+    if (bus_num >= I2S_NUM_MAX || div_a > 63 || div_b > 63 || bck > 63) {
         return ESP_FAIL;
     }
     i2s_dev_t* i2s = I2S[bus_num].bus;
@@ -177,7 +183,7 @@ esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t d
 }
 
 void i2sSetTxDataMode(uint8_t bus_num, i2s_tx_chan_mod_t chan_mod, i2s_tx_fifo_mod_t fifo_mod) {
-    if (bus_num > 1) {
+    if (bus_num >= I2S_NUM_MAX) {
         return;
     }
 
@@ -186,7 +192,7 @@ void i2sSetTxDataMode(uint8_t bus_num, i2s_tx_chan_mod_t chan_mod, i2s_tx_fifo_m
 }
 
 void i2sSetDac(uint8_t bus_num, bool right, bool left) {
-    if (bus_num > 1) {
+    if (bus_num >= I2S_NUM_MAX) {
         return;
     }
 
@@ -217,7 +223,7 @@ void i2sSetDac(uint8_t bus_num, bool right, bool left) {
 }
 
 void i2sSetPins(uint8_t bus_num, int8_t out, int8_t ws, int8_t bck, int8_t in, bool invert) {
-    if (bus_num > 1) {
+    if (bus_num >= I2S_NUM_MAX) {
         return;
     }
 
@@ -232,7 +238,20 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t ws, int8_t bck, int8_t in, b
             }
             I2S[bus_num].ws = ws;
             pinMode(ws, OUTPUT);
-            gpio_matrix_out(ws, bus_num?I2S1O_WS_OUT_IDX:I2S0O_WS_OUT_IDX, invert, false);
+
+            uint32_t i2sSignal;
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+//            (I2S_NUM_MAX == 2)
+            if (bus_num == 1) {
+                i2sSignal = I2S1O_WS_OUT_IDX;
+            }
+            else
+#else
+            {
+                i2sSignal = I2S0O_WS_OUT_IDX;
+            }
+#endif
+            gpio_matrix_out(ws, i2sSignal, invert, false);
         }
     } else if (I2S[bus_num].ws >= 0) {
         gpio_matrix_out(I2S[bus_num].ws, 0x100, invert, false);
@@ -246,7 +265,20 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t ws, int8_t bck, int8_t in, b
             }
             I2S[bus_num].bck = bck;
             pinMode(bck, OUTPUT);
-            gpio_matrix_out(bck, bus_num?I2S1O_BCK_OUT_IDX:I2S0O_BCK_OUT_IDX, invert, false);
+
+            int i2sSignal;
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+//            (I2S_NUM_MAX == 2)
+            if (bus_num == 1) {
+                i2sSignal = I2S1O_BCK_OUT_IDX;
+            }
+            else
+#else
+            {
+                i2sSignal = I2S0O_BCK_OUT_IDX;
+            }
+#endif
+            gpio_matrix_out(bck, i2sSignal, invert, false);
         }
     } else if (I2S[bus_num].bck >= 0) {
         gpio_matrix_out(I2S[bus_num].bck, 0x100, invert, false);
@@ -260,7 +292,20 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t ws, int8_t bck, int8_t in, b
             }
             I2S[bus_num].out = out;
             pinMode(out, OUTPUT);
-            gpio_matrix_out(out, bus_num?I2S1O_DATA_OUT23_IDX:I2S0O_DATA_OUT23_IDX, invert, false);
+
+            int i2sSignal;
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+//            (I2S_NUM_MAX == 2)
+            if (bus_num == 1) {
+                i2sSignal = I2S1O_DATA_OUT23_IDX;
+            }
+            else
+#else
+            {
+                i2sSignal = I2S0O_DATA_OUT23_IDX;
+            }
+#endif
+            gpio_matrix_out(out, i2sSignal, invert, false);
         }
     } else if (I2S[bus_num].out >= 0) {
         gpio_matrix_out(I2S[bus_num].out, 0x100, invert, false);
@@ -270,14 +315,14 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t ws, int8_t bck, int8_t in, b
 }
 
 bool i2sWriteDone(uint8_t bus_num) {
-    if (bus_num > 1) {
+    if (bus_num >= I2S_NUM_MAX) {
         return false;
     }
     return (I2S[bus_num].dma_items[I2S[bus_num].dma_count - 1].data == I2S[bus_num].silence_buf);
 }
 
 void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2s_tx_chan_mod_t chan_mod, i2s_tx_fifo_mod_t fifo_mod, size_t dma_count, size_t dma_len) {
-    if (bus_num > 1) {
+    if (bus_num >= I2S_NUM_MAX) {
         return;
     }
 
@@ -288,9 +333,13 @@ void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2
         return;
     }
 
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+// (I2S_NUM_MAX == 2)
     if (bus_num) {
         periph_module_enable(PERIPH_I2S1_MODULE);
-    } else {
+    } else 
+#endif
+    {
         periph_module_enable(PERIPH_I2S0_MODULE);
     }
 
@@ -366,7 +415,21 @@ void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2
     i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
 
     //  enable intr in cpu // 
-    esp_intr_alloc(bus_num?ETS_I2S1_INTR_SOURCE:ETS_I2S0_INTR_SOURCE, ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_LEVEL1, &i2sDmaISR, &I2S[bus_num], &I2S[bus_num].isr_handle);
+    int i2sIntSource;
+
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+//    (I2S_NUM_MAX == 2)
+    if (bus_num == 1) {
+        i2sIntSource = ETS_I2S1_INTR_SOURCE;
+    }
+    else
+#else
+    {
+        i2sIntSource = ETS_I2S0_INTR_SOURCE;
+    }
+#endif
+
+    esp_intr_alloc(i2sIntSource, ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_LEVEL1, &i2sDmaISR, &I2S[bus_num], &I2S[bus_num].isr_handle);
     //  enable send intr
     i2s->int_ena.out_eof = 1;
     i2s->int_ena.out_dscr_err = 1;
@@ -381,7 +444,7 @@ void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2
 }
 
 esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) {
-    if (bus_num > 1) {
+    if (bus_num >= I2S_NUM_MAX) {
         return ESP_FAIL;
     }
 
@@ -451,7 +514,7 @@ void IRAM_ATTR i2sDmaISR(void* arg)
 }
 
 size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free_when_sent) {
-    if (bus_num > 1 || !I2S[bus_num].tx_queue) {
+    if (bus_num >= I2S_NUM_MAX || !I2S[bus_num].tx_queue) {
         return 0;
     }
     size_t index = 0;
