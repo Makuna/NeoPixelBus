@@ -231,6 +231,8 @@ public:
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_3;
 };
 
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+
 class NeoEsp32RmtChannel4
 {
 public:
@@ -254,6 +256,8 @@ class NeoEsp32RmtChannel7
 public:
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_7;
 };
+
+#endif
 
 template<typename T_SPEED, typename T_CHANNEL> class NeoEsp32RmtMethodBase
 {
