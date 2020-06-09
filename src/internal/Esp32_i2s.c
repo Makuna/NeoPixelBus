@@ -184,7 +184,7 @@ esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t d
 #if !defined(CONFIG_IDF_TARGET_ESP32S2)
     i2s->clkm_conf.clka_en = 0;
 #else
-    i2s->clkm_conf.clk_sel = 0;
+    i2s->clkm_conf.clk_sel = 2;
 #endif
 
     i2s->clkm_conf.clkm_div_a = div_a;
@@ -212,8 +212,8 @@ void i2sSetDac(uint8_t bus_num, bool right, bool left) {
     }
 
     if (!right && !left) {
-        dac_output_disable(1);
-        dac_output_disable(2);
+        dac_output_disable(DAC_CHANNEL_1);
+        dac_output_disable(DAC_CHANNEL_2);
         dac_i2s_disable();
         I2S[bus_num].bus->conf2.lcd_en = 0;
         I2S[bus_num].bus->conf.tx_right_first = 0;
@@ -230,10 +230,10 @@ void i2sSetDac(uint8_t bus_num, bool right, bool left) {
     dac_i2s_enable();
     
     if (right) {// DAC1, right channel, GPIO25
-        dac_output_enable(1);
+        dac_output_enable(DAC_CHANNEL_1);
     }
     if (left) { // DAC2, left  channel, GPIO26
-        dac_output_enable(2);
+        dac_output_enable(DAC_CHANNEL_2);
     }
 }
 
@@ -385,14 +385,10 @@ void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2
     i2s->lc_conf.out_rst = 0;
 
     // Enable and configure DMA
-    i2s->lc_conf.check_owner = 0;
-    i2s->lc_conf.out_loop_test = 0;
-    i2s->lc_conf.out_auto_wrback = 0;
-    i2s->lc_conf.out_data_burst_en = 0;
-    i2s->lc_conf.outdscr_burst_en = 0;
-    i2s->lc_conf.out_no_restart_clr = 0;
-    i2s->lc_conf.indscr_burst_en = 0;
-    i2s->lc_conf.out_eof_mode = 1;
+    typeof(i2s->lc_conf) temp_conf;
+    temp_conf.val = 0;
+    temp_conf.out_eof_mode = 1;
+    i2s->lc_conf.val = temp_conf.val;
 
     i2s->pdm_conf.pcm2pdm_conv_en = 0;
     i2s->pdm_conf.pdm2pcm_conv_en = 0;
