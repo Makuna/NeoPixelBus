@@ -26,7 +26,13 @@
 #include "freertos/semphr.h"
 #include "freertos/queue.h"
 
+
+#if ESP_IDF_VERSION_MAJOR>=4
+#include "esp_intr_alloc.h"
+#else
 #include "esp_intr.h"
+#endif
+
 #include "soc/gpio_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/io_mux_reg.h"
@@ -40,7 +46,10 @@
 #include "Esp32_i2s.h"
 #include "esp32-hal.h"
 
+#if ESP_IDF_VERSION_MAJOR<4
 #define I2S_BASE_CLK (160000000L)
+#endif
+
 #define ESP32_REG(addr) (*((volatile uint32_t*)(0x3FF00000+(addr))))
 
 #define I2S_DMA_QUEUE_SIZE      16
@@ -171,7 +180,13 @@ esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t d
         return ESP_FAIL;
     }
     i2s_dev_t* i2s = I2S[bus_num].bus;
+
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
     i2s->clkm_conf.clka_en = 0;
+#else
+    i2s->clkm_conf.clk_sel = 0;
+#endif
+
     i2s->clkm_conf.clkm_div_a = div_a;
     i2s->clkm_conf.clkm_div_b = div_b;
     i2s->clkm_conf.clkm_div_num = div_num;
