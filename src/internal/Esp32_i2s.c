@@ -205,15 +205,6 @@ esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t d
     return ESP_OK;
 }
 
-void i2sSetTxDataMode(uint8_t bus_num, i2s_tx_chan_mod_t chan_mod, i2s_tx_fifo_mod_t fifo_mod) {
-    if (bus_num >= I2S_NUM_MAX) {
-        return;
-    }
-
-    I2S[bus_num].bus->conf_chan.tx_chan_mod = chan_mod; // 0:dual channel; 1:right channel; 2:left channel; 3:left channel constant; 4:right channel constant; (channels flipped if tx_msb_right == 1)
-    I2S[bus_num].bus->fifo_conf.tx_fifo_mod = fifo_mod; // 0:16-bit dual channel; 1:16-bit single channel; 2:32-bit dual channel; 3:32-bit single channel data
-}
-
 void i2sSetDac(uint8_t bus_num, bool right, bool left) {
     if (bus_num >= I2S_NUM_MAX) {
         return;
@@ -230,7 +221,7 @@ void i2sSetDac(uint8_t bus_num, bool right, bool left) {
         return;
     }
 
-    i2sSetPins(bus_num, -1, -1, -1, -1, false);
+    i2sSetPins(bus_num, -1, false);
     I2S[bus_num].bus->conf2.lcd_en = 1;
     I2S[bus_num].bus->conf.tx_right_first = 0;
     I2S[bus_num].bus->conf2.camera_en = 0;
@@ -245,67 +236,9 @@ void i2sSetDac(uint8_t bus_num, bool right, bool left) {
     }
 }
 
-void i2sSetPins(uint8_t bus_num, int8_t out, int8_t ws, int8_t bck, int8_t in, bool invert) {
+void i2sSetPins(uint8_t bus_num, int8_t out, bool invert) {
     if (bus_num >= I2S_NUM_MAX) {
         return;
-    }
-
-    if ((ws >= 0 && I2S[bus_num].ws == -1) || (bck >= 0 && I2S[bus_num].bck == -1) || (out >= 0 && I2S[bus_num].out == -1)) {
-        i2sSetDac(bus_num, false, false);
-    }
-
-    if (ws >= 0) {
-        if (I2S[bus_num].ws != ws) {
-            if (I2S[bus_num].ws >= 0) {
-                gpio_matrix_out(I2S[bus_num].ws, 0x100, invert, false);
-            }
-            I2S[bus_num].ws = ws;
-            pinMode(ws, OUTPUT);
-
-            uint32_t i2sSignal;
-#if !defined(CONFIG_IDF_TARGET_ESP32S2)
-//            (I2S_NUM_MAX == 2)
-            if (bus_num == 1) {
-                i2sSignal = I2S1O_WS_OUT_IDX;
-            }
-            else
-#else
-            {
-                i2sSignal = I2S0O_WS_OUT_IDX;
-            }
-#endif
-            gpio_matrix_out(ws, i2sSignal, invert, false);
-        }
-    } else if (I2S[bus_num].ws >= 0) {
-        gpio_matrix_out(I2S[bus_num].ws, 0x100, invert, false);
-        I2S[bus_num].ws = -1;
-    }
-
-    if (bck >= 0) {
-        if (I2S[bus_num].bck != bck) {
-            if (I2S[bus_num].bck >= 0) {
-                gpio_matrix_out(I2S[bus_num].bck, 0x100, invert, false);
-            }
-            I2S[bus_num].bck = bck;
-            pinMode(bck, OUTPUT);
-
-            int i2sSignal;
-#if !defined(CONFIG_IDF_TARGET_ESP32S2)
-//            (I2S_NUM_MAX == 2)
-            if (bus_num == 1) {
-                i2sSignal = I2S1O_BCK_OUT_IDX;
-            }
-            else
-#else
-            {
-                i2sSignal = I2S0O_BCK_OUT_IDX;
-            }
-#endif
-            gpio_matrix_out(bck, i2sSignal, invert, false);
-        }
-    } else if (I2S[bus_num].bck >= 0) {
-        gpio_matrix_out(I2S[bus_num].bck, 0x100, invert, false);
-        I2S[bus_num].bck = -1;
     }
 
     if (out >= 0) {
@@ -427,9 +360,8 @@ void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2
 
     i2s->fifo_conf.tx_fifo_mod_force_en = 1;
 
-    typeof(i2s->pdm_conf) pdm_conf;
-    pdm_conf.val = 0;
-    i2s->pdm_conf.val = pdm_conf.val;
+    i2s->pdm_conf.rx_pdm_en = 0;
+    i2s->pdm_conf.tx_pdm_en = 0;
 
     i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
 
