@@ -181,19 +181,27 @@ esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t d
     }
     i2s_dev_t* i2s = I2S[bus_num].bus;
 
+    typeof(i2s->clkm_conf) clkm_conf;
+
+    clkm_conf.val = 0;
 #if !defined(CONFIG_IDF_TARGET_ESP32S2)
-    i2s->clkm_conf.clka_en = 0;
+    clkm_conf.clka_en = 0;
 #else
-    i2s->clkm_conf.clk_sel = 2;
+    clkm_conf.clk_sel = 2;
 #endif
 
-    i2s->clkm_conf.clkm_div_a = div_a;
-    i2s->clkm_conf.clkm_div_b = div_b;
-    i2s->clkm_conf.clkm_div_num = div_num;
-    i2s->sample_rate_conf.tx_bck_div_num = bck;
-    i2s->sample_rate_conf.rx_bck_div_num = bck;
-    i2s->sample_rate_conf.tx_bits_mod = bits;
-    i2s->sample_rate_conf.rx_bits_mod = bits;
+    clkm_conf.clkm_div_a = div_a;
+    clkm_conf.clkm_div_b = div_b;
+    clkm_conf.clkm_div_num = div_num;
+    i2s->clkm_conf.val = clkm_conf.val;
+
+    typeof(i2s->sample_rate_conf) sample_rate_conf;
+    sample_rate_conf.val = 0;
+    sample_rate_conf.tx_bck_div_num = bck;
+    sample_rate_conf.rx_bck_div_num = bck;
+    sample_rate_conf.tx_bits_mod = bits;
+    sample_rate_conf.rx_bits_mod = bits;
+    i2s->sample_rate_conf.val = sample_rate_conf.val;
     return ESP_OK;
 }
 
@@ -385,43 +393,43 @@ void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2
     i2s->lc_conf.out_rst = 0;
 
     // Enable and configure DMA
-    typeof(i2s->lc_conf) temp_conf;
-    temp_conf.val = 0;
-    temp_conf.out_eof_mode = 1;
-    i2s->lc_conf.val = temp_conf.val;
+    typeof(i2s->lc_conf) lc_conf;
+    lc_conf.val = 0;
+    lc_conf.out_eof_mode = 1;
+    i2s->lc_conf.val = lc_conf.val;
 
     i2s->pdm_conf.pcm2pdm_conv_en = 0;
     i2s->pdm_conf.pdm2pcm_conv_en = 0;
     // SET_PERI_REG_BITS(RTC_CNTL_CLK_CONF_REG, RTC_CNTL_SOC_CLK_SEL, 0x1, RTC_CNTL_SOC_CLK_SEL_S);
 
+    typeof(i2s->conf_chan) conf_chan;
+    conf_chan.val = 0;
+    conf_chan.tx_chan_mod = chan_mod; //  0-two channel;1-right;2-left;3-righ;4-left
+    conf_chan.rx_chan_mod = chan_mod; //  0-two channel;1-right;2-left;3-righ;4-left
+    i2s->conf_chan.val = conf_chan.val;
 
-    i2s->conf_chan.tx_chan_mod = chan_mod; //  0-two channel;1-right;2-left;3-righ;4-left
-    i2s->conf_chan.rx_chan_mod = chan_mod; //  0-two channel;1-right;2-left;3-righ;4-left
-    i2s->fifo_conf.tx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
-    i2s->fifo_conf.rx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
+    typeof(i2s->fifo_conf) fifo_conf;
+    fifo_conf.val = 0;
+    fifo_conf.tx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
+    fifo_conf.rx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
+    i2s->fifo_conf.val = fifo_conf.val;
 
-    i2s->conf.tx_mono = 0;
-    i2s->conf.rx_mono = 0;
+    typeof(i2s->conf) conf;
+    conf.val = 0;
+    conf.tx_msb_shift = (bits_per_sample != 8);// 0:DAC/PCM, 1:I2S
+    conf.tx_right_first = (bits_per_sample == 8);
+    i2s->conf.val = conf.val;
 
-    i2s->conf.tx_start = 0;
-    i2s->conf.rx_start = 0;
-
-    i2s->conf.tx_short_sync = 0;
-    i2s->conf.rx_short_sync = 0;
-    i2s->conf.tx_msb_shift = (bits_per_sample != 8);// 0:DAC/PCM, 1:I2S
-    i2s->conf.rx_msb_shift = 0;
-
-    i2s->conf.tx_slave_mod = 0; //  Master
-
-    i2s->conf.tx_msb_right = 0;
-    i2s->conf.tx_right_first = (bits_per_sample == 8);
-    i2s->conf2.lcd_en = (bits_per_sample == 8);
-    i2s->conf2.camera_en = 0;
+    typeof(i2s->conf2) conf2;
+    conf2.val = 0;
+    conf2.lcd_en = (bits_per_sample == 8);
+    i2s->conf2.val = conf2.val;
 
     i2s->fifo_conf.tx_fifo_mod_force_en = 1;
 
-    i2s->pdm_conf.rx_pdm_en = 0;
-    i2s->pdm_conf.tx_pdm_en = 0;
+    typeof(i2s->pdm_conf) pdm_conf;
+    pdm_conf.val = 0;
+    i2s->pdm_conf.val = pdm_conf.val;
 
     i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
 
