@@ -178,18 +178,21 @@ struct RgbColor
 private:
     inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)
     {
-        return (value * (ratio + 1)) >> 8;
+        return (static_cast<uint16_t>(value) * (static_cast<uint16_t>(ratio) + 1)) >> 8;
     }
 
     inline static uint8_t _elementBrighten(uint8_t value, uint8_t ratio)
     { 
-        uint16_t element = (value << 8) / (ratio + 1);
+        uint16_t element = ((static_cast<uint16_t>(value) + 1) << 8) / (static_cast<uint16_t>(ratio) + 1);
 
         if (element > 255)
         {
             element = 255;
         }
-
+        else
+        {
+            element -= 1;
+        }
         return element;
     }
 };
