@@ -32,6 +32,76 @@ License along with NeoPixel.  If not, see
 #ifdef ARDUINO_ARCH_ESP32
 
 
+// translate NeoPixelBuffer into RMT buffer
+// this is done on the fly so we don't require a send buffer in raw RMT format
+// which would be 32x larger than the primary buffer
+//
+// NOTE:  This was moved from the template below to here to workaround a GCC bug
+//  That bug is that the IRAM_ATTR attribute (any attributes) is lost on template classes.  
+//
+//  Further, it was removed from the header to support current Esp32 release
+//  which will need to be removed when the latest GitHub branchis released
+//  due to this method will not get inlined this way
+//
+void NeoEsp32RmtSpeed::_translate(const void* src,
+    rmt_item32_t* dest,
+    size_t src_size,
+    size_t wanted_num,
+    size_t* translated_size,
+    size_t* item_num,
+    const uint32_t rmtBit0,
+    const uint32_t rmtBit1,
+    const uint16_t rmtDurationReset)
+{
+    if (src == NULL || dest == NULL)
+    {
+        *translated_size = 0;
+        *item_num = 0;
+        return;
+    }
+
+    size_t size = 0;
+    size_t num = 0;
+    const uint8_t* psrc = static_cast<const uint8_t*>(src);
+    rmt_item32_t* pdest = dest;
+
+    for (;;)
+    {
+        uint8_t data = *psrc;
+
+        for (uint8_t bit = 0; bit < 8; bit++)
+        {
+            pdest->val = (data & 0x80) ? rmtBit1 : rmtBit0;
+            pdest++;
+            data <<= 1;
+        }
+        num += 8;
+        size++;
+
+        // if this is the last byte we need to adjust the length of the last pulse
+        if (size >= src_size)
+        {
+            // extend the last bits LOW value to include the full reset signal length
+            pdest--;
+            pdest->duration1 = rmtDurationReset;
+            // and stop updating data to send
+            break;
+        }
+
+        if (num >= wanted_num)
+        {
+            // stop updating data to send
+            break;
+        }
+
+        psrc++;
+    }
+
+    *translated_size = size;
+    *item_num = num;
+}
+
+
 // these are required due to the linker error with ISRs
 // dangerous relocation: l32r: literal placed after use
 // https://stackoverflow.com/questions/19532826/what-does-a-dangerous-relocation-error-mean
