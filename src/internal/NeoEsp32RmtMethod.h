@@ -1,9 +1,6 @@
 /*-------------------------------------------------------------------------
 NeoPixel library helper functions for Esp32.
 
-A BIG thanks to Andreas Merkle for the investigation and implementation of
-a workaround to the GCC bug that drops method attributes from template methods 
-
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
@@ -43,10 +40,9 @@ Esp32-hal-rmt.h
 Esp32-hal-rmt.c
 */
 
-#include <Arduino.h>
-
 extern "C"
 {
+#include <Arduino.h>
 #include <driver/rmt.h>
 }
 
@@ -69,71 +65,6 @@ protected:
     const static uint32_t NsPerSecond = 1000000000L;
     const static uint32_t RmtTicksPerSecond = (RmtCpu / RmtClockDivider);
     const static uint32_t NsPerRmtTick = (NsPerSecond / RmtTicksPerSecond); // about 25 
-
-    // translate NeoPixelBuffer into RMT buffer
-    // this is done on the fly so we don't require a send buffer in raw RMT format
-    // which would be 32x larger than the primary buffer
-    // NOTE:  This was moved from the template below to here to workaround a GCC bug
-    //  That bug is that the IRAM_ATTR attribute (any attributes) is lost on template classes.  
-    //
-    static void IRAM_ATTR _translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num,
-        const uint32_t rmtBit0,
-        const uint32_t rmtBit1,
-        const uint16_t rmtDurationReset)
-    {
-        if (src == NULL || dest == NULL)
-        {
-            *translated_size = 0;
-            *item_num = 0;
-            return;
-        }
-
-        size_t size = 0;
-        size_t num = 0;
-        const uint8_t* psrc = static_cast<const uint8_t*>(src);
-        rmt_item32_t* pdest = dest;
-
-        for (;;)
-        {
-            uint8_t data = *psrc;
-
-            for (uint8_t bit = 0; bit < 8; bit++)
-            {
-                pdest->val = (data & 0x80) ? rmtBit1 : rmtBit0;
-                pdest++;
-                data <<= 1;
-            }
-            num += 8;
-            size++;
-
-            // if this is the last byte we need to adjust the length of the last pulse
-            if (size >= src_size)
-            {
-                // extend the last bits LOW value to include the full reset signal length
-                pdest--;
-                pdest->duration1 = rmtDurationReset;
-                // and stop updating data to send
-                break;
-            }
-
-            if (num >= wanted_num)
-            {
-                // stop updating data to send
-                break;
-            }
-
-            psrc++;
-        }
-
-        *translated_size = size;
-        *item_num = num;
-    }
-
 };
 
 class NeoEsp32RmtSpeedBase : public NeoEsp32RmtSpeed
@@ -168,13 +99,6 @@ public:
     const static uint32_t RmtBit0 = Item32Val(300, 950); 
     const static uint32_t RmtBit1 = Item32Val(900, 350); 
     const static uint16_t RmtDurationReset = FromNs(300000); // 300us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtSpeedWs2812x : public NeoEsp32RmtSpeedBase
@@ -183,13 +107,6 @@ public:
 	const static uint32_t RmtBit0 = Item32Val(400, 850);
 	const static uint32_t RmtBit1 = Item32Val(800, 450);
 	const static uint16_t RmtDurationReset = FromNs(300000); // 300us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtSpeedSk6812 : public NeoEsp32RmtSpeedBase
@@ -198,13 +115,6 @@ public:
     const static uint32_t RmtBit0 = Item32Val(400, 850); 
     const static uint32_t RmtBit1 = Item32Val(800, 450); 
     const static uint16_t RmtDurationReset = FromNs(80000); // 80us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 // normal is inverted signal
@@ -214,13 +124,6 @@ public:
     const static uint32_t RmtBit0 = Item32Val(360, 890);
     const static uint32_t RmtBit1 = Item32Val(720, 530);
     const static uint16_t RmtDurationReset = FromNs(200000); // 200us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtSpeed800Kbps : public NeoEsp32RmtSpeedBase
@@ -229,13 +132,6 @@ public:
     const static uint32_t RmtBit0 = Item32Val(400, 850); 
     const static uint32_t RmtBit1 = Item32Val(800, 450); 
     const static uint16_t RmtDurationReset = FromNs(50000); // 50us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtSpeed400Kbps : public NeoEsp32RmtSpeedBase
@@ -244,13 +140,6 @@ public:
     const static uint32_t RmtBit0 = Item32Val(800, 1700); 
     const static uint32_t RmtBit1 = Item32Val(1600, 900); 
     const static uint16_t RmtDurationReset = FromNs(50000); // 50us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtSpeedApa106 : public NeoEsp32RmtSpeedBase
@@ -259,13 +148,6 @@ public:
 	const static uint32_t RmtBit0 = Item32Val(400, 1250);
 	const static uint32_t RmtBit1 = Item32Val(1250, 400);
 	const static uint16_t RmtDurationReset = FromNs(50000); // 50us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtInvertedSpeedWs2811 : public NeoEsp32RmtInvertedSpeedBase
@@ -274,13 +156,6 @@ public:
 	const static uint32_t RmtBit0 = Item32Val(300, 950);
 	const static uint32_t RmtBit1 = Item32Val(900, 350);
 	const static uint16_t RmtDurationReset = FromNs(300000); // 300us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtInvertedSpeedWs2812x : public NeoEsp32RmtInvertedSpeedBase
@@ -289,13 +164,6 @@ public:
 	const static uint32_t RmtBit0 = Item32Val(400, 850);
 	const static uint32_t RmtBit1 = Item32Val(800, 450);
 	const static uint16_t RmtDurationReset = FromNs(300000); // 300us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtInvertedSpeedSk6812 : public NeoEsp32RmtInvertedSpeedBase
@@ -304,13 +172,6 @@ public:
 	const static uint32_t RmtBit0 = Item32Val(400, 850);
 	const static uint32_t RmtBit1 = Item32Val(800, 450);
 	const static uint16_t RmtDurationReset = FromNs(80000); // 80us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 // normal is inverted signal
@@ -320,13 +181,6 @@ public:
     const static uint32_t RmtBit0 = Item32Val(360, 890);
     const static uint32_t RmtBit1 = Item32Val(720, 530);
     const static uint16_t RmtDurationReset = FromNs(200000); // 200us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtInvertedSpeed800Kbps : public NeoEsp32RmtInvertedSpeedBase
@@ -335,13 +189,6 @@ public:
 	const static uint32_t RmtBit0 = Item32Val(400, 850);
 	const static uint32_t RmtBit1 = Item32Val(800, 450);
 	const static uint16_t RmtDurationReset = FromNs(50000); // 50us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtInvertedSpeed400Kbps : public NeoEsp32RmtInvertedSpeedBase
@@ -350,13 +197,6 @@ public:
 	const static uint32_t RmtBit0 = Item32Val(800, 1700);
 	const static uint32_t RmtBit1 = Item32Val(1600, 900);
 	const static uint16_t RmtDurationReset = FromNs(50000); // 50us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtInvertedSpeedApa106 : public NeoEsp32RmtInvertedSpeedBase
@@ -365,13 +205,6 @@ public:
 	const static uint32_t RmtBit0 = Item32Val(400, 1250);
 	const static uint32_t RmtBit1 = Item32Val(1250, 400);
 	const static uint16_t RmtDurationReset = FromNs(50000); // 50us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
 class NeoEsp32RmtChannel0
@@ -477,8 +310,8 @@ public:
         config.clk_div = T_SPEED::RmtClockDivider;
 
         ESP_ERROR_CHECK(rmt_config(&config));
-        ESP_ERROR_CHECK(rmt_driver_install(T_CHANNEL::RmtChannelNumber, 0, ESP_INTR_FLAG_IRAM));
-        ESP_ERROR_CHECK(rmt_translator_init(T_CHANNEL::RmtChannelNumber, T_SPEED::Translate));
+        ESP_ERROR_CHECK(rmt_driver_install(T_CHANNEL::RmtChannelNumber, 0, 0));
+        ESP_ERROR_CHECK(rmt_translator_init(T_CHANNEL::RmtChannelNumber, _translate));
     }
 
     void Update(bool maintainBufferConsistency)
@@ -521,6 +354,65 @@ private:
     // Holds data stream which include LED color values and other settings as needed
     uint8_t*  _dataEditing;   // exposed for get and set
     uint8_t*  _dataSending;   // used for async send using RMT
+
+
+    // stranslate NeoPixelBuffer into RMT buffer
+    // this is done on the fly so we don't require a send buffer in raw RMT format
+    // which would be 32x larger than the primary buffer
+    static void IRAM_ATTR _translate(const void* src,
+        rmt_item32_t* dest,
+        size_t src_size,
+        size_t wanted_num,
+        size_t* translated_size,
+        size_t* item_num)
+    {
+        if (src == NULL || dest == NULL) 
+        {
+            *translated_size = 0;
+            *item_num = 0;
+            return;
+        }
+
+        size_t size = 0;
+        size_t num = 0;
+        const uint8_t* psrc = static_cast<const uint8_t*>(src);
+        rmt_item32_t* pdest = dest;
+
+        for (;;)
+        {
+            uint8_t data = *psrc;
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                pdest->val = (data & 0x80) ? T_SPEED::RmtBit1 : T_SPEED::RmtBit0;
+                pdest++;
+                data <<= 1;
+            }
+            num += 8;
+            size++;
+
+            // if this is the last byte we need to adjust the length of the last pulse
+            if (size >= src_size)
+            {
+                // extend the last bits LOW value to include the full reset signal length
+                pdest--;
+                pdest->duration1 = T_SPEED::RmtDurationReset;
+                // and stop updating data to send
+                break; 
+            }
+
+            if (num >= wanted_num)
+            {
+                // stop updating data to send
+                break;
+            }
+
+            psrc++;
+        }
+
+        *translated_size = size;
+        *item_num = num;
+    }
 };
 
 // normal
