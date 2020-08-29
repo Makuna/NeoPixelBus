@@ -256,11 +256,11 @@ void i2sSetPins(uint8_t bus_num, int8_t out, bool invert) {
                 i2sSignal = I2S1O_DATA_OUT23_IDX;
             }
             else
-#else
+#endif
             {
                 i2sSignal = I2S0O_DATA_OUT23_IDX;
             }
-#endif
+
             gpio_matrix_out(out, i2sSignal, invert, false);
         }
     } else if (I2S[bus_num].out >= 0) {
@@ -374,11 +374,11 @@ void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2
         i2sIntSource = ETS_I2S1_INTR_SOURCE;
     }
     else
-#else
+#endif
     {
         i2sIntSource = ETS_I2S0_INTR_SOURCE;
     }
-#endif
+
 
     esp_intr_alloc(i2sIntSource, ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_LEVEL1, &i2sDmaISR, &I2S[bus_num], &I2S[bus_num].isr_handle);
     //  enable send intr
