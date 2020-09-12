@@ -64,6 +64,7 @@ License along with NeoPixel.  If not, see
 #include "internal/P9813ColorFeatures.h"
 #include "internal/NeoSegmentFeatures.h"
 
+
 #include "internal/Layouts.h"
 #include "internal/NeoTopology.h"
 #include "internal/NeoRingTopology.h"
@@ -84,6 +85,7 @@ License along with NeoPixel.  If not, see
 #include "internal/Lpd8806GenericMethod.h"
 #include "internal/Ws2801GenericMethod.h"
 #include "internal/P9813GenericMethod.h"
+#include "internal/SM16716BitBangMethod.h"
 
 #if defined(ARDUINO_ARCH_ESP8266)
 
