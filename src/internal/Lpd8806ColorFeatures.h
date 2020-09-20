@@ -26,10 +26,32 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class Lpd88063Elements
+class Lpd88063ElementsNoSettings
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    static const size_t SettingsSize = 0;
+
+    static void applySettings(uint8_t*, const SettingsObject&)
+    {
+    }
+
+    static uint8_t* pixels(uint8_t* pData)
+    {
+        return pData;
+    }
+
+    static const uint8_t* pixels(const uint8_t* pData)
+    {
+        return pData;
+    }
+};
+
+class Lpd88063Elements : public Lpd88063ElementsNoSettings
 {
 public:
     static const size_t PixelSize = 3; 
+
 
     static uint8_t* getPixelAddress(uint8_t* pPixels, uint16_t indexPixel)
     {

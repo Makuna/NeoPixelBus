@@ -437,7 +437,7 @@ private:
     // handle here is the RX_EOF_INT status, which indicate the DMA has sent a buffer whose
     // descriptor has the 'EOF' field set to 1.
     // in the case of this code, the second to last state descriptor
-    volatile static void ICACHE_RAM_ATTR i2s_slc_isr(void)
+    static void ICACHE_RAM_ATTR i2s_slc_isr(void)
     {
         ETS_SLC_INTR_DISABLE();
 
