@@ -39,7 +39,7 @@ const uint16_t c_dmaBytesPerPixelBytes = 4;
 class NeoEsp32I2sSpeedWs2812x
 {
 public:
-	const static uint32_t I2sSampleRate = 100000;
+    const static uint32_t I2sSampleRate = 100000;
     const static uint16_t ByteSendTimeUs = 10;
     const static uint16_t ResetTimeUs = 300;
 };
@@ -47,8 +47,8 @@ public:
 class NeoEsp32I2sSpeedSk6812
 {
 public:
-	const static uint32_t I2sSampleRate = 100000;
-	const static uint16_t ByteSendTimeUs = 10;
+    const static uint32_t I2sSampleRate = 100000;
+    const static uint16_t ByteSendTimeUs = 10;
     const static uint16_t ResetTimeUs = 80;
 };
 
@@ -63,25 +63,25 @@ public:
 class NeoEsp32I2sSpeed800Kbps
 {
 public:
-	const static uint32_t I2sSampleRate = 100000;
-	const static uint16_t ByteSendTimeUs = 10;
+    const static uint32_t I2sSampleRate = 100000;
+    const static uint16_t ByteSendTimeUs = 10;
     const static uint16_t ResetTimeUs = 50;
 };
 
 class NeoEsp32I2sSpeed400Kbps
 {
 public:
-	const static uint32_t I2sSampleRate = 50000;
-	const static uint16_t ByteSendTimeUs = 20;
+    const static uint32_t I2sSampleRate = 50000;
+    const static uint16_t ByteSendTimeUs = 20;
     const static uint16_t ResetTimeUs = 50;
 };
 
 class NeoEsp32I2sSpeedApa106
 {
 public:
-	const static uint32_t I2sSampleRate = 76000;
-	const static uint16_t ByteSendTimeUs = 14;
-	const static uint16_t ResetTimeUs = 50;
+    const static uint32_t I2sSampleRate = 76000;
+    const static uint16_t ByteSendTimeUs = 14;
+    const static uint16_t ResetTimeUs = 50;
 };
 
 class NeoEsp32I2sBusZero
@@ -99,13 +99,13 @@ public:
 class NeoEsp32I2sNotInverted
 {
 public:
-	const static bool Inverted = false;
+    const static bool Inverted = false;
 };
 
 class NeoEsp32I2sInverted
 {
 public:
-	const static bool Inverted = true;
+    const static bool Inverted = true;
 };
 
 template<typename T_SPEED, typename T_BUS, typename T_INVERT> class NeoEsp32I2sMethodBase
@@ -117,7 +117,7 @@ public:
     {
         uint16_t dmaSettingsSize = c_dmaBytesPerPixelBytes * settingsSize;
         uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
-		uint16_t resetSize = c_dmaBytesPerPixelBytes * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs;
+        uint16_t resetSize = c_dmaBytesPerPixelBytes * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs;
 
         _i2sBufferSize = pixelCount * dmaPixelSize + dmaSettingsSize + resetSize;
 
@@ -155,7 +155,7 @@ public:
 
     void Initialize()
     {
-		size_t dmaCount = (_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
+        size_t dmaCount = (_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
         i2sInit(T_BUS::I2sBusNumber, 16, T_SPEED::I2sSampleRate, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, dmaCount, 0);
         i2sSetPins(T_BUS::I2sBusNumber, _pin, T_INVERT::Inverted);
     }

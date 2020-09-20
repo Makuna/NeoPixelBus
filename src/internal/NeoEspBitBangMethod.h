@@ -42,9 +42,9 @@ License along with NeoPixel.  If not, see
 class NeoEspSpeedWs2811
 {
 public:
-	const static uint32_t T0H = (F_CPU / 3333333 - CYCLES_LOOPTEST); // 0.3us
-	const static uint32_t T1H = (F_CPU / 1052632 - CYCLES_LOOPTEST); // 0.95us
-	const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
+    const static uint32_t T0H = (F_CPU / 3333333 - CYCLES_LOOPTEST); // 0.3us
+    const static uint32_t T1H = (F_CPU / 1052632 - CYCLES_LOOPTEST); // 0.95us
+    const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 };
 
 class NeoEspSpeedTm1814
@@ -58,119 +58,119 @@ public:
 class NeoEspSpeed800Mhz
 {
 public:
-	const static uint32_t T0H = (F_CPU / 2500000 - CYCLES_LOOPTEST); // 0.4us
-	const static uint32_t T1H = (F_CPU / 1250000 - CYCLES_LOOPTEST); // 0.8us
-	const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
+    const static uint32_t T0H = (F_CPU / 2500000 - CYCLES_LOOPTEST); // 0.4us
+    const static uint32_t T1H = (F_CPU / 1250000 - CYCLES_LOOPTEST); // 0.8us
+    const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 };
 
 class NeoEspSpeed400Mhz
 {
 public:
-	const static uint32_t T0H = (F_CPU / 2000000 - CYCLES_LOOPTEST); 
-	const static uint32_t T1H = (F_CPU /  833333 - CYCLES_LOOPTEST); 
-	const static uint32_t Period = (F_CPU / 400000 - CYCLES_LOOPTEST);
+    const static uint32_t T0H = (F_CPU / 2000000 - CYCLES_LOOPTEST); 
+    const static uint32_t T1H = (F_CPU /  833333 - CYCLES_LOOPTEST); 
+    const static uint32_t Period = (F_CPU / 400000 - CYCLES_LOOPTEST);
 };
 
 class NeoEspPinset
 {
 public:
-	const static uint8_t IdleLevel = LOW;
+    const static uint8_t IdleLevel = LOW;
 
-	inline static void setPin(const uint32_t pinRegister)
-	{
+    inline static void setPin(const uint32_t pinRegister)
+    {
 #if defined(ARDUINO_ARCH_ESP32)
-		GPIO.out_w1ts = pinRegister;
+        GPIO.out_w1ts = pinRegister;
 #else
-		GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+        GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
 #endif
-	}
+    }
 
-	inline static void resetPin(const uint32_t pinRegister)
-	{
+    inline static void resetPin(const uint32_t pinRegister)
+    {
 #if defined(ARDUINO_ARCH_ESP32)
-		GPIO.out_w1tc = pinRegister;
+        GPIO.out_w1tc = pinRegister;
 #else
-		GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+        GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 #endif
-	}
+    }
 };
 
 class NeoEspPinsetInverted
 {
 public:
-	const static uint8_t IdleLevel = HIGH;
+    const static uint8_t IdleLevel = HIGH;
 
-	inline static void setPin(const uint32_t pinRegister)
-	{
+    inline static void setPin(const uint32_t pinRegister)
+    {
 #if defined(ARDUINO_ARCH_ESP32)
-		GPIO.out_w1tc = pinRegister;
+        GPIO.out_w1tc = pinRegister;
 #else
-		GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+        GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 #endif
-	}
+    }
 
-	inline static void resetPin(const uint32_t pinRegister)
-	{
+    inline static void resetPin(const uint32_t pinRegister)
+    {
 #if defined(ARDUINO_ARCH_ESP32)
-		GPIO.out_w1ts = pinRegister;
+        GPIO.out_w1ts = pinRegister;
 #else
-		GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+        GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
 #endif
-	}
+    }
 };
 
 template<typename T_SPEED, typename T_PINSET> class NeoEspBitBangBase
 {
 public:
     __attribute__((noinline)) static void ICACHE_RAM_ATTR send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
-	{
-		const uint32_t pinRegister = _BV(pin);
-		uint8_t mask = 0x80;
-		uint8_t subpix = *pixels++;
-		uint32_t cyclesStart = 0; // trigger emediately
-		uint32_t cyclesNext = 0;
+    {
+        const uint32_t pinRegister = _BV(pin);
+        uint8_t mask = 0x80;
+        uint8_t subpix = *pixels++;
+        uint32_t cyclesStart = 0; // trigger emediately
+        uint32_t cyclesNext = 0;
 
-		for (;;)
-		{
-			// do the checks here while we are waiting on time to pass
-			uint32_t cyclesBit = T_SPEED::T0H;
-			if (subpix & mask)
-			{
-				cyclesBit = T_SPEED::T1H;
-			}
+        for (;;)
+        {
+            // do the checks here while we are waiting on time to pass
+            uint32_t cyclesBit = T_SPEED::T0H;
+            if (subpix & mask)
+            {
+                cyclesBit = T_SPEED::T1H;
+            }
 
-			// after we have done as much work as needed for this next bit
-			// now wait for the HIGH
-			while (((cyclesStart = getCycleCount()) - cyclesNext) < T_SPEED::Period);
+            // after we have done as much work as needed for this next bit
+            // now wait for the HIGH
+            while (((cyclesStart = getCycleCount()) - cyclesNext) < T_SPEED::Period);
 
-			// set pin state
-			T_PINSET::setPin(pinRegister);
+            // set pin state
+            T_PINSET::setPin(pinRegister);
 
-			// wait for the LOW
-			while ((getCycleCount() - cyclesStart) < cyclesBit);
+            // wait for the LOW
+            while ((getCycleCount() - cyclesStart) < cyclesBit);
 
-			// reset pin start
-			T_PINSET::resetPin(pinRegister);
+            // reset pin start
+            T_PINSET::resetPin(pinRegister);
 
-			cyclesNext = cyclesStart;
+            cyclesNext = cyclesStart;
 
-			// next bit
-			mask >>= 1;
-			if (mask == 0)
-			{
-				// no more bits to send in this byte
-				// check for another byte
-				if (pixels >= end)
-				{
-					// no more bytes to send so stop
-					break;
-				}
-				// reset mask to first bit and get the next byte
-				mask = 0x80;
-				subpix = *pixels++;
-			}
-		}
-	}
+            // next bit
+            mask >>= 1;
+            if (mask == 0)
+            {
+                // no more bits to send in this byte
+                // check for another byte
+                if (pixels >= end)
+                {
+                    // no more bytes to send so stop
+                    break;
+                }
+                // reset mask to first bit and get the next byte
+                mask = 0x80;
+                subpix = *pixels++;
+            }
+        }
+    }
 
 protected:
     static inline uint32_t getCycleCount(void)
@@ -184,7 +184,7 @@ protected:
 class NeoEspBitBangSpeedWs2811 : public NeoEspBitBangBase<NeoEspSpeedWs2811, NeoEspPinset>
 {
 public:
-	static const uint32_t ResetTimeUs = 300;
+    static const uint32_t ResetTimeUs = 300;
 };
 
 class NeoEspBitBangSpeedWs2812x : public NeoEspBitBangBase<NeoEspSpeed800Mhz, NeoEspPinset>
@@ -222,19 +222,19 @@ public:
 class NeoEspBitBangInvertedSpeedWs2811 : public NeoEspBitBangBase<NeoEspSpeedWs2811, NeoEspPinsetInverted>
 {
 public:
-	static const uint32_t ResetTimeUs = 300;
+    static const uint32_t ResetTimeUs = 300;
 };
 
 class NeoEspBitBangInvertedSpeedWs2812x : public NeoEspBitBangBase<NeoEspSpeed800Mhz, NeoEspPinsetInverted>
 {
 public:
-	static const uint32_t ResetTimeUs = 300;
+    static const uint32_t ResetTimeUs = 300;
 };
 
 class NeoEspBitBangInvertedSpeedSk6812 : public NeoEspBitBangBase<NeoEspSpeed800Mhz, NeoEspPinsetInverted>
 {
 public:
-	static const uint32_t ResetTimeUs = 80;
+    static const uint32_t ResetTimeUs = 80;
 };
 
 // normal is inverted signal, so inverted is normal
@@ -247,13 +247,13 @@ public:
 class NeoEspBitBangInvertedSpeed800Kbps : public NeoEspBitBangBase<NeoEspSpeed800Mhz, NeoEspPinsetInverted>
 {
 public:
-	static const uint32_t ResetTimeUs = 50;
+    static const uint32_t ResetTimeUs = 50;
 };
 
 class NeoEspBitBangInvertedSpeed400Kbps : public NeoEspBitBangBase<NeoEspSpeed400Mhz, NeoEspPinsetInverted>
 {
 public:
-	static const uint32_t ResetTimeUs = 50;
+    static const uint32_t ResetTimeUs = 50;
 };
 
 template<typename T_SPEED, typename T_PINSET> class NeoEspBitBangMethodBase
@@ -303,10 +303,10 @@ public:
             yield(); // allows for system yield if needed
         }
 
-		// Need 100% focus on instruction timing
+        // Need 100% focus on instruction timing
 #if defined(ARDUINO_ARCH_ESP32)
-		delay(1); // required
-		portMUX_TYPE updateMux = portMUX_INITIALIZER_UNLOCKED;
+        delay(1); // required
+        portMUX_TYPE updateMux = portMUX_INITIALIZER_UNLOCKED;
 
         portENTER_CRITICAL(&updateMux);
 #else
@@ -314,7 +314,7 @@ public:
 #endif
 
         T_SPEED::send_pixels(_data, _data + _sizeData, _pin);
-		
+        
 #if defined(ARDUINO_ARCH_ESP32)
         portEXIT_CRITICAL(&updateMux);
 #else
