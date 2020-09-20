@@ -37,19 +37,19 @@ License along with NeoPixel.  If not, see
 template<typename T_TWOWIRE> class Ws2801MethodBase
 {
 public:
-	Ws2801MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+    Ws2801MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
-		_wire(pinClock, pinData)
+        _wire(pinClock, pinData)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         memset(_data, 0, _sizeData);
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
-	Ws2801MethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-		Ws2801MethodBase(SCK, MOSI, pixelCount, elementSize, settingsSize)
-	{
-	}
+    Ws2801MethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        Ws2801MethodBase(SCK, MOSI, pixelCount, elementSize, settingsSize)
+    {
+    }
 #endif
 
     ~Ws2801MethodBase()
@@ -65,15 +65,15 @@ public:
     }
 
 #if defined(ARDUINO_ARCH_ESP32)
-	void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
-	{
-		_wire.begin(sck, miso, mosi, ss);
-	}
+    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    {
+        _wire.begin(sck, miso, mosi, ss);
+    }
 #endif
 
     void Initialize()
     {
-		_wire.begin();
+        _wire.begin();
 
         _endTime = micros();
     }
@@ -87,12 +87,12 @@ public:
 #endif
         }
 
-		_wire.beginTransaction();
+        _wire.beginTransaction();
         
         // data
-		_wire.transmitBytes(_data, _sizeData);
+        _wire.transmitBytes(_data, _sizeData);
         
-		_wire.endTransaction();
+        _wire.endTransaction();
 
         // save EOD time for latch on next call
         _endTime = micros();

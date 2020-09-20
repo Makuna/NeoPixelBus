@@ -160,7 +160,7 @@ RgbColor::RgbColor(const HsbColor& color)
 
 uint8_t RgbColor::CalculateBrightness() const
 {
-	return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
+    return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
 }
 
 RgbColor RgbColor::Dim(uint8_t ratio) const
@@ -177,69 +177,69 @@ RgbColor RgbColor::Brighten(uint8_t ratio) const
 
 void RgbColor::Darken(uint8_t delta)
 {
-	if (R > delta)
-	{
-		R -= delta;
-	}
-	else
-	{
-		R = 0;
-	}
+    if (R > delta)
+    {
+        R -= delta;
+    }
+    else
+    {
+        R = 0;
+    }
 
-	if (G > delta)
-	{
-		G -= delta;
-	}
-	else
-	{
-		G = 0;
-	}
+    if (G > delta)
+    {
+        G -= delta;
+    }
+    else
+    {
+        G = 0;
+    }
 
-	if (B > delta)
-	{
-		B -= delta;
-	}
-	else
-	{
-		B = 0;
-	}
+    if (B > delta)
+    {
+        B -= delta;
+    }
+    else
+    {
+        B = 0;
+    }
 }
 
 void RgbColor::Lighten(uint8_t delta)
 {
-	if (R < 255 - delta)
-	{
-		R += delta;
-	}
-	else
-	{
-		R = 255;
-	}
+    if (R < 255 - delta)
+    {
+        R += delta;
+    }
+    else
+    {
+        R = 255;
+    }
 
-	if (G < 255 - delta)
-	{
-		G += delta;
-	}
-	else
-	{
-		G = 255;
-	}
+    if (G < 255 - delta)
+    {
+        G += delta;
+    }
+    else
+    {
+        G = 255;
+    }
 
-	if (B < 255 - delta)
-	{
-		B += delta;
-	}
-	else
-	{
-		B = 255;
-	}
+    if (B < 255 - delta)
+    {
+        B += delta;
+    }
+    else
+    {
+        B = 255;
+    }
 }
 
 RgbColor RgbColor::LinearBlend(const RgbColor& left, const RgbColor& right, float progress)
 {
-	return RgbColor( left.R + ((right.R - left.R) * progress),
-		left.G + ((right.G - left.G) * progress),
-		left.B + ((right.B - left.B) * progress));
+    return RgbColor( left.R + ((right.R - left.R) * progress),
+        left.G + ((right.G - left.G) * progress),
+        left.B + ((right.B - left.B) * progress));
 }
 
 RgbColor RgbColor::BilinearBlend(const RgbColor& c00, 

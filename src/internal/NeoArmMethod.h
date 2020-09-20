@@ -154,10 +154,10 @@ public:
 class NeoArmMk20dxSpeedPropsApa106
 {
 public:
-	static const uint32_t CyclesT0h = (F_CPU / 4000000);
-	static const uint32_t CyclesT1h = (F_CPU / 913750);
-	static const uint32_t Cycles = (F_CPU / 584800);
-	static const uint32_t ResetTimeUs = 50;
+    static const uint32_t CyclesT0h = (F_CPU / 4000000);
+    static const uint32_t CyclesT1h = (F_CPU / 913750);
+    static const uint32_t Cycles = (F_CPU / 584800);
+    static const uint32_t ResetTimeUs = 50;
 };
 
 template<typename T_SPEEDPROPS> class NeoArmMk20dxSpeedBase
@@ -591,32 +591,32 @@ public:
         uint8_t bitMask = 0x80;
 
 #if defined(ARDUINO_STM32_FEATHER)
-		uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
+        uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
 
-		volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
-		volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
+        volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
+        volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
 
 #elif defined(ARDUINO_ARCH_STM32F4)
-		uint32_t  pinMask = BIT(pin & 0x0f);
+        uint32_t  pinMask = BIT(pin & 0x0f);
 
-		volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
-		volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
+        volatile uint16_t* set = &(PIN_MAP[pin].gpio_device->regs->BSRRL);
+        volatile uint16_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRRH);
 
 #elif defined(ARDUINO_ARCH_STM32F1)
 
-		uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
+        uint32_t  pinMask = BIT(PIN_MAP[pin].gpio_bit);
 
-		volatile uint32_t* set = &(PIN_MAP[pin].gpio_device->regs->BRR);
-		volatile uint32_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRR);
+        volatile uint32_t* set = &(PIN_MAP[pin].gpio_device->regs->BRR);
+        volatile uint32_t* clr = &(PIN_MAP[pin].gpio_device->regs->BSRR);
 
 #elif defined(ARDUINO_ARCH_STM32L4)
 
-		uint32_t pinMask = g_APinDescription[pin].bit;
+        uint32_t pinMask = g_APinDescription[pin].bit;
 
-		GPIO_TypeDef* GPIO = static_cast<GPIO_TypeDef*>(g_APinDescription[pin].GPIO);
+        GPIO_TypeDef* GPIO = static_cast<GPIO_TypeDef*>(g_APinDescription[pin].GPIO);
 
-		volatile uint32_t* set = &(GPIO->BRR);
-		volatile uint32_t* clr = &(GPIO->BSRR);
+        volatile uint32_t* set = &(GPIO->BRR);
+        volatile uint32_t* clr = &(GPIO->BSRR);
 
 #endif
         for (;;)

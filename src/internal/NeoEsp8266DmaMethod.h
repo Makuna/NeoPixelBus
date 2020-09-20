@@ -68,37 +68,37 @@ struct slc_queue_item
 class NeoEsp8266DmaSpeedBase
 {
 public:
-	static const uint8_t Level = 0x00;
-	static uint16_t Convert(uint8_t value)
-	{
-		const uint16_t bitpatterns[16] =
-		{
-			0b1000100010001000, 0b1000100010001110, 0b1000100011101000, 0b1000100011101110,
-			0b1000111010001000, 0b1000111010001110, 0b1000111011101000, 0b1000111011101110,
-			0b1110100010001000, 0b1110100010001110, 0b1110100011101000, 0b1110100011101110,
-			0b1110111010001000, 0b1110111010001110, 0b1110111011101000, 0b1110111011101110,
-		};
+    static const uint8_t Level = 0x00;
+    static uint16_t Convert(uint8_t value)
+    {
+        const uint16_t bitpatterns[16] =
+        {
+            0b1000100010001000, 0b1000100010001110, 0b1000100011101000, 0b1000100011101110,
+            0b1000111010001000, 0b1000111010001110, 0b1000111011101000, 0b1000111011101110,
+            0b1110100010001000, 0b1110100010001110, 0b1110100011101000, 0b1110100011101110,
+            0b1110111010001000, 0b1110111010001110, 0b1110111011101000, 0b1110111011101110,
+        };
 
-		return bitpatterns[value];
-	}
+        return bitpatterns[value];
+    }
 };
 
 class NeoEsp8266DmaInvertedSpeedBase
 {
 public:
-	static const uint8_t Level = 0xFF;
-	static uint16_t Convert(uint8_t value)
-	{
-		const uint16_t bitpatterns[16] =
-		{
-			0b0111011101110111, 0b0111011101110001, 0b0111011100010111, 0b0111011100010001,
-			0b0111000101110111, 0b0111000101110001, 0b0111000100010111, 0b0111000100010001,
-			0b0001011101110111, 0b0001011101110001, 0b0001011100010111, 0b0001011100010001,
-			0b0001000101110111, 0b0001000101110001, 0b0001000100010111, 0b0001000100010001,
-		};
+    static const uint8_t Level = 0xFF;
+    static uint16_t Convert(uint8_t value)
+    {
+        const uint16_t bitpatterns[16] =
+        {
+            0b0111011101110111, 0b0111011101110001, 0b0111011100010111, 0b0111011100010001,
+            0b0111000101110111, 0b0111000101110001, 0b0111000100010111, 0b0111000100010001,
+            0b0001011101110111, 0b0001011101110001, 0b0001011100010111, 0b0001011100010001,
+            0b0001000101110111, 0b0001000101110001, 0b0001000100010111, 0b0001000100010001,
+        };
 
-		return bitpatterns[value];
-	}
+        return bitpatterns[value];
+    }
 };
 
 class NeoEsp8266DmaSpeed800KbpsBase : public NeoEsp8266DmaSpeedBase
@@ -145,10 +145,10 @@ public:
 class NeoEsp8266DmaSpeedApa106 : public NeoEsp8266DmaSpeedBase
 {
 public:
-	const static uint32_t I2sClockDivisor = 4; 
-	const static uint32_t I2sBaseClockDivisor = 16;
-	const static uint32_t ByteSendTimeUs = 17; // us it takes to send a single pixel element
-	const static uint32_t ResetTimeUs = 50;
+    const static uint32_t I2sClockDivisor = 4; 
+    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t ByteSendTimeUs = 17; // us it takes to send a single pixel element
+    const static uint32_t ResetTimeUs = 50;
 };
 
 
@@ -156,21 +156,21 @@ public:
 class NeoEsp8266DmaInvertedSpeed800KbpsBase : public NeoEsp8266DmaInvertedSpeedBase
 {
 public:
-	const static uint32_t I2sClockDivisor = 3;
-	const static uint32_t I2sBaseClockDivisor = 16;
-	const static uint32_t ByteSendTimeUs = 10; // us it takes to send a single pixel element at 800khz speed
+    const static uint32_t I2sClockDivisor = 3;
+    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t ByteSendTimeUs = 10; // us it takes to send a single pixel element at 800khz speed
 };
 
 class NeoEsp8266DmaInvertedSpeedWs2812x : public NeoEsp8266DmaInvertedSpeed800KbpsBase
 {
 public:
-	const static uint32_t ResetTimeUs = 300;
+    const static uint32_t ResetTimeUs = 300;
 };
 
 class NeoEsp8266DmaInvertedSpeedSk6812 : public NeoEsp8266DmaInvertedSpeed800KbpsBase
 {
 public:
-	const static uint32_t ResetTimeUs = 80;
+    const static uint32_t ResetTimeUs = 80;
 };
 
 class NeoEsp8266DmaSpeedTm1814 : public NeoEsp8266DmaInvertedSpeed800KbpsBase
@@ -182,25 +182,25 @@ public:
 class NeoEsp8266DmaInvertedSpeed800Kbps : public NeoEsp8266DmaInvertedSpeed800KbpsBase
 {
 public:
-	const static uint32_t ResetTimeUs = 50;
+    const static uint32_t ResetTimeUs = 50;
 };
 
 class NeoEsp8266DmaInvertedSpeed400Kbps : public NeoEsp8266DmaInvertedSpeedBase
 {
 public:
-	const static uint32_t I2sClockDivisor = 6;
-	const static uint32_t I2sBaseClockDivisor = 16;
-	const static uint32_t ByteSendTimeUs = 20; // us it takes to send a single pixel element at 400khz speed
-	const static uint32_t ResetTimeUs = 50;
+    const static uint32_t I2sClockDivisor = 6;
+    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t ByteSendTimeUs = 20; // us it takes to send a single pixel element at 400khz speed
+    const static uint32_t ResetTimeUs = 50;
 };
 
 class NeoEsp8266DmaInvertedSpeedApa106 : public NeoEsp8266DmaInvertedSpeedBase
 {
 public:
-	const static uint32_t I2sClockDivisor = 4;
-	const static uint32_t I2sBaseClockDivisor = 16;
-	const static uint32_t ByteSendTimeUs = 17; // us it takes to send a single pixel element
-	const static uint32_t ResetTimeUs = 50;
+    const static uint32_t I2sClockDivisor = 4;
+    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t ByteSendTimeUs = 17; // us it takes to send a single pixel element
+    const static uint32_t ResetTimeUs = 50;
 };
 
 enum NeoDmaState

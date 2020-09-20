@@ -93,14 +93,14 @@ protected:
         // clear all invert bits
         USC0(uartNum) &= ~((1 << UCDTRI) | (1 << UCRTSI) | (1 << UCTXI) | (1 << UCDSRI) | (1 << UCCTSI) | (1 << UCRXI));
 
-		if (!invert)
-		{
-			// For normal operations, 
-			// Invert the TX voltage associated with logic level so:
-			//    - A logic level 0 will generate a Vcc signal
-			//    - A logic level 1 will generate a Gnd signal
-			USC0(uartNum) |= (1 << UCTXI);
-		}
+        if (!invert)
+        {
+            // For normal operations, 
+            // Invert the TX voltage associated with logic level so:
+            //    - A logic level 0 will generate a Vcc signal
+            //    - A logic level 1 will generate a Gnd signal
+            USC0(uartNum) |= (1 << UCTXI);
+        }
     }
 };
 
@@ -324,21 +324,21 @@ public:
 class NeoEsp8266UartSpeedApa106
 {
 public:
-	static const uint32_t ByteSendTimeUs = 14; // us it takes to send a single pixel element at 400khz speed
-	static const uint32_t UartBaud = 2339181; // APA106 pulse cycle of 1.71us, 4 serial bytes per NeoByte
-	static const uint32_t ResetTimeUs = 50; // us between data send bursts to reset for next update
+    static const uint32_t ByteSendTimeUs = 14; // us it takes to send a single pixel element at 400khz speed
+    static const uint32_t UartBaud = 2339181; // APA106 pulse cycle of 1.71us, 4 serial bytes per NeoByte
+    static const uint32_t ResetTimeUs = 50; // us between data send bursts to reset for next update
 };
 
 class NeoEsp8266UartNotInverted
 {
 public:
-	const static bool Inverted = false;
+    const static bool Inverted = false;
 };
 
 class NeoEsp8266UartInverted
 {
 public:
-	const static bool Inverted = true;
+    const static bool Inverted = true;
 };
 
 // NeoEsp8266UartMethodBase is a light shell arround NeoEsp8266Uart or NeoEsp8266AsyncUart that
