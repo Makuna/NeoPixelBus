@@ -46,7 +46,7 @@
 #include "Esp32_i2s.h"
 #include "esp32-hal.h"
 
-#if ESP_IDF_VERSION_MAJOR<4
+#if ESP_IDF_VERSION_MAJOR<=4
 #define I2S_BASE_CLK (160000000L)
 #endif
 
