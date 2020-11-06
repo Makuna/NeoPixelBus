@@ -9,6 +9,11 @@
   },
   "version": "2.6.0",
   "frameworks": "arduino",
-  "platforms": "*"
+  "platforms": "*",
+  "dependencies": [
+    {
+        "name": "SPI"
+    }
+  ]
 }
 
