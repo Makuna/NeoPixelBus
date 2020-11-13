@@ -331,8 +331,10 @@ void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2
     lc_conf.out_eof_mode = 1;
     i2s->lc_conf.val = lc_conf.val;
 
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
     i2s->pdm_conf.pcm2pdm_conv_en = 0;
     i2s->pdm_conf.pdm2pcm_conv_en = 0;
+#endif
     // SET_PERI_REG_BITS(RTC_CNTL_CLK_CONF_REG, RTC_CNTL_SOC_CLK_SEL, 0x1, RTC_CNTL_SOC_CLK_SEL_S);
 
     typeof(i2s->conf_chan) conf_chan;
@@ -360,8 +362,10 @@ void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2
 
     i2s->fifo_conf.tx_fifo_mod_force_en = 1;
 
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
     i2s->pdm_conf.rx_pdm_en = 0;
     i2s->pdm_conf.tx_pdm_en = 0;
+#endif
 
     i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
 
