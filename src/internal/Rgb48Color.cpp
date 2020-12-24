@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-RgbColor provides a color object that can be directly consumed by NeoPixelBus
+Rgb48Color provides a color object that can be directly consumed by NeoPixelBus
 
 Written by Michael C. Miller.
 
@@ -24,12 +24,13 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+#include "Rgb48Color.h"
 #include "RgbColor.h"
 #include "HslColor.h"
 #include "HsbColor.h"
 #include "HtmlColor.h"
 
-RgbColor::RgbColor(const HtmlColor& color)
+Rgb48Color::Rgb48Color(const HtmlColor& color)
 {
     uint32_t temp = color.Color;
 
@@ -40,7 +41,7 @@ RgbColor::RgbColor(const HtmlColor& color)
     R = (temp & 0xff);
 };
 
-RgbColor::RgbColor(const HslColor& color)
+Rgb48Color::Rgb48Color(const HslColor& color)
 {
     float r;
     float g;
@@ -48,12 +49,12 @@ RgbColor::RgbColor(const HslColor& color)
 
     _HslToRgb(color, &r, &g, &b);
 
-    R = (uint8_t)(r * 255.0f);
-    G = (uint8_t)(g * 255.0f);
-    B = (uint8_t)(b * 255.0f);
+    R = (uint16_t)(r * 65535.0f);
+    G = (uint16_t)(g * 65535.0f);
+    B = (uint16_t)(b * 65535.0f);
 }
 
-RgbColor::RgbColor(const HsbColor& color)
+Rgb48Color::Rgb48Color(const HsbColor& color)
 {
     float r;
     float g;
@@ -61,29 +62,29 @@ RgbColor::RgbColor(const HsbColor& color)
 
     _HsbToRgb(color, &r, &g, &b);
 
-    R = (uint8_t)(r * 255.0f);
-    G = (uint8_t)(g * 255.0f);
-    B = (uint8_t)(b * 255.0f);
+    R = (uint16_t)(r * 65535.0f);
+    G = (uint16_t)(g * 65535.0f);
+    B = (uint16_t)(b * 65535.0f);
 }
 
-uint8_t RgbColor::CalculateBrightness() const
+uint16_t Rgb48Color::CalculateBrightness() const
 {
-    return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
+    return (uint16_t)(((uint32_t)R + (uint32_t)G + (uint32_t)B) / 3);
 }
 
-RgbColor RgbColor::Dim(uint8_t ratio) const
-{
-    // specifically avoids float math
-    return RgbColor(_elementDim(R, ratio), _elementDim(G, ratio), _elementDim(B, ratio));
-}
-
-RgbColor RgbColor::Brighten(uint8_t ratio) const
+Rgb48Color Rgb48Color::Dim(uint16_t ratio) const
 {
     // specifically avoids float math
-    return RgbColor(_elementBrighten(R, ratio), _elementBrighten(G, ratio), _elementBrighten(B, ratio));
+    return Rgb48Color(_elementDim(R, ratio), _elementDim(G, ratio), _elementDim(B, ratio));
 }
 
-void RgbColor::Darken(uint8_t delta)
+Rgb48Color Rgb48Color::Brighten(uint16_t ratio) const
+{
+    // specifically avoids float math
+    return Rgb48Color(_elementBrighten(R, ratio), _elementBrighten(G, ratio), _elementBrighten(B, ratio));
+}
+
+void Rgb48Color::Darken(uint16_t delta)
 {
     if (R > delta)
     {
@@ -113,47 +114,47 @@ void RgbColor::Darken(uint8_t delta)
     }
 }
 
-void RgbColor::Lighten(uint8_t delta)
+void Rgb48Color::Lighten(uint16_t delta)
 {
-    if (R < 255 - delta)
+    if (R < 65535 - delta)
     {
         R += delta;
     }
     else
     {
-        R = 255;
+        R = 65535;
     }
 
-    if (G < 255 - delta)
+    if (G < 65535 - delta)
     {
         G += delta;
     }
     else
     {
-        G = 255;
+        G = 65535;
     }
 
-    if (B < 255 - delta)
+    if (B < 65535 - delta)
     {
         B += delta;
     }
     else
     {
-        B = 255;
+        B = 65535;
     }
 }
 
-RgbColor RgbColor::LinearBlend(const RgbColor& left, const RgbColor& right, float progress)
+Rgb48Color Rgb48Color::LinearBlend(const Rgb48Color& left, const Rgb48Color& right, float progress)
 {
-    return RgbColor( left.R + ((right.R - left.R) * progress),
+    return Rgb48Color( left.R + ((right.R - left.R) * progress),
         left.G + ((right.G - left.G) * progress),
         left.B + ((right.B - left.B) * progress));
 }
 
-RgbColor RgbColor::BilinearBlend(const RgbColor& c00, 
-    const RgbColor& c01, 
-    const RgbColor& c10, 
-    const RgbColor& c11, 
+Rgb48Color Rgb48Color::BilinearBlend(const Rgb48Color& c00, 
+    const Rgb48Color& c01, 
+    const Rgb48Color& c10, 
+    const Rgb48Color& c11, 
     float x, 
     float y)
 {
@@ -162,7 +163,7 @@ RgbColor RgbColor::BilinearBlend(const RgbColor& c00,
     float v01 = (1.0f - x) * y;
     float v11 = x * y;
 
-    return RgbColor(
+    return Rgb48Color(
         c00.R * v00 + c10.R * v10 + c01.R * v01 + c11.R * v11,
         c00.G * v00 + c10.G * v10 + c01.G * v01 + c11.G * v11,
         c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11);
