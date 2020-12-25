@@ -28,6 +28,7 @@ License along with NeoPixel.  If not, see
 struct HslColor;
 struct HsbColor;
 struct HtmlColor;
+struct Rgb16Color;
 
 struct RgbColorBase
 {

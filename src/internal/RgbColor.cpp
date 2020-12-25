@@ -25,9 +25,17 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #include "RgbColor.h"
+#include "Rgb16Color.h"
 #include "HslColor.h"
 #include "HsbColor.h"
 #include "HtmlColor.h"
+
+RgbColor::RgbColor(const Rgb16Color& color)
+{
+    R = color.getR();
+    G = color.getG();
+    B = color.getB();
+}
 
 RgbColor::RgbColor(const HtmlColor& color)
 {
