@@ -61,9 +61,11 @@ struct Rgb48Color : RgbColorBase
     // ------------------------------------------------------------------------
     // Construct a Rgb48Color using RgbColor
     // ------------------------------------------------------------------------
-    Rgb48Color(const RgbColor& color) :
-        R(color.R * 256), G(color.G * 256), B(color.B * 256)
+    Rgb48Color(const RgbColor& color) 
     {
+        R = (color.R == 0) ? 0 : (color.R << 8 | 0xff);
+        G = (color.G == 0) ? 0 : (color.G << 8 | 0xff);
+        B = (color.B == 0) ? 0 : (color.B << 8 | 0xff);
     }
 
     // ------------------------------------------------------------------------
@@ -167,9 +169,9 @@ struct Rgb48Color : RgbColorBase
     {
         auto total = 0;
 
-        total += R * settings.RedTenthMilliAmpere / 255;
-        total += G * settings.GreenTenthMilliAmpere / 255;
-        total += B * settings.BlueTenthMilliAmpere / 255;
+        total += R * settings.RedTenthMilliAmpere / Max;
+        total += G * settings.GreenTenthMilliAmpere / Max;
+        total += B * settings.BlueTenthMilliAmpere / Max;
 
         return total;
     }
@@ -182,6 +184,8 @@ struct Rgb48Color : RgbColorBase
     uint16_t G;
     uint16_t B;
 
+    const static uint16_t Max = 65535;
+
 private:
     inline static uint16_t _elementDim(uint16_t value, uint16_t ratio)
     {
@@ -192,9 +196,9 @@ private:
     { 
         uint32_t element = ((static_cast<uint32_t>(value) + 1) << 8) / (static_cast<uint32_t>(ratio) + 1);
 
-        if (element > 65535)
+        if (element > Max)
         {
-            element = 65535;
+            element = Max;
         }
         else
         {

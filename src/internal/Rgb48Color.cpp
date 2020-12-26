@@ -49,9 +49,9 @@ Rgb48Color::Rgb48Color(const HslColor& color)
 
     _HslToRgb(color, &r, &g, &b);
 
-    R = (uint16_t)(r * 65535.0f);
-    G = (uint16_t)(g * 65535.0f);
-    B = (uint16_t)(b * 65535.0f);
+    R = (uint16_t)(r * Max);
+    G = (uint16_t)(g * Max);
+    B = (uint16_t)(b * Max);
 }
 
 Rgb48Color::Rgb48Color(const HsbColor& color)
@@ -62,9 +62,9 @@ Rgb48Color::Rgb48Color(const HsbColor& color)
 
     _HsbToRgb(color, &r, &g, &b);
 
-    R = (uint16_t)(r * 65535.0f);
-    G = (uint16_t)(g * 65535.0f);
-    B = (uint16_t)(b * 65535.0f);
+    R = (uint16_t)(r * Max);
+    G = (uint16_t)(g * Max);
+    B = (uint16_t)(b * Max);
 }
 
 uint16_t Rgb48Color::CalculateBrightness() const
@@ -116,31 +116,31 @@ void Rgb48Color::Darken(uint16_t delta)
 
 void Rgb48Color::Lighten(uint16_t delta)
 {
-    if (R < 65535 - delta)
+    if (R < Max - delta)
     {
         R += delta;
     }
     else
     {
-        R = 65535;
+        R = Max;
     }
 
-    if (G < 65535 - delta)
+    if (G < Max - delta)
     {
         G += delta;
     }
     else
     {
-        G = 65535;
+        G = Max;
     }
 
-    if (B < 65535 - delta)
+    if (B < Max - delta)
     {
         B += delta;
     }
     else
     {
-        B = 65535;
+        B = Max;
     }
 }
 

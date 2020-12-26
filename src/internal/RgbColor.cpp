@@ -57,9 +57,9 @@ RgbColor::RgbColor(const HslColor& color)
 
     _HslToRgb(color, &r, &g, &b);
 
-    R = (uint8_t)(r * 255.0f);
-    G = (uint8_t)(g * 255.0f);
-    B = (uint8_t)(b * 255.0f);
+    R = (uint8_t)(r * Max);
+    G = (uint8_t)(g * Max);
+    B = (uint8_t)(b * Max);
 }
 
 RgbColor::RgbColor(const HsbColor& color)
@@ -70,9 +70,9 @@ RgbColor::RgbColor(const HsbColor& color)
 
     _HsbToRgb(color, &r, &g, &b);
 
-    R = (uint8_t)(r * 255.0f);
-    G = (uint8_t)(g * 255.0f);
-    B = (uint8_t)(b * 255.0f);
+    R = (uint8_t)(r * Max);
+    G = (uint8_t)(g * Max);
+    B = (uint8_t)(b * Max);
 }
 
 uint8_t RgbColor::CalculateBrightness() const
@@ -124,31 +124,31 @@ void RgbColor::Darken(uint8_t delta)
 
 void RgbColor::Lighten(uint8_t delta)
 {
-    if (R < 255 - delta)
+    if (R < Max - delta)
     {
         R += delta;
     }
     else
     {
-        R = 255;
+        R = Max;
     }
 
-    if (G < 255 - delta)
+    if (G < Max - delta)
     {
         G += delta;
     }
     else
     {
-        G = 255;
+        G = Max;
     }
 
-    if (B < 255 - delta)
+    if (B < Max - delta)
     {
         B += delta;
     }
     else
     {
-        B = 255;
+        B = Max;
     }
 }
 
