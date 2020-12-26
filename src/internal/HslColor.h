@@ -50,6 +50,11 @@ struct HslColor
     HslColor(const RgbColor& color);
 
     // ------------------------------------------------------------------------
+    // Construct a HslColor using Rgb48Color
+    // ------------------------------------------------------------------------
+    HslColor(const Rgb48Color& color);
+
+    // ------------------------------------------------------------------------
     // Construct a HslColor that will have its values set in latter operations
     // CAUTION:  The H,S,L members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
@@ -109,5 +114,9 @@ struct HslColor
     float H;
     float S;
     float L;
+
+private:
+    static void _RgbToHsl(float r, float g, float b, HslColor* color);
+
 };
 

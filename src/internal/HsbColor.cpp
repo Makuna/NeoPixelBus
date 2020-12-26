@@ -25,22 +25,17 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #include "RgbColor.h"
+#include "Rgb48Color.h"
 #include "HsbColor.h"
 
-
-HsbColor::HsbColor(const RgbColor& color)
+void HsbColor::_RgbToHsb(float r, float g, float b, HsbColor* color)
 {
-    // convert colors to float between (0.0 - 1.0)
-    float r = color.R / 255.0f;
-    float g = color.G / 255.0f;
-    float b = color.B / 255.0f;
-
     float max = (r > g && r > b) ? r : (g > b) ? g : b;
-    float min = (r < g && r < b) ? r : (g < b) ? g : b;
+    float min = (r < g&& r < b) ? r : (g < b) ? g : b;
 
     float d = max - min;
 
-    float h = 0.0; 
+    float h = 0.0;
     float v = max;
     float s = (v == 0.0f) ? 0 : (d / v);
 
@@ -62,7 +57,27 @@ HsbColor::HsbColor(const RgbColor& color)
     }
 
 
-    H = h;
-    S = s;
-    B = v;
+    color->H = h;
+    color->S = s;
+    color->B = v;
+}
+
+HsbColor::HsbColor(const RgbColor& color)
+{
+    // convert colors to float between (0.0 - 1.0)
+    float r = color.R / 255.0f;
+    float g = color.G / 255.0f;
+    float b = color.B / 255.0f;
+
+    _RgbToHsb(r, g, b, this);
+}
+
+HsbColor::HsbColor(const Rgb48Color& color)
+{
+    // convert colors to float between (0.0 - 1.0)
+    float r = color.R / 65535.0f;
+    float g = color.G / 65535.0f;
+    float b = color.B / 65535.0f;
+
+    _RgbToHsb(r, g, b, this);
 }

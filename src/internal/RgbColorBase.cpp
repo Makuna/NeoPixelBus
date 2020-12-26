@@ -26,6 +26,7 @@ License along with NeoPixel.  If not, see
 
 #include "RgbColorBase.h"
 #include "RgbColor.h"
+#include "Rgb48Color.h"
 #include "HslColor.h"
 #include "HsbColor.h"
 #include "HtmlColor.h"

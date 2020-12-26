@@ -28,6 +28,7 @@ License along with NeoPixel.  If not, see
 #include <Arduino.h>
 #include "NeoSettings.h"
 #include "RgbColorBase.h"
+#include "RgbColor.h"
 
 
 // ------------------------------------------------------------------------
@@ -56,6 +57,14 @@ struct Rgb48Color : RgbColorBase
         R(brightness), G(brightness), B(brightness)
     {
     };
+
+    // ------------------------------------------------------------------------
+    // Construct a Rgb48Color using RgbColor
+    // ------------------------------------------------------------------------
+    Rgb48Color(const RgbColor& color) :
+        R(color.R * 256), G(color.G * 256), B(color.B * 256)
+    {
+    }
 
     // ------------------------------------------------------------------------
     // Construct a Rgb48Color using HtmlColor

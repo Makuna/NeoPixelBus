@@ -10,6 +10,8 @@ NeoPixelBus	KEYWORD1
 NeoPixelSegmentBus	KEYWORD1
 RgbwColor	KEYWORD1
 RgbColor	KEYWORD1
+Rgb16Color	KEYWORD1
+Rgb48Color	KEYWORD1
 HslColor	KEYWORD1
 HsbColor	KEYWORD1
 HtmlColor	KEYWORD1
