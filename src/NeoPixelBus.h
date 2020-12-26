@@ -51,9 +51,13 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoSettings.h"
 
 #include "internal/RgbColor.h"
+#include "internal/Rgb16Color.h"
+#include "internal/Rgb48Color.h"
+
 #include "internal/HslColor.h"
 #include "internal/HsbColor.h"
 #include "internal/HtmlColor.h"
+
 #include "internal/RgbwColor.h"
 #include "internal/SegmentDigit.h"
 
