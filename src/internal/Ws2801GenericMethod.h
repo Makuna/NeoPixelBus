@@ -39,6 +39,7 @@ template<typename T_TWOWIRE> class Ws2801MethodBase
 public:
     Ws2801MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
+        _endTime(0),
         _wire(pinClock, pinData)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));

@@ -261,7 +261,8 @@ template<typename T_SPEED, typename T_PINSET> class NeoEspBitBangMethodBase
 public:
     NeoEspBitBangMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
-        _pin(pin)
+        _pin(pin),
+        _endTime(0)
     {
         pinMode(pin, OUTPUT);
 
