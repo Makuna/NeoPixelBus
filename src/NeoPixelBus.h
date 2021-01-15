@@ -65,6 +65,7 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoTm1814ColorFeatures.h"
 #include "internal/DotStarColorFeatures.h"
 #include "internal/Lpd8806ColorFeatures.h"
+#include "internal/Lpd6803ColorFeatures.h"
 #include "internal/P9813ColorFeatures.h"
 #include "internal/NeoSegmentFeatures.h"
 
@@ -86,6 +87,7 @@ License along with NeoPixel.  If not, see
 
 #include "internal/DotStarGenericMethod.h"
 #include "internal/Lpd8806GenericMethod.h"
+#include "internal/Lpd6803GenericMethod.h"
 #include "internal/Ws2801GenericMethod.h"
 #include "internal/P9813GenericMethod.h"
 
