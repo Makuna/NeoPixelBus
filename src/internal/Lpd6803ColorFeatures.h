@@ -104,6 +104,23 @@ public:
     }
 
     typedef RgbColor ColorObject;
+
+
+protected:
+    static void encodePixel(uint8_t c1, uint8_t c2, uint8_t c3, uint16_t* color555)
+    {
+        *color555 = (0x8000 | 
+                ((c1 & 0xf8) << 7) | 
+                ((c2 & 0xf8) << 2) | 
+                ((c3 & 0xf8) >> 3));
+    }
+
+    static void decodePixel(uint16_t color555, uint8_t* c1, uint8_t* c2, uint8_t* c3)
+    {
+        *c1 = (color555 >> 7) & 0xf8;
+        *c2 = (color555 >> 2) & 0xf8;
+        *c3 = (color555 << 3) & 0xf8;
+    }
 };
 
 class  Lpd6803BrgFeature : public Lpd68033Elements
@@ -111,17 +128,27 @@ class  Lpd6803BrgFeature : public Lpd68033Elements
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
-        uint16_t* p = reinterpret_cast<uint16_t*>( getPixelAddress(pPixels, indexPixel) );
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        uint16_t color555;
 
-        *p = encodePixel(color);
+        encodePixel(color.B, color.R, color.G, &color555);
+        *p++ = color555 >> 8;
+        *p = color555 & 0xff;
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        const uint16_t* p = reinterpret_cast<const uint16_t*>( getPixelAddress(pPixels, indexPixel) );
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        return decodePixel(*p);
+        uint16_t color555;
+
+        color555 = ((*p++) << 8);
+        color555 |= (*p);
+
+        decodePixel(color555, &color.B, &color.R, &color.G);
+
+        return color;
     }
 
     static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
@@ -129,33 +156,11 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
 
-        uint16_t color555 = pgm_read_word(p);
+        uint16_t color555;
 
-        return decodePixel(color555);
-    }
+        color555 = ((pgm_read_byte(p++)) << 8) | (pgm_read_byte(p));
 
-protected:
-    static uint16_t encodePixel(ColorObject color)
-    {
-        uint16_t color555 = color.B >> 3;
-
-        color555 <<= 5;
-        color555 |= color.R >> 3;
-        color555 <<= 5;
-        color555 |= color.G >> 3;
-        color555 |= 0x8000;
-
-        return color555;
-    }
-
-    static ColorObject decodePixel(uint16_t color555)
-    {
-        ColorObject color;
-
-        color555 &= 0x7fff;
-        color.B = (color555 >> 10) & 0x1f;
-        color.R = (color555 >> 5) & 0x1f;
-        color.G = (color555) & 0x1f;
+        decodePixel(color555, &color.B, &color.R, &color.G);
 
         return color;
     }
@@ -166,17 +171,27 @@ class  Lpd6803GrbFeature : public Lpd68033Elements
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
-        uint16_t* p = reinterpret_cast<uint16_t*>(getPixelAddress(pPixels, indexPixel));
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        uint16_t color555;
 
-        *p = encodePixel(color);
+        encodePixel(color.G, color.R, color.B, &color555);
+        *p++ = color555 >> 8;
+        *p = color555 & 0xff;
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(pPixels, indexPixel));
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        return decodePixel(*p);
+        uint16_t color555;
+
+        color555 = ((*p++) << 8);
+        color555 |= (*p);
+
+        decodePixel(color555, &color.G, &color.R, &color.B);
+
+        return color;
     }
 
     static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
@@ -184,33 +199,12 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
 
-        uint16_t color555 = pgm_read_word(p);
+        uint16_t color555;
 
-        return decodePixel(color555);
-    }
+        color555 = ((pgm_read_byte(p++)) << 8) | (pgm_read_byte(p));
 
-protected:
-    static uint16_t encodePixel(ColorObject color)
-    {
-        uint16_t color555 = color.G >> 3;
+        decodePixel(color555, &color.G, &color.R, &color.B);
 
-        color555 <<= 5;
-        color555 |= color.R >> 3;
-        color555 <<= 5;
-        color555 |= color.B >> 3;
-        color555 |= 0x8000;
-
-        return color555;
-    }
-
-    static ColorObject decodePixel(uint16_t color555)
-    {
-        ColorObject color;
-
-        color555 &= 0x7fff;
-        color.G = (color555 >> 10) & 0x1f;
-        color.R = (color555 >> 5) & 0x1f;
-        color.B = (color555) & 0x1f;
         return color;
     }
 };
