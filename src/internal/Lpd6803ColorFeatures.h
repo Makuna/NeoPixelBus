@@ -158,7 +158,8 @@ public:
 
         uint16_t color555;
 
-        color555 = ((pgm_read_byte(p++)) << 8) | (pgm_read_byte(p));
+        color555 = (pgm_read_byte(p++) << 8);
+        color555 |= pgm_read_byte(p);
 
         decodePixel(color555, &color.B, &color.R, &color.G);
 
@@ -201,7 +202,8 @@ public:
 
         uint16_t color555;
 
-        color555 = ((pgm_read_byte(p++)) << 8) | (pgm_read_byte(p));
+        color555 = (pgm_read_byte(p++) << 8);
+        color555 |= pgm_read_byte(p);
 
         decodePixel(color555, &color.G, &color.R, &color.B);
 
