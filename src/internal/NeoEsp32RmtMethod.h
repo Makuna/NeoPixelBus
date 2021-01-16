@@ -201,8 +201,8 @@ public:
 class NeoEsp32RmtSpeedApa106 : public NeoEsp32RmtSpeedBase
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(400, 1250);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(1250, 400);
+    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(350, 1350);
+    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(1350, 350);
     const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(50000); // 50us
 
     static void IRAM_ATTR Translate(const void* src,
@@ -307,8 +307,8 @@ public:
 class NeoEsp32RmtInvertedSpeedApa106 : public NeoEsp32RmtInvertedSpeedBase
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(400, 1250);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(1250, 400);
+    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(350, 1350);
+    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(1350, 350);
     const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(50000); // 50us
 
     static void IRAM_ATTR Translate(const void* src,
