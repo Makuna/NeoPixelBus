@@ -243,6 +243,10 @@ public:
             ,NRF_PWM3
 #endif
         };
+        if (channel >= (sizeof(PWM) / sizeof(PWM[0])))
+        {
+            channel = NeoBusChannel_0;
+        }
         _pwm = PWM[channel];
     }
 
