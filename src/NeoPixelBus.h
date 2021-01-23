@@ -119,7 +119,18 @@ License along with NeoPixel.  If not, see
 #error "Platform Currently Not Supported, please add an Issue at Github/Makuna/NeoPixelBus"
 #endif
 
-
+// For those platforms that support dynamic channel setting
+enum NeoPixelBusChannel
+{
+    NeoPixelBusChannel_0,
+    NeoPixelBusChannel_1,
+    NeoPixelBusChannel_2,
+    NeoPixelBusChannel_3,
+    NeoPixelBusChannel_4,
+    NeoPixelBusChannel_5,
+    NeoPixelBusChannel_6,
+    NeoPixelBusChannel_7
+};
 
 
 template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBus
@@ -132,6 +143,13 @@ public:
         _countPixels(countPixels),
         _state(0),
         _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
+    {
+    }
+
+    NeoPixelBus(uint16_t countPixels, uint8_t pin, NeoPixelBusChannel channel) :
+        _countPixels(countPixels),
+        _state(0),
+        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, channel)
     {
     }
 

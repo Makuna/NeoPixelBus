@@ -311,6 +311,7 @@ private:
     uint8_t* _data;        // Holds LED color values
     size_t   _dmaBufferSize; // total size of _dmaBuffer
     nrf_pwm_values_common_t* _dmaBuffer;     // Holds pixel data in native format for PWM hardware
+    T_BUS _bus; // holds instance for multi channel support
 
     void dmaInit()
     {
