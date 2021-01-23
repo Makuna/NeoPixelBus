@@ -371,6 +371,7 @@ public:
 
 #endif
 
+// dynamic channel support
 class NeoEsp32RmtChannelN
 {
 public:
