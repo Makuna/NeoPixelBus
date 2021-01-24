@@ -322,24 +322,32 @@ public:
 class NeoEsp32RmtChannel0
 {
 public:
+    NeoEsp32RmtChannel0() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_0;
 };
 
 class NeoEsp32RmtChannel1
 {
 public:
+    NeoEsp32RmtChannel1() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_1;
 };
 
 class NeoEsp32RmtChannel2
 {
 public:
+    NeoEsp32RmtChannel2() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_2;
 };
 
 class NeoEsp32RmtChannel3
 {
 public:
+    NeoEsp32RmtChannel3() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_3;
 };
 
@@ -348,28 +356,49 @@ public:
 class NeoEsp32RmtChannel4
 {
 public:
+    NeoEsp32RmtChannel4() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_4;
 };
 
 class NeoEsp32RmtChannel5
 {
 public:
+    NeoEsp32RmtChannel5() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_5;
 };
 
 class NeoEsp32RmtChannel6
 {
 public:
+    NeoEsp32RmtChannel6() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_6;
 };
 
 class NeoEsp32RmtChannel7
 {
 public:
+    NeoEsp32RmtChannel7() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_7;
 };
 
 #endif
+
+// dynamic channel support
+class NeoEsp32RmtChannelN
+{
+public:
+    NeoEsp32RmtChannelN(NeoBusChannel channel) :
+        RmtChannelNumber(static_cast<rmt_channel_t>(channel))
+    {
+    }
+    NeoEsp32RmtChannelN() = delete; // no default constructor
+
+    const rmt_channel_t RmtChannelNumber;
+};
 
 template<typename T_SPEED, typename T_CHANNEL> class NeoEsp32RmtMethodBase
 {
@@ -378,20 +407,24 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_dataEditing, 0x00, _sizeData);
+        construct();
+    }
 
-        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
-        // no need to initialize it, it gets overwritten on every send
+    NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
+        _sizeData(pixelCount* elementSize + settingsSize),
+        _pin(pin),
+        _channel(channel)
+    {
+        construct();
     }
 
     ~NeoEsp32RmtMethodBase()
     {
         // wait until the last send finishes before destructing everything
         // arbitrary time out of 10 seconds
-        ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 10000 / portTICK_PERIOD_MS));
+        ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_wait_tx_done(_channel.RmtChannelNumber, 10000 / portTICK_PERIOD_MS));
 
-        ESP_ERROR_CHECK(rmt_driver_uninstall(T_CHANNEL::RmtChannelNumber));
+        ESP_ERROR_CHECK(rmt_driver_uninstall(_channel.RmtChannelNumber));
 
         free(_dataEditing);
         free(_dataSending);
@@ -400,7 +433,7 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        return (ESP_OK == rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 0));
+        return (ESP_OK == rmt_wait_tx_done(_channel.RmtChannelNumber, 0));
     }
 
     void Initialize()
@@ -408,7 +441,7 @@ public:
         rmt_config_t config;
 
         config.rmt_mode = RMT_MODE_TX;
-        config.channel = T_CHANNEL::RmtChannelNumber;
+        config.channel = _channel.RmtChannelNumber;
         config.gpio_num = static_cast<gpio_num_t>(_pin);
         config.mem_block_num = 1;
         config.tx_config.loop_en = false;
@@ -422,8 +455,8 @@ public:
         config.clk_div = T_SPEED::RmtClockDivider;
 
         ESP_ERROR_CHECK(rmt_config(&config));
-        ESP_ERROR_CHECK(rmt_driver_install(T_CHANNEL::RmtChannelNumber, 0, ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_LEVEL1));
-        ESP_ERROR_CHECK(rmt_translator_init(T_CHANNEL::RmtChannelNumber, T_SPEED::Translate));
+        ESP_ERROR_CHECK(rmt_driver_install(_channel.RmtChannelNumber, 0, ESP_INTR_FLAG_IRAM | ESP_INTR_FLAG_LEVEL1));
+        ESP_ERROR_CHECK(rmt_translator_init(_channel.RmtChannelNumber, T_SPEED::Translate));
     }
 
     void Update(bool maintainBufferConsistency)
@@ -431,10 +464,10 @@ public:
         // wait for not actively sending data
         // this will time out at 10 seconds, an arbitrarily long period of time
         // and do nothing if this happens
-        if (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_wait_tx_done(T_CHANNEL::RmtChannelNumber, 10000 / portTICK_PERIOD_MS)))
+        if (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_wait_tx_done(_channel.RmtChannelNumber, 10000 / portTICK_PERIOD_MS)))
         {
             // now start the RMT transmit with the editing buffer before we swap
-            ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_write_sample(T_CHANNEL::RmtChannelNumber, _dataEditing, _sizeData, false));
+            ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_write_sample(_channel.RmtChannelNumber, _dataEditing, _sizeData, false));
 
             if (maintainBufferConsistency)
             {
@@ -462,13 +495,32 @@ public:
 private:
     const size_t  _sizeData;      // Size of '_data*' buffers 
     const uint8_t _pin;            // output pin number
+    const T_CHANNEL _channel; // holds instance for multi channel support
 
     // Holds data stream which include LED color values and other settings as needed
     uint8_t*  _dataEditing;   // exposed for get and set
     uint8_t*  _dataSending;   // used for async send using RMT
+
+
+    void construct()
+    {
+        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
+        memset(_dataEditing, 0x00, _sizeData);
+
+        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
+        // no need to initialize it, it gets overwritten on every send
+    }
 };
 
 // normal
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2811, NeoEsp32RmtChannelN> NeoEsp32RmtNWs2811Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2812x, NeoEsp32RmtChannelN> NeoEsp32RmtNWs2812xMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedSk6812, NeoEsp32RmtChannelN> NeoEsp32RmtNSk6812Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1814, NeoEsp32RmtChannelN> NeoEsp32RmtNTm1814Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedApa106, NeoEsp32RmtChannelN> NeoEsp32RmtNApa106Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps, NeoEsp32RmtChannelN> NeoEsp32RmtN800KbpsMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtChannelN> NeoEsp32RmtN400KbpsMethod;
+
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2811, NeoEsp32RmtChannel0> NeoEsp32Rmt0Ws2811Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2812x, NeoEsp32RmtChannel0> NeoEsp32Rmt0Ws2812xMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedSk6812, NeoEsp32RmtChannel0> NeoEsp32Rmt0Sk6812Method;
@@ -539,6 +591,14 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtChannel7> NeoE
 #endif
 
 // inverted
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2811, NeoEsp32RmtChannelN> NeoEsp32RmtNWs2811InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2812x, NeoEsp32RmtChannelN> NeoEsp32RmtNWs2812xInvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedSk6812, NeoEsp32RmtChannelN> NeoEsp32RmtNSk6812InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTm1814, NeoEsp32RmtChannelN> NeoEsp32RmtNTm1814InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedApa106, NeoEsp32RmtChannelN> NeoEsp32RmtNApa106InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed800Kbps, NeoEsp32RmtChannelN> NeoEsp32RmtN800KbpsInvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps, NeoEsp32RmtChannelN> NeoEsp32RmtN400KbpsInvertedMethod;
+
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2811, NeoEsp32RmtChannel0> NeoEsp32Rmt0Ws2811InvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2812x, NeoEsp32RmtChannel0> NeoEsp32Rmt0Ws2812xInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedSk6812, NeoEsp32RmtChannel0> NeoEsp32Rmt0Sk6812InvertedMethod;

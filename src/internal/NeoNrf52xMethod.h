@@ -229,6 +229,34 @@ public:
 };
 #endif
 
+// dynamic channel support
+class NeoNrf52xPwmN
+{
+public:
+    NeoNrf52xPwmN(NeoBusChannel channel) 
+    {
+        NRF_PWM_Type* PWM[] = {
+    NRF_PWM0,
+    NRF_PWM1,
+    NRF_PWM2
+#ifdef NRF_PWM3
+            ,NRF_PWM3
+#endif
+        };
+        _pwm = PWM[channel];
+    }
+
+    inline NRF_PWM_Type* Pwm() const
+    {
+        return _pwm;
+    }
+
+protected:
+    NRF_PWM_Type* _pwm;
+
+    NeoNrf52xPwmN() {};
+};
+
 template<typename T_SPEED, typename T_BUS> class NeoNrf52xMethodBase
 {
 public:
@@ -236,13 +264,15 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        pinMode(pin, OUTPUT);
+        construct();
+    }
 
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_data, 0, _sizeData);
-
-        _dmaBufferSize = c_dmaBytesPerDataByte * _sizeData + sizeof(nrf_pwm_values_common_t);
-        _dmaBuffer = static_cast<nrf_pwm_values_common_t*>(malloc(_dmaBufferSize));
+    NeoNrf52xMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
+        _sizeData(pixelCount* elementSize + settingsSize),
+        _pin(pin),
+        _bus(channel)
+    {
+        construct();
     }
 
     ~NeoNrf52xMethodBase()
@@ -262,7 +292,7 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        return (T_BUS::Pwm()->EVENTS_STOPPED);
+        return (_bus.Pwm()->EVENTS_STOPPED);
     }
 
     void Initialize()
@@ -307,50 +337,62 @@ public:
 private:
     const size_t   _sizeData;    // Size of '_data' buffer below
     const uint8_t _pin;      // output pin number
+    const T_BUS _bus; // holds instance for multi channel support
 
     uint8_t* _data;        // Holds LED color values
     size_t   _dmaBufferSize; // total size of _dmaBuffer
     nrf_pwm_values_common_t* _dmaBuffer;     // Holds pixel data in native format for PWM hardware
 
+    void construct()
+    {
+        pinMode(_pin, OUTPUT);
+
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        memset(_data, 0, _sizeData);
+
+        _dmaBufferSize = c_dmaBytesPerDataByte * _sizeData + sizeof(nrf_pwm_values_common_t);
+        _dmaBuffer = static_cast<nrf_pwm_values_common_t*>(malloc(_dmaBufferSize));
+    }
+
     void dmaInit()
     {
         // only use channel zero
-        T_BUS::Pwm()->PSEL.OUT[0] = digitalPinToPinName(_pin);
-        T_BUS::Pwm()->PSEL.OUT[1] = NC;
-        T_BUS::Pwm()->PSEL.OUT[2] = NC;
-        T_BUS::Pwm()->PSEL.OUT[3] = NC;
+        _bus.Pwm()->PSEL.OUT[0] = digitalPinToPinName(_pin);
+        _bus.Pwm()->PSEL.OUT[1] = NC;
+        _bus.Pwm()->PSEL.OUT[2] = NC;
+        _bus.Pwm()->PSEL.OUT[3] = NC;
 
-        T_BUS::Pwm()->ENABLE = 1;
-        T_BUS::Pwm()->MODE = NRF_PWM_MODE_UP;
-        T_BUS::Pwm()->PRESCALER = NRF_PWM_CLK_16MHz;
-        T_BUS::Pwm()->COUNTERTOP = T_SPEED::CountTop;
-        T_BUS::Pwm()->LOOP = 1; // single fire so events get set
-        T_BUS::Pwm()->DECODER = NRF_PWM_LOAD_COMMON;
+        _bus.Pwm()->ENABLE = 1;
+        _bus.Pwm()->MODE = NRF_PWM_MODE_UP;
+        _bus.Pwm()->PRESCALER = NRF_PWM_CLK_16MHz;
+        _bus.Pwm()->COUNTERTOP = T_SPEED::CountTop;
+        _bus.Pwm()->LOOP = 1; // single fire so events get set
+        _bus.Pwm()->DECODER = NRF_PWM_LOAD_COMMON;
 
         // sequence zero is the primary data with a BitReset entry on the end for
         // the delay repeating
-        T_BUS::Pwm()->SEQ[0].PTR = reinterpret_cast<uint32_t>(_dmaBuffer);
-        T_BUS::Pwm()->SEQ[0].CNT = _dmaBufferSize / sizeof(nrf_pwm_values_common_t);
-        T_BUS::Pwm()->SEQ[0].REFRESH = 0; // ignored
-        T_BUS::Pwm()->SEQ[0].ENDDELAY = T_SPEED::CountReset; // ignored still?
+        _bus.Pwm()->SEQ[0].PTR = reinterpret_cast<uint32_t>(_dmaBuffer);
+        _bus.Pwm()->SEQ[0].CNT = _dmaBufferSize / sizeof(nrf_pwm_values_common_t);
+        _bus.Pwm()->SEQ[0].REFRESH = 0; // ignored
+        _bus.Pwm()->SEQ[0].ENDDELAY = T_SPEED::CountReset; // ignored still?
 
         // sequence one is pointing to the BitReset entry at the end of the primary data
-        T_BUS::Pwm()->SEQ[1].PTR = reinterpret_cast<uint32_t>(_dmaBuffer + (T_BUS::Pwm()->SEQ[0].CNT - 1));
-        T_BUS::Pwm()->SEQ[1].CNT = 1;
-        T_BUS::Pwm()->SEQ[1].REFRESH = 0; // ignored
-        T_BUS::Pwm()->SEQ[1].ENDDELAY = 0; // ignored
+        _bus.Pwm()->SEQ[1].PTR = reinterpret_cast<uint32_t>(_dmaBuffer + (_bus.Pwm()->SEQ[0].CNT - 1));
+        _bus.Pwm()->SEQ[1].CNT = 1;
+        _bus.Pwm()->SEQ[1].REFRESH = 0; // ignored
+        _bus.Pwm()->SEQ[1].ENDDELAY = 0; // ignored
 
         // stop when the loop finishes
-        T_BUS::Pwm()->SHORTS = PWM_SHORTS_LOOPSDONE_STOP_Msk;
-        T_BUS::Pwm()->INTEN = 0;
+        _bus.Pwm()->SHORTS = PWM_SHORTS_LOOPSDONE_STOP_Msk;
+        _bus.Pwm()->INTEN = 0;
 
         dmaResetEvents();
     }
 
     void dmaDeinit()
     {
-        T_BUS::Pwm()->ENABLE = 0;
-        T_BUS::Pwm()->PSEL.OUT[0] = NC;
+        _bus.Pwm()->ENABLE = 0;
+        _bus.Pwm()->PSEL.OUT[0] = NC;
     }
 
     void FillBuffer()
@@ -380,20 +422,28 @@ private:
 
     void dmaResetEvents()
     {
-        T_BUS::Pwm()->EVENTS_LOOPSDONE = 0;
-        T_BUS::Pwm()->EVENTS_SEQEND[0] = 0;
-        T_BUS::Pwm()->EVENTS_SEQEND[1] = 0;
-        T_BUS::Pwm()->EVENTS_STOPPED = 0;
+        _bus.Pwm()->EVENTS_LOOPSDONE = 0;
+        _bus.Pwm()->EVENTS_SEQEND[0] = 0;
+        _bus.Pwm()->EVENTS_SEQEND[1] = 0;
+        _bus.Pwm()->EVENTS_STOPPED = 0;
     }
 
     void dmaStart()
     {
         dmaResetEvents();
-        T_BUS::Pwm()->TASKS_SEQSTART[0] = 1;
+        _bus.Pwm()->TASKS_SEQSTART[0] = 1;
     }
 };
 
 // normal
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwmN> NeoNrf52xPwmNWs2811Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwmN> NeoNrf52xPwmNWs2812xMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwmN> NeoNrf52xPwmNSk6812Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1814, NeoNrf52xPwmN> NeoNrf52xPwmNTm1814Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedApa106, NeoNrf52xPwmN> NeoNrf52xPwmNApa106Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed800Kbps, NeoNrf52xPwmN> NeoNrf52xPwmN800KbpsMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwmN> NeoNrf52xPwmN400KbpsMethod;
+
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2811Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwm0> NeoNrf52xPwm0Sk6812Method;
@@ -429,6 +479,14 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm3> NeoNrf52xPw
 #endif
 
 // inverted
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwmN> NeoNrf52xPwmNWs2811InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwmN> NeoNrf52xPwmNWs2812xInvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwmN> NeoNrf52xPwmNSk6812InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1814, NeoNrf52xPwmN> NeoNrf52xPwmNTm1814InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedApa106, NeoNrf52xPwmN> NeoNrf52xPwmNApa106InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed800Kbps, NeoNrf52xPwmN> NeoNrf52xPwmN800KbpsInvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwmN> NeoNrf52xPwmN400KbpsInvertedMethod;
+
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2811InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2812xInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwm0> NeoNrf52xPwm0Sk6812InvertedMethod;
