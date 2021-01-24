@@ -322,24 +322,32 @@ public:
 class NeoEsp32RmtChannel0
 {
 public:
+    NeoEsp32RmtChannel0() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_0;
 };
 
 class NeoEsp32RmtChannel1
 {
 public:
+    NeoEsp32RmtChannel1() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_1;
 };
 
 class NeoEsp32RmtChannel2
 {
 public:
+    NeoEsp32RmtChannel2() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_2;
 };
 
 class NeoEsp32RmtChannel3
 {
 public:
+    NeoEsp32RmtChannel3() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_3;
 };
 
@@ -348,24 +356,32 @@ public:
 class NeoEsp32RmtChannel4
 {
 public:
+    NeoEsp32RmtChannel4() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_4;
 };
 
 class NeoEsp32RmtChannel5
 {
 public:
+    NeoEsp32RmtChannel5() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_5;
 };
 
 class NeoEsp32RmtChannel6
 {
 public:
+    NeoEsp32RmtChannel6() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_6;
 };
 
 class NeoEsp32RmtChannel7
 {
 public:
+    NeoEsp32RmtChannel7() {};
+
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_7;
 };
 
@@ -379,13 +395,9 @@ public:
         RmtChannelNumber(static_cast<rmt_channel_t>(channel))
     {
     }
+    NeoEsp32RmtChannelN() = delete; // no default constructor
 
     const rmt_channel_t RmtChannelNumber;
-
-private:
-    NeoEsp32RmtChannelN() :
-        RmtChannelNumber(RMT_CHANNEL_0) // just to remove warning
-    {};
 };
 
 template<typename T_SPEED, typename T_CHANNEL> class NeoEsp32RmtMethodBase
@@ -483,11 +495,12 @@ public:
 private:
     const size_t  _sizeData;      // Size of '_data*' buffers 
     const uint8_t _pin;            // output pin number
+    const T_CHANNEL _channel; // holds instance for multi channel support
 
     // Holds data stream which include LED color values and other settings as needed
     uint8_t*  _dataEditing;   // exposed for get and set
     uint8_t*  _dataSending;   // used for async send using RMT
-    T_CHANNEL _channel; // holds instance for multi channel support
+
 
     void construct()
     {
