@@ -29,6 +29,7 @@ License along with NeoPixel.  If not, see
 #include "NeoSettings.h"
 #include "RgbColorBase.h"
 
+struct RgbwColor;
 
 // ------------------------------------------------------------------------
 // RgbColor represents a color object that is represented by Red, Green, Blue
@@ -56,6 +57,11 @@ struct RgbColor : RgbColorBase
         R(brightness), G(brightness), B(brightness)
     {
     };
+
+    // ------------------------------------------------------------------------
+    // explicitly Construct a RgbColor using RgbwColor
+    // ------------------------------------------------------------------------
+    explicit RgbColor(const RgbwColor& color);
 
     // ------------------------------------------------------------------------
     // Construct a RgbColor using Rgb16Color
