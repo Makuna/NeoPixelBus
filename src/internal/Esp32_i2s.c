@@ -52,9 +52,9 @@
 
 #define ESP32_REG(addr) (*((volatile uint32_t*)(0x3FF00000+(addr))))
 
-#define I2S_DMA_QUEUE_SIZE      16
-
-#define I2S_DMA_SILENCE_LEN     256 // bytes
+#define I2S_DMA_BLOCK_COUNT_DEFAULT      16
+#define I2S_DMA_SILENCE_SIZE     256 // bytes
+#define I2S_DMA_SILENCE_BLOCK_COUNT  2
 
 typedef struct i2s_dma_item_s {
     uint32_t  blocksize: 12;    // datalen
@@ -93,17 +93,17 @@ typedef struct {
         uint32_t unused      :20;
 } i2s_bus_t;
 
-static uint8_t i2s_silence_buf[I2S_DMA_SILENCE_LEN];
+static uint8_t i2s_silence_buf[I2S_DMA_SILENCE_SIZE];
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2)
 // (I2S_NUM_MAX == 2)
 static i2s_bus_t I2S[I2S_NUM_MAX] = {
-    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_LEN, NULL, I2S_DMA_QUEUE_SIZE, 0, 0},
-    {&I2S1, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_LEN, NULL, I2S_DMA_QUEUE_SIZE, 0, 0}
+    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0},
+    {&I2S1, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0}
 };
 #else
 static i2s_bus_t I2S[I2S_NUM_MAX] = {
-    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_LEN, NULL, I2S_DMA_QUEUE_SIZE, 0, 0}
+    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0}
 };
 #endif
 
@@ -148,28 +148,18 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         item->free_ptr = NULL;
 
         item->buf = NULL;
-        /*
-        if (I2S[bus_num].dma_buf_len) {
-            item->buf = (uint8_t*)(malloc(I2S[bus_num].dma_buf_len));
-            if (item->buf == NULL) {
-                log_e("MEM ERROR!");
-                for(a=0; a<i; a++) {
-                    free(I2S[bus_num].dma_items[i].buf);
-                }
-                free(I2S[bus_num].dma_items);
-                I2S[bus_num].dma_items = NULL;
-                return false;
-            }
-        } else {
-
-            item->buf = NULL;
-        }
-        */
     }
-    // last one loops to one just before
-    item->next = itemPrev;
-    item->eof = 1;
 
+    // last true data block
+    item = &I2S[bus_num].dma_items[dmaCount - I2S_DMA_SILENCE_BLOCK_COUNT - 1];
+    item->eof = 1;
+    item->next = &I2S[bus_num].dma_items[0];
+
+    // last one is silence
+    item = &I2S[bus_num].dma_items[dmaCount - 1];
+    item->eof = 1;
+    item->next = &I2S[bus_num].dma_items[dmaCount - I2S_DMA_SILENCE_BLOCK_COUNT];
+    
     // I2S[bus_num].tx_queue = xQueueCreate(dmaCount, sizeof(i2s_dma_item_t*));
     I2S[bus_num].tx_queue = xQueueCreate(4, sizeof(i2s_dma_item_t*));
     if (I2S[bus_num].tx_queue == NULL) {// memory error
@@ -274,7 +264,7 @@ void i2sInit(uint8_t bus_num,
     }
 
 
-    I2S[bus_num].dma_count = dma_count + 1; // an extra two a looping silence
+    I2S[bus_num].dma_count = dma_count + I2S_DMA_SILENCE_BLOCK_COUNT; // an extra two for looping silence
     I2S[bus_num].dma_buf_len = dma_len & 0xFFF;
 
     if (!i2sInitDmaItems(bus_num)) {
@@ -446,8 +436,8 @@ void IRAM_ATTR i2sDmaISR(void* arg)
     portBASE_TYPE hpTaskAwoken = pdFALSE;
 
     if (dev->bus->int_st.out_eof) {
-        //        i2s_dma_item_t* item = (i2s_dma_item_t*)(dev->bus->out_eof_des_addr);
-        i2s_dma_item_t* itemSilence = &dev->dma_items[dev->dma_count - 1];
+        i2s_dma_item_t* item = (i2s_dma_item_t*)(dev->bus->out_eof_des_addr);
+        i2s_dma_item_t* itemSilence = &dev->dma_items[dev->dma_count - I2S_DMA_SILENCE_BLOCK_COUNT];
         //i2s_dma_item_t* itemFirst = &dev->dma_items[0];
 
         switch (s_I2sState)
@@ -469,8 +459,12 @@ void IRAM_ATTR i2sDmaISR(void* arg)
             s_I2sState = I2sState_Idle;
             break;
         }
-        xQueueSendFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
-
+        /* do we need to even check, or just let it loop */
+        //if (item->data == dev->silence_buf) 
+        {
+            xQueueSendFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
+        }
+        
     }
 
     dev->bus->int_clr.val = dev->bus->int_st.val;
@@ -509,7 +503,10 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     }
 
     s_I2sState = I2sState_Sending;
+    // add the first one
     xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
+    // add the silence
+    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[iItem-1], 10);
 
 //    s_I2sState = I2sState_Pending;
 //    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
