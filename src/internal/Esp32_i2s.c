@@ -118,8 +118,10 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         return true;
     }
 
+    size_t dmaCount = I2S[bus_num].dma_count;
+
     if (I2S[bus_num].dma_items == NULL) {
-        I2S[bus_num].dma_items = (i2s_dma_item_t*)(malloc(I2S[bus_num].dma_count* sizeof(i2s_dma_item_t)));
+        I2S[bus_num].dma_items = (i2s_dma_item_t*)(malloc(dmaCount * sizeof(i2s_dma_item_t)));
         if (I2S[bus_num].dma_items == NULL) {
             log_e("MEM ERROR!");
             return false;
@@ -127,12 +129,15 @@ bool i2sInitDmaItems(uint8_t bus_num) {
     }
 
     int i, i2, a;
-    i2s_dma_item_t* item;
+    i2s_dma_item_t* item = NULL;
+    i2s_dma_item_t* itemPrev;
 
-    for(i=0; i<I2S[bus_num].dma_count; i++) {
-        i2 = (i+1) % I2S[bus_num].dma_count;
+    for(i=0; i< dmaCount; i++) {
+        itemPrev = item;
+
+        i2 = (i+1) % dmaCount;
         item = &I2S[bus_num].dma_items[i];
-        item->eof = 1;
+        item->eof = 0;
         item->owner = 1;
         item->sub_sof = 0;
         item->unused = 0;
@@ -141,6 +146,9 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         item->datalen = I2S[bus_num].silence_len;
         item->next = &I2S[bus_num].dma_items[i2];
         item->free_ptr = NULL;
+
+        item->buf = NULL;
+        /*
         if (I2S[bus_num].dma_buf_len) {
             item->buf = (uint8_t*)(malloc(I2S[bus_num].dma_buf_len));
             if (item->buf == NULL) {
@@ -153,11 +161,17 @@ bool i2sInitDmaItems(uint8_t bus_num) {
                 return false;
             }
         } else {
+
             item->buf = NULL;
         }
+        */
     }
+    // last one loops to one just before
+    item->next = itemPrev;
+    item->eof = 1;
 
-    I2S[bus_num].tx_queue = xQueueCreate(I2S[bus_num].dma_count, sizeof(i2s_dma_item_t*));
+    // I2S[bus_num].tx_queue = xQueueCreate(dmaCount, sizeof(i2s_dma_item_t*));
+    I2S[bus_num].tx_queue = xQueueCreate(4, sizeof(i2s_dma_item_t*));
     if (I2S[bus_num].tx_queue == NULL) {// memory error
         log_e("MEM ERROR!");
         free(I2S[bus_num].dma_items);
@@ -165,14 +179,6 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         return false;
     }
     return true;
-}
-
-void i2sSetSilenceBuf(uint8_t bus_num, uint8_t* data, size_t len) {
-    if (bus_num >= I2S_NUM_MAX || !data || !len) {
-        return;
-    }
-    I2S[bus_num].silence_buf = data;
-    I2S[bus_num].silence_len = len;
 }
 
 esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits) {
@@ -203,37 +209,6 @@ esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t d
     sample_rate_conf.rx_bits_mod = bits;
     i2s->sample_rate_conf.val = sample_rate_conf.val;
     return ESP_OK;
-}
-
-void i2sSetDac(uint8_t bus_num, bool right, bool left) {
-    if (bus_num >= I2S_NUM_MAX) {
-        return;
-    }
-
-    if (!right && !left) {
-        dac_output_disable(DAC_CHANNEL_1);
-        dac_output_disable(DAC_CHANNEL_2);
-        dac_i2s_disable();
-        I2S[bus_num].bus->conf2.lcd_en = 0;
-        I2S[bus_num].bus->conf.tx_right_first = 0;
-        I2S[bus_num].bus->conf2.camera_en = 0;
-        I2S[bus_num].bus->conf.tx_msb_shift = 1;// I2S signaling
-        return;
-    }
-
-    i2sSetPins(bus_num, -1, false);
-    I2S[bus_num].bus->conf2.lcd_en = 1;
-    I2S[bus_num].bus->conf.tx_right_first = 0;
-    I2S[bus_num].bus->conf2.camera_en = 0;
-    I2S[bus_num].bus->conf.tx_msb_shift = 0;
-    dac_i2s_enable();
-    
-    if (right) {// DAC1, right channel, GPIO25
-        dac_output_enable(DAC_CHANNEL_1);
-    }
-    if (left) { // DAC2, left  channel, GPIO26
-        dac_output_enable(DAC_CHANNEL_2);
-    }
 }
 
 void i2sSetPins(uint8_t bus_num, int8_t out, bool invert) {
@@ -270,19 +245,36 @@ void i2sSetPins(uint8_t bus_num, int8_t out, bool invert) {
 
 }
 
+#define I2sState_Idle 0
+#define I2sState_Pending 1
+#define I2sState_Sending 2
+#define I2sState_Zeroing 3
+
+volatile  uint32_t s_I2sState = I2sState_Idle;
+
 bool i2sWriteDone(uint8_t bus_num) {
     if (bus_num >= I2S_NUM_MAX) {
         return false;
     }
-    return (I2S[bus_num].dma_items[I2S[bus_num].dma_count - 1].data == I2S[bus_num].silence_buf);
+
+    return (s_I2sState == I2sState_Idle);
+//    return (s_WriteIsComplete != 0);
+//    return (I2S[bus_num].dma_items[I2S[bus_num].dma_count - 2].data == I2S[bus_num].silence_buf);
 }
 
-void i2sInit(uint8_t bus_num, uint32_t bits_per_sample, uint32_t sample_rate, i2s_tx_chan_mod_t chan_mod, i2s_tx_fifo_mod_t fifo_mod, size_t dma_count, size_t dma_len) {
+void i2sInit(uint8_t bus_num, 
+    uint32_t bits_per_sample, 
+    uint32_t sample_rate, 
+    i2s_tx_chan_mod_t chan_mod, 
+    i2s_tx_fifo_mod_t fifo_mod, 
+    size_t dma_count, 
+    size_t dma_len) {
     if (bus_num >= I2S_NUM_MAX) {
         return;
     }
 
-    I2S[bus_num].dma_count = dma_count;
+
+    I2S[bus_num].dma_count = dma_count + 1; // an extra two a looping silence
     I2S[bus_num].dma_buf_len = dma_len & 0xFFF;
 
     if (!i2sInitDmaItems(bus_num)) {
@@ -446,23 +438,43 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) {
     return ESP_OK;
 }
 
+
+
 void IRAM_ATTR i2sDmaISR(void* arg)
 {
-    i2s_dma_item_t* dummy = NULL;
     i2s_bus_t* dev = (i2s_bus_t*)(arg);
-    portBASE_TYPE hpTaskAwoken = 0;
+    portBASE_TYPE hpTaskAwoken = pdFALSE;
 
     if (dev->bus->int_st.out_eof) {
-        i2s_dma_item_t* item = (i2s_dma_item_t*)(dev->bus->out_eof_des_addr);
-        item->data = dev->silence_buf;
-        item->blocksize = dev->silence_len;
-        item->datalen = dev->silence_len;
-        if (xQueueIsQueueFullFromISR(dev->tx_queue) == pdTRUE) {
-            xQueueReceiveFromISR(dev->tx_queue, &dummy, &hpTaskAwoken);
+        //        i2s_dma_item_t* item = (i2s_dma_item_t*)(dev->bus->out_eof_des_addr);
+        i2s_dma_item_t* itemSilence = &dev->dma_items[dev->dma_count - 1];
+        //i2s_dma_item_t* itemFirst = &dev->dma_items[0];
+
+        switch (s_I2sState)
+        {
+        case I2sState_Idle:
+            break;
+
+        case I2sState_Pending:
+//            xQueueSendFromISR(dev->tx_queue, (void*)&itemFirst, &hpTaskAwoken);
+            s_I2sState = I2sState_Sending;
+            break;
+
+        case I2sState_Sending:
+//            xQueueSendFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
+            s_I2sState = I2sState_Zeroing;
+            break;
+
+        case I2sState_Zeroing:
+            s_I2sState = I2sState_Idle;
+            break;
         }
-        xQueueSendFromISR(dev->tx_queue, (void*)&item, &hpTaskAwoken);
+        xQueueSendFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
+
     }
+
     dev->bus->int_clr.val = dev->bus->int_st.val;
+
     if (hpTaskAwoken == pdTRUE) {
         portYIELD_FROM_ISR();
     }
@@ -476,6 +488,7 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     size_t toSend = len;
     size_t limit = I2S_DMA_MAX_DATA_LEN;
     i2s_dma_item_t* item = NULL;
+    size_t iItem = 0;
 
     while (len) {
         toSend = len;
@@ -483,18 +496,25 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
             toSend = limit;
         }
 
-        if (xQueueReceive(I2S[bus_num].tx_queue, &item, portMAX_DELAY) == pdFALSE) {
-            log_e("xQueueReceive failed\n");
-            break;
-        }
+        item = &I2S[bus_num].dma_items[iItem];
+
         // data is constant. no need to copy
         item->data = data + index;
         item->blocksize = toSend;
         item->datalen = toSend;
-
         len -= toSend;
         index += toSend;
+
+        iItem++;
     }
+
+    s_I2sState = I2sState_Sending;
+    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
+
+//    s_I2sState = I2sState_Pending;
+//    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
+
+
     return index;
 }
 

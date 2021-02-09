@@ -156,7 +156,13 @@ public:
     void Initialize()
     {
         size_t dmaCount = (_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
-        i2sInit(T_BUS::I2sBusNumber, 16, T_SPEED::I2sSampleRate, I2S_CHAN_STEREO, I2S_FIFO_16BIT_DUAL, dmaCount, 0);
+        i2sInit(T_BUS::I2sBusNumber, 
+            16, 
+            T_SPEED::I2sSampleRate, 
+            I2S_CHAN_STEREO, 
+            I2S_FIFO_16BIT_DUAL, 
+            dmaCount, 
+            0);
         i2sSetPins(T_BUS::I2sBusNumber, _pin, T_INVERT::Inverted);
     }
 
