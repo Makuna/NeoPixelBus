@@ -153,12 +153,13 @@ bool i2sInitDmaItems(uint8_t bus_num) {
     // last true data block
     item = &I2S[bus_num].dma_items[dmaCount - I2S_DMA_SILENCE_BLOCK_COUNT - 1];
     item->eof = 1;
-    item->next = &I2S[bus_num].dma_items[0];
+//    item->next = &I2S[bus_num].dma_items[0];
 
-    // last one is silence
+    // last are silence
+    itemPrev = &I2S[bus_num].dma_items[dmaCount - I2S_DMA_SILENCE_BLOCK_COUNT];
     item = &I2S[bus_num].dma_items[dmaCount - 1];
     item->eof = 1;
-    item->next = &I2S[bus_num].dma_items[dmaCount - I2S_DMA_SILENCE_BLOCK_COUNT];
+    item->next = &I2S[bus_num].dma_items[0];
     
     // I2S[bus_num].tx_queue = xQueueCreate(dmaCount, sizeof(i2s_dma_item_t*));
     I2S[bus_num].tx_queue = xQueueCreate(4, sizeof(i2s_dma_item_t*));
@@ -460,9 +461,9 @@ void IRAM_ATTR i2sDmaISR(void* arg)
             break;
         }
         /* do we need to even check, or just let it loop */
-        //if (item->data == dev->silence_buf) 
+        if (item->data == dev->silence_buf) 
         {
-            xQueueSendFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
+            xQueueSendToFrontFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
         }
         
     }
@@ -503,10 +504,12 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     }
 
     s_I2sState = I2sState_Sending;
-    // add the first one
-    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
+    // clear one and add the first one
+    // xQueueReceive(I2S[bus_num].tx_queue, (void*)&item, 0);
+    xQueueReset(I2S[bus_num].tx_queue);
+    xQueueSendToFront(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
     // add the silence
-    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[iItem-1], 10);
+//    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[iItem-1], 10);
 
 //    s_I2sState = I2sState_Pending;
 //    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
