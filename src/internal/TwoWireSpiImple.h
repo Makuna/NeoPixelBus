@@ -52,6 +52,18 @@ public:
     static const uint32_t Clock = 2000000L;
 };
 
+class SpiSpeed1Mhz
+{
+public:
+    static const uint32_t Clock = 1000000L;
+};
+
+class SpiSpeed500Khz
+{
+public:
+    static const uint32_t Clock = 500000L;
+};
+
 template<typename T_SPISPEED> class TwoWireSpiImple
 {
 public:
