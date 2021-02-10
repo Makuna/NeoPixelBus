@@ -53,8 +53,8 @@
 #define ESP32_REG(addr) (*((volatile uint32_t*)(0x3FF00000+(addr))))
 
 #define I2S_DMA_BLOCK_COUNT_DEFAULT      16
-#define I2S_DMA_SILENCE_SIZE     256 // bytes
-#define I2S_DMA_SILENCE_BLOCK_COUNT  2
+#define I2S_DMA_SILENCE_SIZE     4 // bytes
+#define I2S_DMA_SILENCE_BLOCK_COUNT  1
 
 typedef struct i2s_dma_item_s {
     uint32_t  blocksize: 12;    // datalen
@@ -93,7 +93,7 @@ typedef struct {
         uint32_t unused      :20;
 } i2s_bus_t;
 
-static uint8_t i2s_silence_buf[I2S_DMA_SILENCE_SIZE];
+static uint8_t i2s_silence_buf[I2S_DMA_SILENCE_SIZE] = { 0 };
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2)
 // (I2S_NUM_MAX == 2)
@@ -149,7 +149,9 @@ bool i2sInitDmaItems(uint8_t bus_num) {
 
         item->buf = NULL;
     }
+    item->eof = 1;
 
+    /*
     // last true data block
     item = &I2S[bus_num].dma_items[dmaCount - I2S_DMA_SILENCE_BLOCK_COUNT - 1];
     item->eof = 1;
@@ -160,7 +162,8 @@ bool i2sInitDmaItems(uint8_t bus_num) {
     item = &I2S[bus_num].dma_items[dmaCount - 1];
     item->eof = 1;
     item->next = &I2S[bus_num].dma_items[0];
-    
+    */
+
     // I2S[bus_num].tx_queue = xQueueCreate(dmaCount, sizeof(i2s_dma_item_t*));
     I2S[bus_num].tx_queue = xQueueCreate(4, sizeof(i2s_dma_item_t*));
     if (I2S[bus_num].tx_queue == NULL) {// memory error
@@ -438,9 +441,9 @@ void IRAM_ATTR i2sDmaISR(void* arg)
 
     if (dev->bus->int_st.out_eof) {
         i2s_dma_item_t* item = (i2s_dma_item_t*)(dev->bus->out_eof_des_addr);
-        i2s_dma_item_t* itemSilence = &dev->dma_items[dev->dma_count - I2S_DMA_SILENCE_BLOCK_COUNT];
-        //i2s_dma_item_t* itemFirst = &dev->dma_items[0];
-
+        i2s_dma_item_t* itemSilence = &dev->dma_items[I2S_DMA_SILENCE_BLOCK_COUNT-1];
+        //i2s_dma_item_t* itemFirst = &dev->dma_items[I2S_DMA_SILENCE_BLOCK_COUNT];
+        /*
         switch (s_I2sState)
         {
         case I2sState_Idle:
@@ -460,10 +463,15 @@ void IRAM_ATTR i2sDmaISR(void* arg)
             s_I2sState = I2sState_Idle;
             break;
         }
+        */
         /* do we need to even check, or just let it loop */
-        if (item->data == dev->silence_buf) 
+        //if (item->data != dev->silence_buf) 
         {
-            xQueueSendToFrontFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
+            item->eof = 0;
+            s_I2sState = I2sState_Idle;
+            itemSilence->next = itemSilence;
+            //xQueueReceiveFromISR(dev->tx_queue, (void*)&item, &hpTaskAwoken);
+            xQueueSendFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
         }
         
     }
@@ -483,7 +491,9 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     size_t toSend = len;
     size_t limit = I2S_DMA_MAX_DATA_LEN;
     i2s_dma_item_t* item = NULL;
-    size_t iItem = 0;
+    // silence is at front
+    // skip them when filling
+    size_t iItem = I2S_DMA_SILENCE_BLOCK_COUNT; 
 
     while (len) {
         toSend = len;
@@ -504,16 +514,13 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     }
 
     s_I2sState = I2sState_Sending;
-    // clear one and add the first one
-    // xQueueReceive(I2S[bus_num].tx_queue, (void*)&item, 0);
+    item->eof = 1;
+    // reset silence item
+    item = &I2S[bus_num].dma_items[I2S_DMA_SILENCE_BLOCK_COUNT-1];
+    item->next = &I2S[bus_num].dma_items[I2S_DMA_SILENCE_BLOCK_COUNT];
+
     xQueueReset(I2S[bus_num].tx_queue);
     xQueueSendToFront(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
-    // add the silence
-//    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[iItem-1], 10);
-
-//    s_I2sState = I2sState_Pending;
-//    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
-
 
     return index;
 }
