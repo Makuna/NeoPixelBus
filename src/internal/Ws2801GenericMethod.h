@@ -125,6 +125,8 @@ typedef Ws2801MethodBase<TwoWireBitBangImple> NeoWs2801Method;
 typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> NeoWs2801Spi20MhzMethod;
 typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> NeoWs2801Spi10MhzMethod;
 typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> NeoWs2801Spi2MhzMethod;
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> NeoWs2801Spi1MhzMethod;
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> NeoWs2801Spi500KhzMethod;
 typedef NeoWs2801Spi10MhzMethod NeoWs2801SpiMethod;
 #endif
 

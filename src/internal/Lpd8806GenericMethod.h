@@ -123,6 +123,8 @@ typedef Lpd8806MethodBase<TwoWireBitBangImple> Lpd8806Method;
 typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> Lpd8806Spi20MhzMethod;
 typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> Lpd8806Spi10MhzMethod;
 typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> Lpd8806Spi2MhzMethod;
+typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Lpd8806Spi1MhzMethod;
+typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Lpd8806Spi500KhzMethod;
 typedef Lpd8806Spi10MhzMethod Lpd8806SpiMethod;
 #endif
 
