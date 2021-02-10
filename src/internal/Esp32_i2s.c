@@ -146,25 +146,10 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         item->datalen = I2S[bus_num].silence_len;
         item->next = &I2S[bus_num].dma_items[i2];
         item->free_ptr = NULL;
-
         item->buf = NULL;
     }
     item->eof = 1;
 
-    /*
-    // last true data block
-    item = &I2S[bus_num].dma_items[dmaCount - I2S_DMA_SILENCE_BLOCK_COUNT - 1];
-    item->eof = 1;
-//    item->next = &I2S[bus_num].dma_items[0];
-
-    // last are silence
-    itemPrev = &I2S[bus_num].dma_items[dmaCount - I2S_DMA_SILENCE_BLOCK_COUNT];
-    item = &I2S[bus_num].dma_items[dmaCount - 1];
-    item->eof = 1;
-    item->next = &I2S[bus_num].dma_items[0];
-    */
-
-    // I2S[bus_num].tx_queue = xQueueCreate(dmaCount, sizeof(i2s_dma_item_t*));
     I2S[bus_num].tx_queue = xQueueCreate(4, sizeof(i2s_dma_item_t*));
     if (I2S[bus_num].tx_queue == NULL) {// memory error
         log_e("MEM ERROR!");
@@ -440,40 +425,15 @@ void IRAM_ATTR i2sDmaISR(void* arg)
     portBASE_TYPE hpTaskAwoken = pdFALSE;
 
     if (dev->bus->int_st.out_eof) {
-        i2s_dma_item_t* item = (i2s_dma_item_t*)(dev->bus->out_eof_des_addr);
-        i2s_dma_item_t* itemSilence = &dev->dma_items[I2S_DMA_SILENCE_BLOCK_COUNT-1];
-        //i2s_dma_item_t* itemFirst = &dev->dma_items[I2S_DMA_SILENCE_BLOCK_COUNT];
-        /*
-        switch (s_I2sState)
-        {
-        case I2sState_Idle:
-            break;
-
-        case I2sState_Pending:
-//            xQueueSendFromISR(dev->tx_queue, (void*)&itemFirst, &hpTaskAwoken);
-            s_I2sState = I2sState_Sending;
-            break;
-
-        case I2sState_Sending:
-//            xQueueSendFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
-            s_I2sState = I2sState_Zeroing;
-            break;
-
-        case I2sState_Zeroing:
-            s_I2sState = I2sState_Idle;
-            break;
-        }
+        i2s_dma_item_t* itemSilence = &dev->dma_items[0];
+        itemSilence->next = itemSilence;
+/*
+        i2s_dma_item_t* item;
+        xQueueReceiveFromISR(dev->tx_queue, (void*)&item, &hpTaskAwoken);
         */
-        /* do we need to even check, or just let it loop */
-        //if (item->data != dev->silence_buf) 
-        {
-            item->eof = 0;
-            s_I2sState = I2sState_Idle;
-            itemSilence->next = itemSilence;
-            //xQueueReceiveFromISR(dev->tx_queue, (void*)&item, &hpTaskAwoken);
-            xQueueSendFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
-        }
-        
+        s_I2sState = I2sState_Idle;
+            
+        xQueueSendToFrontFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
     }
 
     dev->bus->int_clr.val = dev->bus->int_st.val;
@@ -493,7 +453,7 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     i2s_dma_item_t* item = NULL;
     // silence is at front
     // skip them when filling
-    size_t iItem = I2S_DMA_SILENCE_BLOCK_COUNT; 
+    size_t iItem = 1; // items have silent entry at front and back
 
     while (len) {
         toSend = len;
@@ -514,10 +474,10 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     }
 
     s_I2sState = I2sState_Sending;
-    item->eof = 1;
+//    item->eof = 1;
     // reset silence item
-    item = &I2S[bus_num].dma_items[I2S_DMA_SILENCE_BLOCK_COUNT-1];
-    item->next = &I2S[bus_num].dma_items[I2S_DMA_SILENCE_BLOCK_COUNT];
+    item = &I2S[bus_num].dma_items[0];
+    item->next = &I2S[bus_num].dma_items[1];
 
     xQueueReset(I2S[bus_num].tx_queue);
     xQueueSendToFront(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
