@@ -53,8 +53,9 @@
 #define ESP32_REG(addr) (*((volatile uint32_t*)(0x3FF00000+(addr))))
 
 #define I2S_DMA_BLOCK_COUNT_DEFAULT      16
-#define I2S_DMA_SILENCE_SIZE     4 // bytes
-#define I2S_DMA_SILENCE_BLOCK_COUNT  1
+#define I2S_DMA_SILENCE_SIZE     4*6 // 24 bytes gives us enough time
+#define I2S_DMA_SILENCE_BLOCK_COUNT  3
+#define I2S_DMA_QUEUE_COUNT 2
 
 typedef struct i2s_dma_item_s {
     uint32_t  blocksize: 12;    // datalen
@@ -148,9 +149,10 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         item->free_ptr = NULL;
         item->buf = NULL;
     }
+    itemPrev->eof = 1;
     item->eof = 1;
 
-    I2S[bus_num].tx_queue = xQueueCreate(4, sizeof(i2s_dma_item_t*));
+    I2S[bus_num].tx_queue = xQueueCreate(I2S_DMA_QUEUE_COUNT, sizeof(i2s_dma_item_t*));
     if (I2S[bus_num].tx_queue == NULL) {// memory error
         log_e("MEM ERROR!");
         free(I2S[bus_num].dma_items);
@@ -237,8 +239,6 @@ bool i2sWriteDone(uint8_t bus_num) {
     }
 
     return (s_I2sState == I2sState_Idle);
-//    return (s_WriteIsComplete != 0);
-//    return (I2S[bus_num].dma_items[I2S[bus_num].dma_count - 2].data == I2S[bus_num].silence_buf);
 }
 
 void i2sInit(uint8_t bus_num, 
@@ -422,67 +422,62 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) {
 void IRAM_ATTR i2sDmaISR(void* arg)
 {
     i2s_bus_t* dev = (i2s_bus_t*)(arg);
-    portBASE_TYPE hpTaskAwoken = pdFALSE;
 
     if (dev->bus->int_st.out_eof) {
-        i2s_dma_item_t* itemSilence = &dev->dma_items[0];
-        itemSilence->next = itemSilence;
-/*
-        i2s_dma_item_t* item;
-        xQueueReceiveFromISR(dev->tx_queue, (void*)&item, &hpTaskAwoken);
-        */
-        s_I2sState = I2sState_Idle;
-            
-        xQueueSendToFrontFromISR(dev->tx_queue, (void*)&itemSilence, &hpTaskAwoken);
+ //       i2s_dma_item_t* item = (i2s_dma_item_t*)(dev->bus->out_eof_des_addr);
+        if (s_I2sState != I2sState_Idle)
+        {
+            // loop the silent items
+            i2s_dma_item_t* itemSilence = &dev->dma_items[1];
+            itemSilence->next = &dev->dma_items[0];
+
+            s_I2sState = I2sState_Idle;
+        }
     }
 
     dev->bus->int_clr.val = dev->bus->int_st.val;
-
-    if (hpTaskAwoken == pdTRUE) {
-        portYIELD_FROM_ISR();
-    }
 }
 
 size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free_when_sent) {
     if (bus_num >= I2S_NUM_MAX || !I2S[bus_num].tx_queue) {
         return 0;
     }
-    size_t index = 0;
-    size_t toSend = len;
-    size_t limit = I2S_DMA_MAX_DATA_LEN;
-    i2s_dma_item_t* item = NULL;
-    // silence is at front
-    // skip them when filling
-    size_t iItem = 1; // items have silent entry at front and back
+    size_t blockSize = len;
 
-    while (len) {
-        toSend = len;
-        if (toSend > limit) {
-            toSend = limit;
+    i2s_dma_item_t* itemPrev = NULL;
+    i2s_dma_item_t* item = &I2S[bus_num].dma_items[2]; // skip silent item
+    size_t dataLeft = len;
+    uint8_t* pos = data;
+
+    while (dataLeft) {
+        
+        blockSize = dataLeft;
+        if (blockSize > I2S_DMA_MAX_DATA_LEN) {
+            blockSize = I2S_DMA_MAX_DATA_LEN;
         }
-
-        item = &I2S[bus_num].dma_items[iItem];
+        dataLeft -= blockSize;
 
         // data is constant. no need to copy
-        item->data = data + index;
-        item->blocksize = toSend;
-        item->datalen = toSend;
-        len -= toSend;
-        index += toSend;
+        item->data = pos;
+        item->blocksize = blockSize;
+        item->datalen = blockSize;
 
-        iItem++;
+        itemPrev = item;
+        item++;
+
+        pos += blockSize;
     }
 
+
+    // reset silence item to not loop
+    item = &I2S[bus_num].dma_items[1];
+    item->next = &I2S[bus_num].dma_items[2];
     s_I2sState = I2sState_Sending;
-//    item->eof = 1;
-    // reset silence item
-    item = &I2S[bus_num].dma_items[0];
-    item->next = &I2S[bus_num].dma_items[1];
 
     xQueueReset(I2S[bus_num].tx_queue);
-    xQueueSendToFront(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
+    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
 
-    return index;
+    return len;
 }
 
 
