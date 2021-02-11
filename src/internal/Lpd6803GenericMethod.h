@@ -43,17 +43,7 @@ public:
 		_wire(pinClock, pinData)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-
-        // requires specific memory init
-        memset(_data, 0, _sizeData); // is not good enough
-        uint16_t* pPixel = reinterpret_cast<uint16_t*>(_data + settingsSize);
-        uint16_t* pPixelEnd = pPixel + (_sizeData / elementSize);
-
-        while (pPixel < pPixelEnd)
-        {
-            Lpd68033Elements::encodePixel(0, 0, 0, pPixel);
-            pPixel++;
-        }
+        // data cleared later in Begin()
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
