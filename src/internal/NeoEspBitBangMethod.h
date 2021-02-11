@@ -285,7 +285,7 @@ public:
         pinMode(pin, OUTPUT);
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_data, 0, _sizeData);
+        // data cleared later in Begin()
     }
 
     ~NeoEspBitBangMethodBase()

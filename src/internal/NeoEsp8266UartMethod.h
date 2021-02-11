@@ -150,7 +150,7 @@ protected:
         _sizeData(pixelCount * elementSize + settingsSize)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_data, 0x00, _sizeData);
+        // data cleared later in Begin()
     }
 
     ~NeoEsp8266UartBase()

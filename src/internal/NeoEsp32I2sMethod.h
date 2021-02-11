@@ -129,10 +129,10 @@ public:
         }
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_data, 0x00, _sizeData);
+        // data cleared later in Begin()
 
         _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
-        memset(_i2sBuffer, 0x00, _i2sBufferSize);
+        // no need to initialize it, it gets overwritten on every send
     }
 
     ~NeoEsp32I2sMethodBase()

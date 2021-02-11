@@ -103,6 +103,9 @@ public:
         }
     }
 
+    typedef RgbColor ColorObject;
+
+protected:
     static void encodePixel(uint8_t c1, uint8_t c2, uint8_t c3, uint16_t* color555)
     {
         *color555 = (0x8000 | 
@@ -117,9 +120,6 @@ public:
         *c2 = (color555 >> 2) & 0xf8;
         *c3 = (color555 << 3) & 0xf8;
     }
-
-
-    typedef RgbColor ColorObject;
 };
 
 class  Lpd6803BrgFeature : public Lpd68033Elements
