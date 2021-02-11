@@ -96,6 +96,19 @@ public:
     const static uint8_t I2sBusNumber = 1;
 };
 
+// dynamic channel support
+class NeoEsp32I2sBusN
+{
+public:
+    NeoEsp32I2sBusN(NeoBusChannel channel) :
+        I2sBusNumber(static_cast<uint8_t>(channel))
+    {
+    }
+    NeoEsp32I2sBusN() = delete; // no default constructor
+
+    const uint8_t I2sBusNumber;
+};
+
 class NeoEsp32I2sNotInverted
 {
 public:
@@ -192,7 +205,8 @@ public:
 private:
     const size_t  _sizeData;    // Size of '_data' buffer 
     const uint8_t _pin;            // output pin number
-        
+    const T_BUS _bus; // holds instance for multi bus support
+
     uint8_t*  _data;        // Holds LED color values
 
     uint32_t _i2sBufferSize; // total size of _i2sBuffer
