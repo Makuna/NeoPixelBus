@@ -166,6 +166,12 @@ NeoEsp8266BitBangLc8812InvertedMethod	KEYWORD1
 NeoEsp8266BitBangApa106InvertedMethod	KEYWORD1
 NeoEsp8266BitBang800KbpsInvertedMethod	KEYWORD1
 NeoEsp8266BitBang400KbpsInvertedMethod	KEYWORD1
+NeoEsp32I2sNWs2812xMethod	KEYWORD1
+NeoEsp32I2sNSk6812Method	KEYWORD1
+NeoEsp32I2sNTm1814Method	KEYWORD1
+NeoEsp32I2sN800KbpsMethod	KEYWORD1
+NeoEsp32I2sN400KbpsMethod	KEYWORD1
+NeoEsp32I2sNApa106Method	KEYWORD1
 NeoEsp32I2s0Ws2812xMethod	KEYWORD1
 NeoEsp32I2s0Sk6812Method	KEYWORD1
 NeoEsp32I2s0Tm1814Method	KEYWORD1
@@ -178,6 +184,12 @@ NeoEsp32I2s1Tm1814Method	KEYWORD1
 NeoEsp32I2s1800KbpsMethod	KEYWORD1
 NeoEsp32I2s1400KbpsMethod	KEYWORD1
 NeoEsp32I2s1Apa106Method	KEYWORD1
+NeoEsp32I2sNWs2812xInvertedMethod	KEYWORD1
+NeoEsp32I2sNSk6812InvertedMethod	KEYWORD1
+NeoEsp32I2sNTm1814InvertedMethod	KEYWORD1
+NeoEsp32I2sN800KbpsInvertedMethod	KEYWORD1
+NeoEsp32I2sN400KbpsInvertedMethod	KEYWORD1
+NeoEsp32I2sNApa106InvertedMethod	KEYWORD1
 NeoEsp32I2s0Ws2812xInvertedMethod	KEYWORD1
 NeoEsp32I2s0Sk6812InvertedMethod	KEYWORD1
 NeoEsp32I2s0Tm1814InvertedMethod	KEYWORD1
@@ -585,3 +597,11 @@ NeoTopologyHint_InPanel	LITERAL1
 NeoTopologyHint_LastOnPanel	LITERAL1
 NeoTopologyHint_OutOfBounds	LITERAL1
 PixelIndex_OutOfBounds	LITERAL1
+NeoBusChannel_0	LITERAL1
+NeoBusChannel_1	LITERAL1
+NeoBusChannel_2	LITERAL1
+NeoBusChannel_3	LITERAL1
+NeoBusChannel_4	LITERAL1
+NeoBusChannel_5	LITERAL1
+NeoBusChannel_6	LITERAL1
+NeoBusChannel_7	LITERAL1
