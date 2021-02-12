@@ -53,8 +53,10 @@
 #define ESP32_REG(addr) (*((volatile uint32_t*)(0x3FF00000+(addr))))
 
 #define I2S_DMA_BLOCK_COUNT_DEFAULT      16
-#define I2S_DMA_SILENCE_SIZE     4*6 // 24 bytes gives us enough time
-#define I2S_DMA_SILENCE_BLOCK_COUNT  3
+// 24 bytes gives us enough time if we use single stage idle
+// with the two stage idle we can use the minimum of 4 bytes
+#define I2S_DMA_SILENCE_SIZE     4*1 
+#define I2S_DMA_SILENCE_BLOCK_COUNT  3 // two front, one back
 #define I2S_DMA_QUEUE_COUNT 2
 
 typedef struct i2s_dma_item_s {
@@ -97,7 +99,8 @@ typedef struct {
 
 // is_sending_data values
 #define I2s_Is_Idle 0
-#define I2s_Is_Sending 1
+#define I2s_Is_Pending 1
+#define I2s_Is_Sending 2
 
 static uint8_t i2s_silence_buf[I2S_DMA_SILENCE_SIZE] = { 0 };
 
@@ -114,7 +117,6 @@ static i2s_bus_t I2S[I2S_NUM_MAX] = {
 #endif
 
 void IRAM_ATTR i2sDmaISR(void* arg);
-bool i2sInitDmaItems(uint8_t bus_num);
 
 bool i2sInitDmaItems(uint8_t bus_num) {
     if (bus_num >= I2S_NUM_MAX) {
@@ -240,16 +242,15 @@ bool i2sWriteDone(uint8_t bus_num) {
 }
 
 void i2sInit(uint8_t bus_num, 
-    uint32_t bits_per_sample, 
-    uint32_t sample_rate, 
-    i2s_tx_chan_mod_t chan_mod, 
-    i2s_tx_fifo_mod_t fifo_mod, 
-    size_t dma_count, 
-    size_t dma_len) {
+        uint32_t bits_per_sample, 
+        uint32_t sample_rate, 
+        i2s_tx_chan_mod_t chan_mod, 
+        i2s_tx_fifo_mod_t fifo_mod, 
+        size_t dma_count, 
+        size_t dma_len) {
     if (bus_num >= I2S_NUM_MAX) {
         return;
     }
-
 
     I2S[bus_num].dma_count = dma_count + I2S_DMA_SILENCE_BLOCK_COUNT; // an extra two for looping silence
     I2S[bus_num].dma_buf_len = dma_len & 0xFFF;
@@ -421,15 +422,20 @@ void IRAM_ATTR i2sDmaISR(void* arg)
 {
     i2s_bus_t* dev = (i2s_bus_t*)(arg);
 
-    if (dev->bus->int_st.out_eof) {
+    if (dev->bus->int_st.out_eof) 
+    {
  //       i2s_dma_item_t* item = (i2s_dma_item_t*)(dev->bus->out_eof_des_addr);
-        if (dev->is_sending_data != I2s_Is_Idle)
+        if (dev->is_sending_data == I2s_Is_Pending)
+        {
+            dev->is_sending_data = I2s_Is_Idle;
+        }
+        else if (dev->is_sending_data == I2s_Is_Sending)
         {
             // loop the silent items
             i2s_dma_item_t* itemSilence = &dev->dma_items[1];
             itemSilence->next = &dev->dma_items[0];
 
-            dev->is_sending_data = I2s_Is_Idle;
+            dev->is_sending_data = I2s_Is_Pending;
         }
     }
 
@@ -443,9 +449,12 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     size_t blockSize = len;
 
     i2s_dma_item_t* itemPrev = NULL;
-    i2s_dma_item_t* item = &I2S[bus_num].dma_items[2]; // skip silent item
+    i2s_dma_item_t* item = &I2S[bus_num].dma_items[0]; 
     size_t dataLeft = len;
     uint8_t* pos = data;
+
+    // skip front two silent items
+    item += 2;
 
     while (dataLeft) {
         
@@ -471,6 +480,7 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     item = &I2S[bus_num].dma_items[1];
     item->next = &I2S[bus_num].dma_items[2];
     I2S[bus_num].is_sending_data = I2s_Is_Sending;
+        
 
     xQueueReset(I2S[bus_num].tx_queue);
     xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);

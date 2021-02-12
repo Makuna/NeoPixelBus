@@ -136,7 +136,7 @@ public:
     }
 
     NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(pixelCount* elementSize + settingsSize),
+        _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin),
         _bus(channel)
     {
@@ -163,13 +163,14 @@ public:
 
     void Initialize()
     {
-        size_t dmaCount = (_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
+        size_t dmaBlockCount = (_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
+
         i2sInit(_bus.I2sBusNumber, 
             16, 
             T_SPEED::I2sSampleRate, 
             I2S_CHAN_STEREO, 
             I2S_FIFO_16BIT_DUAL, 
-            dmaCount, 
+            dmaBlockCount,
             0);
         i2sSetPins(_bus.I2sBusNumber, _pin, T_INVERT::Inverted);
     }
@@ -209,6 +210,8 @@ private:
 
     void construct(uint16_t pixelCount, size_t elementSize, size_t settingsSize) 
     {
+        ESP_ERROR_CHECK(pixelCount >= 2 ? ESP_OK : ESP_ERR_INVALID_ARG);
+
         uint16_t dmaSettingsSize = c_dmaBytesPerPixelBytes * settingsSize;
         uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
         uint16_t resetSize = c_dmaBytesPerPixelBytes * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs;
@@ -226,7 +229,9 @@ private:
         // data cleared later in Begin()
 
         _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
-        // no need to initialize it, it gets overwritten on every send
+        // no need to initialize all of it, but since it contains
+        // "reset" bits that don't latter get overwritten we just clear it all
+        memset(_i2sBuffer, 0x00, _i2sBufferSize);
     }
 
     void FillBuffers()
