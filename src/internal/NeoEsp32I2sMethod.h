@@ -228,7 +228,7 @@ private:
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin()
 
-        _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
+        _i2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(_i2sBufferSize, MALLOC_CAP_DMA));
         // no need to initialize all of it, but since it contains
         // "reset" bits that don't latter get overwritten we just clear it all
         memset(_i2sBuffer, 0x00, _i2sBufferSize);

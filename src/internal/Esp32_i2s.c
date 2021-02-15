@@ -129,7 +129,7 @@ bool i2sInitDmaItems(uint8_t bus_num) {
     size_t dmaCount = I2S[bus_num].dma_count;
 
     if (I2S[bus_num].dma_items == NULL) {
-        I2S[bus_num].dma_items = (i2s_dma_item_t*)(malloc(dmaCount * sizeof(i2s_dma_item_t)));
+        I2S[bus_num].dma_items = (i2s_dma_item_t*)heap_caps_malloc(dmaCount * sizeof(i2s_dma_item_t), MALLOC_CAP_DMA);
         if (I2S[bus_num].dma_items == NULL) {
             log_e("MEM ERROR!");
             return false;
