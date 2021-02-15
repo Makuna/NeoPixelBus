@@ -7,8 +7,6 @@
 // There is serial output of the current state so you can confirm and follow along
 //
 
-// TODO: document alt clock speeds in wiki
-
 #include <NeoPixelBus.h>
 
 #define USE_DEFAULT_SPI_PORT 1
@@ -21,10 +19,10 @@
     const bool useSpiAlternatePins = true;
 
     // If you set useSpiAlternatePins true, then these pins will be used instead.  Any output-capable GPIO can be used.
-    //const uint8_t DotClockPin = 18;
-    //const uint8_t DotDataPin = 23;  
-    const uint8_t DotClockPin = 21;
-    const uint8_t DotDataPin = 25;  
+    const uint8_t DotClockPin = 18;
+    const uint8_t DotDataPin = 23;  
+    //const uint8_t DotClockPin = 21;
+    //const uint8_t DotDataPin = 25;  
     const uint8_t DotChipSelectPin = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins=false
 
     // for software bit bang (only use if neither SPI peripheral is available)
@@ -43,10 +41,10 @@
     const bool useSpiAlternatePins2 = true;
 
     // If you set useSpiAlternatePins2 true, then these pins will be used instead.  Any output-capable GPIO can be used.
-    //const uint8_t DotClockPin2 = 14;
-    //const uint8_t DotDataPin2 = 13;  
-    const uint8_t DotClockPin2 = 33;
-    const uint8_t DotDataPin2 = 23;  
+    const uint8_t DotClockPin2 = 14;
+    const uint8_t DotDataPin2 = 13;  
+    //const uint8_t DotClockPin2 = 33;
+    //const uint8_t DotDataPin2 = 23;  
     const uint8_t DotChipSelectPin2 = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins2=false
 
     // for hardware SPI (best performance) with alternate SPI peripheral
