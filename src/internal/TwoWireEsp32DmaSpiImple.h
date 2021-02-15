@@ -28,18 +28,25 @@ License along with NeoPixel.  If not, see
 
 #include <SPI.h>
 
-template<typename T_SPISPEED> class TwoWireEsp32DmaSpiImple
+class Esp32VspiBus
+{
+public:
+    static const uint8_t spi_bus = VSPI;
+};
+
+class Esp32HspiBus
+{
+public:
+    static const uint8_t spi_bus = HSPI;
+};
+
+template<typename T_SPISPEED, typename T_SPIBUS> class TwoWireEsp32DmaSpiImple
 {
 public:
     // "pin" is used to send "spi_bus", this must be specified in the constructor
-    TwoWireEsp32DmaSpiImple(uint8_t spi_bus, uint8_t unused)
+    TwoWireEsp32DmaSpiImple(uint8_t, uint8_t)
     {
-        // default to VSPI if an invalid bus number is provided
-        if(spi_bus != VSPI && spi_bus != HSPI)
-            spi_bus = VSPI;
-
-        busnum = spi_bus;
-        spiClass = new SPIClass(spi_bus);
+        spiClass = new SPIClass(T_SPIBUS::spi_bus);
     }
 
 #if defined(ARDUINO_ARCH_ESP32)
