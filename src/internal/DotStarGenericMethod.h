@@ -144,4 +144,10 @@ typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed1Mhz>> DotStarHspi1MhzMethod;
 typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed500Khz>> DotStarHspi500KhzMethod;
 
 typedef DotStarHspi10MhzMethod DotStarHspiMethod;
+
+#include "TwoWireEsp32DmaSpiImple.h"
+typedef DotStarMethodBase<TwoWireEsp32DmaSpiImple<SpiSpeed10Mhz>> DotStarDmaSpi10MhzMethod;
+
+typedef DotStarDmaSpi10MhzMethod DotStarDmaSpiMethod;
+
 #endif
