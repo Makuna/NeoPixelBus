@@ -134,5 +134,14 @@ typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed500Khz>> DotStarSpi500KhzMetho
 typedef DotStarSpi10MhzMethod DotStarSpiMethod;
 #endif
 
+#if defined(ARDUINO_ARCH_ESP32)
+#include "TwoWireHspiImple.h"
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed40Mhz>> DotStarHspi40MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed20Mhz>> DotStarHspi20MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed10Mhz>> DotStarHspi10MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed2Mhz>> DotStarHspi2MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed1Mhz>> DotStarHspi1MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed500Khz>> DotStarHspi500KhzMethod;
 
-
+typedef DotStarHspi10MhzMethod DotStarHspiMethod;
+#endif
