@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library helper functions for DotStars using general Pins (APA102/LPD8806).
+NeoPixel library helper functions for DotStars using SPI (APA102/LPD8806).
 
 Written by Michael C. Miller.
 
