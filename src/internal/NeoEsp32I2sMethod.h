@@ -303,7 +303,8 @@ typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2sBusN, NeoEsp32I
 
 #endif
 
-/* due to a core issue where requests to send aren't consistent, I2s is no longer the default 
+#if !defined(NEOPIXEL_ESP32_RMT_DEFAULT)
+
 // I2s Bus 1 method is the default method for Esp32
 typedef NeoEsp32I2s1Ws2812xMethod NeoWs2813Method;
 typedef NeoEsp32I2s1Ws2812xMethod NeoWs2812xMethod;
@@ -328,6 +329,7 @@ typedef NeoEsp32I2s1Apa106InvertedMethod NeoApa106InvertedMethod;
 
 typedef NeoEsp32I2s1Ws2812xInvertedMethod Neo800KbpsInvertedMethod;
 typedef NeoEsp32I2s1400KbpsInvertedMethod Neo400KbpsInvertedMethod;
-*/
+
+#endif // !defined(NEOPIXEL_ESP32_RMT_DEFAULT)
 
 #endif
