@@ -37,13 +37,15 @@ License along with NeoPixel.  If not, see
 template<typename T_TWOWIRE> class P9813MethodBase
 {
 public:
+    typedef typename T_TWOWIRE::SettingsObject SettingsObject;
+
     P9813MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
         _sizeEndFrame((pixelCount + 15) / 16), // 16 = div 2 (bit for every two pixels) div 8 (bits to bytes)
         _wire(pinClock, pinData)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_data, 0, _sizeData);
+        // data cleared later in Begin()
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
@@ -104,6 +106,11 @@ public:
         return _sizeData;
     };
 
+    void applySettings(const SettingsObject& settings)
+    {
+        _wire.applySettings(settings);
+    }
+
 private:
     const size_t   _sizeData;   // Size of '_data' buffer below
     const size_t   _sizeEndFrame;
@@ -119,6 +126,11 @@ typedef P9813MethodBase<TwoWireBitBangImple> P9813Method;
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> P9813Spi20MhzMethod;
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> P9813Spi10MhzMethod;
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> P9813Spi2MhzMethod;
+typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> P9813Spi1MhzMethod;
+typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> P9813Spi500KhzMethod;
+
+typedef P9813MethodBase<TwoWireSpiImple<SpiSpeedHz>> P9813SpiHzMethod;
+
 typedef P9813Spi10MhzMethod P9813SpiMethod;
 #endif
 

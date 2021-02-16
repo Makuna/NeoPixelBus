@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library helper functions for LPD8806 using general Pins 
+NeoPixel library helper functions for LPD6803 using general Pins 
 
 Written by Michael C. Miller.
 
@@ -34,29 +34,29 @@ License along with NeoPixel.  If not, see
 #endif
 
 
-template<typename T_TWOWIRE> class Lpd8806MethodBase
+template<typename T_TWOWIRE> class Lpd6803MethodBase
 {
 public:
     typedef typename T_TWOWIRE::SettingsObject SettingsObject;
 
-    Lpd8806MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+    Lpd6803MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
-        _sizeFrame((pixelCount + 31) / 32), 
-        _wire(pinClock, pinData)
+		_sizeFrame((pixelCount + 7) / 8), // bit for every pixel at least
+		_wire(pinClock, pinData)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin()
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
-    Lpd8806MethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        Lpd8806MethodBase(SCK, MOSI, pixelCount, elementSize, settingsSize)
+    Lpd6803MethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        Lpd6803MethodBase(SCK, MOSI, pixelCount, elementSize, settingsSize)
     {
     }
 #endif
 
 
-    ~Lpd8806MethodBase()
+    ~Lpd6803MethodBase()
     {
         free(_data);
     }
@@ -80,21 +80,21 @@ public:
 
     void Update(bool)
     {
+        const uint8_t startFrame[4] = { 0x00 };
+
         _wire.beginTransaction();
 
         // start frame
-        for (size_t frameByte = 0; frameByte < _sizeFrame; frameByte++)
-        {
-            _wire.transmitByte(0x00);
-        }
+        _wire.transmitBytes(startFrame, sizeof(startFrame));
         
         // data
         _wire.transmitBytes(_data, _sizeData);
         
         // end frame 
+        // one bit for every pixel with no less than 1 byte
         for (size_t frameByte = 0; frameByte < _sizeFrame; frameByte++)
         {
-            _wire.transmitByte(0xff);
+            _wire.transmitByte(0x00);
         }
     
         _wire.endTransaction();
@@ -123,19 +123,19 @@ private:
     uint8_t* _data;       // Holds LED color values
 };
 
-typedef Lpd8806MethodBase<TwoWireBitBangImple> Lpd8806Method;
+typedef Lpd6803MethodBase<TwoWireBitBangImple> Lpd6803Method;
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
 #include "TwoWireSpiImple.h"
-typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> Lpd8806Spi20MhzMethod;
-typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> Lpd8806Spi10MhzMethod;
-typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> Lpd8806Spi2MhzMethod;
-typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Lpd8806Spi1MhzMethod;
-typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Lpd8806Spi500KhzMethod;
+typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> Lpd6803Spi20MhzMethod;
+typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> Lpd6803Spi10MhzMethod;
+typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> Lpd6803Spi2MhzMethod;
+typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Lpd6803Spi1MhzMethod;
+typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Lpd6803Spi500KhzMethod;
 
-typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeedHz>> Lpd8806SpiHzMethod;
+typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeedHz>> Lpd6803SpiHzMethod;
 
-typedef Lpd8806Spi10MhzMethod Lpd8806SpiMethod;
+typedef Lpd6803Spi10MhzMethod Lpd6803SpiMethod;
 #endif
 
 

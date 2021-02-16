@@ -51,9 +51,13 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoSettings.h"
 
 #include "internal/RgbColor.h"
+#include "internal/Rgb16Color.h"
+#include "internal/Rgb48Color.h"
+
 #include "internal/HslColor.h"
 #include "internal/HsbColor.h"
 #include "internal/HtmlColor.h"
+
 #include "internal/RgbwColor.h"
 #include "internal/SegmentDigit.h"
 
@@ -61,6 +65,7 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoTm1814ColorFeatures.h"
 #include "internal/DotStarColorFeatures.h"
 #include "internal/Lpd8806ColorFeatures.h"
+#include "internal/Lpd6803ColorFeatures.h"
 #include "internal/P9813ColorFeatures.h"
 #include "internal/NeoSegmentFeatures.h"
 
@@ -80,8 +85,11 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoEase.h"
 #include "internal/NeoGamma.h"
 
+#include "internal/NeoBusChannel.h"
+
 #include "internal/DotStarGenericMethod.h"
 #include "internal/Lpd8806GenericMethod.h"
+#include "internal/Lpd6803GenericMethod.h"
 #include "internal/Ws2801GenericMethod.h"
 #include "internal/P9813GenericMethod.h"
 
@@ -114,8 +122,6 @@ License along with NeoPixel.  If not, see
 #endif
 
 
-
-
 template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBus
 {
 public:
@@ -126,6 +132,13 @@ public:
         _countPixels(countPixels),
         _state(0),
         _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
+    {
+    }
+
+    NeoPixelBus(uint16_t countPixels, uint8_t pin, NeoBusChannel channel) :
+        _countPixels(countPixels),
+        _state(0),
+        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, channel)
     {
     }
 
@@ -156,14 +169,14 @@ public:
     void Begin()
     {
         _method.Initialize();
-        Dirty();
+        ClearTo(0);
     }
 
     // used by DotStartSpiMethod if pins can be configured
     void Begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
         _method.Initialize(sck, miso, mosi, ss);
-        Dirty();
+        ClearTo(0);
     }
 
     void Show(bool maintainBufferConsistency = true)
@@ -363,6 +376,12 @@ public:
     void SetPixelSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
     {
         T_COLOR_FEATURE::applySettings(_method.getData(), settings);
+        Dirty();
+    };
+
+    void SetMethodSettings(const typename T_METHOD::SettingsObject& settings)
+    {
+        _method.applySettings(settings);
         Dirty();
     };
  

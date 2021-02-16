@@ -27,6 +27,9 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+#include <Arduino.h>
+#include "NeoSettings.h"
+#include "NeoBusChannel.h"
 #include "NeoEsp32RmtMethod.h"
 
 #ifdef ARDUINO_ARCH_ESP32

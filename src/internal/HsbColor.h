@@ -49,6 +49,11 @@ struct HsbColor
     HsbColor(const RgbColor& color);
 
     // ------------------------------------------------------------------------
+    // Construct a HsbColor using Rgb48Color
+    // ------------------------------------------------------------------------
+    HsbColor(const Rgb48Color& color);
+
+    // ------------------------------------------------------------------------
     // Construct a HsbColor that will have its values set in latter operations
     // CAUTION:  The H,S,B members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
@@ -109,5 +114,8 @@ struct HsbColor
     float H;
     float S;
     float B;
+
+private:
+    static void _RgbToHsb(float r, float g, float b, HsbColor* color);
 };
 

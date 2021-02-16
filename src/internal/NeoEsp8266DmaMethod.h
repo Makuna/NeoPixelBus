@@ -229,6 +229,8 @@ const uint8_t c_I2sPin = 3; // due to I2S hardware, the pin used is restricted t
 template<typename T_SPEED> class NeoEsp8266DmaMethodBase
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     NeoEsp8266DmaMethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize)
     {
@@ -238,10 +240,10 @@ public:
         _i2sBufferSize = pixelCount * dmaPixelSize + dmaSettingsSize;
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_data, 0x00, _sizeData);
+        // data cleared later in Begin()
 
         _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
-        memset(_i2sBuffer, T_SPEED::Level, _i2sBufferSize);
+        // no need to initialize it, it gets overwritten on every send
 
         // _i2sBuffer[0] = 0b11101000; // debug, 1 bit then 0 bit
 
@@ -423,6 +425,10 @@ public:
     size_t getDataSize() const
     {
         return _sizeData;
+    }
+
+    void applySettings(const SettingsObject& settings)
+    {
     }
 
 private:

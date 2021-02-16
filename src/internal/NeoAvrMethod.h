@@ -124,6 +124,8 @@ public:
 template<typename T_SPEED> class NeoAvrMethodBase
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     NeoAvrMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin),
@@ -133,7 +135,7 @@ public:
         pinMode(pin, OUTPUT);
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_data, 0, _sizeData);
+        // data cleared later in Begin()
 
         _port = portOutputRegister(digitalPinToPort(pin));
         _pinMask = digitalPinToBitMask(pin);
@@ -194,6 +196,10 @@ public:
     {
         return _sizeData;
     };
+
+    void applySettings(const SettingsObject& settings)
+    {
+    }
 
 private:
     const size_t  _sizeData;     // size of _data below       
