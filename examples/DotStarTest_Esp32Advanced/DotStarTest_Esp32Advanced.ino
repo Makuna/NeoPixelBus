@@ -23,7 +23,7 @@
     const uint8_t DotDataPin = 23;  
     //const uint8_t DotClockPin = 21;
     //const uint8_t DotDataPin = 25;  
-    const uint8_t DotChipSelectPin = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins=false
+    const int8_t DotChipSelectPin = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins=false
 
     // for software bit bang (only use if neither SPI peripheral is available)
     //NeoPixelBus<DotStarBgrFeature, DotStarMethod> strip(PixelCount, DotClockPin, DotDataPin);
@@ -45,7 +45,7 @@
     const uint8_t DotDataPin2 = 13;  
     //const uint8_t DotClockPin2 = 33;
     //const uint8_t DotDataPin2 = 23;  
-    const uint8_t DotChipSelectPin2 = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins2=false
+    const int8_t DotChipSelectPin2 = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins2=false
 
     // for hardware SPI (best performance) with alternate SPI peripheral
     NeoPixelBus<DotStarBgrFeature, DotStarHspiMethod> strip2(PixelCount2);

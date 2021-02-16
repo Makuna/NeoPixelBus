@@ -1,8 +1,7 @@
 // DotStarTest_Esp32Advanced - This example only works on the ESP32
 // This example will cycle between showing four pixels as Red, Green, Blue, White
-// and then showing those pixels as Black.  This example uses Hardware SPI on the ESP32
-// with options to use alternate pins for SPI and drive two SPI ports using the alternate
-// additional SPI hardware available on the ESP32.
+// and then showing those pixels as Black.  This example uses DMA to drive Hardware SPI on the ESP32
+// with options to use alternate pins for SPI and drive two SPI ports
 //
 // There is serial output of the current state so you can confirm and follow along
 //
