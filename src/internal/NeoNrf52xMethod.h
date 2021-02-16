@@ -80,6 +80,17 @@ public:
     const static PinStatus IdleLevel = HIGH;
 };
 
+class NeoNrf52xPwmSpeedTm1829
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 5; // ~0.3us
+    const static nrf_pwm_values_common_t Bit1 = 13 | 0x8000; // ~0.8us
+    const static nrf_pwm_values_common_t BitReset = 0x0000; // HIGH
+    const static uint32_t CountReset = 160; // 200us / 1.25us pulse width
+    const static PinStatus IdleLevel = HIGH;
+};
+
 class NeoNrf52xPwmSpeed800Kbps
 {
 public:
@@ -153,6 +164,17 @@ public:
     const static uint32_t CountTop = 20UL; // 1.25us
     const static nrf_pwm_values_common_t Bit0 = 5 | 0x8000; // ~0.3us
     const static nrf_pwm_values_common_t Bit1 = 12 | 0x8000; // ~0.7us
+    const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
+    const static uint32_t CountReset = 160; // 200us / 1.25us pulse width
+    const static PinStatus IdleLevel = LOW;
+};
+
+class NeoNrf52xPwmInvertedSpeedTm1829
+{
+public:
+    const static uint32_t CountTop = 20UL; // 1.25us
+    const static nrf_pwm_values_common_t Bit0 = 5 | 0x8000; // ~0.3us
+    const static nrf_pwm_values_common_t Bit1 = 13; // ~0.8us
     const static nrf_pwm_values_common_t BitReset = 0x8000; // LOW
     const static uint32_t CountReset = 160; // 200us / 1.25us pulse width
     const static PinStatus IdleLevel = LOW;
@@ -454,6 +476,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm0> NeoNrf52xPwm
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwm0> NeoNrf52xPwm0Sk6812Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1814, NeoNrf52xPwm0> NeoNrf52xPwm0Tm1814Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1829, NeoNrf52xPwm0> NeoNrf52xPwm0Tm1829Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedApa106, NeoNrf52xPwm0> NeoNrf52xPwm0Apa106Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed800Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0800KbpsMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0400KbpsMethod;
@@ -462,6 +485,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm1> NeoNrf52xPwm
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm1> NeoNrf52xPwm1Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwm1> NeoNrf52xPwm1Sk6812Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1814, NeoNrf52xPwm1> NeoNrf52xPwm1Tm1814Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1829, NeoNrf52xPwm1> NeoNrf52xPwm1Tm1829Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedApa106, NeoNrf52xPwm1> NeoNrf52xPwm1Apa106Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed800Kbps, NeoNrf52xPwm1> NeoNrf52xPwm1800KbpsMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm1> NeoNrf52xPwm1400KbpsMethod;
@@ -470,6 +494,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm2> NeoNrf52xPwm
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm2> NeoNrf52xPwm2Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwm2> NeoNrf52xPwm2Sk6812Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1814, NeoNrf52xPwm2> NeoNrf52xPwm2Tm1814Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1829, NeoNrf52xPwm2> NeoNrf52xPwm2Tm1829Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedApa106, NeoNrf52xPwm2> NeoNrf52xPwm2Apa106Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed800Kbps, NeoNrf52xPwm2> NeoNrf52xPwm2800KbpsMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm2> NeoNrf52xPwm2400KbpsMethod;
@@ -479,6 +504,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2811, NeoNrf52xPwm3> NeoNrf52xPwm
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedWs2812x, NeoNrf52xPwm3> NeoNrf52xPwm3Ws2812xMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedSk6812, NeoNrf52xPwm3> NeoNrf52xPwm3Sk6812Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1814, NeoNrf52xPwm3> NeoNrf52xPwm3Tm1814Method;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedTm1829, NeoNrf52xPwm3> NeoNrf52xPwm3Tm1829Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeedApa106, NeoNrf52xPwm3> NeoNrf52xPwm3Apa106Method;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed800Kbps, NeoNrf52xPwm3> NeoNrf52xPwm3800KbpsMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmSpeed400Kbps, NeoNrf52xPwm3> NeoNrf52xPwm3400KbpsMethod;
@@ -497,6 +523,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwm0> NeoN
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm0> NeoNrf52xPwm0Ws2812xInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwm0> NeoNrf52xPwm0Sk6812InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1814, NeoNrf52xPwm0> NeoNrf52xPwm0Tm1814InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1829, NeoNrf52xPwm0> NeoNrf52xPwm0Tm1829InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedApa106, NeoNrf52xPwm0> NeoNrf52xPwm0Apa106InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed800Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0800KbpsInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm0> NeoNrf52xPwm0400KbpsInvertedMethod;
@@ -505,6 +532,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwm1> NeoN
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm1> NeoNrf52xPwm1Ws2812xInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwm1> NeoNrf52xPwm1Sk6812InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1814, NeoNrf52xPwm1> NeoNrf52xPwm1Tm1814InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1829, NeoNrf52xPwm1> NeoNrf52xPwm1Tm1829InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedApa106, NeoNrf52xPwm1> NeoNrf52xPwm1Apa106InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed800Kbps, NeoNrf52xPwm1> NeoNrf52xPwm1800KbpsInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm1> NeoNrf52xPwm1400KbpsInvertedMethod;
@@ -513,6 +541,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwm2> NeoN
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm2> NeoNrf52xPwm2Ws2812xInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwm2> NeoNrf52xPwm2Sk6812InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1814, NeoNrf52xPwm2> NeoNrf52xPwm2Tm1814InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1829, NeoNrf52xPwm2> NeoNrf52xPwm2Tm1829InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedApa106, NeoNrf52xPwm2> NeoNrf52xPwm2Apa106InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed800Kbps, NeoNrf52xPwm2> NeoNrf52xPwm2800KbpsInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm2> NeoNrf52xPwm2400KbpsInvertedMethod;
@@ -522,6 +551,7 @@ typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2811, NeoNrf52xPwm3> NeoN
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedWs2812x, NeoNrf52xPwm3> NeoNrf52xPwm3Ws2812xInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedSk6812, NeoNrf52xPwm3> NeoNrf52xPwm3Sk6812InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1814, NeoNrf52xPwm3> NeoNrf52xPwm3Tm1814InvertedMethod;
+typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedTm1829, NeoNrf52xPwm3> NeoNrf52xPwm3Tm1829InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeedApa106, NeoNrf52xPwm3> NeoNrf52xPwm3Apa106InvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed800Kbps, NeoNrf52xPwm3> NeoNrf52xPwm3800KbpsInvertedMethod;
 typedef NeoNrf52xMethodBase<NeoNrf52xPwmInvertedSpeed400Kbps, NeoNrf52xPwm3> NeoNrf52xPwm3400KbpsInvertedMethod;
@@ -534,6 +564,7 @@ typedef NeoNrf52xPwm2800KbpsMethod NeoWs2812Method;
 typedef NeoNrf52xPwm2Ws2812xMethod NeoWs2811Method;
 typedef NeoNrf52xPwm2Sk6812Method NeoSk6812Method;
 typedef NeoNrf52xPwm2Tm1814Method NeoTm1814Method;
+typedef NeoNrf52xPwm2Tm1829Method NeoTm1829Method;
 typedef NeoNrf52xPwm2Sk6812Method NeoLc8812Method;
 typedef NeoNrf52xPwm2Apa106Method NeoApa106Method;
 
@@ -546,6 +577,7 @@ typedef NeoNrf52xPwm2Ws2812xInvertedMethod NeoWs2811InvertedMethod;
 typedef NeoNrf52xPwm2800KbpsInvertedMethod NeoWs2812InvertedMethod;
 typedef NeoNrf52xPwm2Sk6812InvertedMethod NeoSk6812InvertedMethod;
 typedef NeoNrf52xPwm2Tm1814InvertedMethod NeoTm1814InvertedMethod;
+typedef NeoNrf52xPwm2Tm1829InvertedMethod NeoTm1829InvertedMethod;
 typedef NeoNrf52xPwm2Sk6812InvertedMethod NeoLc8812InvertedMethod;
 typedef NeoNrf52xPwm2Apa106InvertedMethod NeoApa106InvertedMethod;
 

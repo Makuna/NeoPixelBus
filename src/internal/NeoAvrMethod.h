@@ -89,6 +89,12 @@ public:
     static const uint32_t ResetTimeUs = 200;
 };
 
+class NeoAvrSpeedTm1829 : public NeoAvrSpeed800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 200;
+};
+
 class NeoAvrSpeed800Kbps: public NeoAvrSpeed800KbpsBase
 {
 public:
@@ -210,6 +216,7 @@ private:
 typedef NeoAvrMethodBase<NeoAvrSpeedWs2812x> NeoAvrWs2812xMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeedSk6812> NeoAvrSk6812Method;
 typedef NeoAvrMethodBase<NeoAvrSpeedTm1814> NeoAvrTm1814InvertedMethod;
+typedef NeoAvrMethodBase<NeoAvrSpeedTm1829> NeoAvrTm1829InvertedMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed800Kbps> NeoAvr800KbpsMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed400Kbps> NeoAvr400KbpsMethod;
 
@@ -226,5 +233,6 @@ typedef NeoAvrWs2812xMethod Neo800KbpsMethod;
 typedef NeoAvr400KbpsMethod Neo400KbpsMethod;
 
 typedef NeoAvrTm1814InvertedMethod NeoTm1814InvertedMethod;
+typedef NeoAvrTm1829InvertedMethod NeoTm1829InvertedMethod;
 #endif
 
