@@ -132,6 +132,9 @@ typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> Lpd6803Spi10MhzMethod;
 typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> Lpd6803Spi2MhzMethod;
 typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Lpd6803Spi1MhzMethod;
 typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Lpd6803Spi500KhzMethod;
+
+typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeedHz>> Lpd6803SpiHzMethod;
+
 typedef Lpd6803Spi10MhzMethod Lpd6803SpiMethod;
 #endif
 
