@@ -347,6 +347,8 @@ template<typename T_SPEED, typename T_BASE, typename T_INVERT>
 class NeoEsp8266UartMethodBase: public T_BASE
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     NeoEsp8266UartMethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
         : T_BASE(pixelCount, elementSize, settingsSize)
     {
@@ -397,6 +399,10 @@ public:
     {
         return this->_sizeData;
     };
+
+    void applySettings(const SettingsObject& settings)
+    {
+    }
 
 private:
     uint32_t getPixelTime() const

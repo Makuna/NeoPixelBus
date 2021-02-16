@@ -35,6 +35,8 @@ License along with NeoPixel.  If not, see
 template<typename T_SPEED> class NeoArmMethodBase
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     NeoArmMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
@@ -98,6 +100,10 @@ public:
     {
         return _sizeData;
     };
+
+    void applySettings(const SettingsObject& settings)
+    {
+    }
 
 private:
     const  size_t    _sizeData;   // Size of '_data' buffer below

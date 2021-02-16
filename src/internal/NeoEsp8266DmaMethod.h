@@ -217,6 +217,8 @@ const uint8_t c_I2sPin = 3; // due to I2S hardware, the pin used is restricted t
 template<typename T_SPEED> class NeoEsp8266DmaMethodBase
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     NeoEsp8266DmaMethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize)
     {
@@ -411,6 +413,10 @@ public:
     size_t getDataSize() const
     {
         return _sizeData;
+    }
+
+    void applySettings(const SettingsObject& settings)
+    {
     }
 
 private:

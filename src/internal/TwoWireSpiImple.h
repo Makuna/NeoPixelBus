@@ -31,42 +31,101 @@ License along with NeoPixel.  If not, see
 class SpiSpeed40Mhz
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed40Mhz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
     static const uint32_t Clock = 40000000L;
 };
 
 class SpiSpeed20Mhz
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed20Mhz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
     static const uint32_t Clock = 20000000L;
 };
 
 class SpiSpeed10Mhz
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed10Mhz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
     static const uint32_t Clock = 10000000L;
 };
 
 class SpiSpeed2Mhz
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed2Mhz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
     static const uint32_t Clock = 2000000L;
 };
 
 class SpiSpeed1Mhz
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed1Mhz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
     static const uint32_t Clock = 1000000L;
 };
 
 class SpiSpeed500Khz
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed500Khz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
     static const uint32_t Clock = 500000L;
+};
+
+class NeoSpiSettings
+{
+public:
+    NeoSpiSettings(uint32_t clock) :
+        Clock(clock)
+    {
+    }
+    uint32_t Clock;
+};
+
+class SpiSpeedHz
+{
+public:
+    typedef NeoSpiSettings SettingsObject;
+
+    SpiSpeedHz() :
+        Clock(10000000)
+    {};
+
+    void applySettings(const SettingsObject& settings)
+    {
+        Clock = settings.Clock;
+    }
+
+    uint32_t Clock;
 };
 
 template<typename T_SPISPEED> class TwoWireSpiImple
 {
 public:
+    typedef typename T_SPISPEED::SettingsObject SettingsObject;
+
     TwoWireSpiImple(uint8_t, uint8_t) // clock and data pins ignored for hardware SPI
     {
     }
@@ -91,7 +150,7 @@ public:
 
     void beginTransaction()
     {
-        SPI.beginTransaction(SPISettings(T_SPISPEED::Clock, MSBFIRST, SPI_MODE0));
+        SPI.beginTransaction(SPISettings(_speed.Clock, MSBFIRST, SPI_MODE0));
     }
 
     void endTransaction()
@@ -123,5 +182,11 @@ public:
 #endif
     }
 
+    void applySettings(const SettingsObject& settings)
+    {
+        _speed.applySettings(settings);
+    }
+
 private:
+    T_SPISPEED _speed;
 };

@@ -403,6 +403,8 @@ public:
 template<typename T_SPEED, typename T_CHANNEL> class NeoEsp32RmtMethodBase
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
@@ -490,6 +492,10 @@ public:
     size_t getDataSize() const
     {
         return _sizeData;
+    }
+
+    void applySettings(const SettingsObject& settings)
+    {
     }
 
 private:
