@@ -129,6 +129,8 @@ typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> P9813Spi2MhzMethod;
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> P9813Spi1MhzMethod;
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> P9813Spi500KhzMethod;
 
+typedef P9813MethodBase<TwoWireSpiImple<SpiSpeedHz>> P9813SpiHzMethod;
+
 typedef P9813Spi10MhzMethod P9813SpiMethod;
 #endif
 
