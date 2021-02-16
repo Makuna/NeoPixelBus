@@ -25,6 +25,9 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #ifdef ARDUINO_ARCH_ESP8266
+
+#include <Arduino.h>
+#include "NeoSettings.h"
 #include "NeoEsp8266UartMethod.h"
 #include <utility>
 extern "C"
