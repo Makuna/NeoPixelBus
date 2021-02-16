@@ -48,7 +48,7 @@
     const uint8_t DotChipSelectPin2 = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins2=false
 
     // for hardware SPI (best performance) with alternate SPI peripheral
-    NeoPixelBus<DotStarBgrFeature, DotStarHspiMethod> strip2(PixelCount);
+    NeoPixelBus<DotStarBgrFeature, DotStarHspiMethod> strip2(PixelCount2);
 
     // DotStarHspiMethod defaults to 10MHz clock speed.  For other speeds, replace "DotStarSpiMethod" with another method specifying speed, e.g. "DotStarHspi2MhzMethod" (see wiki for more details)
 #endif
