@@ -22,7 +22,7 @@
     //const uint8_t DotDataPin = 23;  
     const uint8_t DotClockPin = 21;
     const uint8_t DotDataPin = 25;  
-    const uint8_t DotChipSelectPin = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins=false
+    const int8_t DotChipSelectPin = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins=false
 
     // for software bit bang (only use if neither SPI peripheral is available)
     //NeoPixelBus<DotStarBgrFeature, DotStarMethod> strip(PixelCount, DotClockPin, DotDataPin);
@@ -44,10 +44,10 @@
     //const uint8_t DotDataPin2 = 13;  
     const uint8_t DotClockPin2 = 33;
     const uint8_t DotDataPin2 = 23;  
-    const uint8_t DotChipSelectPin2 = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins2=false
+    const int8_t DotChipSelectPin2 = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins2=false
 
     // for hardware SPI (best performance) with alternate SPI peripheral
-    NeoPixelBus<DotStarBgrFeature, DotStarEsp32DmaHspiMethod> strip2(PixelCount);
+    NeoPixelBus<DotStarBgrFeature, DotStarEsp32DmaHspiMethod> strip2(PixelCount2);
 
     // DotStarHspiMethod defaults to 10MHz clock speed.  For other speeds, replace "DotStarSpiMethod" with another method specifying speed, e.g. "DotStarHspi2MhzMethod" (see wiki for more details)
 #endif
@@ -103,6 +103,7 @@ void loop()
 #if (USE_DEFAULT_SPI_PORT == 1)
     Serial.println("Default SPI Colors R, G, B, W...");
     // set the colors, 
+    while(!strip.CanShow());    // DotStarEsp32Dma*Method uses DMA in the background, don't update until the buffer is free
     strip.SetPixelColor(0, red);
     strip.SetPixelColor(1, green);
     strip.SetPixelColor(2, blue);
@@ -113,6 +114,7 @@ void loop()
 #if (USE_ALTERNATE_SPI_PORT == 1)
     Serial.println("Alt SPI Colors W, B, G, R...");
     // set the colors, 
+    while(!strip2.CanShow());    // DotStarEsp32Dma*Method uses DMA in the background, don't update until the buffer is free
     strip2.SetPixelColor(0, white);
     strip2.SetPixelColor(1, blue);
     strip2.SetPixelColor(2, green);
@@ -126,6 +128,7 @@ void loop()
 
 #if (USE_DEFAULT_SPI_PORT == 1)
     // turn off the pixels
+    while(!strip.CanShow());    // DotStarEsp32Dma*Method uses DMA in the background, don't update until the buffer is free
     strip.SetPixelColor(0, black);
     strip.SetPixelColor(1, black);
     strip.SetPixelColor(2, black);
@@ -135,6 +138,7 @@ void loop()
 
 #if (USE_ALTERNATE_SPI_PORT == 1)
     // turn off the pixels
+    while(!strip2.CanShow());    // DotStarEsp32Dma*Method uses DMA in the background, don't update until the buffer is free
     strip2.SetPixelColor(0, black);
     strip2.SetPixelColor(1, black);
     strip2.SetPixelColor(2, black);
