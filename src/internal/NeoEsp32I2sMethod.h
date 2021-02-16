@@ -128,6 +128,8 @@ public:
 template<typename T_SPEED, typename T_BUS, typename T_INVERT> class NeoEsp32I2sMethodBase
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
@@ -196,6 +198,10 @@ public:
     size_t getDataSize() const
     {
         return _sizeData;
+    }
+
+    void applySettings(const SettingsObject& settings)
+    {
     }
 
 private:
