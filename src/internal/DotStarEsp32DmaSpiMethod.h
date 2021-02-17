@@ -143,8 +143,8 @@ public:
 
 private:
     const size_t             _sizeStartFrame = 4;
-    const size_t             _sizeEndFrame;
     const size_t             _sizePixelData;   // Size of '_data' buffer below, minus (_sizeStartFrame + _sizeEndFrame)
+    const size_t             _sizeEndFrame;
 
     size_t                  _spiBufferSize;
     uint8_t*                _data;       // Holds start/end frames and LED color values
