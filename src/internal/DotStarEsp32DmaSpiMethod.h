@@ -65,6 +65,12 @@ public:
         // data cleared later in NeoPixelBus::Begin()
     }
 
+    // Support constructor specifying pins by ignoring pins
+    DotStarEsp32DmaSpiMethod(uint8_t, uint8_t, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        DotStarEsp32DmaSpiMethod(pixelCount, elementSize, settingsSize)
+    {
+    }
+
     ~DotStarEsp32DmaSpiMethod()
     {
         free(_data);
