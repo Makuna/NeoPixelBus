@@ -44,6 +44,7 @@ NeoWs2811Method	KEYWORD1
 NeoSk6812Method	KEYWORD1
 NeoTm1814Method	KEYWORD1
 NeoTm1829Method	KEYWORD1
+NeoTx1812Method	KEYWORD1
 NeoLc8812Method	KEYWORD1
 NeoApa106Method	KEYWORD1
 Neo800KbpsInvertedMethod	KEYWORD1
@@ -55,6 +56,7 @@ NeoWs2811InvertedMethod	KEYWORD1
 NeoSk6812InvertedMethod	KEYWORD1
 NeoTm1814InvertedMethod	KEYWORD1
 NeoTm1829InvertedMethod	KEYWORD1
+NeoTx1812InvertedMethod	KEYWORD1
 NeoLc8812InvertedMethod	KEYWORD1
 NeoApa106InvertedMethod	KEYWORD1
 NeoEsp8266DmaWs2812xMethod	KEYWORD1
@@ -388,6 +390,8 @@ NeoEsp32BitBang400KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwmNWs2812xMethod	KEYWORD1
 NeoNrf52xPwmNSk6812Method	KEYWORD1
 NeoNrf52xPwmNTm1814Method	KEYWORD1
+NeoNrf52xPwmNTm1829Method	KEYWORD1
+NeoNrf52xPwmNTx1812Method	KEYWORD1
 NeoNrf52xPwmN800KbpsMethod	KEYWORD1
 NeoNrf52xPwmN400KbpsMethod	KEYWORD1
 NeoNrf52xPwmNApa106Method	KEYWORD1
@@ -395,6 +399,7 @@ NeoNrf52xPwm0Ws2812xMethod	KEYWORD1
 NeoNrf52xPwm0Sk6812Method	KEYWORD1
 NeoNrf52xPwm0Tm1814Method	KEYWORD1
 NeoNrf52xPwm0Tm1829Method	KEYWORD1
+NeoNrf52xPwm0Tx1812Method	KEYWORD1
 NeoNrf52xPwm0800KbpsMethod	KEYWORD1
 NeoNrf52xPwm0400KbpsMethod	KEYWORD1
 NeoNrf52xPwm0Apa106Method	KEYWORD1
@@ -402,6 +407,7 @@ NeoNrf52xPwm1Ws2812xMethod	KEYWORD1
 NeoNrf52xPwm1Sk6812Method	KEYWORD1
 NeoNrf52xPwm1Tm1814Method	KEYWORD1
 NeoNrf52xPwm1Tm1829Method	KEYWORD1
+NeoNrf52xPwm1Tx1812Method	KEYWORD1
 NeoNrf52xPwm1800KbpsMethod	KEYWORD1
 NeoNrf52xPwm1400KbpsMethod	KEYWORD1
 NeoNrf52xPwm1Apa106Method	KEYWORD1
@@ -409,6 +415,7 @@ NeoNrf52xPwm2Ws2812xMethod	KEYWORD1
 NeoNrf52xPwm2Sk6812Method	KEYWORD1
 NeoNrf52xPwm2Tm1814Method	KEYWORD1
 NeoNrf52xPwm2Tm1829Method	KEYWORD1
+NeoNrf52xPwm2Tx1812Method	KEYWORD1
 NeoNrf52xPwm2800KbpsMethod	KEYWORD1
 NeoNrf52xPwm2400KbpsMethod	KEYWORD1
 NeoNrf52xPwm2Apa106Method	KEYWORD1
@@ -416,12 +423,15 @@ NeoNrf52xPwm3Ws2812xMethod	KEYWORD1
 NeoNrf52xPwm3Sk6812Method	KEYWORD1
 NeoNrf52xPwm3Tm1814Method	KEYWORD1
 NeoNrf52xPwm3Tm1829Method	KEYWORD1
+NeoNrf52xPwm3Tx1812Method	KEYWORD1
 NeoNrf52xPwm3800KbpsMethod	KEYWORD1
 NeoNrf52xPwm3400KbpsMethod	KEYWORD1
 NeoNrf52xPwm3Apa106Method	KEYWORD1
 NeoNrf52xPwmNWs2812xInvertedMethod	KEYWORD1
 NeoNrf52xPwmNSk6812InvertedMethod	KEYWORD1
 NeoNrf52xPwmNTm1814InvertedMethod	KEYWORD1
+NeoNrf52xPwmNTm1829InvertedMethod	KEYWORD1
+NeoNrf52xPwmNTx1812InvertedMethod	KEYWORD1
 NeoNrf52xPwmN800KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwmN400KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwmNApa106InvertedMethod	KEYWORD1
@@ -429,6 +439,7 @@ NeoNrf52xPwm0Ws2812xInvertedMethod	KEYWORD1
 NeoNrf52xPwm0Sk6812InvertedMethod	KEYWORD1
 NeoNrf52xPwm0Tm1814InvertedMethod	KEYWORD1
 NeoNrf52xPwm0Tm1829InvertedMethod	KEYWORD1
+NeoNrf52xPwm0Tx1812InvertedMethod	KEYWORD1
 NeoNrf52xPwm0800KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwm0400KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwm0Apa106InvertedMethod	KEYWORD1
@@ -436,6 +447,7 @@ NeoNrf52xPwm1Ws2812xInvertedMethod	KEYWORD1
 NeoNrf52xPwm1Sk6812InvertedMethod	KEYWORD1
 NeoNrf52xPwm1Tm1814InvertedMethod	KEYWORD1
 NeoNrf52xPwm1Tm1829InvertedMethod	KEYWORD1
+NeoNrf52xPwm1Tx1812InvertedMethod	KEYWORD1
 NeoNrf52xPwm1800KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwm1400KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwm1Apa106InvertedMethod	KEYWORD1
@@ -443,6 +455,7 @@ NeoNrf52xPwm2Ws2812xInvertedMethod	KEYWORD1
 NeoNrf52xPwm2Sk6812InvertedMethod	KEYWORD1
 NeoNrf52xPwm2Tm1814InvertedMethod	KEYWORD1
 NeoNrf52xPwm2Tm1829InvertedMethod	KEYWORD1
+NeoNrf52xPwm2Tx1812InvertedMethod	KEYWORD1
 NeoNrf52xPwm2800KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwm2400KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwm2Apa106InvertedMethod	KEYWORD1
@@ -450,6 +463,7 @@ NeoNrf52xPwm3Ws2812xInvertedMethod	KEYWORD1
 NeoNrf52xPwm3Sk6812InvertedMethod	KEYWORD1
 NeoNrf52xPwm3Tm1814InvertedMethod	KEYWORD1
 NeoNrf52xPwm3Tm1829InvertedMethod	KEYWORD1
+NeoNrf52xPwm3Tx1812InvertedMethod	KEYWORD1
 NeoNrf52xPwm3800KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwm3400KbpsInvertedMethod	KEYWORD1
 NeoNrf52xPwm3Apa106InvertedMethod	KEYWORD1
