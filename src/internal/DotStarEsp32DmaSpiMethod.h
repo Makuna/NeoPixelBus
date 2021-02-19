@@ -60,7 +60,8 @@ public:
             _spiBufferSize += 4 - alignment;
         }
 
-        _data = static_cast<uint8_t*>(heap_caps_malloc(_spiBufferSize, MALLOC_CAP_DMA));
+        _data = static_cast<uint8_t*>(malloc(_spiBufferSize));
+        _dmadata = static_cast<uint8_t*>(heap_caps_malloc(_spiBufferSize, MALLOC_CAP_DMA));
 
         // data cleared later in NeoPixelBus::Begin()
     }
@@ -74,10 +75,14 @@ public:
     ~DotStarEsp32DmaSpiMethod()
     {
         free(_data);
+        free(_dmadata);
     }
 
     bool IsReadyToUpdate() const
     {
+        if(!_dmaInitialized)
+            return true;
+
         spi_transaction_t t;
         spi_transaction_t * tptr = &t;
         esp_err_t ret = spi_device_get_trans_result(_spiHandle,&tptr, 0);
@@ -128,13 +133,20 @@ public:
 
     void Update(bool)
     {
+        while(!IsReadyToUpdate());
+
+        memcpy(_dmadata, _data, _spiBufferSize);
+
         memset(&_spiTransaction, 0, sizeof(spi_transaction_t));
         _spiTransaction.length=(_spiBufferSize) * 8; // in bits not bytes!
-        _spiTransaction.flags = 0;
-        _spiTransaction.tx_buffer = _data;
+        //_spiTransaction.flags = 0;
+        _spiTransaction.flags = SPI_TRANS_MODE_DIO;
+        _spiTransaction.tx_buffer = _dmadata;
 
         esp_err_t ret = spi_device_queue_trans(_spiHandle, &_spiTransaction, 0);  //Transmit!
         assert(ret==ESP_OK);            //Should have had no issues.
+
+        _dmaInitialized = true;
     }
 
     uint8_t* getData() const
@@ -154,8 +166,10 @@ private:
 
     size_t                  _spiBufferSize;
     uint8_t*                _data;       // Holds start/end frames and LED color values
+    uint8_t*                _dmadata;    // Holds start/end frames and LED color values
     spi_device_handle_t     _spiHandle;
     spi_transaction_t       _spiTransaction;
+    bool                    _dmaInitialized = false;
 };
 
 typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32VspiBus> DotStarEsp32DmaVspi10MhzMethod;
