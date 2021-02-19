@@ -139,7 +139,7 @@ public:
         memset(&_spiTransaction, 0, sizeof(spi_transaction_t));
         _spiTransaction.length=(_spiBufferSize) * 8; // in bits not bytes!
         //_spiTransaction.flags = 0;
-        _spiTransaction.flags = SPI_TRANS_MODE_DIO;
+        _spiTransaction.flags = 0;
         _spiTransaction.tx_buffer = _dmadata;
 
         esp_err_t ret = spi_device_queue_trans(_spiHandle, &_spiTransaction, 0);  //Transmit!
