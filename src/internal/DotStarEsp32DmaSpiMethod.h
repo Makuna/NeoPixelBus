@@ -96,12 +96,11 @@ public:
 
         // TODO: check values of arguments
 
-        //_wire.begin(sck, miso, mosi, ss);
         esp_err_t ret;
         spi_bus_config_t buscfg;
         memset(&buscfg, 0x00, sizeof(buscfg));
 
-        buscfg.miso_io_num=-1;
+        buscfg.miso_io_num=miso;
         buscfg.mosi_io_num=mosi;
         buscfg.sclk_io_num=sck;
         buscfg.quadwp_io_num=-1;
@@ -111,8 +110,8 @@ public:
         spi_device_interface_config_t devcfg;
         memset(&devcfg, 0x00, sizeof(devcfg));
 
-        devcfg.clock_speed_hz=T_SPISPEED::Clock;      //Clock out at 10 MHz
-        devcfg.mode=0;                                //SPI mode 0
+        devcfg.clock_speed_hz=T_SPISPEED::Clock;
+        devcfg.mode=0;                 //SPI mode 0
         devcfg.spics_io_num=ss;        //CS pin
         devcfg.queue_size=1;
 
