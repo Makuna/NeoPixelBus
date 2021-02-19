@@ -28,6 +28,8 @@ License along with NeoPixel.  If not, see
 
 #include "driver/spi_master.h"
 
+#define DMASPI_PARALLEL_BITS 1
+
 class Esp32VspiBus
 {
 public:
@@ -114,6 +116,11 @@ public:
         devcfg.mode=0;                 //SPI mode 0
         devcfg.spics_io_num=ss;        //CS pin
         devcfg.queue_size=1;
+#if (DMASPI_PARALLEL_BITS == 1)
+        devcfg.flags=0;
+#elif (DMASPI_PARALLEL_BITS == 2)
+        devcfg.flags=SPI_DEVICE_HALFDUPLEX;
+#endif
 
         //Initialize the SPI bus
         ret=spi_bus_initialize(T_SPIBUS::spiHostDevice, &buscfg, T_SPIBUS::dmaChannel);
@@ -138,8 +145,11 @@ public:
 
         memset(&_spiTransaction, 0, sizeof(spi_transaction_t));
         _spiTransaction.length=(_spiBufferSize) * 8; // in bits not bytes!
-        //_spiTransaction.flags = 0;
+#if (DMASPI_PARALLEL_BITS == 1)
         _spiTransaction.flags = 0;
+#elif (DMASPI_PARALLEL_BITS == 2)
+        _spiTransaction.flags = SPI_TRANS_MODE_DIO;
+#endif
         _spiTransaction.tx_buffer = _dmadata;
 
         esp_err_t ret = spi_device_queue_trans(_spiHandle, &_spiTransaction, 0);  //Transmit!
