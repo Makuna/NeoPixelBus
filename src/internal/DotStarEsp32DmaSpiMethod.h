@@ -172,10 +172,14 @@ public:
         Initialize(sck, miso, mosi, ss, -1, -1);
     }
 
+    // If pins aren't specified, initialize bus with just the default SCK and MOSI pins for the SPI peripheral (no SS, no >1-bit pins)
     void Initialize()
     {
-        // TODO: do we even want to handle default port?
-        //_wire.begin();
+        if(T_SPIBUS::spiHostDevice == VSPI_HOST) {
+            Initialize(SCK, -1, MOSI, -1, -1, -1);
+        } else {
+            Initialize(14, -1, 13, -1, -1, -1);
+        }
     }
 
     void Update(bool)
