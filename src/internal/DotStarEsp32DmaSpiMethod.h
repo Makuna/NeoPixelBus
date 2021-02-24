@@ -82,13 +82,12 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        if(!_dmaInitialized)
-            return true;
-
         spi_transaction_t t;
         spi_transaction_t * tptr = &t;
-        esp_err_t ret = spi_device_get_trans_result(_spiHandle,&tptr, 0);
-        return (ret==ESP_OK);
+        esp_err_t ret = spi_device_get_trans_result(_spiHandle, &tptr, 0);
+
+        // We know the previous transaction completed if we got ESP_OK, and there's no transactions queued if tptr is unmodified
+        return (ret==ESP_OK || tptr == &t);
     }
 
     void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
@@ -154,8 +153,6 @@ public:
 
         esp_err_t ret = spi_device_queue_trans(_spiHandle, &_spiTransaction, 0);  //Transmit!
         assert(ret==ESP_OK);            //Should have had no issues.
-
-        _dmaInitialized = true;
     }
 
     uint8_t* getData() const
@@ -178,7 +175,6 @@ private:
     uint8_t*                _dmadata;    // Holds start/end frames and LED color values
     spi_device_handle_t     _spiHandle;
     spi_transaction_t       _spiTransaction;
-    bool                    _dmaInitialized = false;
 };
 
 typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32VspiBus> DotStarEsp32DmaVspi10MhzMethod;
