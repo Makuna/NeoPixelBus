@@ -28,14 +28,13 @@ License along with NeoPixel.  If not, see
 
 #include "driver/spi_master.h"
 
-#define DMASPI_PARALLEL_BITS 1
-
 class Esp32VspiBus
 {
 public:
     static const uint8_t spiBus = VSPI;
     static const spi_host_device_t spiHostDevice = VSPI_HOST;
     static const int dmaChannel = 1;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int parallelBits = 1;
 };
 
 class Esp32HspiBus
@@ -44,6 +43,43 @@ public:
     static const uint8_t spiBus = HSPI;
     static const spi_host_device_t spiHostDevice = HSPI_HOST;
     static const int dmaChannel = 2;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int parallelBits = 1;
+};
+
+class Esp32Vspi2BitBus
+{
+public:
+    static const uint8_t spiBus = VSPI;
+    static const spi_host_device_t spiHostDevice = VSPI_HOST;
+    static const int dmaChannel = 1;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int parallelBits = 2;
+};
+
+class Esp32Hspi2BitBus
+{
+public:
+    static const uint8_t spiBus = HSPI;
+    static const spi_host_device_t spiHostDevice = HSPI_HOST;
+    static const int dmaChannel = 2;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int parallelBits = 2;
+};
+
+class Esp32Vspi4BitBus
+{
+public:
+    static const uint8_t spiBus = VSPI;
+    static const spi_host_device_t spiHostDevice = VSPI_HOST;
+    static const int dmaChannel = 1;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int parallelBits = 4;
+};
+
+class Esp32Hspi4BitBus
+{
+public:
+    static const uint8_t spiBus = HSPI;
+    static const spi_host_device_t spiHostDevice = HSPI_HOST;
+    static const int dmaChannel = 2;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int parallelBits = 4;
 };
 
 template<typename T_SPISPEED, typename T_SPIBUS> class DotStarEsp32DmaSpiMethod
@@ -92,7 +128,7 @@ public:
         return (ret==ESP_OK || tptr == &t);
     }
 
-    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss, int8_t bit3, int8_t bit4)
     {
         memset(_data, 0x00, _sizeStartFrame);
         memset(_data + _sizeStartFrame + _sizePixelData, 0x00, _spiBufferSize - (_sizeStartFrame + _sizePixelData));
@@ -106,8 +142,8 @@ public:
         buscfg.miso_io_num=miso;
         buscfg.mosi_io_num=mosi;
         buscfg.sclk_io_num=sck;
-        buscfg.quadwp_io_num=-1;
-        buscfg.quadhd_io_num=-1;
+        buscfg.quadwp_io_num=bit3;
+        buscfg.quadhd_io_num=bit4;
         buscfg.max_transfer_sz=_spiBufferSize;
 
         spi_device_interface_config_t devcfg;
@@ -117,11 +153,10 @@ public:
         devcfg.mode=0;                 //SPI mode 0
         devcfg.spics_io_num=ss;        //CS pin
         devcfg.queue_size=1;
-#if (DMASPI_PARALLEL_BITS == 1)
-        devcfg.flags=0;
-#elif (DMASPI_PARALLEL_BITS == 2)
-        devcfg.flags=SPI_DEVICE_HALFDUPLEX;
-#endif
+        if(T_SPIBUS::parallelBits == 1)
+            devcfg.flags=0;
+        if(T_SPIBUS::parallelBits >= 2)
+            devcfg.flags=SPI_DEVICE_HALFDUPLEX;
 
         //Initialize the SPI bus
         ret=spi_bus_initialize(T_SPIBUS::spiHostDevice, &buscfg, T_SPIBUS::dmaChannel);
@@ -130,6 +165,11 @@ public:
         //Allocate the LEDs on the SPI bus
         ret=spi_bus_add_device(T_SPIBUS::spiHostDevice, &devcfg, &_spiHandle);
         ESP_ERROR_CHECK(ret);
+    }
+
+    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    {
+        Initialize(sck, miso, mosi, ss, -1, -1);
     }
 
     void Initialize()
@@ -146,11 +186,12 @@ public:
 
         memset(&_spiTransaction, 0, sizeof(spi_transaction_t));
         _spiTransaction.length=(_spiBufferSize) * 8; // in bits not bytes!
-#if (DMASPI_PARALLEL_BITS == 1)
-        _spiTransaction.flags = 0;
-#elif (DMASPI_PARALLEL_BITS == 2)
-        _spiTransaction.flags = SPI_TRANS_MODE_DIO;
-#endif
+        if(T_SPIBUS::parallelBits == 1)
+            _spiTransaction.flags = 0;
+        if(T_SPIBUS::parallelBits == 2)
+            _spiTransaction.flags = SPI_TRANS_MODE_DIO;
+        if(T_SPIBUS::parallelBits == 4)
+            _spiTransaction.flags = SPI_TRANS_MODE_QIO;
         _spiTransaction.tx_buffer = _dmadata;
 
         esp_err_t ret = spi_device_queue_trans(_spiHandle, &_spiTransaction, 0);  //Transmit!
@@ -190,3 +231,15 @@ typedef DotStarEsp32DmaVspi10MhzMethod DotStarEsp32DmaVspiMethod;
 
 typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32HspiBus> DotStarEsp32DmaHspi10MhzMethod;
 typedef DotStarEsp32DmaHspi10MhzMethod DotStarEsp32DmaHspiMethod;
+
+typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32Vspi2BitBus> DotStarEsp32DmaVspi2Bit10MhzMethod;
+typedef DotStarEsp32DmaVspi2Bit10MhzMethod DotStarEsp32DmaVspi2BitMethod;
+
+typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32Hspi2BitBus> DotStarEsp32DmaHspi2Bit10MhzMethod;
+typedef DotStarEsp32DmaHspi2Bit10MhzMethod DotStarEsp32DmaHspi2BitMethod;
+
+typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32Vspi4BitBus> DotStarEsp32DmaVspi4Bit10MhzMethod;
+typedef DotStarEsp32DmaVspi4Bit10MhzMethod DotStarEsp32DmaVspi4BitMethod;
+
+typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32Hspi4BitBus> DotStarEsp32DmaHspi4Bit10MhzMethod;
+typedef DotStarEsp32DmaHspi4Bit10MhzMethod DotStarEsp32DmaHspi4BitMethod;
