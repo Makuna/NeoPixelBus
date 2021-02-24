@@ -49,6 +49,8 @@ public:
 template<typename T_SPISPEED, typename T_SPIBUS> class DotStarEsp32DmaSpiMethod
 {
 public:
+    typedef typename T_SPISPEED::SettingsObject SettingsObject;
+
     DotStarEsp32DmaSpiMethod(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizePixelData(pixelCount * elementSize + settingsSize),
         _sizeEndFrame((pixelCount + 15) / 16) // 16 = div 2 (bit for every two pixels) div 8 (bits to bytes)
@@ -165,6 +167,11 @@ public:
         return _sizePixelData;
     };
 
+    void applySettings(const SettingsObject& settings)
+    {
+        _speed.applySettings(settings);
+    }
+
 private:
     const size_t             _sizeStartFrame = 4;
     const size_t             _sizePixelData;   // Size of '_data' buffer below, minus (_sizeStartFrame + _sizeEndFrame)
@@ -175,6 +182,7 @@ private:
     uint8_t*                _dmadata;    // Holds start/end frames and LED color values
     spi_device_handle_t     _spiHandle;
     spi_transaction_t       _spiTransaction;
+    T_SPISPEED _speed;
 };
 
 typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32VspiBus> DotStarEsp32DmaVspi10MhzMethod;
