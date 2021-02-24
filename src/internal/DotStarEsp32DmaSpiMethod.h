@@ -31,54 +31,48 @@ License along with NeoPixel.  If not, see
 class Esp32VspiBus
 {
 public:
-    static const uint8_t spiBus = VSPI;
     static const spi_host_device_t spiHostDevice = VSPI_HOST;
-    static const int dmaChannel = 1;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int dmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 1;
 };
 
 class Esp32HspiBus
 {
 public:
-    static const uint8_t spiBus = HSPI;
     static const spi_host_device_t spiHostDevice = HSPI_HOST;
-    static const int dmaChannel = 2;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int dmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 1;
 };
 
 class Esp32Vspi2BitBus
 {
 public:
-    static const uint8_t spiBus = VSPI;
     static const spi_host_device_t spiHostDevice = VSPI_HOST;
-    static const int dmaChannel = 1;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int dmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 2;
 };
 
 class Esp32Hspi2BitBus
 {
 public:
-    static const uint8_t spiBus = HSPI;
     static const spi_host_device_t spiHostDevice = HSPI_HOST;
-    static const int dmaChannel = 2;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int dmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 2;
 };
 
 class Esp32Vspi4BitBus
 {
 public:
-    static const uint8_t spiBus = VSPI;
     static const spi_host_device_t spiHostDevice = VSPI_HOST;
-    static const int dmaChannel = 1;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int dmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 4;
 };
 
 class Esp32Hspi4BitBus
 {
 public:
-    static const uint8_t spiBus = HSPI;
     static const spi_host_device_t spiHostDevice = HSPI_HOST;
-    static const int dmaChannel = 2;        // // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
+    static const int dmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 4;
 };
 
@@ -124,7 +118,7 @@ public:
         spi_transaction_t * tptr = &t;
         esp_err_t ret = spi_device_get_trans_result(_spiHandle, &tptr, 0);
 
-        // We know the previous transaction completed if we got ESP_OK, and there's no transactions queued if tptr is unmodified
+        // We know the previous transaction completed if we got ESP_OK, and we know there's no transactions queued if tptr is unmodified
         return (ret==ESP_OK || tptr == &t);
     }
 
@@ -132,8 +126,6 @@ public:
     {
         memset(_data, 0x00, _sizeStartFrame);
         memset(_data + _sizeStartFrame + _sizePixelData, 0x00, _spiBufferSize - (_sizeStartFrame + _sizePixelData));
-
-        // TODO: check values of arguments
 
         esp_err_t ret;
         spi_bus_config_t buscfg;
