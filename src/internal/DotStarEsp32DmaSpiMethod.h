@@ -108,6 +108,9 @@ public:
 
     ~DotStarEsp32DmaSpiMethod()
     {
+        DeInitSpiDevice();
+        esp_err_t ret=spi_bus_free(T_SPIBUS::spiHostDevice);
+        ESP_ERROR_CHECK(ret);
         free(_data);
         free(_dmadata);
     }
@@ -127,6 +130,8 @@ public:
         memset(_data, 0x00, _sizeStartFrame);
         memset(_data + _sizeStartFrame + _sizePixelData, 0x00, _spiBufferSize - (_sizeStartFrame + _sizePixelData));
 
+        _ssPin = ss;
+
         esp_err_t ret;
         spi_bus_config_t buscfg;
         memset(&buscfg, 0x00, sizeof(buscfg));
@@ -138,25 +143,11 @@ public:
         buscfg.quadhd_io_num=bit4;
         buscfg.max_transfer_sz=_spiBufferSize;
 
-        spi_device_interface_config_t devcfg;
-        memset(&devcfg, 0x00, sizeof(devcfg));
-
-        devcfg.clock_speed_hz=T_SPISPEED::Clock;
-        devcfg.mode=0;                 //SPI mode 0
-        devcfg.spics_io_num=ss;        //CS pin
-        devcfg.queue_size=1;
-        if(T_SPIBUS::parallelBits == 1)
-            devcfg.flags=0;
-        if(T_SPIBUS::parallelBits >= 2)
-            devcfg.flags=SPI_DEVICE_HALFDUPLEX;
-
         //Initialize the SPI bus
         ret=spi_bus_initialize(T_SPIBUS::spiHostDevice, &buscfg, T_SPIBUS::dmaChannel);
         ESP_ERROR_CHECK(ret);
 
-        //Allocate the LEDs on the SPI bus
-        ret=spi_bus_add_device(T_SPIBUS::spiHostDevice, &devcfg, &_spiHandle);
-        ESP_ERROR_CHECK(ret);
+        InitSpiDevice();
     }
 
     void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
@@ -207,9 +198,37 @@ public:
     void applySettings(const SettingsObject& settings)
     {
         _speed.applySettings(settings);
+        DeInitSpiDevice();
+        InitSpiDevice();
     }
 
 private:
+    void InitSpiDevice()
+    {
+        spi_device_interface_config_t devcfg;
+        memset(&devcfg, 0x00, sizeof(devcfg));
+
+        devcfg.clock_speed_hz=_speed.Clock;
+        devcfg.mode=0;                 //SPI mode 0
+        devcfg.spics_io_num=_ssPin;    //CS pin
+        devcfg.queue_size=1;
+        if(T_SPIBUS::parallelBits == 1)
+            devcfg.flags=0;
+        if(T_SPIBUS::parallelBits >= 2)
+            devcfg.flags=SPI_DEVICE_HALFDUPLEX;
+
+        //Allocate the LEDs on the SPI bus
+        esp_err_t ret=spi_bus_add_device(T_SPIBUS::spiHostDevice, &devcfg, &_spiHandle);
+        ESP_ERROR_CHECK(ret);
+    }
+
+    void DeInitSpiDevice()
+    {
+        while(!IsReadyToUpdate());
+        esp_err_t ret=spi_bus_remove_device(_spiHandle);
+        ESP_ERROR_CHECK(ret);
+    }
+
     const size_t             _sizeStartFrame = 4;
     const size_t             _sizePixelData;   // Size of '_data' buffer below, minus (_sizeStartFrame + _sizeEndFrame)
     const size_t             _sizeEndFrame;
@@ -219,7 +238,8 @@ private:
     uint8_t*                _dmadata;    // Holds start/end frames and LED color values
     spi_device_handle_t     _spiHandle;
     spi_transaction_t       _spiTransaction;
-    T_SPISPEED _speed;
+    T_SPISPEED              _speed;
+    int8_t                  _ssPin;
 };
 
 typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32VspiBus> DotStarEsp32DmaVspi10MhzMethod;
