@@ -35,6 +35,8 @@ License along with NeoPixel.  If not, see
 template<typename T_SPEED> class NeoArmMethodBase
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     NeoArmMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
@@ -99,6 +101,10 @@ public:
         return _sizeData;
     };
 
+    void applySettings(const SettingsObject& settings)
+    {
+    }
+
 private:
     const  size_t    _sizeData;   // Size of '_data' buffer below
 
@@ -131,6 +137,12 @@ public:
 };
 
 class NeoArmMk20dxSpeedPropsTm1814 : public NeoArmMk20dxSpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 200;
+};
+
+class NeoArmMk20dxSpeedPropsTm1829 : public NeoArmMk20dxSpeedProps800KbpsBase
 {
 public:
     static const uint32_t ResetTimeUs = 200;
@@ -207,6 +219,7 @@ public:
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsWs2812x>> NeoArmWs2812xMethod;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsTm1814>> NeoArmTm1814InvertedMethod;
+typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsTm1829>> NeoArmTm1829InvertedMethod;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedPropsApa106>> NeoArmApa106Method;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmMk20dxSpeedBase<NeoArmMk20dxSpeedProps400Kbps>> NeoArm400KbpsMethod;
@@ -324,6 +337,12 @@ public:
     const static uint32_t ResetTimeUs = 200;
 };
 
+class NeoArmMk26z64SpeedTm1829 : public NeoArmMk26z64Speed800KbpsBase
+{
+public:
+    const static uint32_t ResetTimeUs = 200;
+};
+
 class NeoArmMk26z64Speed800Kbps : public NeoArmMk26z64Speed800KbpsBase
 {
 public:
@@ -333,6 +352,7 @@ public:
 typedef NeoArmMethodBase<NeoArmMk26z64SpeedWs2812x> NeoArmWs2812xMethod;
 typedef NeoArmMethodBase<NeoArmMk26z64SpeedSk6812> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmMk26z64SpeedTm1814> NeoArmTm1814InvertedMethod;
+typedef NeoArmMethodBase<NeoArmMk26z64SpeedTm1829> NeoArmTm1829InvertedMethod;
 typedef NeoArmMethodBase<NeoArmMk26z64Speed800Kbps> NeoArm800KbpsMethod;
 typedef NeoArm800KbpsMethod NeoArmApa106Method;
 
@@ -381,6 +401,12 @@ public:
 };
 
 class NeoArmSamd21g18aSpeedPropsTm1814 : public NeoArmSamd21g18aSpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 200;
+};
+
+class NeoArmSamd21g18aSpeedPropsTm1829 : public NeoArmSamd21g18aSpeedProps800KbpsBase
 {
 public:
     static const uint32_t ResetTimeUs = 200;
@@ -475,6 +501,7 @@ public:
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsWs2812x>> NeoArmWs2812xMethod;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsTm1814>> NeoArmTm1814InvertedMethod;
+typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedPropsTm1829>> NeoArmTm1829InvertedMethod;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmSamd21g18aSpeedBase<NeoArmSamd21g18aSpeedProps400Kbps>> NeoArm400KbpsMethod;
 typedef NeoArm400KbpsMethod NeoArmApa106Method;
@@ -546,6 +573,12 @@ public:
 };
 
 class NeoArmStm32SpeedPropsTm1814 : public NeoArmStm32SpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 200;
+};
+
+class NeoArmStm32SpeedPropsTm1829 : public NeoArmStm32SpeedProps800KbpsBase
 {
 public:
     static const uint32_t ResetTimeUs = 200;
@@ -663,6 +696,7 @@ public:
 typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropsWs2812x>> NeoArmWs2812xMethod;
 typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropstm1814>> NeoArmTm1814InvertedMethod;
+typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedPropstm1829>> NeoArmTm1829InvertedMethod;
 typedef NeoArmMethodBase<NeoArmStm32SpeedBase<NeoArmStm32SpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArm800KbpsMethod NeoArmApa106Method;
 
@@ -693,6 +727,12 @@ public:
 };
 
 class NeoArmOtherSpeedPropsTm1814 : public NeoArmOtherSpeedProps800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 200;
+};
+
+class NeoArmOtherSpeedPropsTm1829 : public NeoArmOtherSpeedProps800KbpsBase
 {
 public:
     static const uint32_t ResetTimeUs = 200;
@@ -792,6 +832,7 @@ public:
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsWs2812x>> NeoArmWs2812xMethod;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsSk6812>> NeoArmSk6812Method;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsTm1814>> NeoArmTm1814InvertedMethod;
+typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedPropsTm1829>> NeoArmTm1829InvertedMethod;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps800Kbps>> NeoArm800KbpsMethod;
 typedef NeoArmMethodBase<NeoArmOtherSpeedBase<NeoArmOtherSpeedProps400Kbps>> NeoArm400KbpsMethod;
 typedef NeoArm400KbpsMethod NeoArmApa106Method;
@@ -813,6 +854,7 @@ typedef NeoArm400KbpsMethod Neo400KbpsMethod;
 #endif
 // there is no invert methods for arm, but the norm for TM1814 is inverted, so
 typedef NeoArmTm1814InvertedMethod NeoTm1814InvertedMethod;
+typedef NeoArmTm1829InvertedMethod NeoTm1829InvertedMethod;
 
 #endif // defined(__arm__)
 

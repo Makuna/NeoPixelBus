@@ -37,6 +37,8 @@ License along with NeoPixel.  If not, see
 template<typename T_TWOWIRE> class Ws2801MethodBase
 {
 public:
+    typedef typename T_TWOWIRE::SettingsObject SettingsObject;
+
     Ws2801MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
         _wire(pinClock, pinData)
@@ -110,6 +112,11 @@ public:
         return _sizeData;
     };
 
+    void applySettings(const SettingsObject& settings)
+    {
+        _wire.applySettings(settings);
+    }
+
 private:
     const size_t  _sizeData;   // Size of '_data' buffer below
 
@@ -127,6 +134,9 @@ typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> NeoWs2801Spi10MhzMethod
 typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> NeoWs2801Spi2MhzMethod;
 typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> NeoWs2801Spi1MhzMethod;
 typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> NeoWs2801Spi500KhzMethod;
+
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeedHz>> NeoWs2801SpiHzMethod;
+
 typedef NeoWs2801Spi10MhzMethod NeoWs2801SpiMethod;
 #endif
 

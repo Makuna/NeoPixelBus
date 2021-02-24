@@ -37,6 +37,8 @@ License along with NeoPixel.  If not, see
 template<typename T_TWOWIRE> class Lpd8806MethodBase
 {
 public:
+    typedef typename T_TWOWIRE::SettingsObject SettingsObject;
+
     Lpd8806MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
         _sizeFrame((pixelCount + 31) / 32), 
@@ -108,6 +110,11 @@ public:
         return _sizeData;
     };
 
+    void applySettings(const SettingsObject& settings)
+    {
+        _wire.applySettings(settings);
+    }
+
 private:
     const size_t   _sizeData;   // Size of '_data' buffer below
     const size_t   _sizeFrame;
@@ -125,6 +132,9 @@ typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> Lpd8806Spi10MhzMethod;
 typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> Lpd8806Spi2MhzMethod;
 typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Lpd8806Spi1MhzMethod;
 typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Lpd8806Spi500KhzMethod;
+
+typedef Lpd8806MethodBase<TwoWireSpiImple<SpiSpeedHz>> Lpd8806SpiHzMethod;
+
 typedef Lpd8806Spi10MhzMethod Lpd8806SpiMethod;
 #endif
 

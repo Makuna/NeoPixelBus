@@ -30,6 +30,8 @@ License along with NeoPixel.  If not, see
 class TwoWireBitBangImple
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     TwoWireBitBangImple(uint8_t pinClock, uint8_t pinData) :
         _pinClock(pinClock),
         _pinData(pinData)
@@ -84,6 +86,10 @@ public:
         {
             transmitByte(*data++);
         }
+    }
+
+    void applySettings(const SettingsObject& settings)
+    {
     }
 
 private:

@@ -89,6 +89,12 @@ public:
     static const uint32_t ResetTimeUs = 200;
 };
 
+class NeoAvrSpeedTm1829 : public NeoAvrSpeed800KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 200;
+};
+
 class NeoAvrSpeed800Kbps: public NeoAvrSpeed800KbpsBase
 {
 public:
@@ -118,6 +124,8 @@ public:
 template<typename T_SPEED> class NeoAvrMethodBase
 {
 public:
+    typedef NeoNoSettings SettingsObject;
+
     NeoAvrMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin),
@@ -189,6 +197,10 @@ public:
         return _sizeData;
     };
 
+    void applySettings(const SettingsObject& settings)
+    {
+    }
+
 private:
     const size_t  _sizeData;     // size of _data below       
     const uint8_t _pin;         // output pin number
@@ -204,6 +216,7 @@ private:
 typedef NeoAvrMethodBase<NeoAvrSpeedWs2812x> NeoAvrWs2812xMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeedSk6812> NeoAvrSk6812Method;
 typedef NeoAvrMethodBase<NeoAvrSpeedTm1814> NeoAvrTm1814InvertedMethod;
+typedef NeoAvrMethodBase<NeoAvrSpeedTm1829> NeoAvrTm1829InvertedMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed800Kbps> NeoAvr800KbpsMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed400Kbps> NeoAvr400KbpsMethod;
 
@@ -220,5 +233,6 @@ typedef NeoAvrWs2812xMethod Neo800KbpsMethod;
 typedef NeoAvr400KbpsMethod Neo400KbpsMethod;
 
 typedef NeoAvrTm1814InvertedMethod NeoTm1814InvertedMethod;
+typedef NeoAvrTm1829InvertedMethod NeoTm1829InvertedMethod;
 #endif
 

@@ -379,6 +379,12 @@ public:
         T_COLOR_FEATURE::applySettings(_method.getData(), settings);
         Dirty();
     };
+
+    void SetMethodSettings(const typename T_METHOD::SettingsObject& settings)
+    {
+        _method.applySettings(settings);
+        Dirty();
+    };
  
     uint32_t CalcTotalMilliAmpere(const typename T_COLOR_FEATURE::ColorObject::SettingsObject& settings)
     {
