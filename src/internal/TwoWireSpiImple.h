@@ -61,6 +61,17 @@ public:
     static const uint32_t Clock = 10000000L;
 };
 
+class SpiSpeed5Mhz
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed5Mhz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
+    static const uint32_t Clock = 5000000L;
+};
+
 class SpiSpeed2Mhz
 {
 public:

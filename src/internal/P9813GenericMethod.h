@@ -125,6 +125,7 @@ typedef P9813MethodBase<TwoWireBitBangImple> P9813Method;
 #include "TwoWireSpiImple.h"
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> P9813Spi20MhzMethod;
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> P9813Spi10MhzMethod;
+typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed5Mhz>> P9813Spi5MhzMethod;
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> P9813Spi2MhzMethod;
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> P9813Spi1MhzMethod;
 typedef P9813MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> P9813Spi500KhzMethod;
