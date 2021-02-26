@@ -108,11 +108,14 @@ public:
 
     ~DotStarEsp32DmaSpiMethod()
     {
-        DeInitSpiDevice();
-        esp_err_t ret=spi_bus_free(T_SPIBUS::spiHostDevice);
-        ESP_ERROR_CHECK(ret);
+        if(_spiHandle) {
+            DeInitSpiDevice();
+            esp_err_t ret=spi_bus_free(T_SPIBUS::spiHostDevice);
+            ESP_ERROR_CHECK(ret);            
+        }
         free(_data);
         free(_dmadata);
+        _spiHandle = NULL;
     }
 
     bool IsReadyToUpdate() const
@@ -198,8 +201,10 @@ public:
     void applySettings(const SettingsObject& settings)
     {
         _speed.applySettings(settings);
-        DeInitSpiDevice();
-        InitSpiDevice();
+        if(_spiHandle) {
+            DeInitSpiDevice();
+            InitSpiDevice();
+        }
     }
 
 private:
@@ -236,7 +241,7 @@ private:
     size_t                  _spiBufferSize;
     uint8_t*                _data;       // Holds start/end frames and LED color values
     uint8_t*                _dmadata;    // Holds start/end frames and LED color values
-    spi_device_handle_t     _spiHandle;
+    spi_device_handle_t     _spiHandle = NULL;
     spi_transaction_t       _spiTransaction;
     T_SPISPEED              _speed;
     int8_t                  _ssPin;
