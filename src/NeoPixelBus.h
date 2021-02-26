@@ -180,10 +180,10 @@ public:
         ClearTo(0);
     }
 
-    // used by DotStarEsp32DmaSpiMethod if pins can be configured - extended version for quad SPI
-    void Begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss, int8_t bit3, int8_t bit4)
+    // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting quad SPI
+    void Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
     {
-        _method.Initialize(sck, miso, mosi, ss, bit3, bit4);
+        _method.Initialize(sck, dat0, dat1, dat2, dat3, ss);
         ClearTo(0);
     }
 

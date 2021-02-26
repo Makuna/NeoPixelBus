@@ -128,7 +128,7 @@ public:
         return (ret==ESP_OK || tptr == &t);
     }
 
-    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss, int8_t bit3, int8_t bit4)
+    void Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
     {
         memset(_data, 0x00, _sizeStartFrame);
         memset(_data + _sizeStartFrame + _sizePixelData, 0x00, _spiBufferSize - (_sizeStartFrame + _sizePixelData));
@@ -139,11 +139,11 @@ public:
         spi_bus_config_t buscfg;
         memset(&buscfg, 0x00, sizeof(buscfg));
 
-        buscfg.miso_io_num=miso;
-        buscfg.mosi_io_num=mosi;
+        buscfg.miso_io_num=dat1;
+        buscfg.mosi_io_num=dat0;
         buscfg.sclk_io_num=sck;
-        buscfg.quadwp_io_num=bit3;
-        buscfg.quadhd_io_num=bit4;
+        buscfg.quadwp_io_num=dat2;
+        buscfg.quadhd_io_num=dat3;
         buscfg.max_transfer_sz=_spiBufferSize;
 
         //Initialize the SPI bus
@@ -155,7 +155,7 @@ public:
 
     void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
-        Initialize(sck, miso, mosi, ss, -1, -1);
+        Initialize(sck, mosi, miso, -1, -1, ss);
     }
 
     // If pins aren't specified, initialize bus with just the default SCK and MOSI pins for the SPI peripheral (no SS, no >1-bit pins)
