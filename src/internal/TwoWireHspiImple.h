@@ -31,6 +31,8 @@ License along with NeoPixel.  If not, see
 template<typename T_SPISPEED> class TwoWireHspiImple
 {
 public:
+    typedef typename T_SPISPEED::SettingsObject SettingsObject;
+
     TwoWireHspiImple(uint8_t, uint8_t) // clock and data pins ignored for hardware SPI
     {
         SPI_H = new SPIClass(HSPI);
@@ -57,7 +59,7 @@ public:
 
     void beginTransaction()
     {
-        SPI_H->beginTransaction(SPISettings(T_SPISPEED::Clock, MSBFIRST, SPI_MODE0));
+        SPI_H->beginTransaction(SPISettings(_speed.Clock, MSBFIRST, SPI_MODE0));
     }
 
     void endTransaction()
@@ -78,6 +80,12 @@ public:
         SPI_H->writeBytes(const_cast<uint8_t*>(data), dataSize);
     }
 
+    void applySettings(const SettingsObject& settings)
+    {
+        _speed.applySettings(settings);
+    }
+
 private:
     SPIClass * SPI_H = NULL;
+    T_SPISPEED _speed;
 };
