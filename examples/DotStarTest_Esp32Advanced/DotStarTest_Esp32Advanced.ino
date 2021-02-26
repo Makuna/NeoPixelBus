@@ -21,8 +21,6 @@
     // If you set useSpiAlternatePins true, then these pins will be used instead.  Any output-capable GPIO can be used.
     const uint8_t DotClockPin = 18;
     const uint8_t DotDataPin = 23;  
-    //const uint8_t DotClockPin = 21;
-    //const uint8_t DotDataPin = 25;  
     const int8_t DotChipSelectPin = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins=false
 
     // for software bit bang (only use if neither SPI peripheral is available)
@@ -32,6 +30,11 @@
     NeoPixelBus<DotStarBgrFeature, DotStarSpiMethod> strip(PixelCount);
 
     // DotStarSpiMethod defaults to 10MHz clock speed.  For other speeds, replace "DotStarSpiMethod" with another method specifying speed, e.g. "DotStarSpi2MhzMethod" (see wiki for more details)
+
+    // to change the SPI clock speed during runtime, use the "Hz" clock setting, e.g. DotStarSpiHzMethod, which default to 10MHz but supports updating during runtime
+    //NeoPixelBus<DotStarBgrFeature, DotStarSpiHzMethod> strip(PixelCount);
+    //#define SET_CLOCK_SPEED_DURING_RUNTIME     // only define if using "Hz" clock method
+
 #endif
 
 #if (USE_ALTERNATE_SPI_PORT == 1)
@@ -43,8 +46,6 @@
     // If you set useSpiAlternatePins2 true, then these pins will be used instead.  Any output-capable GPIO can be used.
     const uint8_t DotClockPin2 = 14;
     const uint8_t DotDataPin2 = 13;  
-    //const uint8_t DotClockPin2 = 33;
-    //const uint8_t DotDataPin2 = 23;  
     const int8_t DotChipSelectPin2 = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins2=false
 
     // for hardware SPI (best performance) with alternate SPI peripheral
@@ -126,6 +127,11 @@ void loop()
     Serial.println("Off ...");
 
 #if (USE_DEFAULT_SPI_PORT == 1)
+    #ifdef SET_CLOCK_SPEED_DURING_RUNTIME
+        uint32_t clockspeed = 5000000UL;
+        strip.SetMethodSettings(NeoSpiSettings(clockspeed));
+    #endif
+
     // turn off the pixels
     strip.SetPixelColor(0, black);
     strip.SetPixelColor(1, black);
