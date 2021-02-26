@@ -28,7 +28,8 @@
     // for hardware SPI (best performance) with default SPI peripheral 
     NeoPixelBus<DotStarBgrFeature, DotStarEsp32DmaVspiMethod> strip(PixelCount);
 
-    // DotStarSpiMethod defaults to 10MHz clock speed.  For other speeds, replace "DotStarSpiMethod" with another method specifying speed, e.g. "DotStarSpi2MhzMethod" (see wiki for more details)
+    // DotStarEsp32DmaVspiMethod defaults to 10MHz clock speed.  For other speeds, replace "DotStarSpiMethod" with another method specifying speed, e.g. "DotStarSpi2MhzMethod" (see wiki for more details)
+    // See DotStarTest_Esp32Advanced example for how to set clock speed at runtime
 #endif
 
 #if (USE_ALTERNATE_SPI_PORT == 1)
@@ -45,12 +46,12 @@
     // for hardware SPI (best performance) with alternate SPI peripheral
     NeoPixelBus<DotStarBgrFeature, DotStarEsp32DmaHspiMethod> strip2(PixelCount2);
 
-    // DotStarHspiMethod defaults to 10MHz clock speed.  For other speeds, replace "DotStarSpiMethod" with another method specifying speed, e.g. "DotStarHspi2MhzMethod" (see wiki for more details)
+    // DotStarEsp32DmaHspiMethod defaults to 10MHz clock speed.  For other speeds, replace "DotStarSpiMethod" with another method specifying speed, e.g. "DotStarHspi2MhzMethod" (see wiki for more details)
 #endif
 
 #define colorSaturation 128
 
-// Note that both DotStarSpiMethod and DotStarHspiMethod can be used with DotStarLbgrFeature and DotStarWbgrFeature but to keep things simple those are excluded from this example, see DotStarTest for more details
+// Note that both DotStarEsp32DmaVspiMethod and DotStarEsp32DmaHspiMethod can be used with DotStarLbgrFeature and DotStarWbgrFeature but to keep things simple those are excluded from this example, see DotStarTest for more details
 
 RgbColor red(colorSaturation, 0, 0);
 RgbColor green(0, colorSaturation, 0);
@@ -91,7 +92,6 @@ void setup()
     Serial.println("Running...");
 }
 
-
 void loop()
 {
     delay(500);
@@ -99,7 +99,6 @@ void loop()
 #if (USE_DEFAULT_SPI_PORT == 1)
     Serial.println("Default SPI Colors R, G, B, W...");
     // set the colors, 
-    while(!strip.CanShow());    // DotStarEsp32Dma*Method uses DMA in the background, don't update until the buffer is free
     strip.SetPixelColor(0, red);
     strip.SetPixelColor(1, green);
     strip.SetPixelColor(2, blue);
@@ -110,7 +109,6 @@ void loop()
 #if (USE_ALTERNATE_SPI_PORT == 1)
     Serial.println("Alt SPI Colors W, B, G, R...");
     // set the colors, 
-    while(!strip2.CanShow());    // DotStarEsp32Dma*Method uses DMA in the background, don't update until the buffer is free
     strip2.SetPixelColor(0, white);
     strip2.SetPixelColor(1, blue);
     strip2.SetPixelColor(2, green);
@@ -124,7 +122,6 @@ void loop()
 
 #if (USE_DEFAULT_SPI_PORT == 1)
     // turn off the pixels
-    while(!strip.CanShow());    // DotStarEsp32Dma*Method uses DMA in the background, don't update until the buffer is free
     strip.SetPixelColor(0, black);
     strip.SetPixelColor(1, black);
     strip.SetPixelColor(2, black);
@@ -134,7 +131,6 @@ void loop()
 
 #if (USE_ALTERNATE_SPI_PORT == 1)
     // turn off the pixels
-    while(!strip2.CanShow());    // DotStarEsp32Dma*Method uses DMA in the background, don't update until the buffer is free
     strip2.SetPixelColor(0, black);
     strip2.SetPixelColor(1, black);
     strip2.SetPixelColor(2, black);
