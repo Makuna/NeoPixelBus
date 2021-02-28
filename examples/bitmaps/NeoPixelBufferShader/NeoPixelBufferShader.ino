@@ -47,21 +47,13 @@ public:
 
   // required for a shader object, it will be called for
   // every pixel
-  void Apply(uint16_t index, uint8_t* pDest, uint8_t* pSrc)
+  typename T_COLOR_FEATURE::ColorObject Apply(uint16_t index, typename T_COLOR_FEATURE::ColorObject original)
   {
     // we don't care what the index is so we ignore it
     //
-    // to apply our brightness shader, 
-    // use the source color, modify, and apply to the destination 
-    
-    // for every byte in the pixel,
-    // scale the source value by the brightness and 
-    // store it in the destination byte
-    const uint8_t* pSrcEnd = pSrc + T_COLOR_FEATURE::PixelSize;
-    while (pSrc != pSrcEnd)
-    {
-        *pDest++ = (*pSrc++ * (uint16_t(_brightness) + 1)) >> 8;
-    }
+
+    // dim the original color and return it  
+    return original.Dim(_brightness);
   }
 
   // provide an accessor to set brightness
