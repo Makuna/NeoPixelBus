@@ -37,7 +37,22 @@ enum LedSegment
     LedSegment_F,
     LedSegment_G,
     LedSegment_Decimal,
-    LedSegment_COUNT
+    LedSegment_COUNT,
+};
+
+class NeoSevenSegCurrentSettings
+{
+public:
+    NeoSevenSegCurrentSettings(uint16_t segments, uint16_t decimal, uint16_t special = 0) :
+        SegmentTenthMilliAmpere(segments),
+        DecimalTenthMilliAmpere(decimal),
+        SpecialTenthMilliAmpere(special)
+    {
+    }
+
+    uint16_t SegmentTenthMilliAmpere;   // in 1/10th ma
+    uint16_t DecimalTenthMilliAmpere; // in 1/10th ma
+    uint16_t SpecialTenthMilliAmpere;  // in 1/10th ma
 };
 
 // ------------------------------------------------------------------------
@@ -51,6 +66,8 @@ enum LedSegment
 // ------------------------------------------------------------------------
 struct SevenSegDigit
 {
+    typedef NeoSevenSegCurrentSettings SettingsObject;
+
     // ------------------------------------------------------------------------
     // Construct a SevenSegDigit using 
     //   the default brightness to apply to all segments
@@ -134,8 +151,28 @@ struct SevenSegDigit
     // ------------------------------------------------------------------------
     static SevenSegDigit LinearBlend(const SevenSegDigit& left, const SevenSegDigit& right, float progress);
 
+
+    uint32_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
+    {
+        auto total = 0;
+
+        for (uint8_t segment = LedSegment_A; segment < SegmentCount - 2; segment++)
+        {
+            total += Segment[segment] * settings.SegmentTenthMilliAmpere / Max;
+        }
+
+        total += Segment[SegmentCount - 2] * settings.DecimalTenthMilliAmpere / Max;
+        total += Segment[SegmentCount - 1] * settings.SpecialTenthMilliAmpere / Max;
+
+        return total;
+    }
+
     template <typename T_SET_TARGET> 
-    static void SetString(T_SET_TARGET& target, uint16_t indexDigit, const char* str, uint8_t brightness, uint8_t defaultBrightness = 0)
+    static void SetString(T_SET_TARGET& target, 
+            uint16_t indexDigit, 
+            const char* str, 
+            uint8_t brightness, 
+            uint8_t defaultBrightness = 0)
     {
         if (str == nullptr)
         {
@@ -157,17 +194,16 @@ struct SevenSegDigit
         while (pIter >= pFirst)
         {
             bool decimal = false;
-            char value = *pIter;
+            char value = *pIter--;
 
             // check if merging a decimal is required
-            if (pIter > pFirst && (*pIter == '.' || *pIter == ','))
+            if (pIter >= pFirst && (value == '.' || value == ','))
             {
                 // merge a decimal as long as they aren't the same
-                if (*(pIter - 1) != *pIter)
+                if (*(pIter) != value)
                 {
                     decimal = true;
-                    pIter--;
-                    value = *pIter; // use the next char
+                    value = *pIter--; // use the next char
                 }
             }
 
@@ -188,6 +224,7 @@ struct SevenSegDigit
     static const uint8_t SegmentCount = 9;
     uint8_t Segment[SegmentCount];
 
+    const static uint8_t Max = 255;
 
     // segment decode maps from ascii relative first char in map to a bitmask of segments
     //
