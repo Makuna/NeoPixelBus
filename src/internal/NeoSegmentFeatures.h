@@ -168,7 +168,7 @@ public:
 
         *p++ = color.Segment[LedSegment_Decimal];
         *p++ = color.Segment[LedSegment_G];
-        *p++ = color.Segment[LedSegment_COUNT];
+        *p++ = color.Segment[LedSegment_Custom];
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
@@ -186,7 +186,7 @@ public:
 
         color.Segment[LedSegment_Decimal] = *p++;
         color.Segment[LedSegment_G] = *p++;
-        color.Segment[LedSegment_COUNT] = *p++;
+        color.Segment[LedSegment_Custom] = *p++;
 
         return color;
     }
@@ -206,7 +206,7 @@ public:
 
         color.Segment[LedSegment_Decimal] = pgm_read_byte(p++);
         color.Segment[LedSegment_G] = pgm_read_byte(p++);
-        color.Segment[LedSegment_COUNT] = pgm_read_byte(p++);
+        color.Segment[LedSegment_Custom] = pgm_read_byte(p++);
 
         return color;
     }

@@ -36,8 +36,9 @@ enum LedSegment
     LedSegment_E,
     LedSegment_F,
     LedSegment_G,
-    LedSegment_Decimal,
-    LedSegment_COUNT,
+    LedSegment_Decimal, // maybe jumpered to alternate custom segment
+    LedSegment_Custom, // generally not used but maybe connected to a custom segment
+    LedSegment_COUNT
 };
 
 class NeoSevenSegCurrentSettings
@@ -183,7 +184,7 @@ struct SevenSegDigit
         const char* pIter = str;
 
         // digits are right to left
-        // so find the end
+        // so find the end and start there
         while (*pIter != '\0')
         {
             pIter++;
@@ -194,9 +195,21 @@ struct SevenSegDigit
         while (pIter >= pFirst)
         {
             bool decimal = false;
+            bool special = false;
             char value = *pIter--;
 
-            // check if merging a decimal is required
+            // must always be merged by previous char 
+            // (the one to the right)
+            // so if repeated ignore it
+            //
+            if (value == ':' || value == ';')
+            {
+                continue;
+            }
+
+            // check if merging a decimal with the next char is required
+            // (the one to the left)
+            //
             if (pIter >= pFirst && (value == '.' || value == ','))
             {
                 // merge a decimal as long as they aren't the same
@@ -207,10 +220,25 @@ struct SevenSegDigit
                 }
             }
 
+            // check next char for colon
+            // 
+            if (pIter >= pFirst && (*pIter == ':' || *pIter == ';'))
+            {
+                // the colon is custom extension using the decimal AND the special
+                // channels
+                special = true;
+                decimal = true;
+                pIter--; // skip colon
+            }
+
             SevenSegDigit digit(value, brightness, defaultBrightness);
             if (decimal)
             {
                 digit.Segment[LedSegment_Decimal] = brightness;
+            }
+            if (special)
+            {
+                digit.Segment[LedSegment_Custom] = brightness;
             }
             target.SetPixelColor(indexDigit, digit);
             indexDigit++;
