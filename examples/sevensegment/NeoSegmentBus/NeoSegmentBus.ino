@@ -30,7 +30,7 @@ void loop()
 {
     delay(2000);
 
-    strip.RotateLeft(1);
+    strip.RotateRight(1); // reads right to left, so it is reversed
     strip.Show();
 }
 

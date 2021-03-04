@@ -32,7 +32,7 @@ NeoPixelAnimator animations(Animation_COUNT);
 void CycleAnimation(const AnimationParam& param)
 {
     // calculate which segment should be on using the animation progress
-    uint8_t bitfield = 1 << (uint8_t)(param.progress * LedSegment_F);
+    uint8_t bitfield = 1 << ( (uint8_t)(param.progress * LedSegment_G) % LedSegment_G);
     // instant a digit with that segment on
     SevenSegDigit digit(bitfield, brightness);
     // apply it to the strip
@@ -126,7 +126,7 @@ void loop()
             brightness);
 
         // start the seconds fade animation
-        animations.StartAnimation(Animation_Fade, 1000, FadeAnimation);
+        animations.StartAnimation(Animation_Fade, 500, FadeAnimation);
 
         // start the cycle animation for the next second
         animations.StartAnimation(Animation_Cycle, 1000, CycleAnimation);

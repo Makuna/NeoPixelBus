@@ -84,8 +84,29 @@ public:
     typedef SevenSegDigit ColorObject;
 };
 
-// Abcdefg byte order
-class NeoAbcdefgSegmentFeature : public Neo9Elements
+class Neo9ElementsNoSettings : public Neo9Elements
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    static const size_t SettingsSize = 0;
+
+    static void applySettings(uint8_t*, const SettingsObject&)
+    {
+    }
+
+    static uint8_t* pixels(uint8_t* pData)
+    {
+        return pData;
+    }
+
+    static const uint8_t* pixels(const uint8_t* pData)
+    {
+        return pData;
+    }
+};
+
+// Abcdefgps byte order
+class NeoAbcdefgSegmentFeature : public Neo9ElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -127,4 +148,69 @@ public:
     
 };
 
-typedef NeoAbcdefgSegmentFeature SevenSegmentFeature; // Abcdefg order is default
+
+// BACEDF.G+ byte order
+class NeoBacedfpgsSegmentFeature : public Neo9ElementsNoSettings
+{
+public:
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        // Segment Digit is Abcdefgps order
+        *p++ = color.Segment[LedSegment_B];
+        *p++ = color.Segment[LedSegment_A];
+        *p++ = color.Segment[LedSegment_C];
+
+        *p++ = color.Segment[LedSegment_E];
+        *p++ = color.Segment[LedSegment_D];
+        *p++ = color.Segment[LedSegment_F];
+
+        *p++ = color.Segment[LedSegment_Decimal];
+        *p++ = color.Segment[LedSegment_G];
+        *p++ = color.Segment[LedSegment_Custom];
+    }
+
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        color.Segment[LedSegment_B] = *p++;
+        color.Segment[LedSegment_A] = *p++;
+        color.Segment[LedSegment_C] = *p++;
+
+        color.Segment[LedSegment_E] = *p++;
+        color.Segment[LedSegment_D] = *p++;
+        color.Segment[LedSegment_F] = *p++;
+
+        color.Segment[LedSegment_Decimal] = *p++;
+        color.Segment[LedSegment_G] = *p++;
+        color.Segment[LedSegment_Custom] = *p++;
+
+        return color;
+    }
+
+    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
+
+        color.Segment[LedSegment_B] = pgm_read_byte(p++);
+        color.Segment[LedSegment_A] = pgm_read_byte(p++);
+        color.Segment[LedSegment_C] = pgm_read_byte(p++);
+
+        color.Segment[LedSegment_E] = pgm_read_byte(p++);
+        color.Segment[LedSegment_D] = pgm_read_byte(p++);
+        color.Segment[LedSegment_F] = pgm_read_byte(p++);
+
+        color.Segment[LedSegment_Decimal] = pgm_read_byte(p++);
+        color.Segment[LedSegment_G] = pgm_read_byte(p++);
+        color.Segment[LedSegment_Custom] = pgm_read_byte(p++);
+
+        return color;
+    }
+
+};
+
+typedef NeoBacedfpgsSegmentFeature SevenSegmentFeature; // Abcdefg order is default
