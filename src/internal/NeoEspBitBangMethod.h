@@ -91,109 +91,22 @@ class NeoEspPinset
 {
 public:
     const static uint8_t IdleLevel = LOW;
-
-    inline static void setPin(const uint32_t pinRegister)
-    {
-#if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1ts = pinRegister;
-#else
-        GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
-#endif
-    }
-
-    inline static void resetPin(const uint32_t pinRegister)
-    {
-#if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1tc = pinRegister;
-#else
-        GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-#endif
-    }
 };
 
 class NeoEspPinsetInverted
 {
 public:
     const static uint8_t IdleLevel = HIGH;
-
-    inline static void setPin(const uint32_t pinRegister)
-    {
-#if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1tc = pinRegister;
-#else
-        GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-#endif
-    }
-
-    inline static void resetPin(const uint32_t pinRegister)
-    {
-#if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1ts = pinRegister;
-#else
-        GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
-#endif
-    }
 };
+
+extern void NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period, uint8_t IdleLevel);
 
 template<typename T_SPEED, typename T_PINSET> class NeoEspBitBangBase
 {
 public:
-    __attribute__((noinline)) static void ICACHE_RAM_ATTR send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
+    static void send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
     {
-        const uint32_t pinRegister = _BV(pin);
-        uint8_t mask = 0x80;
-        uint8_t subpix = *pixels++;
-        uint32_t cyclesStart = 0; // trigger emediately
-        uint32_t cyclesNext = 0;
-
-        for (;;)
-        {
-            // do the checks here while we are waiting on time to pass
-            uint32_t cyclesBit = T_SPEED::T0H;
-            if (subpix & mask)
-            {
-                cyclesBit = T_SPEED::T1H;
-            }
-
-            // after we have done as much work as needed for this next bit
-            // now wait for the HIGH
-            while (((cyclesStart = getCycleCount()) - cyclesNext) < T_SPEED::Period);
-
-            // set pin state
-            T_PINSET::setPin(pinRegister);
-
-            // wait for the LOW
-            while ((getCycleCount() - cyclesStart) < cyclesBit);
-
-            // reset pin start
-            T_PINSET::resetPin(pinRegister);
-
-            cyclesNext = cyclesStart;
-
-            // next bit
-            mask >>= 1;
-            if (mask == 0)
-            {
-                // no more bits to send in this byte
-                // check for another byte
-                if (pixels >= end)
-                {
-                    // no more bytes to send so stop
-                    break;
-                }
-                // reset mask to first bit and get the next byte
-                mask = 0x80;
-                subpix = *pixels++;
-            }
-        }
-    }
-
-protected:
-    static inline uint32_t getCycleCount(void)
-    {
-        uint32_t ccount;
-        __asm__ __volatile__("rsr %0,ccount":"=a" (ccount));
-        return ccount;
+        NeoEspBitBangBase_send_pixels(pixels, end, pin, T_SPEED::T0H, T_SPEED::T1H, T_SPEED::Period, T_PINSET::IdleLevel);
     }
 };
 
