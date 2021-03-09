@@ -136,9 +136,9 @@ bool i2sInitDmaItems(uint8_t bus_num) {
         }
     }
 
-    int i, i2, a;
+    int i, i2;
     i2s_dma_item_t* item = NULL;
-    i2s_dma_item_t* itemPrev;
+    i2s_dma_item_t* itemPrev = NULL;
 
     for(i=0; i< dmaCount; i++) {
         itemPrev = item;
@@ -448,7 +448,6 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     }
     size_t blockSize = len;
 
-    i2s_dma_item_t* itemPrev = NULL;
     i2s_dma_item_t* item = &I2S[bus_num].dma_items[0]; 
     size_t dataLeft = len;
     uint8_t* pos = data;
@@ -469,7 +468,6 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
         item->blocksize = blockSize;
         item->datalen = blockSize;
 
-        itemPrev = item;
         item++;
 
         pos += blockSize;
