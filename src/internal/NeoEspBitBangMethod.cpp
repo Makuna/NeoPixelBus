@@ -27,7 +27,6 @@ License along with NeoPixel.  If not, see
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
 
 #include <Arduino.h>
-#include "NeoEspBitBangMethod.h"
 
 static inline uint32_t getCycleCount(void)
 {
