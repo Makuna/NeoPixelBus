@@ -87,26 +87,37 @@ public:
     const static uint32_t Period = (F_CPU / 606061 - CYCLES_LOOPTEST); // 1.65us
 };
 
+extern void NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period);
+extern void NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period);
+
 class NeoEspPinset
 {
 public:
     const static uint8_t IdleLevel = LOW;
+
+    inline static void send_pixels_impl(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
+    {
+        NeoEspBitBangBase_send_pixels(pixels, end, pin, t0h, t1h, period);
+    }
 };
 
 class NeoEspPinsetInverted
 {
 public:
     const static uint8_t IdleLevel = HIGH;
-};
 
-extern void NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period, uint8_t IdleLevel);
+    inline static void send_pixels_impl(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
+    {
+        NeoEspBitBangBase_send_pixels_inv(pixels, end, pin, t0h, t1h, period);
+    }
+};
 
 template<typename T_SPEED, typename T_PINSET> class NeoEspBitBangBase
 {
 public:
     static void send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
     {
-        NeoEspBitBangBase_send_pixels(pixels, end, pin, T_SPEED::T0H, T_SPEED::T1H, T_SPEED::Period, T_PINSET::IdleLevel);
+        T_PINSET::send_pixels_impl(pixels, end, pin, T_SPEED::T0H, T_SPEED::T1H, T_SPEED::Period);
     }
 };
 
