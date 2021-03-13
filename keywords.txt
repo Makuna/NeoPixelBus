@@ -571,6 +571,7 @@ PixelCount	KEYWORD2
 SetPixelColor	KEYWORD2
 GetPixelColor	KEYWORD2
 SwapPixelColor	KEYWORD2
+SetString	KEYWORD2
 CalculateBrightness	KEYWORD2
 Dim	KEYWORD2
 Brighten	KEYWORD2
