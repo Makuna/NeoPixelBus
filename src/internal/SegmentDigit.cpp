@@ -35,13 +35,13 @@ const uint8_t SevenSegDigit::DecodeNumbers[] = {
 
 const uint8_t SevenSegDigit::DecodeAlphaCaps[] = {
     // A     B     C     D     E     F     G  
-    0x77, 0x00, 0x39, 0x00, 0x79, 0x71, 0x3D,
+    0x77, 0x7F, 0x39, 0x00, 0x79, 0x71, 0x3D,
     // H     I     J     K     L     M     N    
     0x76, 0x30, 0x1E, 0x00, 0x38, 0x00, 0x00,
     // O     P     Q     R     S 
     0x3F, 0x73, 0x00, 0x00, 0x6D,
     // T     U     V     W     X     Y     Z  
-    0x00, 0x3E, 0x00, 0x00, 0x00, 0x00, 0x00 };
+    0x00, 0x3E, 0x00, 0x00, 0x76, 0x00, 0x00 };
 
 const uint8_t SevenSegDigit::DecodeAlpha[] = {
     // a     b     c     d     e     f     g  
@@ -71,7 +71,7 @@ SevenSegDigit::SevenSegDigit(uint8_t bitmask, uint8_t brightness, uint8_t defaul
     init(bitmask, brightness, defaultBrightness);
 };
 
-SevenSegDigit::SevenSegDigit(char letter, uint8_t brightness, uint8_t defaultBrightness)
+SevenSegDigit::SevenSegDigit(char letter, uint8_t brightness, uint8_t defaultBrightness, bool maintainCase)
 {
     if (letter >= '0' && letter <= '9')
     {
@@ -79,11 +79,23 @@ SevenSegDigit::SevenSegDigit(char letter, uint8_t brightness, uint8_t defaultBri
     }
     else if (letter >= 'a' && letter <= 'z')
     {
-        init(DecodeAlpha[letter - 'a'], brightness, defaultBrightness);
+        uint8_t index = letter - 'a';
+        uint8_t bitmask = DecodeAlpha[index];
+        if (!bitmask && !maintainCase)
+        {
+            bitmask = DecodeAlphaCaps[index];
+        }
+        init(bitmask, brightness, defaultBrightness);
     }
     else if (letter >= 'A' && letter <= 'Z')
     {
-        init(DecodeAlphaCaps[letter - 'A'], brightness, defaultBrightness);
+        uint8_t index = letter - 'A';
+        uint8_t bitmask = DecodeAlphaCaps[index];
+        if (!bitmask && !maintainCase)
+        {
+            bitmask = DecodeAlpha[index];
+        }
+        init(bitmask, brightness, defaultBrightness);
     }
     else if (letter >= ',' && letter <= '/')
     {

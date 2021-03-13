@@ -92,7 +92,7 @@ struct SevenSegDigit
     //   the brightness to apply to them, (0-255)
     //   the default brightness to apply to those not set in the bitmask (0-255)
     // ------------------------------------------------------------------------
-    SevenSegDigit(char letter, uint8_t brightness, uint8_t defaultBrightness = 0);
+    SevenSegDigit(char letter, uint8_t brightness, uint8_t defaultBrightness = 0, bool maintainCase = false);
 
     // ------------------------------------------------------------------------
     // Construct a SevenSegDigit that will have its values set in latter operations
