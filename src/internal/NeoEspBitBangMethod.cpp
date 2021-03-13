@@ -62,7 +62,6 @@ void ICACHE_RAM_ATTR NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end
 #else
         GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
 #endif
-        // T_PINSET::setPin(pinRegister);
 
         // wait for the LOW
         while ((getCycleCount() - cyclesStart) < cyclesBit);
@@ -73,7 +72,6 @@ void ICACHE_RAM_ATTR NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end
 #else
         GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 #endif
-        // T_PINSET::resetPin(pinRegister);
 
         cyclesNext = cyclesStart;
 
@@ -122,7 +120,6 @@ void ICACHE_RAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t*
 #else
         GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 #endif
-        // T_PINSET::setPin(pinRegister);
 
         // wait for the LOW
         while ((getCycleCount() - cyclesStart) < cyclesBit);
@@ -133,7 +130,6 @@ void ICACHE_RAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t*
 #else
         GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
 #endif
-        // T_PINSET::resetPin(pinRegister);
 
         cyclesNext = cyclesStart;
 
