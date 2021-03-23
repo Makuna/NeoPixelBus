@@ -62,6 +62,16 @@ struct Rgb16Color : RgbColorBase
     };
 
     // ------------------------------------------------------------------------
+    // Construct a Rgb16Color using a single 16bit encoded value 
+    // CAUTION: the color value must follow a 5/6/5 encoding model otherwise an
+    // incorrect color will be generated
+    // ------------------------------------------------------------------------
+    Rgb16Color(uint16_t color) :
+        Color565(color)
+    {
+    };
+
+    // ------------------------------------------------------------------------
     // Construct a Rgb16Color using HtmlColor
     // ------------------------------------------------------------------------
     Rgb16Color(const HtmlColor& color)
@@ -99,7 +109,7 @@ struct Rgb16Color : RgbColorBase
 
     // ------------------------------------------------------------------------
     // Construct a Rgb16Color that will have its values set in latter operations
-    // CAUTION:  The _c members are not initialized and may not be consistent
+    // CAUTION:  The Color565 member is not initialized and may not be consistent
     // ------------------------------------------------------------------------
     Rgb16Color()
     {
@@ -110,32 +120,32 @@ struct Rgb16Color : RgbColorBase
     // ------------------------------------------------------------------------
     void setR(uint8_t r)
     {
-        _c &= 0x07ff;
-        _c |= ((r & 0xf8) << 8);
+        Color565 &= 0x07ff;
+        Color565 |= ((r & 0xf8) << 8);
     };
     uint8_t getR() const
     {
-        return (_c & 0xf800) >> 8;
+        return (Color565 & 0xf800) >> 8;
     };
 
     void setG(uint8_t g)
     {
-        _c &= 0xf81f;
-        _c |= ((g & 0xfe) << 3);
+        Color565 &= 0xf81f;
+        Color565 |= ((g & 0xfe) << 3);
     };
     uint8_t getG() const
     {
-        return (_c & 0x07e0) >> 3;
+        return (Color565 & 0x07e0) >> 3;
     };
 
     void setB(uint8_t b)
     {
-        _c &= 0xffe0;
-        _c |= ((b & 0xf8) >> 3);
+        Color565 &= 0xffe0;
+        Color565 |= ((b & 0xf8) >> 3);
     };
     uint8_t getB() const
     {
-        return (_c & 0x001f) << 3;
+        return (Color565 & 0x001f) << 3;
     };
 
 
@@ -144,7 +154,7 @@ struct Rgb16Color : RgbColorBase
     // ------------------------------------------------------------------------
     bool operator==(const Rgb16Color& other) const
     {
-        return (_c == other._c);
+        return (Color565 == other.Color565);
     };
 
     bool operator!=(const Rgb16Color& other) const
@@ -266,7 +276,6 @@ struct Rgb16Color : RgbColorBase
         return total;
     };
 
-protected:
-    uint16_t _c;
+    uint16_t Color565;
 };
 
