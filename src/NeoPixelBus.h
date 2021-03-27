@@ -109,7 +109,7 @@ License along with NeoPixel.  If not, see
 
 #include "internal/NeoNrf52xMethod.h"
 
-#elif defined(ARDUINO_ARCH_ARM) && defined(__SAME53N19A__) // must be before __arm__, 
+#elif defined(ARDUINO_ARCH_ARM) && defined(USE_ARM_DWT_BITBANG) // must be before __arm__, 
 
 // use the more general purpose ARM bitbang
 #include "internal/NeoArmBitBangMethod.h"
