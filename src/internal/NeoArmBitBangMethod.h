@@ -169,23 +169,32 @@ public:
 protected:
     static inline uint32_t getCycleCount(void)
     {
+#ifdef DWT
+        // use the general exposed access object
+        return DWT->CYCCNT;
+#else
         return *((volatile uint32_t*)0xE0001004);
+#endif
     }
 
     static inline void startCycleCount()
     {
-        // init DWT feature
+#ifndef DWT
+        // init DWT feature since not exposed for general use
         (*((volatile uint32_t*)0xE000EDFC)) |= 0x01000000;
         // init DWT Count to zero
         *((volatile uint32_t*)0xE0001004) = 0;
         // start DWT
         (*(volatile uint32_t*)0xe0001000) |= 0x40000001;
+#endif
     }
 
     static inline void stopCycleCount()
     {
-        // stop DWT
+#ifndef DWT
+        // stop DWT since not exposed generally
         (*(volatile uint32_t*)0xe0001000) &= ~0x00000001;
+#endif
     }
 };
 
