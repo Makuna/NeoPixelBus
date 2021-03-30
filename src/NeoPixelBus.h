@@ -109,9 +109,9 @@ License along with NeoPixel.  If not, see
 
 #include "internal/NeoNrf52xMethod.h"
 
-#elif defined(ARDUINO_ARCH_ARM) && defined(USE_ARM_DWT_BITBANG) // must be before __arm__, 
+#elif defined(ARDUINO_ARCH_SAM) && defined(USE_ARM_DWT_BITBANG) // must be before __arm__, 
 
-// use the more general purpose ARM bitbang
+// use the more general purpose ARM SAM bitbang
 #include "internal/NeoArmBitBangMethod.h"
 
 #elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
