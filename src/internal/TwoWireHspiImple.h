@@ -2,6 +2,7 @@
 NeoPixel library helper functions for DotStars using ESP32's alternate SPI (HSPI) (APA102/LPD8806).
 
 Written by Michael C. Miller.
+Minor changes adapting TwoWireSpiImple to support HSPI by Louis Beaudoin (Pixelvation)
 
 I invest time and resources providing this open source code,
 please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
@@ -35,41 +36,41 @@ public:
 
     TwoWireHspiImple(uint8_t, uint8_t) // clock and data pins ignored for hardware SPI
     {
-        SPI_H = new SPIClass(HSPI);
+        _hspi = new SPIClass(HSPI);
     }
 
     ~TwoWireHspiImple()
     {
-        SPI_H->end();
-        delete SPI_H;
+        _hspi->end();
+        delete _hspi;
     }
 
 #if defined(ARDUINO_ARCH_ESP32)
     // for cases where hardware SPI can have pins changed
     void begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
-        SPI_H->begin(sck, miso, mosi, ss);
+        _hspi->begin(sck, miso, mosi, ss);
     }
 #endif
 
     void begin()
     {
-        SPI_H->begin();
+        _hspi->begin();
     }
 
     void beginTransaction()
     {
-        SPI_H->beginTransaction(SPISettings(_speed.Clock, MSBFIRST, SPI_MODE0));
+        _hspi->beginTransaction(SPISettings(_speed.Clock, MSBFIRST, SPI_MODE0));
     }
 
     void endTransaction()
     {
-        SPI_H->endTransaction();
+        _hspi->endTransaction();
     }
 
     void transmitByte(uint8_t data)
     {
-        SPI_H->transfer(data);
+        _hspi->transfer(data);
     }
 
     void transmitBytes(const uint8_t* data, size_t dataSize)
@@ -77,7 +78,7 @@ public:
         // ESPs have a method to write without inplace overwriting the send buffer
         // since we don't care what gets received, use it for performance
         // FIX: but for what ever reason on Esp32, its not const
-        SPI_H->writeBytes(const_cast<uint8_t*>(data), dataSize);
+        _hspi->writeBytes(const_cast<uint8_t*>(data), dataSize);
     }
 
     void applySettings(const SettingsObject& settings)
@@ -86,6 +87,6 @@ public:
     }
 
 private:
-    SPIClass * SPI_H = NULL;
+    SPIClass * _hspi = NULL;
     T_SPISPEED _speed;
 };

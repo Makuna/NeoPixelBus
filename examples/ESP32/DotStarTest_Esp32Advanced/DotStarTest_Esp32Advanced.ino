@@ -74,20 +74,28 @@ void setup()
     Serial.flush();
 
 #if (USE_DEFAULT_SPI_PORT == 1)
-    if(useSpiAlternatePins)
+    if (useSpiAlternatePins)
+    {
         strip.Begin(DotClockPin, DotDataPin, DotDataPin, DotChipSelectPin);
+    }
     else
+    {
         strip.Begin();
+    }
 
     strip.ClearTo(black);   // this resets all the DotStars to an off state
     strip.Show();
 #endif
 
 #if (USE_ALTERNATE_SPI_PORT == 1)
-    if(useSpiAlternatePins2)
+    if (useSpiAlternatePins2)
+    {
         strip2.Begin(DotClockPin2, DotDataPin2, DotDataPin2, DotChipSelectPin2);
+    }
     else
+    {
         strip2.Begin();
+    }
 
     strip2.ClearTo(black);  // this resets all the DotStars to an off state
     strip2.Show();

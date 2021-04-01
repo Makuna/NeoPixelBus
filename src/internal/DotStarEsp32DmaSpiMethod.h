@@ -2,6 +2,7 @@
 NeoPixel library helper functions for DotStars using Esp32, DMA and SPI (APA102).
 
 Written by Michael C. Miller.
+DotStarEsp32DmaSpiMethod written by Louis Beaudoin (Pixelvation)
 
 I invest time and resources providing this open source code,
 please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
@@ -31,7 +32,7 @@ License along with NeoPixel.  If not, see
 class Esp32VspiBus
 {
 public:
-    static const spi_host_device_t spiHostDevice = VSPI_HOST;
+    static const spi_host_device_t SpiHostDevice = VSPI_HOST;
     static const int dmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 1;
 };
@@ -39,7 +40,7 @@ public:
 class Esp32HspiBus
 {
 public:
-    static const spi_host_device_t spiHostDevice = HSPI_HOST;
+    static const spi_host_device_t SpiHostDevice = HSPI_HOST;
     static const int dmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 1;
 };
@@ -47,7 +48,7 @@ public:
 class Esp32Vspi2BitBus
 {
 public:
-    static const spi_host_device_t spiHostDevice = VSPI_HOST;
+    static const spi_host_device_t SpiHostDevice = VSPI_HOST;
     static const int dmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 2;
 };
@@ -55,7 +56,7 @@ public:
 class Esp32Hspi2BitBus
 {
 public:
-    static const spi_host_device_t spiHostDevice = HSPI_HOST;
+    static const spi_host_device_t SpiHostDevice = HSPI_HOST;
     static const int dmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 2;
 };
@@ -63,7 +64,7 @@ public:
 class Esp32Vspi4BitBus
 {
 public:
-    static const spi_host_device_t spiHostDevice = VSPI_HOST;
+    static const spi_host_device_t SpiHostDevice = VSPI_HOST;
     static const int dmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 4;
 };
@@ -71,7 +72,7 @@ public:
 class Esp32Hspi4BitBus
 {
 public:
-    static const spi_host_device_t spiHostDevice = HSPI_HOST;
+    static const spi_host_device_t SpiHostDevice = HSPI_HOST;
     static const int dmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     static const int parallelBits = 4;
 };
@@ -108,9 +109,10 @@ public:
 
     ~DotStarEsp32DmaSpiMethod()
     {
-        if(_spiHandle) {
+        if (_spiHandle)
+        {
             DeInitSpiDevice();
-            esp_err_t ret=spi_bus_free(T_SPIBUS::spiHostDevice);
+            esp_err_t ret = spi_bus_free(T_SPIBUS::SpiHostDevice);
             ESP_ERROR_CHECK(ret);            
         }
         free(_data);
@@ -125,7 +127,7 @@ public:
         esp_err_t ret = spi_device_get_trans_result(_spiHandle, &tptr, 0);
 
         // We know the previous transaction completed if we got ESP_OK, and we know there's no transactions queued if tptr is unmodified
-        return (ret==ESP_OK || tptr == &t);
+        return (ret == ESP_OK || tptr == &t);
     }
 
     void Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
@@ -139,15 +141,15 @@ public:
         spi_bus_config_t buscfg;
         memset(&buscfg, 0x00, sizeof(buscfg));
 
-        buscfg.miso_io_num=dat1;
-        buscfg.mosi_io_num=dat0;
-        buscfg.sclk_io_num=sck;
-        buscfg.quadwp_io_num=dat2;
-        buscfg.quadhd_io_num=dat3;
-        buscfg.max_transfer_sz=_spiBufferSize;
+        buscfg.miso_io_num = dat1;
+        buscfg.mosi_io_num = dat0;
+        buscfg.sclk_io_num = sck;
+        buscfg.quadwp_io_num = dat2;
+        buscfg.quadhd_io_num = dat3;
+        buscfg.max_transfer_sz = _spiBufferSize;
 
         //Initialize the SPI bus
-        ret=spi_bus_initialize(T_SPIBUS::spiHostDevice, &buscfg, T_SPIBUS::dmaChannel);
+        ret=spi_bus_initialize(T_SPIBUS::SpiHostDevice, &buscfg, T_SPIBUS::dmaChannel);
         ESP_ERROR_CHECK(ret);
 
         InitSpiDevice();
@@ -161,9 +163,12 @@ public:
     // If pins aren't specified, initialize bus with just the default SCK and MOSI pins for the SPI peripheral (no SS, no >1-bit pins)
     void Initialize()
     {
-        if(T_SPIBUS::spiHostDevice == VSPI_HOST) {
+        if (T_SPIBUS::SpiHostDevice == VSPI_HOST)
+        {
             Initialize(SCK, -1, MOSI, -1, -1, -1);
-        } else {
+        }
+        else
+        {
             Initialize(14, -1, 13, -1, -1, -1);
         }
     }
@@ -175,17 +180,23 @@ public:
         memcpy(_dmadata, _data, _spiBufferSize);
 
         memset(&_spiTransaction, 0, sizeof(spi_transaction_t));
-        _spiTransaction.length=(_spiBufferSize) * 8; // in bits not bytes!
-        if(T_SPIBUS::parallelBits == 1)
+        _spiTransaction.length = (_spiBufferSize) * 8; // in bits not bytes!
+        if (T_SPIBUS::parallelBits == 1)
+        {
             _spiTransaction.flags = 0;
-        if(T_SPIBUS::parallelBits == 2)
+        }
+        if (T_SPIBUS::parallelBits == 2)
+        {
             _spiTransaction.flags = SPI_TRANS_MODE_DIO;
-        if(T_SPIBUS::parallelBits == 4)
+        }
+        if (T_SPIBUS::parallelBits == 4)
+        {
             _spiTransaction.flags = SPI_TRANS_MODE_QIO;
+        }
         _spiTransaction.tx_buffer = _dmadata;
 
         esp_err_t ret = spi_device_queue_trans(_spiHandle, &_spiTransaction, 0);  //Transmit!
-        assert(ret==ESP_OK);            //Should have had no issues.
+        assert(ret == ESP_OK);            //Should have had no issues.
     }
 
     uint8_t* getData() const
@@ -201,7 +212,8 @@ public:
     void applySettings(const SettingsObject& settings)
     {
         _speed.applySettings(settings);
-        if(_spiHandle) {
+        if (_spiHandle)
+        {
             DeInitSpiDevice();
             InitSpiDevice();
         }
@@ -210,27 +222,30 @@ public:
 private:
     void InitSpiDevice()
     {
-        spi_device_interface_config_t devcfg;
-        memset(&devcfg, 0x00, sizeof(devcfg));
+        spi_device_interface_config_t devcfg = {};
 
-        devcfg.clock_speed_hz=_speed.Clock;
-        devcfg.mode=0;                 //SPI mode 0
-        devcfg.spics_io_num=_ssPin;    //CS pin
-        devcfg.queue_size=1;
-        if(T_SPIBUS::parallelBits == 1)
+        devcfg.clock_speed_hz = _speed.Clock;
+        devcfg.mode = 0;                 //SPI mode 0
+        devcfg.spics_io_num = _ssPin;    //CS pin
+        devcfg.queue_size = 1;
+        if (T_SPIBUS::parallelBits == 1)
+        {
             devcfg.flags=0;
-        if(T_SPIBUS::parallelBits >= 2)
+        }
+        if (T_SPIBUS::parallelBits >= 2)
+        {
             devcfg.flags=SPI_DEVICE_HALFDUPLEX;
+        }
 
         //Allocate the LEDs on the SPI bus
-        esp_err_t ret=spi_bus_add_device(T_SPIBUS::spiHostDevice, &devcfg, &_spiHandle);
+        esp_err_t ret=spi_bus_add_device(T_SPIBUS::SpiHostDevice, &devcfg, &_spiHandle);
         ESP_ERROR_CHECK(ret);
     }
 
     void DeInitSpiDevice()
     {
         while(!IsReadyToUpdate());
-        esp_err_t ret=spi_bus_remove_device(_spiHandle);
+        esp_err_t ret = spi_bus_remove_device(_spiHandle);
         ESP_ERROR_CHECK(ret);
     }
 
