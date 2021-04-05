@@ -224,7 +224,11 @@ private:
 
     void construct(uint16_t pixelCount, size_t elementSize, size_t settingsSize) 
     {
-        ESP_ERROR_CHECK(pixelCount >= 2 ? ESP_OK : ESP_ERR_INVALID_ARG);
+        // DMA is too fast to support a single pixel and maintain consistency
+        if (pixelCount < 2)
+        {
+            pixelCount = 2;
+        }
 
         uint16_t dmaSettingsSize = c_dmaBytesPerPixelBytes * settingsSize;
         uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
