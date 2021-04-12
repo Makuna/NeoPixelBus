@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library helper functions for DotStars using general Pins (APA102/LPD8806).
+NeoPixel library helper functions for DotStars using SPI (APA102/LPD8806).
 
 Written by Michael C. Miller.
 
@@ -59,6 +59,17 @@ public:
     static void applySettings(const SettingsObject& settings) {}
 
     static const uint32_t Clock = 10000000L;
+};
+
+class SpiSpeed5Mhz
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed5Mhz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
+    static const uint32_t Clock = 5000000L;
 };
 
 class SpiSpeed2Mhz

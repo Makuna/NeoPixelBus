@@ -104,6 +104,7 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoEsp32I2sMethod.h"
 #include "internal/NeoEsp32RmtMethod.h"
 #include "internal/NeoEspBitBangMethod.h"
+#include "internal/DotStarEsp32DmaSpiMethod.h"
 
 #elif defined(ARDUINO_ARCH_NRF52840) // must be before __arm__
 
@@ -172,10 +173,17 @@ public:
         ClearTo(0);
     }
 
-    // used by DotStartSpiMethod if pins can be configured
+    // used by DotStarSpiMethod/DotStarEsp32DmaSpiMethod if pins can be configured
     void Begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
         _method.Initialize(sck, miso, mosi, ss);
+        ClearTo(0);
+    }
+
+    // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting quad SPI
+    void Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
+    {
+        _method.Initialize(sck, dat0, dat1, dat2, dat3, ss);
         ClearTo(0);
     }
 

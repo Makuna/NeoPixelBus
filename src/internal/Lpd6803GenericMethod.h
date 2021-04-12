@@ -129,6 +129,7 @@ typedef Lpd6803MethodBase<TwoWireBitBangImple> Lpd6803Method;
 #include "TwoWireSpiImple.h"
 typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> Lpd6803Spi20MhzMethod;
 typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> Lpd6803Spi10MhzMethod;
+typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed5Mhz>> Lpd6803Spi5MhzMethod;
 typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> Lpd6803Spi2MhzMethod;
 typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Lpd6803Spi1MhzMethod;
 typedef Lpd6803MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Lpd6803Spi500KhzMethod;
