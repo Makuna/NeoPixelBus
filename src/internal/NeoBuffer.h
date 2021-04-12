@@ -162,9 +162,9 @@ private:
         uint16_t result = PixelIndex_OutOfBounds;
 
         if (x >= 0 &&
-            (uint16_t)x < Width() &&
+            static_cast<uint16_t>(x) < Width() &&
             y >= 0 &&
-            (uint16_t)y < Height())
+            static_cast<uint16_t>(y) < Height())
         {
             result = x + y * Width();
         }

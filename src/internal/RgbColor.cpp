@@ -65,9 +65,9 @@ RgbColor::RgbColor(const HslColor& color)
 
     _HslToRgb(color, &r, &g, &b);
 
-    R = (uint8_t)(r * Max);
-    G = (uint8_t)(g * Max);
-    B = (uint8_t)(b * Max);
+    R = static_cast<uint8_t>(r * Max);
+    G = static_cast<uint8_t>(g * Max);
+    B = static_cast<uint8_t>(b * Max);
 }
 
 RgbColor::RgbColor(const HsbColor& color)
@@ -78,14 +78,14 @@ RgbColor::RgbColor(const HsbColor& color)
 
     _HsbToRgb(color, &r, &g, &b);
 
-    R = (uint8_t)(r * Max);
-    G = (uint8_t)(g * Max);
-    B = (uint8_t)(b * Max);
+    R = static_cast<uint8_t>(r * Max);
+    G = static_cast<uint8_t>(g * Max);
+    B = static_cast<uint8_t>(b * Max);
 }
 
 uint8_t RgbColor::CalculateBrightness() const
 {
-    return (uint8_t)(((uint16_t)R + (uint16_t)G + (uint16_t)B) / 3);
+    return static_cast<uint8_t>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
 }
 
 RgbColor RgbColor::Dim(uint8_t ratio) const

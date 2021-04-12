@@ -206,7 +206,7 @@ public:
         {
             for (int16_t x = 0; x < wSrc && indexPixel < destPixelCount; x++, indexPixel++)
             {
-                if ((uint16_t)xSrc < _width)
+                if (static_cast<uint16_t>(xSrc) < _width)
                 {
                     if (readPixel(&color))
                     {
@@ -255,7 +255,7 @@ public:
                 {
                     uint16_t indexDest = layoutMap(xDest + x, yDest + y);
 
-                    if ((uint16_t)xFile < _width)
+                    if (static_cast<uint16_t>(xFile) < _width)
                     {
                         if (readPixel(&color))
                         {
@@ -311,7 +311,7 @@ private:
         {
             x = 0;
         }
-        else if ((uint16_t)x >= _width)
+        else if (static_cast<uint16_t>(x) >= _width)
         {
             x = _width - 1;
         }
@@ -324,7 +324,7 @@ private:
         {
             y = 0;
         }
-        else if ((uint16_t)y >= _height)
+        else if (static_cast<uint16_t>(y) >= _height)
         {
             y = _height - 1;
         }
