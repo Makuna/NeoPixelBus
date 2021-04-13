@@ -90,7 +90,7 @@ struct HtmlColor
     // ------------------------------------------------------------------------
     HtmlColor(const RgbColor& color)
     {
-        Color = (uint32_t)color.R << 16 | (uint32_t)color.G << 8 | (uint32_t)color.B;
+        Color = static_cast<uint32_t>(color.R) << 16 | static_cast<uint32_t>(color.G) << 8 | static_cast<uint32_t>(color.B);
     }
 
     // ------------------------------------------------------------------------

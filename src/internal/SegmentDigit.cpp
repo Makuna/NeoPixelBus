@@ -116,7 +116,7 @@ uint8_t SevenSegDigit::CalculateBrightness() const
         sum += Segment[iSegment];
     }
 
-    return (uint8_t)(sum / SegmentCount);
+    return static_cast<uint8_t>(sum / SegmentCount);
 }
 
 void SevenSegDigit::Darken(uint8_t delta)

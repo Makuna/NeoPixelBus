@@ -314,9 +314,9 @@ public:
             _i2sBufDesc[indexDesc].sub_sof = 0;
             _i2sBufDesc[indexDesc].datalen = blockSize;
             _i2sBufDesc[indexDesc].blocksize = blockSize;
-            _i2sBufDesc[indexDesc].buf_ptr = (uint32_t)is2Buffer;
+            _i2sBufDesc[indexDesc].buf_ptr = reinterpret_cast<uint32_t>(is2Buffer);
             _i2sBufDesc[indexDesc].unused = 0;
-            _i2sBufDesc[indexDesc].next_link_ptr = (uint32_t)&(_i2sBufDesc[indexDesc + 1]);
+            _i2sBufDesc[indexDesc].next_link_ptr = reinterpret_cast<uint32_t>(&(_i2sBufDesc[indexDesc + 1]));
 
             is2Buffer += blockSize;
             is2BufferSize -= blockSize;
@@ -330,15 +330,15 @@ public:
             _i2sBufDesc[indexDesc].sub_sof = 0;
             _i2sBufDesc[indexDesc].datalen = sizeof(_i2sZeroes);
             _i2sBufDesc[indexDesc].blocksize = sizeof(_i2sZeroes);
-            _i2sBufDesc[indexDesc].buf_ptr = (uint32_t)_i2sZeroes;
+            _i2sBufDesc[indexDesc].buf_ptr = reinterpret_cast<uint32_t>(_i2sZeroes);
             _i2sBufDesc[indexDesc].unused = 0;
-            _i2sBufDesc[indexDesc].next_link_ptr = (uint32_t)&(_i2sBufDesc[indexDesc + 1]);
+            _i2sBufDesc[indexDesc].next_link_ptr = reinterpret_cast<uint32_t>(&(_i2sBufDesc[indexDesc + 1]));
         }
 
         // the first state block will trigger the interrupt
         _i2sBufDesc[indexDesc - 2].eof = 1;
         // the last state block will loop to the first state block by defualt
-        _i2sBufDesc[indexDesc - 1].next_link_ptr = (uint32_t)&(_i2sBufDesc[indexDesc - 2]);
+        _i2sBufDesc[indexDesc - 1].next_link_ptr = reinterpret_cast<uint32_t>(&(_i2sBufDesc[indexDesc - 2]));
 
         // setup the rest of i2s DMA
         //
@@ -476,7 +476,7 @@ private:
 
                     // data block has pending data waiting to send, prepare it
                     // point last state block to top 
-                    (finished_item + 1)->next_link_ptr = (uint32_t)(s_this->_i2sBufDesc);
+                    (finished_item + 1)->next_link_ptr = reinterpret_cast<uint32_t>(s_this->_i2sBufDesc);
 
                     s_this->_dmaState = NeoDmaState_Sending;
                 }
@@ -489,7 +489,7 @@ private:
                     // the data block had actual data sent
                     // point last state block to first state block thus
                     // just looping and not sending the data blocks
-                    (finished_item + 1)->next_link_ptr = (uint32_t)(finished_item);
+                    (finished_item + 1)->next_link_ptr = reinterpret_cast<uint32_t>(finished_item);
 
                     s_this->_dmaState = NeoDmaState_Zeroing;
                 }
