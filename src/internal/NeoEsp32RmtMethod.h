@@ -769,9 +769,12 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed800Kbps, NeoEsp32RmtChanne
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps, NeoEsp32RmtChannel7> NeoEsp32Rmt7400KbpsInvertedMethod;
 
 #endif
-#if defined(NEOPIXEL_ESP32_RMT_DEFAULT)
-// Normally I2s method is the default, defining NEOPIXEL_ESP32_RMT_DEFAULT
+
+
+#if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2)
+// Normally I2s method is the default, defining NEOPIXEL_ESP32_RMT_DEFAULT 
 // will switch to use RMT as the default method
+// The ESP32S2 will always defualt to RMT
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2)
 // (RMT_CHANNEL_MAX == 8)
