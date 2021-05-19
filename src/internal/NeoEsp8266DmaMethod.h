@@ -62,7 +62,7 @@ struct slc_queue_item
     uint32  eof : 1;
     uint32  owner : 1;
     uint8*  buf_ptr;
-    uint32*  next_link_ptr;
+    struct slc_queue_item*  next_link_ptr;
 };
 
 class NeoEsp8266DmaSpeedBase
@@ -316,7 +316,7 @@ public:
             _i2sBufDesc[indexDesc].blocksize = blockSize;
             _i2sBufDesc[indexDesc].buf_ptr = is2Buffer;
             _i2sBufDesc[indexDesc].unused = 0;
-            _i2sBufDesc[indexDesc].next_link_ptr = &(_i2sBufDesc[indexDesc + 1]);
+            _i2sBufDesc[indexDesc].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDesc + 1]));
 
             is2Buffer += blockSize;
             is2BufferSize -= blockSize;
@@ -332,13 +332,13 @@ public:
             _i2sBufDesc[indexDesc].blocksize = sizeof(_i2sZeroes);
             _i2sBufDesc[indexDesc].buf_ptr = _i2sZeroes;
             _i2sBufDesc[indexDesc].unused = 0;
-            _i2sBufDesc[indexDesc].next_link_ptr = &(_i2sBufDesc[indexDesc + 1]);
+            _i2sBufDesc[indexDesc].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDesc + 1]));
         }
 
         // the first state block will trigger the interrupt
         _i2sBufDesc[indexDesc - 2].eof = 1;
         // the last state block will loop to the first state block by defualt
-        _i2sBufDesc[indexDesc - 1].next_link_ptr = &(_i2sBufDesc[indexDesc - 2]);
+        _i2sBufDesc[indexDesc - 1].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDesc - 2]));
 
         // setup the rest of i2s DMA
         //
@@ -489,7 +489,7 @@ private:
                     // the data block had actual data sent
                     // point last state block to first state block thus
                     // just looping and not sending the data blocks
-                    (finished_item + 1)->next_link_ptr = reinterpret_cast<uint32*>(finished_item);
+                    (finished_item + 1)->next_link_ptr = finished_item;
 
                     s_this->_dmaState = NeoDmaState_Zeroing;
                 }
