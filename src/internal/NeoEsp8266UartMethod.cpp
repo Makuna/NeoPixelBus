@@ -35,7 +35,7 @@ extern "C"
     #include <ets_sys.h>
 }
 
-const volatile uint8_t* ICACHE_RAM_ATTR NeoEsp8266UartContext::FillUartFifo(uint8_t uartNum,
+const volatile uint8_t* IRAM_ATTR NeoEsp8266UartContext::FillUartFifo(uint8_t uartNum,
     const volatile uint8_t* start,
     const volatile uint8_t* end)
 {
@@ -139,7 +139,7 @@ void NeoEsp8266UartInterruptContext::Detach(uint8_t uartNum)
     ETS_UART_INTR_ENABLE();
 }
 
-void ICACHE_RAM_ATTR NeoEsp8266UartInterruptContext::Isr(void* param)
+void IRAM_ATTR NeoEsp8266UartInterruptContext::Isr(void* param)
 {
     // make sure this is for us
     if (param == s_uartInteruptContext)

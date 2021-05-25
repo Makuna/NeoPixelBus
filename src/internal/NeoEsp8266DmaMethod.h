@@ -404,7 +404,7 @@ public:
         I2SC |= I2STXS; // Start transmission
     }
 
-    void ICACHE_RAM_ATTR Update(bool)
+    void IRAM_ATTR Update(bool)
     {
         // wait for not actively sending data
         while (!IsReadyToUpdate())
@@ -455,7 +455,7 @@ private:
     // handle here is the RX_EOF_INT status, which indicate the DMA has sent a buffer whose
     // descriptor has the 'EOF' field set to 1.
     // in the case of this code, the second to last state descriptor
-    static void ICACHE_RAM_ATTR i2s_slc_isr(void)
+    static void IRAM_ATTR i2s_slc_isr(void)
     {
         ETS_SLC_INTR_DISABLE();
 

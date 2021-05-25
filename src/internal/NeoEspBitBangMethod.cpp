@@ -35,7 +35,7 @@ static inline uint32_t getCycleCount(void)
     return ccount;
 }
 
-void ICACHE_RAM_ATTR NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
+void IRAM_ATTR NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
 {
     const uint32_t pinRegister = _BV(pin);
     uint8_t mask = 0x80;
@@ -93,7 +93,7 @@ void ICACHE_RAM_ATTR NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end
     }
 }
 
-void ICACHE_RAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
+void IRAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
 {
     const uint32_t pinRegister = _BV(pin);
     uint8_t mask = 0x80;
