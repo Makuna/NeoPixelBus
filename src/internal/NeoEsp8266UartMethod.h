@@ -37,17 +37,17 @@ class NeoEsp8266UartContext
 {
 public:
     // Gets the number of bytes waiting in the TX FIFO
-    static inline uint8_t ICACHE_RAM_ATTR GetTxFifoLength(uint8_t uartNum)
+    static inline uint8_t IRAM_ATTR GetTxFifoLength(uint8_t uartNum)
     {
         return (USS(uartNum) >> USTXC) & 0xff;
     }
     // Append a byte to the TX FIFO
-    static inline void ICACHE_RAM_ATTR Enqueue(uint8_t uartNum, uint8_t value)
+    static inline void IRAM_ATTR Enqueue(uint8_t uartNum, uint8_t value)
     {
         USF(uartNum) = value;
     }
 
-    static const volatile uint8_t* ICACHE_RAM_ATTR FillUartFifo(uint8_t uartNum,
+    static const volatile uint8_t* IRAM_ATTR FillUartFifo(uint8_t uartNum,
         const volatile uint8_t* start,
         const volatile uint8_t* end);
 };
@@ -79,7 +79,7 @@ private:
     volatile const uint8_t* _asyncBuffEnd;
     volatile static NeoEsp8266UartInterruptContext* s_uartInteruptContext[2]; 
 
-    static void ICACHE_RAM_ATTR Isr(void* param);
+    static void IRAM_ATTR Isr(void* param);
 };
 
 // this template feature class is used a base for all others and contains 
@@ -241,7 +241,7 @@ protected:
         free(_dataSending);
     }
 
-    void ICACHE_RAM_ATTR InitializeUart(uint32_t uartBaud, bool invert)
+    void IRAM_ATTR InitializeUart(uint32_t uartBaud, bool invert)
     {
         T_UARTFEATURE::Init(uartBaud, invert);
      

@@ -32,11 +32,6 @@ License along with NeoPixel.  If not, see
 #include <eagle_soc.h>
 #endif
 
-// ESP32 doesn't define ICACHE_RAM_ATTR
-#ifndef ICACHE_RAM_ATTR
-#define ICACHE_RAM_ATTR IRAM_ATTR
-#endif
-
 #define CYCLES_LOOPTEST   (4) // adjustment due to loop exit test instruction cycles
 
 class NeoEspSpeedWs2811
