@@ -53,6 +53,7 @@ public:
     static void applySettings(uint8_t* pData, const SettingsObject& settings)
     {
         uint8_t* pSet = pData;
+        uint8_t mode = 0xff;
 
         // C1 - the mode
         *pSet++ = 0xff;
@@ -61,19 +62,20 @@ public:
         switch (settings.Mode)
         {
         case NeoTm1914_Mode_DinFdinAutoSwitch:
-            *pSet++ = 0xff;
+            mode = 0xff;
             break;
 
         case NeoTm1914_Mode_FdinOnly:
-            *pSet++ = 0xfa;
+            mode = 0xfa;
             break;
 
         case NeoTm1914_Mode_DinOnly:
         default:
-            *pSet++ = 0xf5;
+            mode = 0xf5;
             break;
         }
-    
+        *pSet++ = mode;
+
         // C2 - ones compliment of the above
         uint8_t* pC1 = pData;
         for (uint8_t elem = 0; elem < 3; elem++)
