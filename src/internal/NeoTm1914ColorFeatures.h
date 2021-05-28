@@ -91,7 +91,7 @@ public:
 
     static const uint8_t* pixels(const uint8_t* pData)
     {
-        return pData;
+        return pData + SettingsSize;
     }
 };
 
@@ -134,3 +134,41 @@ public:
     
 };
 
+
+class NeoGrbTm1914Feature : public Neo3ElementsTm1914Settings
+{
+public:
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        *p++ = color.G;
+        *p++ = color.R;
+        *p = color.B;
+    }
+
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        color.G = *p++;
+        color.R = *p++;
+        color.B = *p;
+
+        return color;
+    }
+
+    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
+
+        color.G = pgm_read_byte(p++);
+        color.R = pgm_read_byte(p++);
+        color.B = pgm_read_byte(p);
+
+        return color;
+    }
+
+};

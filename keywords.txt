@@ -27,6 +27,7 @@ NeoBrgFeature	KEYWORD1
 NeoRbgFeature	KEYWORD1
 NeoWrgbTm1814Feature	KEYWORD1
 NeoRgbTm1914Feature	KEYWORD1
+NeoGrbTm1914Feature	KEYWORD1
 DotStarBgrFeature	KEYWORD1
 DotStarLbgrFeature	KEYWORD1
 Lpd6803GrbFeature	KEYWORD1
