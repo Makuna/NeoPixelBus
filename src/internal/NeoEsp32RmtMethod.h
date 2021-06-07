@@ -413,7 +413,7 @@ public:
     const static rmt_channel_t RmtChannelNumber = RMT_CHANNEL_3;
 };
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 
 class NeoEsp32RmtChannel4
 {
@@ -630,7 +630,7 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTx1812, NeoEsp32RmtChannel3> NeoEs
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps, NeoEsp32RmtChannel3> NeoEsp32Rmt3800KbpsMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtChannel3> NeoEsp32Rmt3400KbpsMethod;
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 // (RMT_CHANNEL_MAX == 8)
 
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2811, NeoEsp32RmtChannel4> NeoEsp32Rmt4Ws2811Method;
@@ -725,7 +725,7 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTx1812, NeoEsp32RmtChannel
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed800Kbps, NeoEsp32RmtChannel3> NeoEsp32Rmt3800KbpsInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps, NeoEsp32RmtChannel3> NeoEsp32Rmt3400KbpsInvertedMethod;
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 // (RMT_CHANNEL_MAX == 8)
 
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2811, NeoEsp32RmtChannel4> NeoEsp32Rmt4Ws2811InvertedMethod;
@@ -771,12 +771,12 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps, NeoEsp32RmtChanne
 #endif
 
 
-#if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2)
+#if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
 // Normally I2s method is the default, defining NEOPIXEL_ESP32_RMT_DEFAULT 
 // will switch to use RMT as the default method
-// The ESP32S2 will always defualt to RMT
+// The ESP32S2 & ESP32C3 will always defualt to RMT
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 // (RMT_CHANNEL_MAX == 8)
 // RMT channel 6 method is the default method for Esp32
 typedef NeoEsp32Rmt6Ws2812xMethod NeoWs2813Method;
@@ -806,9 +806,9 @@ typedef NeoEsp32Rmt6Tx1812InvertedMethod NeoTx1812InvertedMethod;
 
 typedef NeoEsp32Rmt6Ws2812xInvertedMethod Neo800KbpsInvertedMethod;
 typedef NeoEsp32Rmt6400KbpsInvertedMethod Neo400KbpsInvertedMethod;
-#else // !defined(CONFIG_IDF_TARGET_ESP32S2)
+#else // !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 
-// RMT channel 3 method is the default method for Esp32S2
+// RMT channel 3 method is the default method for Esp32S2 & Esp32C3
 typedef NeoEsp32Rmt3Ws2812xMethod NeoWs2813Method;
 typedef NeoEsp32Rmt3Ws2812xMethod NeoWs2812xMethod;
 typedef NeoEsp32Rmt3800KbpsMethod NeoWs2812Method;
@@ -837,7 +837,7 @@ typedef NeoEsp32Rmt3Tx1812InvertedMethod NeoTx1812InvertedMethod;
 typedef NeoEsp32Rmt3Ws2812xInvertedMethod Neo800KbpsInvertedMethod;
 typedef NeoEsp32Rmt3400KbpsInvertedMethod Neo400KbpsInvertedMethod;
 
-#endif // !defined(CONFIG_IDF_TARGET_ESP32S2)
+#endif // !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 
 #endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT)
 
