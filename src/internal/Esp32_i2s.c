@@ -38,7 +38,10 @@
 #include "soc/io_mux_reg.h"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/i2s_struct.h"
+#if defined(CONFIG_IDF_TARGET_ESP32)
+/* included here for ESP-IDF v4.x compatibility */
 #include "soc/dport_reg.h"
+#endif
 #include "soc/sens_reg.h"
 #include "driver/gpio.h"
 #include "driver/i2s.h"
