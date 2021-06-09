@@ -15,8 +15,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if defined(ARDUINO_ARCH_ESP32) 
+
+#include "sdkconfig.h" // this sets useful config symbols, like CONFIG_IDF_TARGET_ESP32C3
+
 // ESP32C3 I2S is not supported yet due to significant changes to interface
-#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3)
+#if !defined(CONFIG_IDF_TARGET_ESP32C3)
 
 #include <string.h>
 #include <stdio.h>
@@ -490,5 +494,6 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     return len;
 }
 
+#endif // !defined(CONFIG_IDF_TARGET_ESP32C3)
+#endif // defined(ARDUINO_ARCH_ESP32) 
 
-#endif
