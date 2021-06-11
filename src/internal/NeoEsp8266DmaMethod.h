@@ -226,7 +226,72 @@ const uint16_t c_maxDmaBlockSize = 4095;
 const uint16_t c_dmaBytesPerPixelBytes = 4;
 const uint8_t c_I2sPin = 3; // due to I2S hardware, the pin used is restricted to this
 
-template<typename T_SPEED> class NeoEsp8266DmaMethodBase
+class NeoEsp8266DmaMethodCore
+{
+protected:
+    static NeoEsp8266DmaMethodCore* s_this; // for the ISR
+
+    volatile NeoDmaState _dmaState;
+
+    slc_queue_item* _i2sBufDesc;  // dma block descriptors
+    uint16_t _i2sBufDescCount;   // count of block descriptors in _i2sBufDesc
+
+
+    // This routine is called as soon as the DMA routine has something to tell us. All we
+    // handle here is the RX_EOF_INT status, which indicate the DMA has sent a buffer whose
+    // descriptor has the 'EOF' field set to 1.
+    // in the case of this code, the second to last state descriptor
+    static void IRAM_ATTR i2s_slc_isr(void)
+    {
+        ETS_SLC_INTR_DISABLE();
+
+        uint32_t slc_intr_status = SLCIS;
+
+        SLCIC = 0xFFFFFFFF;
+
+        if ((slc_intr_status & SLCIRXEOF) && s_this)
+        {
+            switch (s_this->_dmaState)
+            {
+            case NeoDmaState_Idle:
+                break;
+
+            case NeoDmaState_Pending:
+            {
+                slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
+
+                // data block has pending data waiting to send, prepare it
+                // point last state block to top 
+                (finished_item + 1)->next_link_ptr = s_this->_i2sBufDesc;
+
+                s_this->_dmaState = NeoDmaState_Sending;
+            }
+            break;
+
+            case NeoDmaState_Sending:
+            {
+                slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
+
+                // the data block had actual data sent
+                // point last state block to first state block thus
+                // just looping and not sending the data blocks
+                (finished_item + 1)->next_link_ptr = finished_item;
+
+                s_this->_dmaState = NeoDmaState_Zeroing;
+            }
+            break;
+
+            case NeoDmaState_Zeroing:
+                s_this->_dmaState = NeoDmaState_Idle;
+                break;
+            }
+        }
+
+        ETS_SLC_INTR_ENABLE();
+    }
+};
+
+template<typename T_SPEED> class NeoEsp8266DmaMethodBase : NeoEsp8266DmaMethodCore
 {
 public:
     typedef NeoNoSettings SettingsObject;
@@ -432,8 +497,6 @@ public:
     }
 
 private:
-    static NeoEsp8266DmaMethodBase* s_this; // for the ISR
-
     const size_t  _sizeData;    // Size of '_data' buffer 
     uint8_t*  _data;        // Holds LED color values
 
@@ -445,64 +508,8 @@ private:
     // buffer size = (24 * (reset time / 50)) / 6
     uint8_t _i2sZeroes[(24L * (T_SPEED::ResetTimeUs / 50L)) / 6L];
 
-    slc_queue_item* _i2sBufDesc;  // dma block descriptors
-    uint16_t _i2sBufDescCount;   // count of block descriptors in _i2sBufDesc
     uint16_t _is2BufMaxBlockSize; // max size based on size of a pixel of a single block
 
-    volatile NeoDmaState _dmaState;
-
-    // This routine is called as soon as the DMA routine has something to tell us. All we
-    // handle here is the RX_EOF_INT status, which indicate the DMA has sent a buffer whose
-    // descriptor has the 'EOF' field set to 1.
-    // in the case of this code, the second to last state descriptor
-    static void IRAM_ATTR i2s_slc_isr(void)
-    {
-        ETS_SLC_INTR_DISABLE();
-
-        uint32_t slc_intr_status = SLCIS;
-
-        SLCIC = 0xFFFFFFFF;
-
-        if ((slc_intr_status & SLCIRXEOF) && s_this)
-        {
-            switch (s_this->_dmaState)
-            {
-            case NeoDmaState_Idle:
-                break;
-
-            case NeoDmaState_Pending:
-                {
-                    slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
-
-                    // data block has pending data waiting to send, prepare it
-                    // point last state block to top 
-                    (finished_item + 1)->next_link_ptr = s_this->_i2sBufDesc;
-
-                    s_this->_dmaState = NeoDmaState_Sending;
-                }
-                break;
-
-            case NeoDmaState_Sending:
-                {
-                    slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
-
-                    // the data block had actual data sent
-                    // point last state block to first state block thus
-                    // just looping and not sending the data blocks
-                    (finished_item + 1)->next_link_ptr = finished_item;
-
-                    s_this->_dmaState = NeoDmaState_Zeroing;
-                }
-                break;
-
-            case NeoDmaState_Zeroing:
-                s_this->_dmaState = NeoDmaState_Idle;
-                break;
-            }
-        }
-
-        ETS_SLC_INTR_ENABLE();
-    }
 
     void FillBuffers()
     {
@@ -544,8 +551,6 @@ private:
 };
 
 
-template<typename T_SPEED> 
-NeoEsp8266DmaMethodBase<T_SPEED>* NeoEsp8266DmaMethodBase<T_SPEED>::s_this;
 
 // normal
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaSpeedWs2812x> NeoEsp8266DmaWs2812xMethod;
