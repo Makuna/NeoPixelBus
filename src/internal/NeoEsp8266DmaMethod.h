@@ -39,7 +39,7 @@ extern "C"
 #include "ets_sys.h"
 
 #include "i2s_reg.h"
-#include "i2s.h"
+#include "core_esp8266_i2s.h"
 #include "eagle_soc.h"
 #include "esp8266_peri.h"
 #include "slc_register.h"
