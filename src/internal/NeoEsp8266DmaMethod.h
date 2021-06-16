@@ -32,9 +32,10 @@ License along with NeoPixel.  If not, see
 
 #ifdef ARDUINO_ARCH_ESP8266
 
+#include "Arduino.h"
+
 extern "C"
 {
-#include "Arduino.h"
 #include "osapi.h"
 #include "ets_sys.h"
 
