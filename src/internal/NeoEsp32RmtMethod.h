@@ -646,6 +646,8 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTx1812, NeoEsp32RmtChannel1> NeoEs
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps, NeoEsp32RmtChannel1> NeoEsp32Rmt1800KbpsMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtChannel1> NeoEsp32Rmt1400KbpsMethod;
 
+#if !defined(CONFIG_IDF_TARGET_ESP32C3)
+
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2811, NeoEsp32RmtChannel2> NeoEsp32Rmt2Ws2811Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2812x, NeoEsp32RmtChannel2> NeoEsp32Rmt2Ws2812xMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedSk6812, NeoEsp32RmtChannel2>  NeoEsp32Rmt2Sk6812Method;
@@ -662,14 +664,13 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2812x, NeoEsp32RmtChannel3> NeoE
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedSk6812, NeoEsp32RmtChannel3>  NeoEsp32Rmt3Sk6812Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1814, NeoEsp32RmtChannel3> NeoEsp32Rmt3Tm1814Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1829, NeoEsp32RmtChannel3> NeoEsp32Rmt3Tm1829Method;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1914, NeoEsp32RmtChannel2> NeoEsp32Rmt2Tm1914Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1914, NeoEsp32RmtChannel3> NeoEsp32Rmt3Tm1914Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedApa106, NeoEsp32RmtChannel3> NeoEsp32Rmt3Apa106Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTx1812, NeoEsp32RmtChannel3> NeoEsp32Rmt3Tx1812Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps, NeoEsp32RmtChannel3> NeoEsp32Rmt3800KbpsMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtChannel3> NeoEsp32Rmt3400KbpsMethod;
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
-// (RMT_CHANNEL_MAX == 8)
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) 
 
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2811, NeoEsp32RmtChannel4> NeoEsp32Rmt4Ws2811Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2812x, NeoEsp32RmtChannel4> NeoEsp32Rmt4Ws2812xMethod;
@@ -715,7 +716,8 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTx1812, NeoEsp32RmtChannel7> NeoEs
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps, NeoEsp32RmtChannel7> NeoEsp32Rmt7800KbpsMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtChannel7> NeoEsp32Rmt7400KbpsMethod;
 
-#endif
+#endif // !defined(CONFIG_IDF_TARGET_ESP32S2) 
+#endif // !defined(CONFIG_IDF_TARGET_ESP32C3)
 
 // inverted
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2811, NeoEsp32RmtChannelN> NeoEsp32RmtNWs2811InvertedMethod;
@@ -751,6 +753,8 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTx1812, NeoEsp32RmtChannel
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed800Kbps, NeoEsp32RmtChannel1> NeoEsp32Rmt1800KbpsInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps, NeoEsp32RmtChannel1> NeoEsp32Rmt1400KbpsInvertedMethod;
 
+#if !defined(CONFIG_IDF_TARGET_ESP32C3)
+
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2811, NeoEsp32RmtChannel2> NeoEsp32Rmt2Ws2811InvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2812x, NeoEsp32RmtChannel2> NeoEsp32Rmt2Ws2812xInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedSk6812, NeoEsp32RmtChannel2>  NeoEsp32Rmt2Sk6812InvertedMethod;
@@ -773,8 +777,7 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTx1812, NeoEsp32RmtChannel
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed800Kbps, NeoEsp32RmtChannel3> NeoEsp32Rmt3800KbpsInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps, NeoEsp32RmtChannel3> NeoEsp32Rmt3400KbpsInvertedMethod;
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
-// (RMT_CHANNEL_MAX == 8)
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
 
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2811, NeoEsp32RmtChannel4> NeoEsp32Rmt4Ws2811InvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2812x, NeoEsp32RmtChannel4> NeoEsp32Rmt4Ws2812xInvertedMethod;
@@ -820,16 +823,51 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTx1812, NeoEsp32RmtChannel
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed800Kbps, NeoEsp32RmtChannel7> NeoEsp32Rmt7800KbpsInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps, NeoEsp32RmtChannel7> NeoEsp32Rmt7400KbpsInvertedMethod;
 
-#endif
+#endif // !defined(CONFIG_IDF_TARGET_ESP32S2) 
+#endif // !defined(CONFIG_IDF_TARGET_ESP32C3)
 
 
 #if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
+
 // Normally I2s method is the default, defining NEOPIXEL_ESP32_RMT_DEFAULT 
 // will switch to use RMT as the default method
 // The ESP32S2 & ESP32C3 will always defualt to RMT
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
-// (RMT_CHANNEL_MAX == 8)
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
+
+// RMT channel 1 method is the default method for Esp32S2 & Esp32C3
+typedef NeoEsp32Rmt1Ws2812xMethod NeoWs2813Method;
+typedef NeoEsp32Rmt1Ws2812xMethod NeoWs2812xMethod;
+typedef NeoEsp32Rmt1800KbpsMethod NeoWs2812Method;
+typedef NeoEsp32Rmt1Ws2812xMethod NeoWs2811Method;
+typedef NeoEsp32Rmt1Sk6812Method NeoSk6812Method;
+typedef NeoEsp32Rmt1Tm1814Method NeoTm1814Method;
+typedef NeoEsp32Rmt1Tm1829Method NeoTm1829Method;
+typedef NeoEsp32Rmt1Tm1914Method NeoTm1914Method;
+typedef NeoEsp32Rmt1Sk6812Method NeoLc8812Method;
+typedef NeoEsp32Rmt1Apa106Method NeoApa106Method;
+typedef NeoEsp32Rmt1Tx1812Method NeoTx1812Method;
+
+typedef NeoEsp32Rmt1Ws2812xMethod Neo800KbpsMethod;
+typedef NeoEsp32Rmt1400KbpsMethod Neo400KbpsMethod;
+
+typedef NeoEsp32Rmt1Ws2812xInvertedMethod NeoWs2813InvertedMethod;
+typedef NeoEsp32Rmt1Ws2812xInvertedMethod NeoWs2812xInvertedMethod;
+typedef NeoEsp32Rmt1Ws2812xInvertedMethod NeoWs2811InvertedMethod;
+typedef NeoEsp32Rmt1800KbpsInvertedMethod NeoWs2812InvertedMethod;
+typedef NeoEsp32Rmt1Sk6812InvertedMethod NeoSk6812InvertedMethod;
+typedef NeoEsp32Rmt1Tm1814InvertedMethod NeoTm1814InvertedMethod;
+typedef NeoEsp32Rmt1Tm1829InvertedMethod NeoTm1829InvertedMethod;
+typedef NeoEsp32Rmt1Tm1914InvertedMethod NeoTm1914InvertedMethod;
+typedef NeoEsp32Rmt1Sk6812InvertedMethod NeoLc8812InvertedMethod;
+typedef NeoEsp32Rmt1Apa106InvertedMethod NeoApa106InvertedMethod;
+typedef NeoEsp32Rmt1Tx1812InvertedMethod NeoTx1812InvertedMethod;
+
+typedef NeoEsp32Rmt1Ws2812xInvertedMethod Neo800KbpsInvertedMethod;
+typedef NeoEsp32Rmt1400KbpsInvertedMethod Neo400KbpsInvertedMethod;
+
+#else // defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
+
 // RMT channel 6 method is the default method for Esp32
 typedef NeoEsp32Rmt6Ws2812xMethod NeoWs2813Method;
 typedef NeoEsp32Rmt6Ws2812xMethod NeoWs2812xMethod;
@@ -860,41 +898,9 @@ typedef NeoEsp32Rmt6Tx1812InvertedMethod NeoTx1812InvertedMethod;
 
 typedef NeoEsp32Rmt6Ws2812xInvertedMethod Neo800KbpsInvertedMethod;
 typedef NeoEsp32Rmt6400KbpsInvertedMethod Neo400KbpsInvertedMethod;
-#else // !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 
-// RMT channel 3 method is the default method for Esp32S2 & Esp32C3
-typedef NeoEsp32Rmt3Ws2812xMethod NeoWs2813Method;
-typedef NeoEsp32Rmt3Ws2812xMethod NeoWs2812xMethod;
-typedef NeoEsp32Rmt3800KbpsMethod NeoWs2812Method;
-typedef NeoEsp32Rmt3Ws2812xMethod NeoWs2811Method;
-typedef NeoEsp32Rmt3Sk6812Method NeoSk6812Method;
-typedef NeoEsp32Rmt3Tm1814Method NeoTm1814Method;
-typedef NeoEsp32Rmt3Tm1829Method NeoTm1829Method;
-typedef NeoEsp32Rmt3Tm1914Method NeoTm1914Method;
-typedef NeoEsp32Rmt3Sk6812Method NeoLc8812Method;
-typedef NeoEsp32Rmt3Apa106Method NeoApa106Method;
-typedef NeoEsp32Rmt3Tx1812Method NeoTx1812Method;
+#endif // defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
 
-typedef NeoEsp32Rmt3Ws2812xMethod Neo800KbpsMethod;
-typedef NeoEsp32Rmt3400KbpsMethod Neo400KbpsMethod;
-
-typedef NeoEsp32Rmt3Ws2812xInvertedMethod NeoWs2813InvertedMethod;
-typedef NeoEsp32Rmt3Ws2812xInvertedMethod NeoWs2812xInvertedMethod;
-typedef NeoEsp32Rmt3Ws2812xInvertedMethod NeoWs2811InvertedMethod;
-typedef NeoEsp32Rmt3800KbpsInvertedMethod NeoWs2812InvertedMethod;
-typedef NeoEsp32Rmt3Sk6812InvertedMethod NeoSk6812InvertedMethod;
-typedef NeoEsp32Rmt3Tm1814InvertedMethod NeoTm1814InvertedMethod;
-typedef NeoEsp32Rmt3Tm1829InvertedMethod NeoTm1829InvertedMethod;
-typedef NeoEsp32Rmt3Tm1914InvertedMethod NeoTm1914InvertedMethod;
-typedef NeoEsp32Rmt3Sk6812InvertedMethod NeoLc8812InvertedMethod;
-typedef NeoEsp32Rmt3Apa106InvertedMethod NeoApa106InvertedMethod;
-typedef NeoEsp32Rmt3Tx1812InvertedMethod NeoTx1812InvertedMethod;
-
-typedef NeoEsp32Rmt3Ws2812xInvertedMethod Neo800KbpsInvertedMethod;
-typedef NeoEsp32Rmt3400KbpsInvertedMethod Neo400KbpsInvertedMethod;
-
-#endif // !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
-
-#endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT)
+#endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3)
 
 #endif
