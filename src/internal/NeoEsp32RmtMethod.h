@@ -537,7 +537,7 @@ public:
 
     void Initialize()
     {
-        rmt_config_t config;
+        rmt_config_t config = {};
 
         config.rmt_mode = RMT_MODE_TX;
         config.channel = _channel.RmtChannelNumber;
