@@ -207,38 +207,47 @@ esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t d
     return ESP_OK;
 }
 
-void i2sSetPins(uint8_t bus_num, int8_t out, bool invert) {
-    if (bus_num >= I2S_NUM_MAX) {
+void i2sSetPins(uint8_t bus_num, int8_t out, bool invert) 
+{
+    if (bus_num >= I2S_NUM_MAX) 
+    {
         return;
     }
 
-    if (out >= 0) {
-        if (I2S[bus_num].out != out) {
-            if (I2S[bus_num].out >= 0) {
-                gpio_matrix_out(I2S[bus_num].out, 0x100, invert, false);
-            }
-            I2S[bus_num].out = out;
-            pinMode(out, OUTPUT);
+    int8_t outOld = I2S[bus_num].out;
 
-            int i2sSignal;
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
-//            (I2S_NUM_MAX == 2)
-            if (bus_num == 1) {
-                i2sSignal = I2S1O_DATA_OUT23_IDX;
-            }
-            else
-#endif
-            {
-                i2sSignal = I2S0O_DATA_OUT23_IDX;
-            }
-
-            gpio_matrix_out(out, i2sSignal, invert, false);
-        }
-    } else if (I2S[bus_num].out >= 0) {
-        gpio_matrix_out(I2S[bus_num].out, 0x100, invert, false);
-        I2S[bus_num].out = -1;
+    // disable old pin
+    if (outOld >= 0)
+    {
+        gpio_matrix_out(outOld, 0x100, false, false);
+        pinMode(outOld, INPUT);
     }
 
+    if (out >= 0) 
+    {
+        I2S[bus_num].out = out;
+           
+        pinMode(out, OUTPUT);
+
+        int i2sSignal;
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3)
+//            (I2S_NUM_MAX == 2)
+        if (bus_num == 1) 
+        {
+            i2sSignal = I2S1O_DATA_OUT23_IDX;
+        }
+        else
+#endif
+        {
+            i2sSignal = I2S0O_DATA_OUT23_IDX;
+        }
+
+        gpio_matrix_out(out, i2sSignal, invert, false);
+    } 
+    else 
+    {
+        I2S[bus_num].out = -1;
+    }
 }
 
 bool i2sWriteDone(uint8_t bus_num) {
