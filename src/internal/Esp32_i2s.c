@@ -216,6 +216,8 @@ void i2sSetPins(uint8_t bus_num, int8_t out, bool invert)
 
     int8_t outOld = I2S[bus_num].out;
 
+    I2S[bus_num].out = out;
+
     // disable old pin
     if (outOld >= 0)
     {
@@ -225,8 +227,6 @@ void i2sSetPins(uint8_t bus_num, int8_t out, bool invert)
 
     if (out >= 0) 
     {
-        I2S[bus_num].out = out;
-           
         pinMode(out, OUTPUT);
 
         int i2sSignal;
@@ -244,10 +244,6 @@ void i2sSetPins(uint8_t bus_num, int8_t out, bool invert)
 
         gpio_matrix_out(out, i2sSignal, invert, false);
     } 
-    else 
-    {
-        I2S[bus_num].out = -1;
-    }
 }
 
 bool i2sWriteDone(uint8_t bus_num) {
