@@ -169,8 +169,7 @@ public:
             yield();
         }
 
-        gpio_matrix_out(_pin, 0x100, false, false);
-        pinMode(_pin, INPUT);
+        i2sSetPins(_bus.I2sBusNumber, -1, false);
 
         free(_data);
         free(_i2sBuffer);
