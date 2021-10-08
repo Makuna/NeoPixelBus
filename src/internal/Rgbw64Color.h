@@ -62,12 +62,9 @@ struct Rgbw64Color
     // ------------------------------------------------------------------------
     // Construct a Rgbw64Color using RgbColor
     // ------------------------------------------------------------------------
-    Rgbw64Color(const RgbColor& color) :
-        R(color.R),
-        G(color.G),
-        B(color.B),
-        W(0)
+    Rgbw64Color(const RgbColor& color) 
     {
+        *this = Rgb48Color(color);
     };
 
     // ------------------------------------------------------------------------

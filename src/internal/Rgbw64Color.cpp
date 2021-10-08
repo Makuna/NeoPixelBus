@@ -32,12 +32,12 @@ License along with NeoPixel.  If not, see
 #include "Rgbw64Color.h"
 #include "HtmlColor.h"
 
-Rgbw64Color::Rgbw64Color(const RgbwColor& color) :
-    R(color.R),
-    G(color.G),
-    B(color.B),
-    W(color.W)
+Rgbw64Color::Rgbw64Color(const RgbwColor& color)
 {
+    R = (color.R == 0) ? 0 : (color.R << 8 | 0xff);
+    G = (color.G == 0) ? 0 : (color.G << 8 | 0xff);
+    B = (color.B == 0) ? 0 : (color.B << 8 | 0xff);
+    W = (color.W == 0) ? 0 : (color.W << 8 | 0xff);
 };
 
 Rgbw64Color::Rgbw64Color(const HtmlColor& color)
