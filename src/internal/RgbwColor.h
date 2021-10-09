@@ -187,10 +187,10 @@ struct RgbwColor
     {
         auto total = 0;
 
-        total += R * settings.RedTenthMilliAmpere / 255;
-        total += G * settings.GreenTenthMilliAmpere / 255;
-        total += B * settings.BlueTenthMilliAmpere / 255;
-        total += W * settings.WhiteCurrent / 255;
+        total += R * settings.RedTenthMilliAmpere / Max;
+        total += G * settings.GreenTenthMilliAmpere / Max;
+        total += B * settings.BlueTenthMilliAmpere / Max;
+        total += W * settings.WhiteCurrent / Max;
 
         return total;
     }
@@ -205,6 +205,8 @@ struct RgbwColor
     uint8_t B;
     uint8_t W;
 
+    const static uint8_t Max = 255;
+
 private:
     inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)
     {
@@ -215,9 +217,9 @@ private:
     {
         uint16_t element = ((static_cast<uint16_t>(value) + 1) << 8) / (static_cast<uint16_t>(ratio) + 1);
 
-        if (element > 255)
+        if (element > Max)
         {
-            element = 255;
+            element = Max;
         }
         else
         {
