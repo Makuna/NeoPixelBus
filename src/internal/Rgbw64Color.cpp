@@ -40,18 +40,6 @@ Rgbw64Color::Rgbw64Color(const RgbwColor& color)
     W = (color.W == 0) ? 0 : (color.W << 8 | 0xff);
 };
 
-Rgbw64Color::Rgbw64Color(const HtmlColor& color)
-{
-    uint32_t temp = color.Color;
-    B = (temp & 0xff) << 8;
-    temp = temp >> 8;
-    G = (temp & 0xff) << 8;
-    temp = temp >> 8;
-    R = (temp & 0xff) << 8;
-    temp = temp >> 8;
-    W = (temp & 0xff);
-};
-
 Rgbw64Color::Rgbw64Color(const HslColor& color)
 {
     RgbColor rgbColor(color);

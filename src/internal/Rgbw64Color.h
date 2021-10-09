@@ -86,7 +86,10 @@ struct Rgbw64Color
     // ------------------------------------------------------------------------
     // Construct a Rgbw64Color using HtmlColor
     // ------------------------------------------------------------------------
-    Rgbw64Color(const HtmlColor& color);
+    Rgbw64Color(const HtmlColor& color)
+    {
+        *this = RgbwColor(color);
+    }
 
     // ------------------------------------------------------------------------
     // Construct a Rgbw64Color using HslColor

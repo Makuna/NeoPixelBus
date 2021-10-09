@@ -61,17 +61,20 @@ struct Rgb48Color : RgbColorBase
     // ------------------------------------------------------------------------
     // Construct a Rgb48Color using RgbColor
     // ------------------------------------------------------------------------
-    Rgb48Color(const RgbColor& color) 
+    Rgb48Color(const RgbColor& color)
     {
         R = (color.R == 0) ? 0 : (color.R << 8 | 0xff);
         G = (color.G == 0) ? 0 : (color.G << 8 | 0xff);
         B = (color.B == 0) ? 0 : (color.B << 8 | 0xff);
-    }
+    };
 
     // ------------------------------------------------------------------------
     // Construct a Rgb48Color using HtmlColor
     // ------------------------------------------------------------------------
-    Rgb48Color(const HtmlColor& color);
+    Rgb48Color(const HtmlColor& color)
+    {
+        *this = RgbColor(color);
+    };
 
     // ------------------------------------------------------------------------
     // Construct a Rgb48Color using HslColor

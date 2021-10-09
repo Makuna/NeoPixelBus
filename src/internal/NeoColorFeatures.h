@@ -669,3 +669,6 @@ public:
         return color;
     }
 };
+
+typedef NeoRgb48Feature NeoRgbUcs8903Feature;
+typedef NeoRgbw64Feature NeoRgbwUcs8904Feature;
