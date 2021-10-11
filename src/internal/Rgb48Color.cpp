@@ -30,17 +30,6 @@ License along with NeoPixel.  If not, see
 #include "HsbColor.h"
 #include "HtmlColor.h"
 
-Rgb48Color::Rgb48Color(const HtmlColor& color)
-{
-    uint32_t temp = color.Color;
-
-    B = (temp & 0xff);
-    temp = temp >> 8;
-    G = (temp & 0xff);
-    temp = temp >> 8;
-    R = (temp & 0xff);
-};
-
 Rgb48Color::Rgb48Color(const HslColor& color)
 {
     float r;

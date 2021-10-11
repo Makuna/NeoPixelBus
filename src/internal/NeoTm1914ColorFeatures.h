@@ -44,7 +44,7 @@ public:
     NeoTm1914_Mode Mode;
 };
 
-class Neo3ElementsTm1914Settings : public Neo3Elements
+class Neo3ByteElementsTm1914Settings : public Neo3ByteElements
 {
 public:
     typedef NeoTm1914Settings SettingsObject;
@@ -96,7 +96,7 @@ public:
 };
 
 
-class NeoRgbTm1914Feature : public Neo3ElementsTm1914Settings
+class NeoRgbTm1914Feature : public Neo3ByteElementsTm1914Settings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -135,7 +135,7 @@ public:
 };
 
 
-class NeoGrbTm1914Feature : public Neo3ElementsTm1914Settings
+class NeoGrbTm1914Feature : public Neo3ByteElementsTm1914Settings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
