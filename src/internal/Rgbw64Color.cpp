@@ -42,13 +42,13 @@ Rgbw64Color::Rgbw64Color(const RgbwColor& color)
 
 Rgbw64Color::Rgbw64Color(const HslColor& color)
 {
-    RgbColor rgbColor(color);
+    Rgb48Color rgbColor(color);
     *this = rgbColor;
 }
 
 Rgbw64Color::Rgbw64Color(const HsbColor& color)
 {
-    RgbColor rgbColor(color);
+    Rgb48Color rgbColor(color);
     *this = rgbColor;
 }
 
