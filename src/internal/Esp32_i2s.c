@@ -126,6 +126,7 @@ static i2s_bus_t I2S[I2S_NUM_MAX] = {
 
 void IRAM_ATTR i2sDmaISR(void* arg);
 
+
 bool i2sInitDmaItems(uint8_t bus_num) {
     if (bus_num >= I2S_NUM_MAX) {
         return false;
@@ -170,10 +171,26 @@ bool i2sInitDmaItems(uint8_t bus_num) {
     I2S[bus_num].tx_queue = xQueueCreate(I2S_DMA_QUEUE_COUNT, sizeof(i2s_dma_item_t*));
     if (I2S[bus_num].tx_queue == NULL) {// memory error
         log_e("MEM ERROR!");
-        free(I2S[bus_num].dma_items);
+        heap_caps_free(I2S[bus_num].dma_items);
         I2S[bus_num].dma_items = NULL;
         return false;
     }
+    return true;
+}
+
+bool i2sDeinitDmaItems(uint8_t bus_num) {
+    if (bus_num >= I2S_NUM_MAX) {
+        return false;
+    }
+    if (!I2S[bus_num].tx_queue) {
+        return false; // nothing to deinit
+    }
+
+    vQueueDelete(I2S[bus_num].tx_queue);
+    I2S[bus_num].tx_queue = NULL;
+    heap_caps_free(I2S[bus_num].dma_items);
+    I2S[bus_num].dma_items = NULL;
+
     return true;
 }
 
@@ -379,6 +396,10 @@ void i2sInit(uint8_t bus_num,
     i2s->conf.tx_start = 1;// Start I2s module
 
     esp_intr_enable(I2S[bus_num].isr_handle);
+}
+
+void i2sDeinit(uint8_t bus_num) {
+    i2sDeinitDmaItems(bus_num);
 }
 
 esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) {

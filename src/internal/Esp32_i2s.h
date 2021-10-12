@@ -27,6 +27,8 @@ void i2sInit(uint8_t bus_num,
     size_t dma_count, 
     size_t dma_len);
 
+void i2sDeinit(uint8_t bus_num);
+
 void i2sSetPins(uint8_t bus_num, int8_t out, bool invert);
 
 esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits_per_sample);
