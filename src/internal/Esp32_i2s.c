@@ -187,7 +187,9 @@ bool i2sDeinitDmaItems(uint8_t bus_num) {
     }
 
     vQueueDelete(I2S[bus_num].tx_queue);
+    I2S[bus_num].tx_queue = NULL;
     heap_caps_free(I2S[bus_num].dma_items);
+    I2S[bus_num].dma_items = NULL;
 
     return true;
 }
