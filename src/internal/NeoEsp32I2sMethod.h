@@ -170,9 +170,9 @@ public:
         }
 
         i2sSetPins(_bus.I2sBusNumber, -1, false);
-
+        i2sDeinit(_bus.I2sBusNumber);
         free(_data);
-        free(_i2sBuffer);
+        heap_caps_free(_i2sBuffer);
     }
 
     bool IsReadyToUpdate() const

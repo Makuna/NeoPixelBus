@@ -127,7 +127,7 @@ public:
             ESP_ERROR_CHECK(ret);            
         }
         free(_data);
-        free(_dmadata);
+        heap_caps_free(_dmadata);
         _spiHandle = NULL;
     }
 
