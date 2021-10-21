@@ -144,11 +144,10 @@ public:
 
         for (uint16_t indexPixel = 0; indexPixel < countPixels; indexPixel++)
         {
-            typename T_BUFFER_METHOD::ColorObject color;
-            
-            shader.Apply(indexPixel, (uint8_t*)(&color), _method.Pixels() + (indexPixel * _method.PixelSize()));
+            const uint8_t* pSrc = T_BUFFER_METHOD::ColorFeature::getPixelAddress(_method.Pixels(), indexPixel);
+            uint8_t* pDest = T_BUFFER_METHOD::ColorFeature::getPixelAddress(destBuffer.Pixels, indexPixel);
 
-            T_BUFFER_METHOD::ColorFeature::applyPixelColor(destBuffer.Pixels, indexPixel, color);
+            shader.Apply(indexPixel, pDest, pSrc);
         }
     }
 

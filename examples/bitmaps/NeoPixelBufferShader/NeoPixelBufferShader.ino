@@ -47,7 +47,7 @@ public:
 
   // required for a shader object, it will be called for
   // every pixel
-  void Apply(uint16_t index, uint8_t* pDest, uint8_t* pSrc)
+  void Apply(uint16_t index, uint8_t* pDest, const uint8_t* pSrc)
   {
     // we don't care what the index is so we ignore it
     //
