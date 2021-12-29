@@ -34,6 +34,10 @@ public:
     {
         return static_cast<uint8_t>(255.0f * NeoEase::Gamma(value / 255.0f) + 0.5f);
     }
+    static uint16_t Correct(uint16_t value)
+    {
+        return static_cast<uint8_t>(65535.0f * NeoEase::Gamma(value / 65535.0f) + 0.5f);
+    }
 };
 
 // NeoGammaTableMethod uses 256 bytes of memory, but is significantly faster
@@ -44,6 +48,13 @@ public:
     {
         return _table[value];
     }
+    /*
+    static uint16_t Correct(uint16_t value)
+    {
+// NOTE: 16 bit color elements not supported with NeoGammaTableMethod, use NeoGammaEquationMethod
+        return 0;
+    }
+    */
 
 private:
     static const uint8_t _table[256];
@@ -67,6 +78,21 @@ public:
             T_METHOD::Correct(original.G),
             T_METHOD::Correct(original.B),
             T_METHOD::Correct(original.W) );
+    }
+
+    Rgb48Color Correct(const Rgb48Color& original)
+    {
+        return RgbColor(T_METHOD::Correct(original.R),
+            T_METHOD::Correct(original.G),
+            T_METHOD::Correct(original.B));
+    }
+
+    Rgbw64Color Correct(const Rgbw64Color& original)
+    {
+        return RgbwColor(T_METHOD::Correct(original.R),
+            T_METHOD::Correct(original.G),
+            T_METHOD::Correct(original.B),
+            T_METHOD::Correct(original.W));
     }
 };
 
