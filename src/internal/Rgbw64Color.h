@@ -227,12 +227,12 @@ struct Rgbw64Color
 private:
     inline static uint16_t _elementDim(uint16_t value, uint16_t ratio)
     {
-        return (static_cast<uint16_t>(value) * (static_cast<uint16_t>(ratio) + 1)) >> 16;
+        return (static_cast<uint32_t>(value) * (static_cast<uint32_t>(ratio) + 1)) >> 16;
     }
 
     inline static uint16_t _elementBrighten(uint16_t value, uint16_t ratio)
     {
-        uint16_t element = ((static_cast<uint32_t>(value) + 1) << 16) / (static_cast<uint32_t>(ratio) + 1);
+        uint32_t element = ((static_cast<uint32_t>(value) + 1) << 16) / (static_cast<uint32_t>(ratio) + 1);
 
         if (element > Max)
         {
