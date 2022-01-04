@@ -39,6 +39,17 @@ public:
     static const uint32_t Clock = 40000000L;
 };
 
+class SpiSpeed30Mhz
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed30Mhz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
+    static const uint32_t Clock = 30000000L;
+};
+
 class SpiSpeed20Mhz
 {
 public:
@@ -48,6 +59,17 @@ public:
     static void applySettings(const SettingsObject& settings) {}
 
     static const uint32_t Clock = 20000000L;
+};
+
+class SpiSpeed15Mhz
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed15Mhz() {};
+
+    static void applySettings(const SettingsObject& settings) {}
+
+    static const uint32_t Clock = 15000000L;
 };
 
 class SpiSpeed10Mhz
