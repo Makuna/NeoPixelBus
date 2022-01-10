@@ -26,6 +26,7 @@ NeoRgbwFeature	KEYWORD1
 NeoRgbFeature	KEYWORD1
 NeoBrgFeature	KEYWORD1
 NeoRbgFeature	KEYWORD1
+NeoBgrFeature	KEYWORD1
 NeoRgbw64Feature	KEYWORD1
 NeoRgb48Feature	KEYWORD1
 NeoRgbUcs8903Feature	KEYWORD1
