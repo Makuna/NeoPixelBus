@@ -36,7 +36,7 @@ public:
     }
     static uint16_t Correct(uint16_t value)
     {
-        return static_cast<uint8_t>(65535.0f * NeoEase::Gamma(value / 65535.0f) + 0.5f);
+        return static_cast<uint16_t>(65535.0f * NeoEase::Gamma(value / 65535.0f) + 0.5f);
     }
 };
 
