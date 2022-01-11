@@ -95,7 +95,7 @@ License along with NeoPixel.  If not, see
 #include "internal/Lpd6803GenericMethod.h"
 #include "internal/Ws2801GenericMethod.h"
 #include "internal/P9813GenericMethod.h"
-#include "internal/TLC5947GenericMethod.h"
+#include "internal/Tlc5947GenericMethod.h"
 
 #if defined(ARDUINO_ARCH_ESP8266)
 
@@ -154,7 +154,7 @@ public:
     {
     }
 
-    NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, int8_t pinOutputEnable = -1) :
+    NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
         _countPixels(countPixels),
         _state(0),
         _method(pinClock, pinData, pinLatch, pinOutputEnable, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
