@@ -86,7 +86,11 @@ public:
 };
 
 extern void NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period);
-extern void NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period);
+extern void NeoEspBitBangBase_send_pixels_inv(uint8_t *pixels, uint8_t *end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period);
+#if defined(ARDUINO_ARCH_ESP8266)
+extern void NeoEspBitBangBase_send_pixels_pin16(uint8_t *pixels, uint8_t *end, uint32_t t0h, uint32_t t1h, uint32_t period);
+extern void NeoEspBitBangBase_send_pixels_inv_pin16(uint8_t *pixels, uint8_t *end, uint32_t t0h, uint32_t t1h, uint32_t period);
+#endif
 
 class NeoEspPinset
 {
@@ -95,7 +99,14 @@ public:
 
     inline static void send_pixels_impl(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
     {
+#if defined(ARDUINO_ARCH_ESP8266)
+        if (pin == 16)
+            NeoEspBitBangBase_send_pixels_pin16(pixels, end, t0h, t1h, period);
+        else
+            NeoEspBitBangBase_send_pixels(pixels, end, pin, t0h, t1h, period);
+#else
         NeoEspBitBangBase_send_pixels(pixels, end, pin, t0h, t1h, period);
+#endif
     }
 };
 
@@ -106,7 +117,14 @@ public:
 
     inline static void send_pixels_impl(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
     {
+#if defined(ARDUINO_ARCH_ESP8266)
+        if (pin == 16)
+            NeoEspBitBangBase_send_pixels_inv_pin16(pixels, end, t0h, t1h, period);
+        else
+            NeoEspBitBangBase_send_pixels_inv(pixels, end, pin, t0h, t1h, period);
+#else
         NeoEspBitBangBase_send_pixels_inv(pixels, end, pin, t0h, t1h, period);
+#endif
     }
 };
 
