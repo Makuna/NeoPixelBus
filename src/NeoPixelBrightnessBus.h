@@ -83,6 +83,12 @@ public:
     {
     }
 
+    NeoPixelBrightnessBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
+        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pinClock, pinData, pinLatch, pinOutputEnable),
+        _brightness(255)
+    {
+    }
+
     NeoPixelBrightnessBus(uint16_t countPixels) :
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels),
         _brightness(255)
