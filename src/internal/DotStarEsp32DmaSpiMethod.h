@@ -224,7 +224,7 @@ public:
         return _sizePixelData;
     };
 
-    void applySettings(const SettingsObject& settings)
+    void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
         _speed.applySettings(settings);
         if (_spiHandle)

@@ -45,9 +45,12 @@ public:
         // Write 2 channels into 3 bytes scaling 8-bit to 12-bit per channel 
         for (int indexChannel = 0; indexChannel < TLC5947_MODULE_PWM_CHANNEL_COUNT; indexChannel += 2)
         {
-            *sendBufferPtr++ = *channelPtr;
-            *sendBufferPtr++ = (*channelPtr-- & 0xf0) | (*channelPtr >> 4);
-            *sendBufferPtr++ = ((*channelPtr << 4) & 0xf0) | (*channelPtr-- >> 4); 
+            uint8_t ch1 = *channelPtr--;
+            uint8_t ch2 = *channelPtr--;
+
+            *sendBufferPtr++ = ch1;
+            *sendBufferPtr++ = (ch1 & 0xf0) | (ch2 >> 4);
+            *sendBufferPtr++ = ((ch2 << 4) & 0xf0) | (ch2 >> 4);
         }
     }
 };
@@ -63,9 +66,12 @@ public:
         // Write 2 channels into 3 bytes using upper 12-bit of each channel 
         for (int indexChannel = 0; indexChannel < TLC5947_MODULE_PWM_CHANNEL_COUNT; indexChannel += 2)
         {
-            *sendBufferPtr++ = *channelPtr >> 8; 
-            *sendBufferPtr++ = (*channelPtr-- & 0xf0) | (*channelPtr >> 12);
-            *sendBufferPtr++ = *channelPtr-- >> 4;
+            uint8_t ch1 = *channelPtr--;
+            uint8_t ch2 = *channelPtr--;
+
+            *sendBufferPtr++ = ch1 >> 8;
+            *sendBufferPtr++ = (ch1 & 0xf0) | (ch2 >> 12);
+            *sendBufferPtr++ = ch2 >> 4;
         }
     }
 };
@@ -168,7 +174,7 @@ public:
         return _sizeData;
     };
 
-    void applySettings(const SettingsObject& settings)
+    void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
         _wire.applySettings(settings);
     }
