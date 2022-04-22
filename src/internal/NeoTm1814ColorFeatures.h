@@ -76,12 +76,12 @@ public:
         }
     }
 
-    static uint8_t* pixels(uint8_t* pData)
+    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
     {
         return pData + SettingsSize;
     }
 
-    static const uint8_t* pixels(const uint8_t* pData)
+    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
     {
         return pData + SettingsSize;
     }

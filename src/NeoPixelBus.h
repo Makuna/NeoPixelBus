@@ -394,7 +394,7 @@ public:
 
     void SetPixelSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
     {
-        T_COLOR_FEATURE::applySettings(_method.getData(), settings);
+        T_COLOR_FEATURE::applySettings(_method.getData(), _method.getDataSize(), settings);
         Dirty();
     };
 
@@ -426,13 +426,13 @@ protected:
     uint8_t* _pixels()
     {
         // get pixels data within the data stream
-        return T_COLOR_FEATURE::pixels(_method.getData());
+        return T_COLOR_FEATURE::pixels(_method.getData(), _method.getDataSize());
     }
 
     const uint8_t* _pixels() const
     {
         // get pixels data within the data stream
-        return T_COLOR_FEATURE::pixels(_method.getData());
+        return T_COLOR_FEATURE::pixels(_method.getData(), _method.getDataSize());
     }
 
     void _rotateLeft(uint16_t rotationCount, uint16_t first, uint16_t last)
