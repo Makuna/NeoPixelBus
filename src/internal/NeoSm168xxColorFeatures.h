@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoTm1814ColorFeatures provides feature classes to describe color order and
-color depth for NeoPixelBus template class specific to the TM1814 chip
+NeoSm168xxColorFeatures provides feature classes to describe color order and
+color depth for NeoPixelBus template class specific to the SM1680 chip
 
 Written by Michael C. Miller.
 
@@ -26,16 +26,16 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class NeoTm1814Settings : public NeoRgbwCurrentSettings
+class NeoSm168xxSettings : public NeoRgbwCurrentSettings
 {
 public:
-    NeoTm1814Settings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white)  :
+    NeoSm168xxSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white)  :
         NeoRgbwCurrentSettings(red, green, blue, white)
     {
     }
 
-    const static uint16_t MinCurrent = 65;
-    const static uint16_t MaxCurrent = 380;
+    const static uint16_t MinCurrent = 60;
+    const static uint16_t MaxCurrent = 350;
 
     static uint16_t LimitCurrent(uint16_t value)
     {
@@ -51,60 +51,51 @@ public:
     }
 };
 
-class Neo4ByteElementsTm1814Settings : public Neo4ByteElements
+class Neo4ByteElementsSm168xxSettings : public Neo4ByteElements
 {
 private:
-    const static uint16_t EncodeDivisor = 5;
+    const static uint16_t EncodeDivisor = 19;
 
 public:
-    typedef NeoTm1814Settings SettingsObject;
-    static const size_t SettingsSize = 8;
+    typedef NeoSm168xxSettings SettingsObject;
+    static const size_t SettingsSize = 2;
 
     static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
-        // settings are at the front of the data stream
-        uint8_t* pSet = pData;
+        // settings are at the end of the data stream
+        uint8_t* pSet = pData + sizeData - SettingsSize;
 
-        // C1
-        *pSet++ = (SettingsObject::LimitCurrent(settings.WhiteCurrent) - SettingsObject::MinCurrent) / EncodeDivisor;
-        *pSet++ = (SettingsObject::LimitCurrent(settings.RedTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
-        *pSet++ = (SettingsObject::LimitCurrent(settings.GreenTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
-        *pSet++ = (SettingsObject::LimitCurrent(settings.BlueTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
-        
-        uint8_t* pC1 = pData;
+        // four bits per element in RGBW order
+        *pSet++ = ((SettingsObject::LimitCurrent(settings.RedTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor) << 4 |
+                ((SettingsObject::LimitCurrent(settings.GreenTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor);
+        *pSet++ = ((SettingsObject::LimitCurrent(settings.BlueTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor) << 4 |
+                ((SettingsObject::LimitCurrent(settings.WhiteCurrent) - SettingsObject::MinCurrent) / EncodeDivisor);
 
-        // C2
-        for (uint8_t elem = 0; elem < 4; elem++)
-        {
-            *pSet++ = ~(*pC1++);
-        }
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
     {
-        // settings are at the front of the data stream
-        return pData + SettingsSize;
+        return pData;
     }
 
     static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
     {
-        // settings are at the front of the data stream
-        return pData + SettingsSize;
+        return pData;
     }
 };
 
 
-class NeoWrgbTm1814Feature : public Neo4ByteElementsTm1814Settings
+class NeoRgbwSm168xxFeature : public Neo4ByteElementsSm168xxSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        *p++ = color.W;
         *p++ = color.R;
         *p++ = color.G;
-        *p = color.B;
+        *p++ = color.B;
+        *p = color.W;
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
@@ -112,10 +103,10 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        color.W = *p++;
         color.R = *p++;
         color.G = *p++;
-        color.B = *p;
+        color.B = *p++;
+        color.W = *p;
 
         return color;
     }
@@ -125,10 +116,10 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
 
-        color.W = pgm_read_byte(p++);
         color.R = pgm_read_byte(p++);
         color.G = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p);
+        color.B = pgm_read_byte(p++);
+        color.W = pgm_read_byte(p);
 
         return color;
     }

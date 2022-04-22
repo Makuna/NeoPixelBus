@@ -52,6 +52,7 @@ public:
 
     static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
+        // settings are at the front of the data stream
         uint8_t* pSet = pData;
         uint8_t mode = 0xff;
 
@@ -86,11 +87,13 @@ public:
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
     {
+        // settings are at the front of the data stream
         return pData + SettingsSize;
     }
 
     static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
     {
+        // settings are at the front of the data stream
         return pData + SettingsSize;
     }
 };

@@ -19,6 +19,7 @@ HtmlColor	KEYWORD1
 NeoNoSettings	KEYWORD1
 NeoTm1814Settings	KEYWORD1
 NeoTm1914Settings	KEYWORD1
+NeoSm168xxSettings	KEYWORD1
 NeoSpiSettings	KEYWORD1
 NeoGrbFeature	KEYWORD1
 NeoGrbwFeature	KEYWORD1
@@ -34,6 +35,7 @@ NeoRgbwUcs8904Feature	KEYWORD1
 NeoWrgbTm1814Feature	KEYWORD1
 NeoRgbTm1914Feature	KEYWORD1
 NeoGrbTm1914Feature	KEYWORD1
+NeoRgbwSm168xxFeature	KEYWORD1
 DotStarBgrFeature	KEYWORD1
 DotStarLbgrFeature	KEYWORD1
 Lpd6803GrbFeature	KEYWORD1
