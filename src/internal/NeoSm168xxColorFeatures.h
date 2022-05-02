@@ -25,39 +25,205 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 #pragma once
+/*
+3 channel RGB
+SM16803PB  1.8~60mA
+SM16813P 1.75~19mA
+SM16823E 60~350mA
+4 channel RGBW
+SM16804PB 1.8~19mA
+SM16804EB 1.5~60mA
+SM16824E 60~350mA
+*/
 
-class NeoSm168xxSettings : public NeoRgbwCurrentSettings
+class NeoSm168x3SettingsBase : public NeoRgbCurrentSettings
 {
 public:
-    NeoSm168xxSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white)  :
-        NeoRgbwCurrentSettings(red, green, blue, white)
-    {
-    }
+    NeoSm168x3SettingsBase(uint16_t red, uint16_t green, uint16_t blue) :
+        NeoRgbCurrentSettings(red, green, blue) {}
 
-    const static uint16_t MinCurrent = 60;
-    const static uint16_t MaxCurrent = 350;
-
-    static uint16_t LimitCurrent(uint16_t value)
+protected:
+    static uint16_t limit(const uint16_t min, const uint16_t max, uint16_t value)
     {
-        if (value < MinCurrent)
+        if (value < min)
         {
-            value = MinCurrent;
+            value = min;
         }
-        else if (value > MaxCurrent)
+        else if (value > max)
         {
-            value = MaxCurrent;
+            value = max;
         }
         return value;
     }
+
+    static uint8_t encode(const uint16_t min, const uint16_t max, uint16_t value)
+    {
+        return (limit(value) - min) / ((max - min) / 16);
+    }
 };
 
-class Neo4ByteElementsSm168xxSettings : public Neo4ByteElements
+class NeoSm168x4SettingsBase : public NeoRgbwCurrentSettings
 {
-private:
-    const static uint16_t EncodeDivisor = 19;
-
 public:
-    typedef NeoSm168xxSettings SettingsObject;
+    NeoSm168x4SettingsBase(uint16_t red, uint16_t green, uint16_t blue, uint16_t white) :
+        NeoRgbwCurrentSettings(red, green, blue, white) {}
+
+protected:
+    static uint16_t limit((const uint16_t min, const uint16_t max, uint16_t value))
+    {
+        if (value < min)
+        {
+            value = min;
+        }
+        else if (value > max)
+        {
+            value = max;
+        }
+        return value;
+    }
+
+    static uint8_t encode(const uint16_t min, const uint16_t max, uint16_t value)
+    {
+        return (limit(value) - min) / ((max - min) / 16);
+    }
+};
+
+class NeoSm16803pbSettings : public NeoSm168x3SettingsBase
+{
+public:
+    NeoSm16803pbSettings(uint16_t red, uint16_t green, uint16_t blue)  :
+        NeoSm168x3SettingsBase(red, green, blue)
+    {
+    }
+
+    const static uint16_t MinCurrent = 18;
+    const static uint16_t MaxCurrent = 600;
+
+    static uint16_t LimitCurrent(uint16_t value)
+    {
+        return limit(MinCurrent, MaxCurrent, value);
+    }
+
+    static uint8_t Encode(uint16_t value)
+    {
+        return encode(MinCurrent, MaxCurrent, value);
+    }
+};
+
+class NeoSm16813pSettings : public NeoSm168x3SettingsBase
+{
+public:
+    NeoSm16813pSettings(uint16_t red, uint16_t green, uint16_t blue) :
+        NeoSm168x3SettingsBase(red, green, blue)
+    {
+    }
+
+    const static uint16_t MinCurrent = 17;
+    const static uint16_t MaxCurrent = 190;
+
+    static uint16_t LimitCurrent(uint16_t value)
+    {
+        return limit(MinCurrent, MaxCurrent, value);
+    }
+
+    static uint8_t Encode(uint16_t value)
+    {
+        return encode(MinCurrent, MaxCurrent, value);
+    }
+};
+
+class NeoSm16823eSettings : public NeoSm168x3SettingsBase
+{
+public:
+    NeoSm16823eSettings(uint16_t red, uint16_t green, uint16_t blue) :
+        NeoSm168x3SettingsBase(red, green, blue)
+    {
+    }
+
+    const static uint16_t MinCurrent = 600;
+    const static uint16_t MaxCurrent = 3500;
+ 
+    static uint16_t LimitCurrent(uint16_t value)
+    {
+        return limit(MinCurrent, MaxCurrent, value);
+    }
+
+    static uint8_t Encode(uint16_t value)
+    {
+        return encode(MinCurrent, MaxCurrent, value);
+    }
+};
+
+class NeoSm16804pbSettings : public NeoSm168x4SettingsBase
+{
+public:
+    NeoSm16804pbSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white) :
+        NeoSm168x4SettingsBase(red, green, blue, white)
+    {
+    }
+
+    const static uint16_t MinCurrent = 18;
+    const static uint16_t MaxCurrent = 190;
+
+    static uint16_t LimitCurrent(uint16_t value)
+    {
+        return limit(MinCurrent, MaxCurrent, value);
+    }
+
+    static uint8_t Encode(uint16_t value)
+    {
+        return encode(MinCurrent, MaxCurrent, value);
+    }
+};
+
+class NeoSm16804ebSettings : public NeoSm168x4SettingsBase
+{
+public:
+    NeoSm16804ebSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white) :
+        NeoSm168x4SettingsBase(red, green, blue, white)
+    {
+    }
+
+    const static uint16_t MinCurrent = 15;
+    const static uint16_t MaxCurrent = 600;
+
+    static uint16_t LimitCurrent(uint16_t value)
+    {
+        return limit(MinCurrent, MaxCurrent, value);
+    }
+
+    static uint8_t Encode(uint16_t value)
+    {
+        return encode(MinCurrent, MaxCurrent, value);
+    }
+};
+
+class NeoSm16824eSettings : public NeoSm168x4SettingsBase
+{
+public:
+    NeoSm168xxSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white) :
+        NeoSm168x4SettingsBase(red, green, blue, white)
+    {
+    }
+
+    const static uint16_t MinCurrent = 600;
+    const static uint16_t MaxCurrent = 3500;
+
+    static uint16_t LimitCurrent(uint16_t value)
+    {
+        return limit(MinCurrent, MaxCurrent, value);
+    }
+
+    static uint8_t Encode(uint16_t value)
+    {
+        return encode(MinCurrent, MaxCurrent, value);
+    }
+};
+
+template<typename T_SETTINGS> class NeoElementsSm168x4Settings : public Neo4ByteElements
+{
+public:
+    typedef T_SETTINGS SettingsObject;
     static const size_t SettingsSize = 2;
 
     static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
@@ -65,12 +231,14 @@ public:
         // settings are at the end of the data stream
         uint8_t* pSet = pData + sizeData - SettingsSize;
 
-        // four bits per element in RGBW order
-        *pSet++ = ((SettingsObject::LimitCurrent(settings.RedTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor) << 4 |
-                ((SettingsObject::LimitCurrent(settings.GreenTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor);
-        *pSet++ = ((SettingsObject::LimitCurrent(settings.BlueTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor) << 4 |
-                ((SettingsObject::LimitCurrent(settings.WhiteCurrent) - SettingsObject::MinCurrent) / EncodeDivisor);
+        uint8_t red = T_SETTINGS::Encode(settings.RedTenthMilliAmpere);
+        uint8_t green = T_SETTINGS::Encode(settings.GreenTenthMilliAmpere);
+        uint8_t blue = T_SETTINGS::Encode(settings.BlueTenthMilliAmpere);
+        uint8_t white = T_SETTINGS::Encode(settings.WhiteTenthMilliAmpere);
 
+        // four bits per element in RGBW order
+        *pSet++ = (red << 4) | green;
+        *pSet++ = (blue << 4) | white;
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
@@ -84,6 +252,36 @@ public:
     }
 };
 
+template<typename T_SETTINGS> class NeoElementsSm168x3Settings : public Neo3ByteElements
+{
+public:
+    typedef T_SETTINGS SettingsObject;
+    static const size_t SettingsSize = 2;
+
+    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    {
+        // settings are at the end of the data stream
+        uint8_t* pSet = pData + sizeData - SettingsSize;
+
+        uint8_t red = T_SETTINGS::Encode(settings.RedTenthMilliAmpere);
+        uint8_t green = T_SETTINGS::Encode(settings.GreenTenthMilliAmpere);
+        uint8_t blue = T_SETTINGS::Encode(settings.BlueTenthMilliAmpere);
+        
+        // four bits per element in xRGB order
+        *pSet++ = (0xf0) | red;
+        *pSet++ = (green << 4) | blue;
+    }
+
+    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    {
+        return pData;
+    }
+
+    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    {
+        return pData;
+    }
+};
 
 class NeoRgbwSm168xxFeature : public Neo4ByteElementsSm168xxSettings
 {
