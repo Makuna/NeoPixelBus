@@ -25,9 +25,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #include <Arduino.h>
-#include "NeoSettings.h"
-#include "NeoBusChannel.h"
-#include "NeoEsp8266DmaMethod.h"
+#include "NeoEsp8266DmaMethodCore.h"
 
 #ifdef ARDUINO_ARCH_ESP8266
 
