@@ -29,28 +29,57 @@ License along with NeoPixel.  If not, see
 #ifdef ARDUINO_ARCH_ESP8266
 #include "NeoEsp8266I2sMethodCore.h"
 
-class NeoEsp8266I2sDmx512Speed
+/*
+
+*/
+
+class NeoEsp8266I2sDmx512SpeedBase
 {
 public:
     // 4 us bit send
     static const uint32_t I2sClockDivisor = 106;
     static const uint32_t I2sBaseClockDivisor = 16;
-    static const uint32_t ByteSendTimeUs = 44; // us it takes to send a single pixel element at 800khz speed
+    static const uint32_t ByteSendTimeUs = 44; // us it takes to send a single pixel element
     static const uint32_t MtbpUs = 100; // min 88
-    static const uint8_t MtbpLevel = 0x1; // high
-    static const uint32_t BreakMab = 0x00000003; // Break + Mab
+    // DMX requires the first slot to be zero
+    static const size_t HeaderSize = 1;
+
+protected:
+    static uint8_t Lsb(uint8_t b) 
+    {
+        b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;
+        b = (b & 0b11001100) >> 2 | (b & 0b00110011) << 2;
+        b = (b & 0b10101010) >> 1 | (b & 0b01010101) << 1;
+        return b;
+    }
 };
 
-class NeoEsp8266I2sDmx512InvertedSpeed
+class NeoEsp8266I2sDmx512Speed : public NeoEsp8266I2sDmx512SpeedBase
 {
 public:
-    // 4 us bit send
-    static const uint32_t I2sClockDivisor = 106;
-    static const uint32_t I2sBaseClockDivisor = 16;
-    static const uint32_t ByteSendTimeUs = 44; // us it takes to send a single pixel element at 800khz speed
-    static const uint32_t MtbpUs = 100; // min 88
+    static const uint8_t MtbpLevel = 0x1; // high
+    static const uint8_t ControlBits = 0b00000110; // SSs = StopBits StartBit
+    static const uint32_t BreakMab = 0x00000003; // Break + Mab
+
+    static uint8_t Convert(uint8_t value)
+    {
+        // DMX requires LSB order
+        return Lsb( value );
+    }
+};
+
+class NeoEsp8266I2sDmx512InvertedSpeed : public NeoEsp8266I2sDmx512SpeedBase
+{
+public:
     static const uint8_t MtbpLevel = 0x00; // low
+    static const uint8_t ControlBits = 0b00000001; // SSs = StopBits StartBit
     static const uint32_t BreakMab = 0xfffffffc; // Break + Mab
+
+    static uint8_t Convert(uint8_t value)
+    {
+        // DMX requires LSB order
+        return Lsb( ~value );
+    }
 };
 
 
@@ -60,6 +89,7 @@ public:
 // so 22 byte of sending buffer gives byte boundary sending buffers 
 const uint16_t c_i2sBitsPerPixelBytes = 11;
 const uint16_t c_i2sByteBoundarySize = 22;
+const uint16_t c_i2sSourceByteBoundarySize = 8;
 
 template<typename T_SPEED> class NeoEsp8266I2sDmx512MethodBase : NeoEsp8266I2sMethodCore
 {
@@ -67,10 +97,10 @@ public:
     typedef NeoNoSettings SettingsObject;
 
     NeoEsp8266I2sDmx512MethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize)
+        _sizeData(pixelCount * elementSize + settingsSize + T_SPEED::HeaderSize)
     {
         size_t dmaPixelBits = c_i2sBitsPerPixelBytes * elementSize;
-        size_t dmaSettingsBits = c_i2sBitsPerPixelBytes * settingsSize;
+        size_t dmaSettingsBits = c_i2sBitsPerPixelBytes * (settingsSize + T_SPEED::HeaderSize);
 
         // bits + half rounding byte of bits / bits per byte
         size_t i2sBufferSize = (pixelCount * dmaPixelBits + dmaSettingsBits + 4) / 8;
@@ -85,8 +115,13 @@ public:
         // protocol limits use of full block size to c_i2sByteBoundarySize
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / c_i2sByteBoundarySize) * c_i2sByteBoundarySize;
 
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
+        // due to rounding of i2s buffer and the method it gets filled below,
+        // we pad the allocated memory to match the i2s buffer but we don't worry
+        // what is actually in it as it will get ignored
+        size_t sizeData = _sizeData + c_i2sSourceByteBoundarySize - (_sizeData % c_i2sSourceByteBoundarySize);
+        _data = static_cast<uint8_t*>(malloc(sizeData));
+        // data cleared due to embedded settings and padding
+        memset(_data, 0x00, sizeData);
 
         AllocateI2s(i2sBufferSize, i2sZeroesSize, is2BufMaxBlockSize, T_SPEED::MtbpLevel);
     }
@@ -143,12 +178,12 @@ public:
 
     uint8_t* getData() const
     {
-        return _data;
+        return _data + T_SPEED::HeaderSize;
     };
 
     size_t getDataSize() const
     {
-        return _sizeData;
+        return _sizeData - T_SPEED::HeaderSize;
     }
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
@@ -159,59 +194,57 @@ private:
     const size_t  _sizeData;    // Size of '_data' buffer 
     uint8_t*  _data;        // Holds LED color values
 
+
     void FillBuffers()
     {
-        // stops bits then start bits merged into one (SSs)
-        const uint8_t controlBits = (T_SPEED::MtbpLevel * 0x06) | (T_SPEED::MtbpLevel ^ 1);
-
         uint8_t* pDma = _i2sBuffer;
+        uint8_t* pDmaEnd = _i2sBuffer + _i2sBufferSize;
         uint8_t* pEnd = _data + _sizeData;
 
         // first put Break and MAB at front
         // 
         // BREAK 100us @ 4us per bit 
         // MAB 8us
-        *(pDma++) = T_SPEED::BreakMab >> 24;
-        *(pDma++) = T_SPEED::BreakMab >> 16;
-        *(pDma++) = T_SPEED::BreakMab >> 8;
-        *(pDma++) = T_SPEED::BreakMab;
+        *(pDma++) = (T_SPEED::BreakMab >> 24) & 0xff;
+        *(pDma++) = (T_SPEED::BreakMab >> 16) & 0xff;
+        *(pDma++) = (T_SPEED::BreakMab >> 8) & 0xff;
+        *(pDma++) = (T_SPEED::BreakMab) & 0xff;
 
         // DATA stream, one start, two stop
-        for (uint8_t* pData = _data; pData < pEnd; pData++)
+        for (uint8_t* pData = _data; pData < pEnd && pDma < pDmaEnd; pData++)
         {
-            uint8_t byte0 = *(pData++);
-            uint8_t byte1 = *(pData++);
-            uint8_t byte2 = *(pData++);
-            uint8_t byte3 = *(pData++);
-            uint8_t byte4 = *(pData++);
-            uint8_t byte5 = *(pData++);
-            uint8_t byte6 = *(pData++);
-            uint8_t byte7 = *(pData++);
+            uint8_t byte0 = T_SPEED::Convert( *(pData++) );
+            uint8_t byte1 = T_SPEED::Convert( *(pData++) );
+            uint8_t byte2 = T_SPEED::Convert( *(pData++) );
+            uint8_t byte3 = T_SPEED::Convert( *(pData++) );
+            uint8_t byte4 = T_SPEED::Convert( *(pData++) );
+            uint8_t byte5 = T_SPEED::Convert( *(pData++) );
+            uint8_t byte6 = T_SPEED::Convert( *(pData++) );
+            uint8_t byte7 = T_SPEED::Convert( *(pData++) );
 
             // s0123456 7SSs0123
-            *(pDma++) = (controlBits << 7) | (byte0 >> 1);
-            *(pDma++) = (byte0 << 7) | (controlBits << 4) | (byte1 >> 4);
+            *(pDma++) = (T_SPEED::ControlBits << 7) | (byte0 >> 1);
+            *(pDma++) = (byte0 << 7) | (T_SPEED::ControlBits << 4) | (byte1 >> 4);
            
             // 4567SSs0 1234567S 
-            *(pDma++) = (byte1 << 4) | (controlBits << 1) | (byte2 >> 7);
-            *(pDma++) = (byte2 << 1) | (controlBits >> 2);
+            *(pDma++) = (byte1 << 4) | (T_SPEED::ControlBits << 1) | (byte2 >> 7);
+            *(pDma++) = (byte2 << 1) | (T_SPEED::ControlBits >> 2);
 
             // Ss012345 67SSs012
-            *(pDma++) = (controlBits << 6) | (byte3 >> 2);
-            *(pDma++) = (byte3 << 6) | (controlBits << 3) | (byte4 >> 5);
+            *(pDma++) = (T_SPEED::ControlBits << 6) | (byte3 >> 2);
+            *(pDma++) = (byte3 << 6) | (T_SPEED::ControlBits << 3) | (byte4 >> 5);
 
             // 34567SSs 01234567
-            *(pDma++) = (byte4 << 3) | (controlBits);
+            *(pDma++) = (byte4 << 3) | (T_SPEED::ControlBits);
             *(pDma++) = (byte5);
 
             // SSs01234 567SSs01
-            *(pDma++) = (controlBits << 5) | (byte6 >> 3);
-            *(pDma++) = (byte6 << 5) | (controlBits << 2) | (byte7 >> 6);
+            *(pDma++) = (T_SPEED::ControlBits << 5) | (byte6 >> 3);
+            *(pDma++) = (byte6 << 5) | (T_SPEED::ControlBits << 2) | (byte7 >> 6);
 
             // 234567SS 
-            *(pDma++) = (byte7 << 2) | (controlBits > 1);
+            *(pDma++) = (byte7 << 2) | (T_SPEED::ControlBits > 1);
         }
-        
     }
 
     uint32_t getPixelTime() const
