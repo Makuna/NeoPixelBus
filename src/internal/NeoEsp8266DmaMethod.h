@@ -31,12 +31,12 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #ifdef ARDUINO_ARCH_ESP8266
-#include "NeoEsp8266DmaMethodCore.h"
+#include "NeoEsp8266I2sMethodCore.h"
 
 class NeoEsp8266DmaSpeedBase
 {
 public:
-    static const uint8_t Level = 0x00;
+    static const uint8_t IdleLevel = 0;
     static uint16_t Convert(uint8_t value)
     {
         const uint16_t bitpatterns[16] =
@@ -54,7 +54,7 @@ public:
 class NeoEsp8266DmaInvertedSpeedBase
 {
 public:
-    static const uint8_t Level = 0xFF;
+    static const uint8_t IdleLevel = 1;
     static uint16_t Convert(uint8_t value)
     {
         const uint16_t bitpatterns[16] =
@@ -185,7 +185,7 @@ public:
 
 const uint16_t c_dmaBytesPerPixelBytes = 4;
 
-template<typename T_SPEED> class NeoEsp8266DmaMethodBase : NeoEsp8266DmaMethodCore
+template<typename T_SPEED> class NeoEsp8266DmaMethodBase : NeoEsp8266I2sMethodCore
 {
 public:
     typedef NeoNoSettings SettingsObject;
@@ -208,7 +208,7 @@ public:
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin()
 
-        AllocateI2s(i2sBufferSize, i2sZeroesSize, is2BufMaxBlockSize, T_SPEED::Level);
+        AllocateI2s(i2sBufferSize, i2sZeroesSize, is2BufMaxBlockSize, T_SPEED::IdleLevel);
     }
 
     NeoEsp8266DmaMethodBase([[maybe_unused]] uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 

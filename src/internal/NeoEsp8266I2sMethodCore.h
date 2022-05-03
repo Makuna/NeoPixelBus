@@ -79,10 +79,10 @@ const uint16_t c_maxDmaBlockSize = 4095;
 
 const uint8_t c_I2sPin = 3; // due to I2S hardware, the pin used is restricted to this
 
-class NeoEsp8266DmaMethodCore
+class NeoEsp8266I2sMethodCore
 {
 protected:
-    static NeoEsp8266DmaMethodCore* s_this; // for the ISR
+    static NeoEsp8266I2sMethodCore* s_this; // for the ISR
 
     volatile NeoDmaState _dmaState;
 
@@ -151,13 +151,13 @@ protected:
         ETS_SLC_INTR_ENABLE();
     }
 
-    NeoEsp8266DmaMethodCore() 
+    NeoEsp8266I2sMethodCore() 
     { };
 
     void AllocateI2s(const size_t i2sBufferSize, 
             const size_t i2sZeroesSize,
             const size_t is2BufMaxBlockSize,
-            const uint8_t resetLevel)
+            const uint8_t idleLevel)
     {
         _i2sBufferSize = i2sBufferSize;
         _i2sZeroesSize = i2sZeroesSize;
@@ -166,7 +166,7 @@ protected:
         _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
         // no need to initialize it, it gets overwritten on every send
         _i2sZeroes = static_cast<uint8_t*>(malloc(_i2sZeroesSize));
-        memset(_i2sZeroes, resetLevel, _i2sZeroesSize);
+        memset(_i2sZeroes, idleLevel * 0xff, _i2sZeroesSize);
 
         _i2sBufDescCount = (_i2sBufferSize / _is2BufMaxBlockSize) + 1 + 2; // need two more for state/latch blocks
         _i2sBufDesc = (slc_queue_item*)malloc(_i2sBufDescCount * sizeof(slc_queue_item));

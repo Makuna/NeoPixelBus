@@ -101,6 +101,7 @@ License along with NeoPixel.  If not, see
 #if defined(ARDUINO_ARCH_ESP8266)
 
 #include "internal/NeoEsp8266DmaMethod.h"
+#include "internal/NeoEsp8266I2sDmx512Method.h"
 #include "internal/NeoEsp8266UartMethod.h"
 #include "internal/NeoEspBitBangMethod.h"
 
