@@ -29,9 +29,6 @@ License along with NeoPixel.  If not, see
 #ifdef ARDUINO_ARCH_ESP8266
 #include "NeoEsp8266I2sMethodCore.h"
 
-/*
-
-*/
 
 class NeoEsp8266I2sDmx512SpeedBase
 {
@@ -45,6 +42,7 @@ public:
     static const size_t HeaderSize = 1;
 
 protected:
+    // TODO:  Speed test these options
     static uint8_t Lsb(uint8_t b) 
     {
         b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;
@@ -52,6 +50,22 @@ protected:
         b = (b & 0b10101010) >> 1 | (b & 0b01010101) << 1;
         return b;
     }
+    /*
+    static uint8_t Lsb(uint8_t n) 
+    {
+        static uint8_t lookup[16] = {
+                0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
+                0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf };
+
+        return (lookup[n & 0b1111] << 4) | lookup[n >> 4];
+    }
+    */
+    /*
+    static uint8_t Lsb(uint8_t b) 
+    {
+        return (b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
+    }
+    */
 };
 
 class NeoEsp8266I2sDmx512Speed : public NeoEsp8266I2sDmx512SpeedBase
@@ -213,6 +227,7 @@ private:
         // DATA stream, one start, two stop
         for (uint8_t* pData = _data; pData < pEnd && pDma < pDmaEnd; pData++)
         {
+            // encode every 8 bytes in the loop
             uint8_t byte0 = T_SPEED::Convert( *(pData++) );
             uint8_t byte1 = T_SPEED::Convert( *(pData++) );
             uint8_t byte2 = T_SPEED::Convert( *(pData++) );
