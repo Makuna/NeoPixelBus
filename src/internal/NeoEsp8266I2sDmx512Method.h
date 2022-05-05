@@ -34,8 +34,8 @@ class NeoEsp8266I2sDmx512SpeedBase
 {
 public:
     // 4 us bit send
-    static const uint32_t I2sClockDivisor = 21;
-    static const uint32_t I2sBaseClockDivisor = 32;
+    static const uint32_t I2sClockDivisor = 21; // 0-63
+    static const uint32_t I2sBaseClockDivisor = 32; // 0-63
     static const uint32_t ByteSendTimeUs = 44; // us it takes to send a single pixel element
     static const uint32_t MtbpUs = 100; // min 88
     // DMX requires the first slot to be zero
@@ -75,8 +75,9 @@ class NeoEsp8266I2sDmx512Speed : public NeoEsp8266I2sDmx512SpeedBase
 {
 public:
     static const uint8_t MtbpLevel = 0x1; // high
-    static const uint8_t ControlBits = 0b00000110; // SSs = StopBits StartBit
-    static const uint16_t BreakMab = 0x0007; // Break + Mab
+    static const uint8_t StartBit = 0b00000000; 
+    static const uint8_t StopBits = 0b00000011; 
+    static const uint32_t BreakMab = 0x00000007; // Break + Mab
 
     static uint8_t Convert(uint8_t value)
     {
@@ -89,8 +90,9 @@ class NeoEsp8266I2sDmx512InvertedSpeed : public NeoEsp8266I2sDmx512SpeedBase
 {
 public:
     static const uint8_t MtbpLevel = 0x00; // low
-    static const uint8_t ControlBits = 0b00000001; // SSs = StopBits StartBit
-    static const uint16_t BreakMab = 0xfff8; // Break + Mab
+    static const uint8_t StartBit = 0b00000001;
+    static const uint8_t StopBits = 0b00000000;
+    static const uint32_t BreakMab = 0xfffffff8; // Break + Mab
 
     static uint8_t Convert(uint8_t value)
     {
@@ -105,13 +107,10 @@ inline size_t roundUp(size_t numToRound, size_t multiple)
 }
 
 // given 11 sending bits per pixel byte, 
-// 8 pixel bytes would be 88 bits or 11 bytes of sending buffer
-// i2s sends 2 byte elements, 
-// so 22 byte of sending buffer gives byte boundary sending buffers 
 const uint16_t c_i2sBitsPerPixelBytes = 11;
-const uint16_t c_i2sByteBoundarySize = 32; // 22
-const uint16_t c_i2sSourceByteBoundarySize = 8;
-const size_t c_BreakMabBytes = 6;
+// i2s sends 4 byte elements, 
+const uint16_t c_i2sByteBoundarySize = 4; 
+
 
 template<typename T_SPEED> class NeoEsp8266I2sDmx512MethodBase : NeoEsp8266I2sMethodCore
 {
@@ -124,49 +123,24 @@ public:
         size_t dmaPixelBits = c_i2sBitsPerPixelBytes * elementSize;
         size_t dmaSettingsBits = c_i2sBitsPerPixelBytes * (settingsSize + T_SPEED::HeaderSize);
 
-        //Serial.print(dmaPixelBits);
-        //Serial.println(" dmaPixelBits");
-        //Serial.print(dmaSettingsBits);
-        //Serial.println(" dmaSettingsBits");
-
         // bits + half rounding byte of bits / bits per byte
         size_t i2sBufferSize = (pixelCount * dmaPixelBits + dmaSettingsBits + 4) / 8;
-        //Serial.print(i2sBufferSize);
-        //Serial.println(" i2sBufferSize");
 
-        i2sBufferSize = i2sBufferSize + c_BreakMabBytes;
-        //Serial.print(i2sBufferSize);
-        //Serial.println(" i2sBufferSize+BreakMab");
+        i2sBufferSize = i2sBufferSize + sizeof(T_SPEED::BreakMab);
 
-        // size is rounded up to nearest 22 byte boundary
+        // size is rounded up to nearest c_i2sByteBoundarySize
         i2sBufferSize = roundUp(i2sBufferSize, c_i2sByteBoundarySize);
-        //Serial.print(i2sBufferSize);
-        //Serial.println(" i2sBufferSize roundup 22");
 
         // 4.2 us per bit
         size_t i2sZeroesBitsSize = (T_SPEED::MtbpUs) / 4;
         size_t i2sZeroesSize = roundUp(i2sZeroesBitsSize, 8) / 8;
         
-        //Serial.print(i2sZeroesBitsSize);
-        //Serial.println(" i2sZeroesBitsSize");
-        //Serial.print(i2sZeroesSize);
-        //Serial.println(" i2sZeroesSize");
-
         // protocol limits use of full block size to c_i2sByteBoundarySize
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / c_i2sByteBoundarySize) * c_i2sByteBoundarySize;
-        //Serial.print(is2BufMaxBlockSize);
-        //Serial.println(" is2BufMaxBlockSize");
 
-        // due to rounding of i2s buffer and the method it gets filled below,
-        // we pad the allocated memory to match the i2s buffer but we don't worry
-        // what is actually in it as it will get ignored
-        size_t sizeData = roundUp(_sizeData, c_i2sSourceByteBoundarySize);
-        //Serial.print(sizeData);
-        //Serial.println(" sizeData padded");
-
-        _data = static_cast<uint8_t*>(malloc(sizeData));
-        // data cleared due to embedded settings and padding
-        memset(_data, 0x00, sizeData);
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        // first "slot" cleared due to protocol requiring it to be zero
+        memset(_data, 0x00, 1);
 
         AllocateI2s(i2sBufferSize, i2sZeroesSize, is2BufMaxBlockSize, T_SPEED::MtbpLevel);
     }
@@ -239,93 +213,98 @@ private:
     const size_t  _sizeData;    // Size of '_data' buffer 
     uint8_t*  _data;        // Holds LED color values
 
+    // encodes the data with start and stop bits
+    // input buffer is bytes
+    // output stream is uint31_t
+    static void Encoder(const uint8_t* pSrc, const uint8_t* pSrcEnd, 
+            uint32_t* pOutput, const uint32_t* pOutputEnd)
+    {
+        static const uint32_t Mtbp = 0xffffffff * T_SPEED::MtbpLevel;
+        const uint8_t* pData = pSrc;
+
+        int8_t outputBit = 32;
+        uint32_t output = 0;
+
+        // DATA stream, one start, two stop
+        while (pData < pSrcEnd)
+        {
+            uint8_t data = T_SPEED::Convert( *(pData++) );
+
+            if (outputBit > 10)
+            {
+                // simple
+                outputBit -= 1;
+                output |= T_SPEED::StartBit << outputBit;
+
+                outputBit -= 8;
+                output |= data << outputBit;
+
+                outputBit -= 2;
+                output |= T_SPEED::StopBits << outputBit;
+            }
+            else
+            {
+                // split across an output uint32_t
+                // handle start bit
+                if (outputBit < 1)
+                {
+                    *(pOutput++) = output;
+                    output = 0;
+                    outputBit += 32;
+                }
+                outputBit -= 1;
+                output |= (T_SPEED::StartBit << outputBit);
+
+                // handle data bits
+                if (outputBit < 8)
+                {
+                    output |= data >> (8 - outputBit);
+
+                    *(pOutput++) = output;
+                    output = 0;
+                    outputBit += 32;
+                }
+                outputBit -= 8;
+                output |= data << outputBit;
+
+                // handle stop bits
+                if (outputBit < 2)
+                {
+                    output |= T_SPEED::StopBits >> (2 - outputBit);
+
+                    *(pOutput++) = output;
+                    output = 0;
+                    outputBit += 32;
+                }
+                outputBit -= 2;
+                output |= T_SPEED::StopBits << outputBit;
+            }
+        }
+        if (outputBit > 0)
+        {
+            // padd last output uint32_t with Mtbp
+            output |= Mtbp >> (32 - outputBit);
+            *(pOutput++) = output;
+        }
+        // fill the rest of the output with Mtbp
+        while (pOutput < pOutputEnd)
+        {
+            *(pOutput++) = Mtbp;
+        }
+    }
 
     void FillBuffers()
     {
-        uint8_t* pDma = _i2sBuffer;
-        uint8_t* pDmaEnd = _i2sBuffer + _i2sBufferSize;
-        uint8_t* pEnd = _data + _sizeData;
+        uint32_t* pDma32 = reinterpret_cast<uint32_t*>(_i2sBuffer);
+        const uint32_t* pDma32End = reinterpret_cast<uint32_t*>(_i2sBuffer + _i2sBufferSize);
 
         // first put Break and MAB at front
         // 
-        // BREAK 100us @ 4us per bit 
-        // MAB 8us
-        // Need extra bytes to ensure timing as i2s is trimming initial bits
-        for (uint8_t bytes = c_BreakMabBytes - 4; bytes > 0; bytes--)
-        {
-            *(pDma++) = (T_SPEED::BreakMab >> 24) & 0xff;
-        }
-
-        *(pDma++) = (T_SPEED::BreakMab >> 24) & 0xff;
-        *(pDma++) = (T_SPEED::BreakMab >> 16) & 0xff;
-        *(pDma++) = (T_SPEED::BreakMab >> 8) & 0xff;
-        *(pDma++) = (T_SPEED::BreakMab) & 0xff;
-
+        // BREAK 121.8us @ 4.2us per bit 
+        // MAB 12.6us
+        *(pDma32++) = T_SPEED::BreakMab;
         
-        uint8_t* pData = _data;
-        //Serial.println(reinterpret_cast<uint64_t>(pData), HEX);
-        // DATA stream, one start, two stop
-        for (; pData < pEnd; pData++)
-        {
-            // encode every 8 bytes in the loop
-            uint8_t byte0 = T_SPEED::Convert( *(pData++) );
-            uint8_t byte1 = T_SPEED::Convert( *(pData++) );
-            uint8_t byte2 = T_SPEED::Convert( *(pData++) );
-            uint8_t byte3 = T_SPEED::Convert( *(pData++) );
-            uint8_t byte4 = T_SPEED::Convert( *(pData++) );
-            uint8_t byte5 = T_SPEED::Convert( *(pData++) );
-            uint8_t byte6 = T_SPEED::Convert( *(pData++) );
-            uint8_t byte7 = T_SPEED::Convert( *(pData++) );
-
-            // s0123456 7SSs0123
-            *(pDma++) = (T_SPEED::ControlBits << 7) | (byte0 >> 1);
-            *(pDma++) = (byte0 << 7) | (T_SPEED::ControlBits << 4) | (byte1 >> 4);
-           
-            // 4567SSs0 1234567S 
-            *(pDma++) = (byte1 << 4) | (T_SPEED::ControlBits << 1) | (byte2 >> 7);
-            *(pDma++) = (byte2 << 1) | (T_SPEED::ControlBits >> 2);
-
-            // Ss012345 67SSs012
-            *(pDma++) = (T_SPEED::ControlBits << 6) | (byte3 >> 2);
-            *(pDma++) = (byte3 << 6) | (T_SPEED::ControlBits << 3) | (byte4 >> 5);
-
-            // 34567SSs 01234567
-            *(pDma++) = (byte4 << 3) | (T_SPEED::ControlBits);
-            *(pDma++) = (byte5);
-
-            // SSs01234 567SSs01
-            *(pDma++) = (T_SPEED::ControlBits << 5) | (byte6 >> 3);
-            *(pDma++) = (byte6 << 5) | (T_SPEED::ControlBits << 2) | (byte7 >> 6);
-
-            // 234567SS 
-            *(pDma++) = (byte7 << 2) | (T_SPEED::ControlBits > 1);
-        }
-
-        //Serial.println(reinterpret_cast<uint64_t>(pData), HEX);
-        //Serial.println(reinterpret_cast<uint64_t>(pEnd), HEX);
-
-        //Serial.println("DMA Buffer");
-        //pDma = _i2sBuffer;
-        //while (pDma < pDmaEnd)
-        //{
-        //    uint8_t data = *(pDma);
-
-        //    // *(pDma) = 0;
-        //    pDma++;
-
-        //    for (uint8_t mask = 0b10000000; mask > 0; mask >>= 1)
-        //    {
-        //        if (data & mask)
-        //        {
-        //            Serial.print('1');
-        //        }
-        //        else
-        //        {
-        //            Serial.print('0');
-        //        }
-        //    }
-        //    Serial.println();
-        //}
+        Encoder(_data, _data + _sizeData, pDma32, pDma32End);
     }
 
     uint32_t getPixelTime() const

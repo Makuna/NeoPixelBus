@@ -72,8 +72,8 @@ public:
 class NeoEsp8266DmaSpeed800KbpsBase : public NeoEsp8266DmaSpeedBase
 {
 public:
-    const static uint32_t I2sClockDivisor = 3;
-    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t I2sClockDivisor = 3; // 0-63
+    const static uint32_t I2sBaseClockDivisor = 16; // 0-63
     const static uint32_t ByteSendTimeUs = 10; // us it takes to send a single pixel element at 800khz speed
 };
 
@@ -110,8 +110,8 @@ public:
 class NeoEsp8266DmaSpeed400Kbps : public NeoEsp8266DmaSpeedBase
 {
 public:
-    const static uint32_t I2sClockDivisor = 6;
-    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t I2sClockDivisor = 6; // 0-63
+    const static uint32_t I2sBaseClockDivisor = 16; // 0-63
     const static uint32_t ByteSendTimeUs = 20; // us it takes to send a single pixel element at 400khz speed
     const static uint32_t ResetTimeUs = 50;
 };
@@ -119,8 +119,8 @@ public:
 class NeoEsp8266DmaSpeedApa106 : public NeoEsp8266DmaSpeedBase
 {
 public:
-    const static uint32_t I2sClockDivisor = 4; 
-    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t I2sClockDivisor = 4; // 0-63
+    const static uint32_t I2sBaseClockDivisor = 16; // 0-63
     const static uint32_t ByteSendTimeUs = 17; // us it takes to send a single pixel element
     const static uint32_t ResetTimeUs = 50;
 };
@@ -130,8 +130,8 @@ public:
 class NeoEsp8266DmaInvertedSpeed800KbpsBase : public NeoEsp8266DmaInvertedSpeedBase
 {
 public:
-    const static uint32_t I2sClockDivisor = 3;
-    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t I2sClockDivisor = 3; // 0-63
+    const static uint32_t I2sBaseClockDivisor = 16; // 0-63
     const static uint32_t ByteSendTimeUs = 10; // us it takes to send a single pixel element at 800khz speed
 };
 
@@ -168,8 +168,8 @@ public:
 class NeoEsp8266DmaInvertedSpeed400Kbps : public NeoEsp8266DmaInvertedSpeedBase
 {
 public:
-    const static uint32_t I2sClockDivisor = 6;
-    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t I2sClockDivisor = 6; // 0-63
+    const static uint32_t I2sBaseClockDivisor = 16; // 0-63
     const static uint32_t ByteSendTimeUs = 20; // us it takes to send a single pixel element at 400khz speed
     const static uint32_t ResetTimeUs = 50;
 };
@@ -177,8 +177,8 @@ public:
 class NeoEsp8266DmaInvertedSpeedApa106 : public NeoEsp8266DmaInvertedSpeedBase
 {
 public:
-    const static uint32_t I2sClockDivisor = 4;
-    const static uint32_t I2sBaseClockDivisor = 16;
+    const static uint32_t I2sClockDivisor = 4; // 0-63
+    const static uint32_t I2sBaseClockDivisor = 16; // 0-63
     const static uint32_t ByteSendTimeUs = 17; // us it takes to send a single pixel element
     const static uint32_t ResetTimeUs = 50;
 };
