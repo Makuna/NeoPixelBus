@@ -183,7 +183,7 @@ public:
     const static uint32_t ResetTimeUs = 50;
 };
 
-const uint16_t c_dmaBytesPerPixelBytes = 4;
+
 
 template<typename T_SPEED> class NeoEsp8266DmaMethodBase : NeoEsp8266I2sMethodCore
 {
@@ -193,8 +193,8 @@ public:
     NeoEsp8266DmaMethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize)
     {
-        size_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
-        size_t dmaSettingsSize = c_dmaBytesPerPixelBytes * settingsSize;
+        size_t dmaPixelSize = DmaBytesPerPixelBytes * elementSize;
+        size_t dmaSettingsSize = DmaBytesPerPixelBytes * settingsSize;
 
         size_t i2sBufferSize = pixelCount * dmaPixelSize + dmaSettingsSize;
 
@@ -276,6 +276,9 @@ public:
     }
 
 private:
+    // due to encoding required for i2s, we need 4 bytes to encode the pulses
+    static const uint16_t DmaBytesPerPixelBytes = 4;
+
     const size_t  _sizeData;    // Size of '_data' buffer 
     uint8_t*  _data;        // Holds LED color values
 

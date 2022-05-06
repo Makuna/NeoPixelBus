@@ -42,18 +42,6 @@ public:
     static const size_t HeaderSize = 1;
 
 protected:
-    
-    /*
-    // marginally slower than the table
-    static uint8_t ReverseBits(uint8_t b) 
-    {
-        b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;
-        b = (b & 0b11001100) >> 2 | (b & 0b00110011) << 2;
-        b = (b & 0b10101010) >> 1 | (b & 0b01010101) << 1;
-        return b;
-    }
-    */
-
     static constexpr uint8_t ReverseBitsLookup[16] = {
         0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
         0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf };
@@ -63,6 +51,18 @@ protected:
         return (ReverseBitsLookup[n & 0b1111] << 4) | ReverseBitsLookup[n >> 4];
     }
     
+    // alternatives that proved to be slower but left for more periodic testing
+    /*
+    // marginally slower than the table
+    static uint8_t ReverseBits(uint8_t b)
+    {
+        b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;
+        b = (b & 0b11001100) >> 2 | (b & 0b00110011) << 2;
+        b = (b & 0b10101010) >> 1 | (b & 0b01010101) << 1;
+        return b;
+    }
+    */
+
     /*  WAY TO SLOW
     static uint8_t ReverseBits(uint8_t b) 
     {
@@ -101,16 +101,6 @@ public:
     }
 };
 
-inline size_t roundUp(size_t numToRound, size_t multiple)
-{
-    return ((numToRound + multiple - 1) / multiple) * multiple;
-}
-
-// given 11 sending bits per pixel byte, 
-const uint16_t c_i2sBitsPerPixelBytes = 11;
-// i2s sends 4 byte elements, 
-const uint16_t c_i2sByteBoundarySize = 4; 
-
 
 template<typename T_SPEED> class NeoEsp8266I2sDmx512MethodBase : NeoEsp8266I2sMethodCore
 {
@@ -120,23 +110,23 @@ public:
     NeoEsp8266I2sDmx512MethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize + T_SPEED::HeaderSize)
     {
-        size_t dmaPixelBits = c_i2sBitsPerPixelBytes * elementSize;
-        size_t dmaSettingsBits = c_i2sBitsPerPixelBytes * (settingsSize + T_SPEED::HeaderSize);
+        size_t dmaPixelBits = I2sBitsPerPixelBytes * elementSize;
+        size_t dmaSettingsBits = I2sBitsPerPixelBytes * (settingsSize + T_SPEED::HeaderSize);
 
         // bits + half rounding byte of bits / bits per byte
         size_t i2sBufferSize = (pixelCount * dmaPixelBits + dmaSettingsBits + 4) / 8;
 
         i2sBufferSize = i2sBufferSize + sizeof(T_SPEED::BreakMab);
 
-        // size is rounded up to nearest c_i2sByteBoundarySize
-        i2sBufferSize = roundUp(i2sBufferSize, c_i2sByteBoundarySize);
+        // size is rounded up to nearest I2sByteBoundarySize
+        i2sBufferSize = roundUp(i2sBufferSize, I2sByteBoundarySize);
 
         // 4.2 us per bit
         size_t i2sZeroesBitsSize = (T_SPEED::MtbpUs) / 4;
         size_t i2sZeroesSize = roundUp(i2sZeroesBitsSize, 8) / 8;
         
-        // protocol limits use of full block size to c_i2sByteBoundarySize
-        size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / c_i2sByteBoundarySize) * c_i2sByteBoundarySize;
+        // protocol limits use of full block size to I2sByteBoundarySize
+        size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / I2sByteBoundarySize) * I2sByteBoundarySize;
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // first "slot" cleared due to protocol requiring it to be zero
@@ -210,6 +200,11 @@ public:
     }
 
 private:
+    // given 11 sending bits per pixel byte, 
+    static const uint16_t I2sBitsPerPixelBytes = 11;
+    // i2s sends 4 byte elements, 
+    static const uint16_t I2sByteBoundarySize = 4;
+
     const size_t  _sizeData;    // Size of '_data' buffer 
     uint8_t*  _data;        // Holds LED color values
 
@@ -291,6 +286,12 @@ private:
         {
             *(pOutput++) = Mtbp;
         }
+    }
+
+
+    inline size_t roundUp(size_t numToRound, size_t multiple)
+    {
+        return ((numToRound + multiple - 1) / multiple) * multiple;
     }
 
     void FillBuffers()
