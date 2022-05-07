@@ -46,6 +46,8 @@ License along with NeoPixel.  If not, see
 // '_state' flags for internal state
 #define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
 
+#include "internal/NeoUtil.h"
+
 #include "internal/NeoHueBlend.h"
 
 #include "internal/NeoSettings.h"
@@ -101,6 +103,7 @@ License along with NeoPixel.  If not, see
 #if defined(ARDUINO_ARCH_ESP8266)
 
 #include "internal/NeoEsp8266DmaMethod.h"
+#include "internal/NeoEsp8266I2sDmx512Method.h"
 #include "internal/NeoEsp8266UartMethod.h"
 #include "internal/NeoEspBitBangMethod.h"
 

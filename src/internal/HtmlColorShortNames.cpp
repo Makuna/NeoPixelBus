@@ -24,6 +24,9 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+
+#include <Arduino.h>
+#include "NeoUtil.h"
 #include "HtmlColor.h"
 #include "HtmlColorNameStrings.h"
 
