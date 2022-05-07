@@ -25,7 +25,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include <Arduino.h>
+
 #include "RgbColor.h"
 
 #define MAX_HTML_COLOR_NAME_LEN 21
@@ -33,10 +33,6 @@ License along with NeoPixel.  If not, see
 #ifndef pgm_read_ptr
 // ESP8266 doesn't define this macro
 #define pgm_read_ptr(addr) (*reinterpret_cast<const void* const *>(addr))
-#endif
-
-#ifndef countof
-#define countof(array) (sizeof(array)/sizeof(array[0]))
 #endif
 
 // ------------------------------------------------------------------------

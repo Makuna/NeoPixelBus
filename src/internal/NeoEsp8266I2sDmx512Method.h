@@ -40,35 +40,6 @@ public:
     static const uint32_t MtbpUs = 100; // min 88
     // DMX requires the first slot to be zero
     static const size_t HeaderSize = 1;
-
-protected:
-    static constexpr uint8_t ReverseBitsLookup[16] = {
-        0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
-        0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf };
-
-    static uint8_t ReverseBits(uint8_t n) 
-    {
-        return (ReverseBitsLookup[n & 0b1111] << 4) | ReverseBitsLookup[n >> 4];
-    }
-    
-    // alternatives that proved to be slower but left for more periodic testing
-    /*
-    // marginally slower than the table
-    static uint8_t ReverseBits(uint8_t b)
-    {
-        b = (b & 0b11110000) >> 4 | (b & 0b00001111) << 4;
-        b = (b & 0b11001100) >> 2 | (b & 0b00110011) << 2;
-        b = (b & 0b10101010) >> 1 | (b & 0b01010101) << 1;
-        return b;
-    }
-    */
-
-    /*  WAY TO SLOW
-    static uint8_t ReverseBits(uint8_t b) 
-    {
-        return (b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
-    }
-    */
 };
 
 class NeoEsp8266I2sDmx512Speed : public NeoEsp8266I2sDmx512SpeedBase
@@ -82,7 +53,7 @@ public:
     static uint8_t Convert(uint8_t value)
     {
         // DMX requires LSB order
-        return ReverseBits( value );
+        return NeoUtil::Reverse8Bits( value );
     }
 };
 
@@ -97,7 +68,7 @@ public:
     static uint8_t Convert(uint8_t value)
     {
         // DMX requires LSB order
-        return ReverseBits( ~value );
+        return NeoUtil::Reverse8Bits( ~value );
     }
 };
 
@@ -119,11 +90,11 @@ public:
         i2sBufferSize = i2sBufferSize + sizeof(T_SPEED::BreakMab);
 
         // size is rounded up to nearest I2sByteBoundarySize
-        i2sBufferSize = roundUp(i2sBufferSize, I2sByteBoundarySize);
+        i2sBufferSize = NeoUtil::RoundUp(i2sBufferSize, I2sByteBoundarySize);
 
         // 4.2 us per bit
         size_t i2sZeroesBitsSize = (T_SPEED::MtbpUs) / 4;
-        size_t i2sZeroesSize = roundUp(i2sZeroesBitsSize, 8) / 8;
+        size_t i2sZeroesSize = NeoUtil::RoundUp(i2sZeroesBitsSize, 8) / 8;
         
         // protocol limits use of full block size to I2sByteBoundarySize
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / I2sByteBoundarySize) * I2sByteBoundarySize;
@@ -288,11 +259,6 @@ private:
         }
     }
 
-
-    inline size_t roundUp(size_t numToRound, size_t multiple)
-    {
-        return ((numToRound + multiple - 1) / multiple) * multiple;
-    }
 
     void FillBuffers()
     {

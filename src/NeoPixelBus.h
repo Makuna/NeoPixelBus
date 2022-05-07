@@ -46,6 +46,8 @@ License along with NeoPixel.  If not, see
 // '_state' flags for internal state
 #define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
 
+#include "internal/NeoUtil.h"
+
 #include "internal/NeoHueBlend.h"
 
 #include "internal/NeoSettings.h"
