@@ -33,10 +33,10 @@ License along with NeoPixel.  If not, see
 class NeoEsp8266I2sDmx512SpeedBase
 {
 public:
-    // 4 us bit send
+    // 4.2 us bit send, 250Kbps
     static const uint32_t I2sClockDivisor = 21; // 0-63
     static const uint32_t I2sBaseClockDivisor = 32; // 0-63
-    static const uint32_t ByteSendTimeUs = 44; // us it takes to send a single pixel element
+    static const uint32_t ByteSendTimeUs = 47; // us it takes to send a single pixel element
     static const uint32_t MtbpUs = 100; // min 88
     // DMX requires the first slot to be zero
     static const size_t HeaderSize = 1;
@@ -72,6 +72,48 @@ public:
     }
 };
 
+
+class NeoEsp8266I2sWs2821SpeedBase
+{
+public:
+    // 1.4 us bit send, 750Kbps
+    static const uint32_t I2sClockDivisor = 7; // 0-63
+    static const uint32_t I2sBaseClockDivisor = 32; // 0-63
+    static const uint32_t ByteSendTimeUs = 16; // us it takes to send a single pixel element
+    static const uint32_t MtbpUs = 33; // min 88
+    // DMX/WS2821 requires the first slot to be zero
+    static const size_t HeaderSize = 1;
+};
+
+class NeoEsp8266I2sWs2821Speed : public NeoEsp8266I2sWs2821SpeedBase
+{
+public:
+    static const uint8_t MtbpLevel = 0x1; // high
+    static const uint8_t StartBit = 0b00000000;
+    static const uint8_t StopBits = 0b00000011;
+    static const uint32_t BreakMab = 0x00000007; // Break + Mab
+
+    static uint8_t Convert(uint8_t value)
+    {
+        // DMX requires LSB order
+        return NeoUtil::Reverse8Bits(value);
+    }
+};
+
+class NeoEsp8266I2sWs2821InvertedSpeed : public NeoEsp8266I2sWs2821SpeedBase
+{
+public:
+    static const uint8_t MtbpLevel = 0x00; // low
+    static const uint8_t StartBit = 0b00000001;
+    static const uint8_t StopBits = 0b00000000;
+    static const uint32_t BreakMab = 0xfffffff8; // Break + Mab
+
+    static uint8_t Convert(uint8_t value)
+    {
+        // DMX requires LSB order
+        return NeoUtil::Reverse8Bits(~value);
+    }
+};
 
 template<typename T_SPEED> class NeoEsp8266I2sDmx512MethodBase : NeoEsp8266I2sMethodCore
 {
@@ -284,8 +326,10 @@ private:
 
 // normal
 typedef NeoEsp8266I2sDmx512MethodBase<NeoEsp8266I2sDmx512Speed> NeoEsp8266Dmx512Method;
+typedef NeoEsp8266I2sDmx512MethodBase<NeoEsp8266I2sWs2821Speed> NeoEsp8266Ws2821Method;
 
 // inverted
 typedef NeoEsp8266I2sDmx512MethodBase<NeoEsp8266I2sDmx512InvertedSpeed> NeoEsp8266Dmx512InvertedMethod;
+typedef NeoEsp8266I2sDmx512MethodBase<NeoEsp8266I2sWs2821InvertedSpeed> NeoEsp8266Ws2821InvertedMethod;
 
 #endif
