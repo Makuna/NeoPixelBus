@@ -81,7 +81,7 @@ public:
         _hspi->writeBytes(const_cast<uint8_t*>(data), dataSize);
     }
 
-    void applySettings(const SettingsObject& settings)
+    void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
         _speed.applySettings(settings);
     }
