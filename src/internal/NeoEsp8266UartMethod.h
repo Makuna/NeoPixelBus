@@ -79,7 +79,7 @@ private:
     volatile const uint8_t* _asyncBuffEnd;
     volatile static NeoEsp8266UartInterruptContext* s_uartInteruptContext[2]; 
 
-    static void IRAM_ATTR Isr(void* param);
+    static void IRAM_ATTR Isr(void* param, void* exceptionFrame);
 };
 
 // this template feature class is used a base for all others and contains 
