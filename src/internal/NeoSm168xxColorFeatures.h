@@ -27,200 +27,146 @@ License along with NeoPixel.  If not, see
 #pragma once
 /*
 3 channel RGB
-SM16803PB  1.8~60mA
-SM16813P 1.75~19mA
+SM16803P  1.8~60mA << need spec sheet to get accurate implementation
+SM16813PB 1.8~19mA 
 SM16823E 60~350mA
 4 channel RGBW
-SM16804PB 1.8~19mA
-SM16804EB 1.5~60mA
+SM16804PB 1.5~60mA << need spec sheet to get accurate implementation
+SM16804EB 1.8~19mA   
 SM16824E 60~350mA
 */
 
 class NeoSm168x3SettingsBase : public NeoRgbCurrentSettings
 {
 public:
-    NeoSm168x3SettingsBase(uint16_t red, uint16_t green, uint16_t blue) :
-        NeoRgbCurrentSettings(red, green, blue) {}
+    NeoSm168x3SettingsBase(uint16_t encoded = 0) :
+        NeoRgbCurrentSettings(0,0,0),
+        Encoded(encoded) {}
 
-protected:
-    static uint16_t limit(const uint16_t min, const uint16_t max, uint16_t value)
-    {
-        if (value < min)
-        {
-            value = min;
-        }
-        else if (value > max)
-        {
-            value = max;
-        }
-        return value;
-    }
-
-    static uint8_t encode(const uint16_t min, const uint16_t max, uint16_t value)
-    {
-        return (limit(value) - min) / ((max - min) / 16);
-    }
-};
-
-class NeoSm168x4SettingsBase : public NeoRgbwCurrentSettings
-{
-public:
-    NeoSm168x4SettingsBase(uint16_t red, uint16_t green, uint16_t blue, uint16_t white) :
-        NeoRgbwCurrentSettings(red, green, blue, white) {}
-
-protected:
-    static uint16_t limit((const uint16_t min, const uint16_t max, uint16_t value))
-    {
-        if (value < min)
-        {
-            value = min;
-        }
-        else if (value > max)
-        {
-            value = max;
-        }
-        return value;
-    }
-
-    static uint8_t encode(const uint16_t min, const uint16_t max, uint16_t value)
-    {
-        return (limit(value) - min) / ((max - min) / 16);
-    }
+    uint16_t Encoded; 
 };
 
 class NeoSm16803pbSettings : public NeoSm168x3SettingsBase
 {
 public:
-    NeoSm16803pbSettings(uint16_t red, uint16_t green, uint16_t blue)  :
-        NeoSm168x3SettingsBase(red, green, blue)
+    NeoSm16803pbSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain)
     {
+        redGain &= 0x0f;
+        greenGain &= 0x0f;
+        blueGain &= 0x0f;
+
+        RedTenthMilliAmpere = CurrentLookup[redGain];
+        GreenTenthMilliAmpere = CurrentLookup[greenGain];
+        BlueTenthMilliAmpere = CurrentLookup[blueGain];
+
+        // 0RGB 4 bits each
+        Encoded = redGain << 8 | greenGain << 4 | blueGain;
     }
 
-    const static uint16_t MinCurrent = 18;
-    const static uint16_t MaxCurrent = 600;
-
-    static uint16_t LimitCurrent(uint16_t value)
-    {
-        return limit(MinCurrent, MaxCurrent, value);
-    }
-
-    static uint8_t Encode(uint16_t value)
-    {
-        return encode(MinCurrent, MaxCurrent, value);
-    }
-};
-
-class NeoSm16813pSettings : public NeoSm168x3SettingsBase
-{
-public:
-    NeoSm16813pSettings(uint16_t red, uint16_t green, uint16_t blue) :
-        NeoSm168x3SettingsBase(red, green, blue)
-    {
-    }
-
-    const static uint16_t MinCurrent = 17;
-    const static uint16_t MaxCurrent = 190;
-
-    static uint16_t LimitCurrent(uint16_t value)
-    {
-        return limit(MinCurrent, MaxCurrent, value);
-    }
-
-    static uint8_t Encode(uint16_t value)
-    {
-        return encode(MinCurrent, MaxCurrent, value);
-    }
+protected:
+    static constexpr uint8_t CurrentLookup[16] = {
+            18, 30, 41, 53, 64, 76, 87, 99, 
+            110, 133, 145, 156, 168, 179, 19};
 };
 
 class NeoSm16823eSettings : public NeoSm168x3SettingsBase
 {
 public:
-    NeoSm16823eSettings(uint16_t red, uint16_t green, uint16_t blue) :
-        NeoSm168x3SettingsBase(red, green, blue)
+    NeoSm16823eSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint16_t resisterOhms) :
+        extROhms(resisterOhms)
     {
+        redGain &= 0x0f;
+        greenGain &= 0x0f;
+        blueGain &= 0x0f;
+
+        RedTenthMilliAmpere = calcCurrent(extROhms, redGain);
+        GreenTenthMilliAmpere = calcCurrent(extROhms, greenGain);
+        BlueTenthMilliAmpere = calcCurrent(extROhms, blueGain);
+
+        // RGB0 4 bits each
+        Encoded = redGain << 12 | greenGain << 8 | blueGain << 4;
     }
 
-    const static uint16_t MinCurrent = 600;
-    const static uint16_t MaxCurrent = 3500;
- 
-    static uint16_t LimitCurrent(uint16_t value)
+protected:
+    const uint16_t extROhms;
+
+    static uint16_t calcCurrent(const uint16_t ohms, const uint8_t gain)
     {
-        return limit(MinCurrent, MaxCurrent, value);
+        uint16_t mA = (967 / ohms * (240 + (gain * 32))); // from spec sheet, gain 0-15 instead
+        return mA * 10; // return tenths of mA
     }
 
-    static uint8_t Encode(uint16_t value)
-    {
-        return encode(MinCurrent, MaxCurrent, value);
-    }
 };
 
-class NeoSm16804pbSettings : public NeoSm168x4SettingsBase
+// RGBW versions
+
+class NeoSm168x4SettingsBase : public NeoRgbwCurrentSettings
 {
 public:
-    NeoSm16804pbSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white) :
-        NeoSm168x4SettingsBase(red, green, blue, white)
-    {
-    }
+    NeoSm168x4SettingsBase(uint16_t encoded = 0) :
+        NeoRgbwCurrentSettings(0,0,0,0),
+        Encoded(encoded) {}
 
-    const static uint16_t MinCurrent = 18;
-    const static uint16_t MaxCurrent = 190;
-
-    static uint16_t LimitCurrent(uint16_t value)
-    {
-        return limit(MinCurrent, MaxCurrent, value);
-    }
-
-    static uint8_t Encode(uint16_t value)
-    {
-        return encode(MinCurrent, MaxCurrent, value);
-    }
+    uint16_t Encoded;
 };
 
 class NeoSm16804ebSettings : public NeoSm168x4SettingsBase
 {
 public:
-    NeoSm16804ebSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white) :
-        NeoSm168x4SettingsBase(red, green, blue, white)
+    NeoSm16804ebSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain)
     {
+        redGain &= 0x0f;
+        greenGain &= 0x0f;
+        blueGain &= 0x0f;
+        whiteGain &= 0x0f;
+
+        RedTenthMilliAmpere = CurrentLookup[redGain];
+        GreenTenthMilliAmpere = CurrentLookup[greenGain];
+        BlueTenthMilliAmpere = CurrentLookup[blueGain];
+        WhiteTenthMilliAmpere = CurrentLookup[whiteGain];
+
+        // RGBW 4 bits each
+        Encoded = redGain << 12 | greenGain << 8 | blueGain << 4 | whiteGain;
     }
 
-    const static uint16_t MinCurrent = 15;
-    const static uint16_t MaxCurrent = 600;
-
-    static uint16_t LimitCurrent(uint16_t value)
-    {
-        return limit(MinCurrent, MaxCurrent, value);
-    }
-
-    static uint8_t Encode(uint16_t value)
-    {
-        return encode(MinCurrent, MaxCurrent, value);
-    }
+protected:
+    static constexpr uint8_t CurrentLookup[16] = {
+            18, 30, 41, 53, 64, 76, 87, 99,
+            110, 133, 145, 156, 168, 179, 19 };
 };
 
 class NeoSm16824eSettings : public NeoSm168x4SettingsBase
 {
 public:
-    NeoSm168xxSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t white) :
-        NeoSm168x4SettingsBase(red, green, blue, white)
+    NeoSm16824eSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain, uint16_t resisterOhms) :
+        extROhms(resisterOhms)
     {
+        redGain &= 0x0f;
+        greenGain &= 0x0f;
+        blueGain &= 0x0f;
+        whiteGain &= 0x0f;
+
+        RedTenthMilliAmpere = calcCurrent(extROhms, redGain);
+        GreenTenthMilliAmpere = calcCurrent(extROhms, greenGain);
+        BlueTenthMilliAmpere = calcCurrent(extROhms, blueGain);
+        WhiteTenthMilliAmpere = calcCurrent(extROhms, whiteGain);
+
+        // RGBW 4 bits each
+        Encoded = redGain << 12 | greenGain << 8 | blueGain << 4 | whiteGain;
     }
 
-    const static uint16_t MinCurrent = 600;
-    const static uint16_t MaxCurrent = 3500;
+protected:
+    const uint16_t extROhms;
 
-    static uint16_t LimitCurrent(uint16_t value)
+    static uint16_t calcCurrent(const uint16_t ohms, const uint8_t gain)
     {
-        return limit(MinCurrent, MaxCurrent, value);
+        uint16_t mA = (1100 / ohms * (240 + (gain * 32))); // from spec sheet, gain 0-15 instead
+        return mA * 10; // return tenths of mA
     }
 
-    static uint8_t Encode(uint16_t value)
-    {
-        return encode(MinCurrent, MaxCurrent, value);
-    }
 };
 
-template<typename T_SETTINGS> class NeoElementsSm168x4Settings : public Neo4ByteElements
+template<typename T_SETTINGS> class NeoRgbwSm168x4Elements : public Neo4ByteElements
 {
 public:
     typedef T_SETTINGS SettingsObject;
@@ -229,16 +175,9 @@ public:
     static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
         // settings are at the end of the data stream
-        uint8_t* pSet = pData + sizeData - SettingsSize;
+        uint16_t* pSet = reinterpret_cast<uint16_t *>(pData + sizeData - SettingsSize);
 
-        uint8_t red = T_SETTINGS::Encode(settings.RedTenthMilliAmpere);
-        uint8_t green = T_SETTINGS::Encode(settings.GreenTenthMilliAmpere);
-        uint8_t blue = T_SETTINGS::Encode(settings.BlueTenthMilliAmpere);
-        uint8_t white = T_SETTINGS::Encode(settings.WhiteTenthMilliAmpere);
-
-        // four bits per element in RGBW order
-        *pSet++ = (red << 4) | green;
-        *pSet++ = (blue << 4) | white;
+        *pSet = settings.Encoded;
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
@@ -250,42 +189,7 @@ public:
     {
         return pData;
     }
-};
 
-template<typename T_SETTINGS> class NeoElementsSm168x3Settings : public Neo3ByteElements
-{
-public:
-    typedef T_SETTINGS SettingsObject;
-    static const size_t SettingsSize = 2;
-
-    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
-    {
-        // settings are at the end of the data stream
-        uint8_t* pSet = pData + sizeData - SettingsSize;
-
-        uint8_t red = T_SETTINGS::Encode(settings.RedTenthMilliAmpere);
-        uint8_t green = T_SETTINGS::Encode(settings.GreenTenthMilliAmpere);
-        uint8_t blue = T_SETTINGS::Encode(settings.BlueTenthMilliAmpere);
-        
-        // four bits per element in xRGB order
-        *pSet++ = (0xf0) | red;
-        *pSet++ = (green << 4) | blue;
-    }
-
-    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
-    {
-        return pData;
-    }
-
-    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
-    {
-        return pData;
-    }
-};
-
-class NeoRgbwSm168xxFeature : public Neo4ByteElementsSm168xxSettings
-{
-public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
@@ -308,7 +212,7 @@ public:
 
         return color;
     }
-    
+
     static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
     {
         ColorObject color;
@@ -321,6 +225,69 @@ public:
 
         return color;
     }
-    
 };
+
+template<typename T_SETTINGS> class NeoRgbSm168x3Elements : public Neo3ByteElements
+{
+public:
+    typedef T_SETTINGS SettingsObject;
+    static const size_t SettingsSize = 2;
+
+    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    {
+        // settings are at the end of the data stream
+        uint16_t* pSet = reinterpret_cast<uint16_t*>(pData + sizeData - SettingsSize);
+        
+        *pSet = settings.Encoded;
+    }
+
+    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    {
+        return pData;
+    }
+
+    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    {
+        return pData;
+    }
+
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        *p++ = color.R;
+        *p++ = color.G;
+        *p = color.B;
+    }
+
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        color.R = *p++;
+        color.G = *p++;
+        color.B = *p;
+
+        return color;
+    }
+
+    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
+
+        color.R = pgm_read_byte(p++);
+        color.G = pgm_read_byte(p++);
+        color.B = pgm_read_byte(p);
+
+        return color;
+    }
+};
+
+typedef NeoRgbSm168x3Elements<NeoSm16803pbSettings> NeoRgbSm16803pbColorFeature;
+typedef NeoRgbSm168x3Elements<NeoSm16823eSettings> NeoRgbSm16823eColorFeature;
+typedef NeoRgbwSm168x4Elements<NeoSm16804ebSettings> NeoRgbwSm16804ebColorFeature;
+typedef NeoRgbwSm168x4Elements<NeoSm16824eSettings> NeoRgbwSm16824eColorFeature;
+
 
