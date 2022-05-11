@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
 NeoSm168xxColorFeatures provides feature classes to describe color order and
-color depth for NeoPixelBus template class specific to the SM1680 chip
+color depth for NeoPixelBus template class specific to the SM168xx chips/leds
 
 Written by Michael C. Miller.
 
@@ -39,11 +39,11 @@ SM16824E 60~350mA
 class NeoSm168x3SettingsBase : public NeoRgbCurrentSettings
 {
 public:
-    NeoSm168x3SettingsBase(uint16_t encoded = 0) :
+    NeoSm168x3SettingsBase() :
         NeoRgbCurrentSettings(0,0,0),
-        Encoded(encoded) {}
+        Encoded{0} {}
 
-    uint16_t Encoded; 
+    uint8_t Encoded[2];
 };
 
 class NeoSm16803pbSettings : public NeoSm168x3SettingsBase
@@ -60,7 +60,8 @@ public:
         BlueTenthMilliAmpere = CurrentLookup[blueGain];
 
         // 0RGB 4 bits each
-        Encoded = redGain << 8 | greenGain << 4 | blueGain;
+        Encoded[0] = redGain;
+        Encoded[1] = greenGain << 4 | blueGain;
     }
 
 protected:
@@ -84,7 +85,8 @@ public:
         BlueTenthMilliAmpere = calcCurrent(extROhms, blueGain);
 
         // RGB0 4 bits each
-        Encoded = redGain << 12 | greenGain << 8 | blueGain << 4;
+        Encoded[0] = redGain << 4 | greenGain;
+        Encoded[1] = blueGain << 4;
     }
 
 protected:
@@ -92,7 +94,7 @@ protected:
 
     static uint16_t calcCurrent(const uint16_t ohms, const uint8_t gain)
     {
-        uint16_t mA = (967 / ohms * (240 + (gain * 32))); // from spec sheet, gain 0-15 instead
+        uint16_t mA = (967 * (240 + (gain * 32)) / ohms); // from spec sheet, gain 0-15 instead
         return mA * 10; // return tenths of mA
     }
 
@@ -103,11 +105,11 @@ protected:
 class NeoSm168x4SettingsBase : public NeoRgbwCurrentSettings
 {
 public:
-    NeoSm168x4SettingsBase(uint16_t encoded = 0) :
+    NeoSm168x4SettingsBase() :
         NeoRgbwCurrentSettings(0,0,0,0),
-        Encoded(encoded) {}
+        Encoded{ 0 } {}
 
-    uint16_t Encoded;
+    uint8_t Encoded[2];
 };
 
 class NeoSm16804ebSettings : public NeoSm168x4SettingsBase
@@ -126,7 +128,8 @@ public:
         WhiteTenthMilliAmpere = CurrentLookup[whiteGain];
 
         // RGBW 4 bits each
-        Encoded = redGain << 12 | greenGain << 8 | blueGain << 4 | whiteGain;
+        Encoded[0] = redGain << 4 | greenGain;
+        Encoded[1] = blueGain << 4 | whiteGain;
     }
 
 protected:
@@ -152,7 +155,8 @@ public:
         WhiteTenthMilliAmpere = calcCurrent(extROhms, whiteGain);
 
         // RGBW 4 bits each
-        Encoded = redGain << 12 | greenGain << 8 | blueGain << 4 | whiteGain;
+        Encoded[0] = redGain << 4 | greenGain;
+        Encoded[1] = blueGain << 4 | whiteGain;
     }
 
 protected:
@@ -160,7 +164,7 @@ protected:
 
     static uint16_t calcCurrent(const uint16_t ohms, const uint8_t gain)
     {
-        uint16_t mA = (1100 / ohms * (240 + (gain * 32))); // from spec sheet, gain 0-15 instead
+        uint16_t mA = (1100 * (240 + (gain * 32)) / ohms); // from spec sheet, gain 0-15 instead
         return mA * 10; // return tenths of mA
     }
 
@@ -175,9 +179,9 @@ public:
     static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
         // settings are at the end of the data stream
-        uint16_t* pSet = reinterpret_cast<uint16_t *>(pData + sizeData - SettingsSize);
-
-        *pSet = settings.Encoded;
+        uint8_t* pDest = pData + sizeData - SettingsSize;
+        // copy by bytes to avoid endianess
+        memcpy(pDest, &settings.Encoded, SettingsSize);
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
@@ -236,9 +240,9 @@ public:
     static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
         // settings are at the end of the data stream
-        uint16_t* pSet = reinterpret_cast<uint16_t*>(pData + sizeData - SettingsSize);
-        
-        *pSet = settings.Encoded;
+        uint8_t* pDest = pData + sizeData - SettingsSize;
+        // copy by bytes to avoid endianess
+        memcpy(pDest, &settings.Encoded, SettingsSize);
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
