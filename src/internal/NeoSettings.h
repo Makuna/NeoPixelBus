@@ -51,12 +51,12 @@ public:
         RedTenthMilliAmpere(red),
         GreenTenthMilliAmpere(green),
         BlueTenthMilliAmpere(blue),
-        WhiteCurrent(white)
+        WhiteTenthMilliAmpere(white)
     {
     }
 
     uint16_t RedTenthMilliAmpere;   // in 1/10th ma
     uint16_t GreenTenthMilliAmpere; // in 1/10th ma
     uint16_t BlueTenthMilliAmpere;  // in 1/10th ma
-    uint16_t WhiteCurrent; // in 1/10th ma
+    uint16_t WhiteTenthMilliAmpere; // in 1/10th ma
 };

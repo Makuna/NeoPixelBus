@@ -190,7 +190,7 @@ struct RgbwColor
         total += R * settings.RedTenthMilliAmpere / Max;
         total += G * settings.GreenTenthMilliAmpere / Max;
         total += B * settings.BlueTenthMilliAmpere / Max;
-        total += W * settings.WhiteCurrent / Max;
+        total += W * settings.WhiteTenthMilliAmpere / Max;
 
         return total;
     }

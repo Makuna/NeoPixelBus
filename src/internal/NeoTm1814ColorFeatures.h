@@ -66,7 +66,7 @@ public:
         uint8_t* pSet = pData;
 
         // C1
-        *pSet++ = (SettingsObject::LimitCurrent(settings.WhiteCurrent) - SettingsObject::MinCurrent) / EncodeDivisor;
+        *pSet++ = (SettingsObject::LimitCurrent(settings.WhiteTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
         *pSet++ = (SettingsObject::LimitCurrent(settings.RedTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
         *pSet++ = (SettingsObject::LimitCurrent(settings.GreenTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
         *pSet++ = (SettingsObject::LimitCurrent(settings.BlueTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
