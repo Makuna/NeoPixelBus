@@ -39,29 +39,40 @@ SM16824E 60~350mA
 class NeoSm168x3SettingsBase : public NeoRgbCurrentSettings
 {
 public:
-    NeoSm168x3SettingsBase() :
-        NeoRgbCurrentSettings(0,0,0),
-        Encoded{0} {}
+    NeoSm168x3SettingsBase(uint8_t redGain, 
+            uint8_t greenGain, 
+            uint8_t blueGain,
+            uint16_t redCurrent, 
+            uint16_t greenCurrent,
+            uint16_t blueCurrent) :
+        NeoRgbCurrentSettings(redCurrent, greenCurrent, blueCurrent),
+        RedGain(redGain & 0x0f),
+        GreenGain(greenGain & 0x0f),
+        BlueGain(blueGain & 0x0f) {}
 
-    uint8_t Encoded[2];
+    const uint8_t RedGain : 4;
+    const uint8_t GreenGain : 4;
+    const uint8_t BlueGain : 4;
 };
 
 class NeoSm16803pbSettings : public NeoSm168x3SettingsBase
 {
 public:
-    NeoSm16803pbSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain)
+    NeoSm16803pbSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain) :
+        NeoSm168x3SettingsBase(redGain, 
+            greenGain, 
+            blueGain,
+            CurrentLookup[redGain],
+            CurrentLookup[greenGain],
+            CurrentLookup[blueGain])
     {
-        redGain &= 0x0f;
-        greenGain &= 0x0f;
-        blueGain &= 0x0f;
+    }
 
-        RedTenthMilliAmpere = CurrentLookup[redGain];
-        GreenTenthMilliAmpere = CurrentLookup[greenGain];
-        BlueTenthMilliAmpere = CurrentLookup[blueGain];
-
+    void Encode(uint8_t* encoded) const
+    {
         // 0RGB 4 bits each
-        Encoded[0] = redGain;
-        Encoded[1] = greenGain << 4 | blueGain;
+        encoded[0] = RedGain;
+        encoded[1] = GreenGain << 4 | BlueGain;
     }
 
 protected:
@@ -74,19 +85,21 @@ class NeoSm16823eSettings : public NeoSm168x3SettingsBase
 {
 public:
     NeoSm16823eSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint16_t resisterOhms) :
+        NeoSm168x3SettingsBase(redGain,
+            greenGain,
+            blueGain,
+            calcCurrent(resisterOhms, redGain),
+            calcCurrent(resisterOhms, greenGain),
+            calcCurrent(resisterOhms, blueGain)),
         extROhms(resisterOhms)
     {
-        redGain &= 0x0f;
-        greenGain &= 0x0f;
-        blueGain &= 0x0f;
+    }
 
-        RedTenthMilliAmpere = calcCurrent(extROhms, redGain);
-        GreenTenthMilliAmpere = calcCurrent(extROhms, greenGain);
-        BlueTenthMilliAmpere = calcCurrent(extROhms, blueGain);
-
+    void Encode(uint8_t* encoded) const
+    {
         // RGB0 4 bits each
-        Encoded[0] = redGain << 4 | greenGain;
-        Encoded[1] = blueGain << 4;
+        encoded[0] = RedGain << 4 | GreenGain;
+        encoded[1] = BlueGain << 4;
     }
 
 protected:
@@ -97,7 +110,6 @@ protected:
         uint16_t mA = (967 * (240 + (gain * 32)) / ohms); // from spec sheet, gain 0-15 instead
         return mA * 10; // return tenths of mA
     }
-
 };
 
 // RGBW versions
@@ -105,31 +117,46 @@ protected:
 class NeoSm168x4SettingsBase : public NeoRgbwCurrentSettings
 {
 public:
-    NeoSm168x4SettingsBase() :
-        NeoRgbwCurrentSettings(0,0,0,0),
-        Encoded{ 0 } {}
+    NeoSm168x4SettingsBase(uint8_t redGain, 
+            uint8_t greenGain, 
+            uint8_t blueGain, 
+            uint8_t whiteGain,
+            uint16_t redCurrent,
+            uint16_t greenCurrent,
+            uint16_t blueCurrent,
+            uint16_t whiteCurrent) :
+        NeoRgbwCurrentSettings(redCurrent, greenCurrent, blueCurrent, whiteCurrent),
+        RedGain(redGain & 0x0f),
+        GreenGain(greenGain & 0x0f),
+        BlueGain(blueGain & 0x0f),
+        WhiteGain(whiteGain & 0x0f) {}
 
-    uint8_t Encoded[2];
+    const uint8_t RedGain : 4;
+    const uint8_t GreenGain : 4;
+    const uint8_t BlueGain : 4;
+    const uint8_t WhiteGain : 4;
 };
 
 class NeoSm16804ebSettings : public NeoSm168x4SettingsBase
 {
 public:
-    NeoSm16804ebSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain)
+    NeoSm16804ebSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain) :
+        NeoSm168x4SettingsBase(redGain, 
+            greenGain, 
+            blueGain, 
+            whiteGain,
+            CurrentLookup[redGain],
+            CurrentLookup[greenGain],
+            CurrentLookup[blueGain],
+            CurrentLookup[whiteGain])
     {
-        redGain &= 0x0f;
-        greenGain &= 0x0f;
-        blueGain &= 0x0f;
-        whiteGain &= 0x0f;
+    }
 
-        RedTenthMilliAmpere = CurrentLookup[redGain];
-        GreenTenthMilliAmpere = CurrentLookup[greenGain];
-        BlueTenthMilliAmpere = CurrentLookup[blueGain];
-        WhiteTenthMilliAmpere = CurrentLookup[whiteGain];
-
+    void Encode(uint8_t* encoded) const
+    {
         // RGBW 4 bits each
-        Encoded[0] = redGain << 4 | greenGain;
-        Encoded[1] = blueGain << 4 | whiteGain;
+        encoded[0] = RedGain << 4 | GreenGain;
+        encoded[1] = BlueGain << 4 | WhiteGain;
     }
 
 protected:
@@ -142,21 +169,23 @@ class NeoSm16824eSettings : public NeoSm168x4SettingsBase
 {
 public:
     NeoSm16824eSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain, uint16_t resisterOhms) :
+        NeoSm168x4SettingsBase(redGain,
+            greenGain,
+            blueGain,
+            whiteGain,
+            calcCurrent(resisterOhms, redGain),
+            calcCurrent(resisterOhms, greenGain),
+            calcCurrent(resisterOhms, blueGain),
+            calcCurrent(resisterOhms, whiteGain)),
         extROhms(resisterOhms)
     {
-        redGain &= 0x0f;
-        greenGain &= 0x0f;
-        blueGain &= 0x0f;
-        whiteGain &= 0x0f;
+    }
 
-        RedTenthMilliAmpere = calcCurrent(extROhms, redGain);
-        GreenTenthMilliAmpere = calcCurrent(extROhms, greenGain);
-        BlueTenthMilliAmpere = calcCurrent(extROhms, blueGain);
-        WhiteTenthMilliAmpere = calcCurrent(extROhms, whiteGain);
-
+    void Encode(uint8_t* encoded) const
+    {
         // RGBW 4 bits each
-        Encoded[0] = redGain << 4 | greenGain;
-        Encoded[1] = blueGain << 4 | whiteGain;
+        encoded[0] = RedGain << 4 | GreenGain;
+        encoded[1] = BlueGain << 4 | WhiteGain;
     }
 
 protected:
@@ -180,8 +209,8 @@ public:
     {
         // settings are at the end of the data stream
         uint8_t* pDest = pData + sizeData - SettingsSize;
-        // copy by bytes to avoid endianess
-        memcpy(pDest, &settings.Encoded, SettingsSize);
+
+        settings.Encode(pDest);
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
@@ -241,8 +270,8 @@ public:
     {
         // settings are at the end of the data stream
         uint8_t* pDest = pData + sizeData - SettingsSize;
-        // copy by bytes to avoid endianess
-        memcpy(pDest, &settings.Encoded, SettingsSize);
+
+        settings.Encode(pDest);
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)

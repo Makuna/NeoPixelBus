@@ -159,21 +159,6 @@ void IRAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, 
     uint32_t cyclesStart = 0; // trigger emediately
     uint32_t cyclesNext = 0;
 
-#if defined(ARDUINO_ARCH_ESP8266)
-    // compensation for if (pin == ...)
-    t0h -= 3;
-    t1h -= 3;
-
-    uint32_t gpio_clear = 0;
-    uint32_t gpio_set = 0;
-    if (pin == 16)
-    {
-        // reading and writing RTC_GPIO_OUT is too slow inside the loop
-        gpio_clear = (READ_PERI_REG(RTC_GPIO_OUT) & (uint32)0xfffffffe);
-        gpio_set = gpio_clear | 1;
-    }
-#endif
-
     for (;;)
     {
         // do the checks here while we are waiting on time to pass
