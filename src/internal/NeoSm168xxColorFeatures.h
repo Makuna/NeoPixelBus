@@ -39,26 +39,33 @@ SM16824E 60~350mA
 class NeoSm168x3SettingsBase : public NeoRgbCurrentSettings
 {
 public:
-    NeoSm168x3SettingsBase(uint8_t redGain, uint8_t greenGain, uint8_t blueGain) :
-        NeoRgbCurrentSettings(0,0,0),
+    NeoSm168x3SettingsBase(uint8_t redGain, 
+            uint8_t greenGain, 
+            uint8_t blueGain,
+            uint16_t redCurrent, 
+            uint16_t greenCurrent,
+            uint16_t blueCurrent) :
+        NeoRgbCurrentSettings(redCurrent, greenCurrent, blueCurrent),
         RedGain(redGain & 0x0f),
         GreenGain(greenGain & 0x0f),
         BlueGain(blueGain & 0x0f) {}
 
-    uint8_t RedGain : 4;
-    uint8_t GreenGain : 4;
-    uint8_t BlueGain : 4;
+    const uint8_t RedGain : 4;
+    const uint8_t GreenGain : 4;
+    const uint8_t BlueGain : 4;
 };
 
 class NeoSm16803pbSettings : public NeoSm168x3SettingsBase
 {
 public:
     NeoSm16803pbSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain) :
-        NeoSm168x3SettingsBase(redGain, greenGain, blueGain)
+        NeoSm168x3SettingsBase(redGain, 
+            greenGain, 
+            blueGain,
+            CurrentLookup[redGain],
+            CurrentLookup[greenGain],
+            CurrentLookup[blueGain])
     {
-        RedTenthMilliAmpere = CurrentLookup[redGain];
-        GreenTenthMilliAmpere = CurrentLookup[greenGain];
-        BlueTenthMilliAmpere = CurrentLookup[blueGain];
     }
 
     void Encode(uint8_t* encoded) const
@@ -78,12 +85,14 @@ class NeoSm16823eSettings : public NeoSm168x3SettingsBase
 {
 public:
     NeoSm16823eSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint16_t resisterOhms) :
-        NeoSm168x3SettingsBase(redGain, greenGain, blueGain),
+        NeoSm168x3SettingsBase(redGain,
+            greenGain,
+            blueGain,
+            calcCurrent(resisterOhms, redGain),
+            calcCurrent(resisterOhms, greenGain),
+            calcCurrent(resisterOhms, blueGain)),
         extROhms(resisterOhms)
     {
-        RedTenthMilliAmpere = calcCurrent(extROhms, redGain);
-        GreenTenthMilliAmpere = calcCurrent(extROhms, greenGain);
-        BlueTenthMilliAmpere = calcCurrent(extROhms, blueGain);
     }
 
     void Encode(uint8_t* encoded) const
@@ -108,29 +117,39 @@ protected:
 class NeoSm168x4SettingsBase : public NeoRgbwCurrentSettings
 {
 public:
-    NeoSm168x4SettingsBase(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain) :
-        NeoRgbwCurrentSettings(0,0,0,0),
+    NeoSm168x4SettingsBase(uint8_t redGain, 
+            uint8_t greenGain, 
+            uint8_t blueGain, 
+            uint8_t whiteGain,
+            uint16_t redCurrent,
+            uint16_t greenCurrent,
+            uint16_t blueCurrent,
+            uint16_t whiteCurrent) :
+        NeoRgbwCurrentSettings(redCurrent, greenCurrent, blueCurrent, whiteCurrent),
         RedGain(redGain & 0x0f),
         GreenGain(greenGain & 0x0f),
         BlueGain(blueGain & 0x0f),
         WhiteGain(whiteGain & 0x0f) {}
 
-    uint8_t RedGain : 4;
-    uint8_t GreenGain : 4;
-    uint8_t BlueGain : 4;
-    uint8_t WhiteGain : 4;
+    const uint8_t RedGain : 4;
+    const uint8_t GreenGain : 4;
+    const uint8_t BlueGain : 4;
+    const uint8_t WhiteGain : 4;
 };
 
 class NeoSm16804ebSettings : public NeoSm168x4SettingsBase
 {
 public:
     NeoSm16804ebSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain) :
-        NeoSm168x4SettingsBase(redGain, greenGain, blueGain, whiteGain)
+        NeoSm168x4SettingsBase(redGain, 
+            greenGain, 
+            blueGain, 
+            whiteGain,
+            CurrentLookup[redGain],
+            CurrentLookup[greenGain],
+            CurrentLookup[blueGain],
+            CurrentLookup[whiteGain])
     {
-        RedTenthMilliAmpere = CurrentLookup[redGain];
-        GreenTenthMilliAmpere = CurrentLookup[greenGain];
-        BlueTenthMilliAmpere = CurrentLookup[blueGain];
-        WhiteTenthMilliAmpere = CurrentLookup[whiteGain];
     }
 
     void Encode(uint8_t* encoded) const
@@ -150,13 +169,16 @@ class NeoSm16824eSettings : public NeoSm168x4SettingsBase
 {
 public:
     NeoSm16824eSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain, uint16_t resisterOhms) :
-        NeoSm168x4SettingsBase(redGain, greenGain, blueGain, whiteGain),
+        NeoSm168x4SettingsBase(redGain,
+            greenGain,
+            blueGain,
+            whiteGain,
+            calcCurrent(resisterOhms, redGain),
+            calcCurrent(resisterOhms, greenGain),
+            calcCurrent(resisterOhms, blueGain),
+            calcCurrent(resisterOhms, whiteGain)),
         extROhms(resisterOhms)
     {
-        RedTenthMilliAmpere = calcCurrent(extROhms, redGain);
-        GreenTenthMilliAmpere = calcCurrent(extROhms, greenGain);
-        BlueTenthMilliAmpere = calcCurrent(extROhms, blueGain);
-        WhiteTenthMilliAmpere = calcCurrent(extROhms, whiteGain);
     }
 
     void Encode(uint8_t* encoded) const
