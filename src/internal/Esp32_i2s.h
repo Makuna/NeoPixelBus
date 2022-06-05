@@ -29,7 +29,7 @@ void i2sInit(uint8_t bus_num,
 
 void i2sDeinit(uint8_t bus_num);
 
-void i2sSetPins(uint8_t bus_num, int8_t out, bool invert);
+void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert);
 
 esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits_per_sample);
 esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_per_sample);

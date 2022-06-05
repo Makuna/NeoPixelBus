@@ -113,6 +113,7 @@ License along with NeoPixel.  If not, see
 #include "internal/NeoEsp32RmtMethod.h"
 #include "internal/NeoEspBitBangMethod.h"
 #include "internal/DotStarEsp32DmaSpiMethod.h"
+#include "internal/NeoEsp32I2sXMethod.h"
 
 #elif defined(ARDUINO_ARCH_NRF52840) // must be before __arm__
 

@@ -54,6 +54,8 @@
 #include "Esp32_i2s.h"
 #include "esp32-hal.h"
 
+#define MATRIX_DETACH_OUT_SIG 0x100
+
 #if ESP_IDF_VERSION_MAJOR<=4
 #define I2S_BASE_CLK (160000000L)
 #endif
@@ -224,7 +226,7 @@ esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t d
     return ESP_OK;
 }
 
-void i2sSetPins(uint8_t bus_num, int8_t out, bool invert) 
+void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert) 
 {
     if (bus_num >= I2S_NUM_MAX) 
     {
@@ -238,7 +240,7 @@ void i2sSetPins(uint8_t bus_num, int8_t out, bool invert)
     // disable old pin
     if (outOld >= 0)
     {
-        gpio_matrix_out(outOld, 0x100, false, false);
+        gpio_matrix_out(outOld, MATRIX_DETACH_OUT_SIG, false, false);
         pinMode(outOld, INPUT);
     }
 
@@ -251,12 +253,26 @@ void i2sSetPins(uint8_t bus_num, int8_t out, bool invert)
 //            (I2S_NUM_MAX == 2)
         if (bus_num == 1) 
         {
-            i2sSignal = I2S1O_DATA_OUT23_IDX;
+            if (parallel == -1)
+            {
+                i2sSignal = I2S1O_DATA_OUT23_IDX;
+            }
+            else
+            {
+                i2sSignal = I2S1O_DATA_OUT0_IDX + parallel;
+            }
         }
         else
 #endif
         {
-            i2sSignal = I2S0O_DATA_OUT23_IDX;
+            if (parallel == -1)
+            {
+                i2sSignal = I2S0O_DATA_OUT23_IDX;
+            }
+            else
+            {
+                i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
+            }
         }
 
         gpio_matrix_out(out, i2sSignal, invert, false);
@@ -351,13 +367,15 @@ void i2sInit(uint8_t bus_num,
 
     typeof(i2s->conf) conf;
     conf.val = 0;
-    conf.tx_msb_shift = (bits_per_sample != 8);// 0:DAC/PCM, 1:I2S
+    conf.tx_msb_shift = 0; // (bits_per_sample != 8);// 0:DAC/PCM, 1:I2S
     conf.tx_right_first = (bits_per_sample == 8);
     i2s->conf.val = conf.val;
 
+    // set parallel mode
     typeof(i2s->conf2) conf2;
     conf2.val = 0;
     conf2.lcd_en = (bits_per_sample == 8);
+    conf2.lcd_tx_wrx2_en = (bits_per_sample == 8);
     i2s->conf2.val = conf2.val;
 
     i2s->fifo_conf.tx_fifo_mod_force_en = 1;

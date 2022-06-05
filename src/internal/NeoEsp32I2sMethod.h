@@ -169,7 +169,7 @@ public:
             yield();
         }
 
-        i2sSetPins(_bus.I2sBusNumber, -1, false);
+        i2sSetPins(_bus.I2sBusNumber, -1, -1, false);
         i2sDeinit(_bus.I2sBusNumber);
         free(_data);
         heap_caps_free(_i2sBuffer);
@@ -191,7 +191,7 @@ public:
             I2S_FIFO_16BIT_DUAL, 
             dmaBlockCount,
             0);
-        i2sSetPins(_bus.I2sBusNumber, _pin, T_INVERT::Inverted);
+        i2sSetPins(_bus.I2sBusNumber, _pin, -1, T_INVERT::Inverted);
     }
 
     void Update(bool)

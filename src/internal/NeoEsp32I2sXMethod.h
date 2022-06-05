@@ -26,19 +26,38 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+extern "C"
+{
+#include <Arduino.h>
+#include "Esp32_i2s.h"
+}
+
+//16 channel
+//
+//01234567 89abcdef 01234567 89abcdef 01234567 89abcdef 01234567 89abcdef
+//encode 0          encode 1          encode 2          encode 3
+//1                 0                 0                 0
+//1                 1                 1                 0
 #pragma once
 
 // ESP32C3 I2S is not supported yet due to significant changes to interface
 #if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 
-// duplicate to support i2s bus one also
+// $REVIEW duplicate/refactor to support i2s bus one also
+//
 class NeoEsp32I2sX8BusZero
 {
 public:
     const static size_t DmaBitsPerPixelBits = 4; // encoding needs 4 bits to provide pulse for a bit
     const static uint8_t BusMaxCount = 8;
     const static uint8_t I2sBusNumber = 0;
+    const static uint8_t InvalidBusId = 255;
     const static size_t DmaBytesPerPixelBytes = BusMaxCount * DmaBitsPerPixelBits;
+
+    NeoEsp32I2sX8BusZero() :
+        _busId(InvalidBusId)
+    {
+    }
 
     uint8_t RegisterNewMatrixBus(size_t dataSize)
     {
@@ -60,22 +79,23 @@ public:
             }
             busId++;
         }
+        _busId = busId;
         return busId;
     }
 
-    void Initialize(uint8_t busId, uint8_t pin, uint32_t i2sSampleRate, bool invert)
+    void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
     {
         if (s_i2sBuffer == nullptr)
         {
             // only construct once
             construct(i2sSampleRate);
         }
-        i2sSetPins(_bus.I2sBusNumber, _pin, T_INVERT::Inverted);
+        i2sSetPins(I2sBusNumber, pin, _busId, invert);
     }
 
-    void DeregisterMatrixBus(uint8_t busId)
+    void DeregisterMatrixBus()
     {
-        uint8_t busIdField = (1 << busId);
+        uint8_t busIdField = (1 << _busId);
         if (s_UpdateMapMask & busIdField)
         {
             // complete deregistration
@@ -87,11 +107,7 @@ public:
             }
             // disconnect pin?
         }
-    }
-
-    void MarkMatrixBusUpdated(uint8_t busId)
-    {
-        s_UpdateMap |= (1 << busId);
+        _busId = InvalidBusId;
     }
 
     bool IsAllMatrixBusesUpdated()
@@ -99,14 +115,10 @@ public:
         return (s_UpdateMap == s_UpdateMapMask);
     }
 
-    void ResetMatrixBusesUpdated()
-    {
-        s_UpdateMap = 0;
-    }
-
     void StartWrite()
     {
-        i2sWrite(I2sBusNumber, s_i2sBuffer, s_i2sBufferSize, false, false);
+        resetMatrixBusesUpdated();
+        i2sWrite(I2sBusNumber, reinterpret_cast<uint8_t*>(s_i2sBuffer), s_i2sBufferSize, false, false);
     }
 
     bool IsWriteDone()
@@ -114,9 +126,35 @@ public:
         return i2sWriteDone(I2sBusNumber);
     }
 
-    uint32_t* getData()
+    void FillBuffers(const uint8_t* data, size_t  sizeData)
     {
-        return s_i2sBuffer;
+        // 8 channel bits layout for DMA 32bit value
+        //
+        //  matrix bus id  01234567 01234567 01234567 01234567
+        //  encode bit #   0        1        2        3
+        //  value zero     1        0        0        0
+        //  value one      1        1        1        0       
+
+        uint32_t* pDma = s_i2sBuffer;
+        const uint8_t* pEnd = data + sizeData;
+        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
+        {
+            uint8_t value = *pPixel++;
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                uint32_t dma = *(pDma);
+
+                // clear previous data for matrix bus
+                dma &= ~(0x80808080 >> _busId);
+                // apply new data for matrix bus
+                dma |= (((value & 0x80) ? 0x80808000 : 0x80000000) >> _busId);
+
+                *(pDma++) = dma;
+                value <<= 1;
+            }
+        }
+
+        markMatrixBusUpdated();
     }
 
 private:
@@ -127,6 +165,8 @@ private:
     static uint8_t s_UpdateMap; // bitmap flags of matrix buses to track update state
     static uint8_t s_UpdateMapMask; // mask to used bits in s_UpdateMap
     static uint8_t s_BusCount; // count of matrix buses
+
+    uint8_t _busId; 
 
     void construct(uint32_t i2sSampleRate)
     {
@@ -142,10 +182,10 @@ private:
         size_t dmaBlockCount = (s_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
 
         i2sInit(I2sBusNumber,
-            16,
+            8,
             i2sSampleRate,
-            I2S_CHAN_STEREO,
-            I2S_FIFO_16BIT_DUAL,
+            I2S_CHAN_RIGHT_TO_LEFT,
+            I2S_FIFO_32BIT_SINGLE,
             dmaBlockCount,
             0);
 
@@ -162,7 +202,7 @@ private:
             return;
         }
 
-        i2sSetPins(I2sBusNumber, -1, false);
+        i2sSetPins(I2sBusNumber, -1, -1, false);
         i2sDeinit(I2sBusNumber);
 
         heap_caps_free(s_i2sBuffer);
@@ -173,6 +213,16 @@ private:
         s_UpdateMap = 0;
         s_UpdateMapMask = 0;
         s_BusCount = 0;
+    }
+
+    void markMatrixBusUpdated()
+    {
+        s_UpdateMap |= (1 << _busId);
+    }
+
+    void resetMatrixBusesUpdated()
+    {
+        s_UpdateMap = 0;
     }
 };
 
@@ -185,17 +235,17 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        _busId = _bus.RegisterNewMatrixBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);
+        _bus.RegisterNewMatrixBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);
     }
 
-    ~NeoEsp32I2sMethodBase()
+    ~NeoEsp32I2sXMethodBase()
     {
-        while (!IsReadyToUpdate())
+        while (!_bus.IsWriteDone())
         {
             yield();
         }
 
-        _bus.DeregisterMatrixBus(_busId);
+        _bus.DeregisterMatrixBus();
 
         free(_data);
     }
@@ -207,7 +257,7 @@ public:
 
     void Initialize()
     {
-        _bus.Initialize(_busId, _pin, T_SPEED::I2sSampleRate, T_INVERT::Inverted);
+        _bus.Initialize(_pin, T_SPEED::I2sSampleRate, T_INVERT::Inverted);
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin()
@@ -221,13 +271,10 @@ public:
             yield();
         }
 
-        FillBuffers();
-
-        _bus.MarkMatrixBusUpdated(_busId);
+        _bus.FillBuffers(_data, _sizeData);
 
         if (_bus.IsAllMatrixBusesUpdated())
         {
-            _bus.ResetMatrixBusesUpdated();
             _bus.StartWrite();
         }
     }
@@ -249,43 +296,16 @@ public:
 private:
     const size_t  _sizeData;    // Size of '_data' buffer 
     const uint8_t _pin;            // output pin number
-    const T_BUS _bus; // holds instance for matrix bus support
 
-    uint8_t _busId; // $REVIEW should this be a member of T_BUS?
+    T_BUS _bus; // holds instance for matrix bus support
     uint8_t* _data;        // Holds LED color values
-
-    void FillBuffers()
-    {
-        // $REVIEW should this be put inside T_BUS ?
-        // 
-        // 8 channel bits layout for DMA 32bit value
-        //
-        //  matrix bus  01234567 01234567 01234567 01234567
-        //  encode bit     0        1        2        3
-        //  value zero     1        0        0        0
-        //  value one      1        1        1        0       
-
-        uint32_t* pDma = _bus.getData();
-        uint8_t* pEnd = _data + _sizeData;
-        for (uint8_t* pPixel = _data; pPixel < pEnd; pPixel++)
-        {
-            uint8_t value = *pPixel++;
-            for (uint8_t bit = 0; bit < 8; bit++)
-            {
-                uint32_t dma = *(pDma);
-
-                // clear previous data for matrix bus
-                dma &= ~(0x80808080 >> _busId);
-                // apply new data for matrix bus
-                dma |= (((value & 0x80) ? 0x80808000 : 0x80000000) >> _busId);
-
-                *(pDma++) = dma;
-                value <<= 1;
-            }
-        }
-    }
 };
 
+// NORMAL
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2sX8BusZero, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Ws2812xMethod;
 
+
+// INVERTED
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2sX8BusZero, NeoEsp32I2sInverted> NeoEsp32I2s0X8Ws2812xInvertedMethod;
 
 #endif
