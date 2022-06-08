@@ -164,6 +164,11 @@ public:
         digitalWrite(_pinOutputEnable, LOW);
     }
 
+    void MarkUpdated()
+    {
+        // unused method functionality
+    }
+
     uint8_t* getData() const
     {
         return _data;

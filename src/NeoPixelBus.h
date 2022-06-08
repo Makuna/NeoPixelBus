@@ -207,6 +207,7 @@ public:
     {
         if (!IsDirty())
         {
+            _method.MarkUpdated();
             return;
         }
 

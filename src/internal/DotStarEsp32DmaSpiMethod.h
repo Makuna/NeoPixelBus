@@ -214,6 +214,11 @@ public:
         assert(ret == ESP_OK);            //Should have had no issues.
     }
 
+    void MarkUpdated()
+    {
+        // unused method functionality
+    }
+
     uint8_t* getData() const
     {
         return _data + _sizeStartFrame;

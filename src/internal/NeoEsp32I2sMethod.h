@@ -207,6 +207,11 @@ public:
         i2sWrite(_bus.I2sBusNumber, _i2sBuffer, _i2sBufferSize, false, false);
     }
 
+    void MarkUpdated()
+    {
+        // unused method functionality
+    }
+
     uint8_t* getData() const
     {
         return _data;

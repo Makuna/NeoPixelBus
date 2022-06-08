@@ -102,6 +102,11 @@ public:
         _endTime = micros();
     }
 
+    void MarkUpdated()
+    {
+        // unused method functionality
+    }
+
     uint8_t* getData() const
     {
         return _data;

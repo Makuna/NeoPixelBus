@@ -32,93 +32,190 @@ extern "C"
 #include "Esp32_i2s.h"
 }
 
-//16 channel
+//16 channel layout if it ever gets supported
 //
 //01234567 89abcdef 01234567 89abcdef 01234567 89abcdef 01234567 89abcdef
 //encode 0          encode 1          encode 2          encode 3
 //1                 0                 0                 0
 //1                 1                 1                 0
+
 #pragma once
 
 // ESP32C3 I2S is not supported yet due to significant changes to interface
 #if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 
-// $REVIEW duplicate/refactor to support i2s bus one also
-//
-class NeoEsp32I2sX8BusZero
+class NeoEspI2sContext
 {
 public:
     const static size_t DmaBitsPerPixelBits = 4; // encoding needs 4 bits to provide pulse for a bit
     const static uint8_t BusMaxCount = 8;
-    const static uint8_t I2sBusNumber = 0;
-    const static uint8_t InvalidBusId = 255;
+    const static uint8_t InvalidMuxId = -1;
     const static size_t DmaBytesPerPixelBytes = BusMaxCount * DmaBitsPerPixelBits;
 
-    NeoEsp32I2sX8BusZero() :
-        _busId(InvalidBusId)
+    uint32_t I2sBufferSize; // total size of I2sBuffer
+    uint32_t* I2sBuffer;    // holds the DMA buffer that is referenced by I2sBufDesc
+
+    size_t MaxBusDataSize; // max size of stream data from any single mux bus
+    uint8_t UpdateMap;     // bitmap flags of mux buses to track update state
+    uint8_t UpdateMapMask; // mask to used bits in s_UpdateMap
+    uint8_t BusCount;      // count of mux buses
+
+    NeoEspI2sContext() :
+        I2sBufferSize(0),
+        I2sBuffer(nullptr),
+        MaxBusDataSize(0),
+        UpdateMap(0),
+        UpdateMapMask(0),
+        BusCount(0)
     {
     }
 
-    uint8_t RegisterNewMatrixBus(size_t dataSize)
+    uint8_t RegisterNewMuxBus(size_t dataSize)
     {
         // find first available bus id
-        uint8_t busId = 0;
-        while (busId < BusMaxCount)
+        uint8_t muxId = 0;
+        while (muxId < BusMaxCount)
         {
-            uint8_t busIdField = (1 << busId);
-            if ((s_UpdateMapMask & busIdField) == 0)
+            uint8_t muxIdField = (1 << muxId);
+            if ((UpdateMapMask & muxIdField) == 0)
             {
                 // complete registration
-                s_BusCount++;
-                s_UpdateMapMask |= busIdField;
-                if (dataSize > s_MaxBusDataSize)
+                BusCount++;
+                UpdateMapMask |= muxIdField;
+                if (dataSize > MaxBusDataSize)
                 {
-                    s_MaxBusDataSize = dataSize;
+                    MaxBusDataSize = dataSize;
                 }
                 break;
             }
-            busId++;
+            muxId++;
         }
-        _busId = busId;
-        return busId;
+        return muxId;
+    }
+
+    bool DeregisterMuxBus(uint8_t muxId)
+    {
+        uint8_t muxIdField = (1 << muxId);
+        if (UpdateMapMask & muxIdField)
+        {
+            // complete deregistration
+            BusCount--;
+            UpdateMapMask &= ~muxIdField;
+            if (UpdateMapMask == 0)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    bool IsAllMuxBusesUpdated()
+    {
+        return (UpdateMap == UpdateMapMask);
+    }
+
+    void MarkMuxBusUpdated(uint8_t muxId)
+    {
+        UpdateMap |= (1 << muxId);
+    }
+
+    void ResetMuxBusesUpdated()
+    {
+        UpdateMap = 0;
+    }
+
+    void Construct(const uint8_t busNumber, uint32_t i2sSampleRate)
+    {
+        // construct only once on first time called
+        if (I2sBuffer == nullptr)
+        {
+            I2sBufferSize = DmaBytesPerPixelBytes * MaxBusDataSize;
+
+            // must have a 4 byte aligned buffer for i2s
+            uint32_t alignment = I2sBufferSize % 4;
+            if (alignment)
+            {
+                I2sBufferSize += 4 - alignment;
+            }
+
+            size_t dmaBlockCount = (I2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
+
+            i2sInit(busNumber,
+                8,
+                i2sSampleRate,
+                I2S_CHAN_RIGHT_TO_LEFT,
+                I2S_FIFO_32BIT_SINGLE,
+                dmaBlockCount,
+                0);
+
+            I2sBuffer = static_cast<uint32_t*>(heap_caps_malloc(I2sBufferSize, MALLOC_CAP_DMA));
+            // no need to initialize all of it, but since it contains
+            // "reset" bits that don't later get overwritten we just clear it all
+            memset(I2sBuffer, 0x00, I2sBufferSize);
+        }
+    }
+
+    void Destruct(const uint8_t busNumber)
+    {
+        if (I2sBuffer == nullptr)
+        {
+            return;
+        }
+
+        i2sSetPins(busNumber, -1, -1, false);
+        i2sDeinit(busNumber);
+
+        heap_caps_free(I2sBuffer);
+
+        I2sBufferSize = 0;
+        I2sBuffer = nullptr;
+        MaxBusDataSize = 0;
+        UpdateMap = 0;
+        UpdateMapMask = 0;
+        BusCount = 0;
+    }
+};
+
+// $REVIEW duplicate/refactor to support i2s bus one also
+//
+class NeoEsp32I2s0Mux8Bus
+{
+public:
+    const static uint8_t I2sBusNumber = 0;
+
+    NeoEsp32I2s0Mux8Bus() :
+        _muxId(NeoEspI2sContext::InvalidMuxId)
+    {
+    }
+
+    void RegisterNewMuxBus(size_t dataSize)
+    {
+        _muxId = s_context.RegisterNewMuxBus(dataSize);
     }
 
     void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
     {
-        if (s_i2sBuffer == nullptr)
-        {
-            // only construct once
-            construct(i2sSampleRate);
-        }
-        i2sSetPins(I2sBusNumber, pin, _busId, invert);
+        s_context.Construct(I2sBusNumber, i2sSampleRate);
+        i2sSetPins(I2sBusNumber, pin, _muxId, invert);
     }
 
-    void DeregisterMatrixBus()
+    void DeregisterMuxBus()
     {
-        uint8_t busIdField = (1 << _busId);
-        if (s_UpdateMapMask & busIdField)
+        if (s_context.DeregisterMuxBus(_muxId))
         {
-            // complete deregistration
-            s_BusCount--;
-            s_UpdateMapMask &= ~busIdField;
-            if (s_UpdateMapMask == 0)
-            {
-                destruct();
-            }
-            // disconnect pin?
+            s_context.Destruct(I2sBusNumber);
         }
-        _busId = InvalidBusId;
-    }
-
-    bool IsAllMatrixBusesUpdated()
-    {
-        return (s_UpdateMap == s_UpdateMapMask);
+        // disconnect muxed pin?
+        _muxId = NeoEspI2sContext::InvalidMuxId;
     }
 
     void StartWrite()
     {
-        resetMatrixBusesUpdated();
-        i2sWrite(I2sBusNumber, reinterpret_cast<uint8_t*>(s_i2sBuffer), s_i2sBufferSize, false, false);
+        if (s_context.IsAllMuxBusesUpdated())
+        {
+            s_context.ResetMuxBusesUpdated();
+            i2sWrite(I2sBusNumber, reinterpret_cast<uint8_t*>(s_context.I2sBuffer), s_context.I2sBufferSize, false, false);
+        }
     }
 
     bool IsWriteDone()
@@ -130,12 +227,12 @@ public:
     {
         // 8 channel bits layout for DMA 32bit value
         //
-        //  matrix bus id  01234567 01234567 01234567 01234567
+        //  mux bus id     01234567 01234567 01234567 01234567
         //  encode bit #   0        1        2        3
         //  value zero     1        0        0        0
         //  value one      1        1        1        0       
 
-        uint32_t* pDma = s_i2sBuffer;
+        uint32_t* pDma = s_context.I2sBuffer;
         const uint8_t* pEnd = data + sizeData;
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
         {
@@ -144,86 +241,27 @@ public:
             {
                 uint32_t dma = *(pDma);
 
-                // clear previous data for matrix bus
-                dma &= ~(0x80808080 >> _busId);
-                // apply new data for matrix bus
-                dma |= (((value & 0x80) ? 0x80808000 : 0x80000000) >> _busId);
+                // clear previous data for mux bus
+                dma &= ~(0x80808080 >> _muxId);
+                // apply new data for mux bus
+                dma |= (((value & 0x80) ? 0x80808000 : 0x80000000) >> _muxId);
 
                 *(pDma++) = dma;
                 value <<= 1;
             }
         }
 
-        markMatrixBusUpdated();
+        s_context.MarkMuxBusUpdated(_muxId);
+    }
+
+    void MarkUpdated()
+    {
+        s_context.MarkMuxBusUpdated(_muxId);
     }
 
 private:
-    static uint32_t s_i2sBufferSize; // total size of _i2sBuffer
-    static uint32_t* s_i2sBuffer;  // holds the DMA buffer that is referenced by _i2sBufDesc
-
-    static size_t s_MaxBusDataSize; // max size of stream data from any single matrix bus
-    static uint8_t s_UpdateMap; // bitmap flags of matrix buses to track update state
-    static uint8_t s_UpdateMapMask; // mask to used bits in s_UpdateMap
-    static uint8_t s_BusCount; // count of matrix buses
-
-    uint8_t _busId; 
-
-    void construct(uint32_t i2sSampleRate)
-    {
-        s_i2sBufferSize = DmaBytesPerPixelBytes * s_MaxBusDataSize;
-
-        // must have a 4 byte aligned buffer for i2s
-        uint32_t alignment = s_i2sBufferSize % 4;
-        if (alignment)
-        {
-            s_i2sBufferSize += 4 - alignment;
-        }
-
-        size_t dmaBlockCount = (s_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
-
-        i2sInit(I2sBusNumber,
-            8,
-            i2sSampleRate,
-            I2S_CHAN_RIGHT_TO_LEFT,
-            I2S_FIFO_32BIT_SINGLE,
-            dmaBlockCount,
-            0);
-
-        s_i2sBuffer = static_cast<uint32_t*>(heap_caps_malloc(s_i2sBufferSize, MALLOC_CAP_DMA));
-        // no need to initialize all of it, but since it contains
-        // "reset" bits that don't latter get overwritten we just clear it all
-        memset(s_i2sBuffer, 0x00, s_i2sBufferSize);
-    }
-
-    void destruct()
-    {
-        if (s_i2sBuffer == nullptr)
-        {
-            return;
-        }
-
-        i2sSetPins(I2sBusNumber, -1, -1, false);
-        i2sDeinit(I2sBusNumber);
-
-        heap_caps_free(s_i2sBuffer);
-
-        s_i2sBufferSize = 0;
-        s_i2sBuffer = nullptr;
-        s_MaxBusDataSize = 0;
-        s_UpdateMap = 0;
-        s_UpdateMapMask = 0;
-        s_BusCount = 0;
-    }
-
-    void markMatrixBusUpdated()
-    {
-        s_UpdateMap |= (1 << _busId);
-    }
-
-    void resetMatrixBusesUpdated()
-    {
-        s_UpdateMap = 0;
-    }
+    static NeoEspI2sContext s_context;
+    uint8_t _muxId; 
 };
 
 template<typename T_SPEED, typename T_BUS, typename T_INVERT> class NeoEsp32I2sXMethodBase
@@ -235,7 +273,7 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        _bus.RegisterNewMatrixBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);
+        _bus.RegisterNewMuxBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);
     }
 
     ~NeoEsp32I2sXMethodBase()
@@ -245,7 +283,7 @@ public:
             yield();
         }
 
-        _bus.DeregisterMatrixBus();
+        _bus.DeregisterMuxBus();
 
         free(_data);
     }
@@ -272,11 +310,12 @@ public:
         }
 
         _bus.FillBuffers(_data, _sizeData);
+        _bus.StartWrite(); // only triggers actual write after all mux busses have updated
+    }
 
-        if (_bus.IsAllMatrixBusesUpdated())
-        {
-            _bus.StartWrite();
-        }
+    void MarkUpdated()
+    {
+        _bus.MarkUpdated();
     }
 
     uint8_t* getData() const
@@ -295,17 +334,17 @@ public:
 
 private:
     const size_t  _sizeData;    // Size of '_data' buffer 
-    const uint8_t _pin;            // output pin number
+    const uint8_t _pin;         // output pin number
 
-    T_BUS _bus; // holds instance for matrix bus support
-    uint8_t* _data;        // Holds LED color values
+    T_BUS _bus;          // holds instance for mux bus support
+    uint8_t* _data;      // Holds LED color values
 };
 
 // NORMAL
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2sX8BusZero, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Ws2812xMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Ws2812Method;
 
 
 // INVERTED
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2sX8BusZero, NeoEsp32I2sInverted> NeoEsp32I2s0X8Ws2812xInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Ws2812InvertedMethod;
 
 #endif

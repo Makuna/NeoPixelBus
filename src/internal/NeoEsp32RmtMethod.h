@@ -587,6 +587,11 @@ public:
         }
     }
 
+    void MarkUpdated()
+    {
+        // unused method functionality
+    }
+
     uint8_t* getData() const
     {
         return _dataEditing;

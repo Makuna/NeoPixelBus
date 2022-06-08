@@ -396,6 +396,11 @@ public:
         this->UpdateUart(maintainBufferConsistency);
     }
 
+    void MarkUpdated()
+    {
+        // unused method functionality
+    }
+
     uint8_t* getData() const
     {
         return this->_data;
