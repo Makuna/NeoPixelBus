@@ -230,7 +230,10 @@ public:
         //  mux bus id     01234567 01234567 01234567 01234567
         //  encode bit #   0        1        2        3
         //  value zero     1        0        0        0
-        //  value one      1        1        1        0       
+        //  value one      1        1        1        0    
+        const uint32_t EncodedZeroBit = 0x80000000;
+        const uint32_t EncodedOneBit = 0x80808000;
+        const uint32_t EncodedBitMask = 0x80808080;
 
         uint32_t* pDma = s_context.I2sBuffer;
         const uint8_t* pEnd = data + sizeData;
@@ -242,9 +245,9 @@ public:
                 uint32_t dma = *(pDma);
 
                 // clear previous data for mux bus
-                dma &= ~(0x80808080 >> _muxId);
+                dma &= ~(EncodedBitMask >> _muxId);
                 // apply new data for mux bus
-                dma |= (((value & 0x80) ? 0x80808000 : 0x80000000) >> _muxId);
+                dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) >> _muxId);
 
                 *(pDma++) = dma;
                 value <<= 1;
