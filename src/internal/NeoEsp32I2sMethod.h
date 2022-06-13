@@ -351,6 +351,7 @@ typedef NeoEsp32I2s1Ws2812xMethod NeoWs2813Method;
 typedef NeoEsp32I2s1Ws2812xMethod NeoWs2812xMethod;
 typedef NeoEsp32I2s1800KbpsMethod NeoWs2812Method;
 typedef NeoEsp32I2s1Ws2812xMethod NeoWs2811Method;
+typedef NeoEsp32I2s1Ws2812xMethod NeoWs2816Method;
 typedef NeoEsp32I2s1Sk6812Method NeoSk6812Method;
 typedef NeoEsp32I2s1Tm1814Method NeoTm1814Method;
 typedef NeoEsp32I2s1Tm1829Method NeoTm1829Method;

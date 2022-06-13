@@ -328,6 +328,7 @@ typedef NeoEsp8266DmaWs2812xMethod NeoWs2813Method;
 typedef NeoEsp8266DmaWs2812xMethod NeoWs2812xMethod;
 typedef NeoEsp8266Dma800KbpsMethod NeoWs2812Method;
 typedef NeoEsp8266DmaWs2812xMethod NeoWs2811Method;
+typedef NeoEsp8266DmaWs2812xMethod NeoWs2816Method;
 typedef NeoEsp8266DmaSk6812Method NeoSk6812Method;
 typedef NeoEsp8266DmaTm1814Method NeoTm1814Method;
 typedef NeoEsp8266DmaTm1829Method NeoTm1829Method;

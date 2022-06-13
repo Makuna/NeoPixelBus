@@ -226,6 +226,7 @@ typedef NeoAvrWs2812xMethod NeoWs2813Method;
 typedef NeoAvrWs2812xMethod NeoWs2812xMethod;
 typedef NeoAvr800KbpsMethod NeoWs2812Method;
 typedef NeoAvrWs2812xMethod NeoWs2811Method;
+typedef NeoAvrWs2812xMethod NeoWs2816Method;
 typedef NeoAvrSk6812Method NeoSk6812Method;
 typedef NeoAvrSk6812Method NeoLc8812Method;
 typedef NeoAvr400KbpsMethod NeoApa106Method;

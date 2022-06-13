@@ -636,6 +636,7 @@ typedef NeoNrf52xPwm2Ws2812xMethod NeoWs2813Method;
 typedef NeoNrf52xPwm2Ws2812xMethod NeoWs2812xMethod;
 typedef NeoNrf52xPwm2800KbpsMethod NeoWs2812Method;
 typedef NeoNrf52xPwm2Ws2812xMethod NeoWs2811Method;
+typedef NeoNrf52xPwm2Ws2812xMethod NeoWs2816Method;
 typedef NeoNrf52xPwm2Sk6812Method NeoSk6812Method;
 typedef NeoNrf52xPwm2Tm1814Method NeoTm1814Method;
 typedef NeoNrf52xPwm2Tm1829Method NeoTm1829Method;
