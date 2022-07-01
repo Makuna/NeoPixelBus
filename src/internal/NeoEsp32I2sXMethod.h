@@ -197,6 +197,9 @@ public:
     {
         s_context.Construct(I2sBusNumber, i2sSampleRate);
         i2sSetPins(I2sBusNumber, pin, _muxId, invert);
+
+        Serial.print(" muxid ");
+        Serial.println(_muxId);
     }
 
     void DeregisterMuxBus()
@@ -213,6 +216,7 @@ public:
     {
         if (s_context.IsAllMuxBusesUpdated())
         {
+            Serial.println("writing");
             s_context.ResetMuxBusesUpdated();
             i2sWrite(I2sBusNumber, reinterpret_cast<uint8_t*>(s_context.I2sBuffer), s_context.I2sBufferSize, false, false);
         }

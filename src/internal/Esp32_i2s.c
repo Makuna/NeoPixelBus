@@ -54,6 +54,9 @@
 #include "Esp32_i2s.h"
 #include "esp32-hal.h"
 
+esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits_per_sample);
+esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_per_sample);
+
 #define MATRIX_DETACH_OUT_SIG 0x100
 
 #if ESP_IDF_VERSION_MAJOR<=4
@@ -196,10 +199,26 @@ bool i2sDeinitDmaItems(uint8_t bus_num) {
     return true;
 }
 
-esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits) {
+// normal 4, 10, 63, 12, 16
+
+esp_err_t i2sSetClock(uint8_t bus_num, 
+        uint8_t div_num, // 4     13
+        uint8_t div_b,   // 10    20
+        uint8_t div_a,   // 63    63
+        uint8_t bck,     // 12    60 or 7
+        uint8_t bits)    // 16    8
+{
     if (bus_num >= I2S_NUM_MAX || div_a > 63 || div_b > 63 || bck > 63) {
         return ESP_FAIL;
     }
+    log_i("i2sSetClock bus %u, clkm_div_num %u, clk_div_a %u, clk_div_b %u, bck_div_num %u, bits_mod %u",
+        bus_num,
+        div_num,
+        div_a,
+        div_b,
+        bck,
+        bits);
+
     i2s_dev_t* i2s = I2S[bus_num].bus;
 
     typeof(i2s->clkm_conf) clkm_conf;
@@ -232,7 +251,7 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
     {
         return;
     }
-
+    /* cant really track this with parrallel
     int8_t outOld = I2S[bus_num].out;
 
     I2S[bus_num].out = out;
@@ -243,7 +262,7 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
         gpio_matrix_out(outOld, MATRIX_DETACH_OUT_SIG, false, false);
         pinMode(outOld, INPUT);
     }
-
+    */
     if (out >= 0) 
     {
         pinMode(out, OUTPUT);
@@ -368,7 +387,7 @@ void i2sInit(uint8_t bus_num,
     typeof(i2s->conf) conf;
     conf.val = 0;
     conf.tx_msb_shift = 0; // (bits_per_sample != 8);// 0:DAC/PCM, 1:I2S
-    conf.tx_right_first = (bits_per_sample == 8);
+    conf.tx_right_first = 0; // (bits_per_sample == 8);
     i2s->conf.val = conf.val;
 
     // set parallel mode
@@ -420,7 +439,8 @@ void i2sDeinit(uint8_t bus_num) {
     i2sDeinitDmaItems(bus_num);
 }
 
-esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) {
+esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) 
+{
     if (bus_num >= I2S_NUM_MAX) {
         return ESP_FAIL;
     }
@@ -429,41 +449,30 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) {
         return ESP_OK;
     }
 
-    int clkmInteger, clkmDecimals, bck = 0;
-    double denom = (double)1 / 63;
-    int channel = 2;
-
-//    double mclk;
-    double clkmdiv;
-
-    int factor;
-
-    if (bits == 8) {
-        factor = 120;
-    } else {
-        factor = (256 % bits) ? 384 : 256;
-    }
-
-    clkmdiv = (double)I2S_BASE_CLK / (rate* factor);
-    if (clkmdiv > 256) {
+    //               160,000,000L / (100,000 * 384)
+    double clkmdiv = (double)I2S_BASE_CLK / ((rate * 384) + 1);
+    if (clkmdiv > 256) 
+    {
         log_e("rate is too low");
+        return ESP_FAIL;
+    } 
+    else if (clkmdiv < 2) 
+    {
+        log_e("rate is too fast");
         return ESP_FAIL;
     }
     I2S[bus_num].rate = rate;
 
-    clkmInteger = clkmdiv;
-    clkmDecimals = ((clkmdiv - clkmInteger) / denom);
+    // calc integer and franctional for more precise timing
+    // 
+    uint8_t clkmInteger = clkmdiv;
+    uint8_t clkmFraction = (clkmdiv - clkmInteger) * 63.0;
 
-    if (bits == 8) {
-//        mclk = rate* factor;
-        bck = 60;
-        bits = 16;
-    } else {
-//        mclk = (double)clkmInteger + (denom* clkmDecimals);
-        bck = factor/(bits* channel);
-    }
+    // due to conf2.lcd_tx_wrx2_en being set for p8, bit rate is doubled
+    // adjust by using bck here
+    uint8_t bck = (bits == 8) ? 24 : 12;
 
-    i2sSetClock(bus_num, clkmInteger, clkmDecimals, 63, bck, bits);
+    i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bits);
 
     return ESP_OK;
 }

@@ -31,8 +31,6 @@ void i2sDeinit(uint8_t bus_num);
 
 void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert);
 
-esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits_per_sample);
-esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_per_sample);
 
 size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free_when_sent);
 bool i2sWriteDone(uint8_t bus_num);
