@@ -50,7 +50,7 @@ public:
     const static size_t DmaBitsPerPixelBits = 4; // encoding needs 4 bits to provide pulse for a bit
     const static uint8_t BusMaxCount = 8;
     const static uint8_t InvalidMuxId = -1;
-    const static size_t DmaBytesPerPixelBytes = BusMaxCount * DmaBitsPerPixelBits;
+    const static size_t DmaBytesPerPixelBytes = BusMaxCount * DmaBitsPerPixelBits / 8; // max bus count * dma bits per pixel bits / bits per byte
 
     uint32_t I2sBufferSize; // total size of I2sBuffer
     uint32_t* I2sBuffer;    // holds the DMA buffer that is referenced by I2sBufDesc
@@ -70,7 +70,7 @@ public:
     {
     }
 
-    uint8_t RegisterNewMuxBus(size_t dataSize)
+    uint8_t RegisterNewMuxBus(const size_t dataSize)
     {
         // find first available bus id
         uint8_t muxId = 0;
@@ -147,6 +147,12 @@ public:
                 I2S_FIFO_32BIT_SINGLE,
                 dmaBlockCount,
                 0);
+
+            Serial.print("MaxBusDataSize = ");
+            Serial.println(MaxBusDataSize);
+
+            Serial.print("I2sBufferSize = ");
+            Serial.println(I2sBufferSize);
 
             I2sBuffer = static_cast<uint32_t*>(heap_caps_malloc(I2sBufferSize, MALLOC_CAP_DMA));
             // no need to initialize all of it, but since it contains
@@ -252,6 +258,8 @@ public:
                 dma &= ~(EncodedBitMask >> _muxId);
                 // apply new data for mux bus
                 dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) >> _muxId);
+// debug
+//                dma = 0x00;// 0xc0c00303;
 
                 *(pDma++) = dma;
                 value <<= 1;
@@ -280,6 +288,9 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
+        Serial.print("_sizeData = ");
+        Serial.println(_sizeData);
+        
         _bus.RegisterNewMuxBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);
     }
 
