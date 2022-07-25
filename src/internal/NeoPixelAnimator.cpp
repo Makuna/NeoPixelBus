@@ -118,8 +118,8 @@ void NeoPixelAnimator::StopAll()
     _activeAnimations = 0;
 }
 
-
-void NeoPixelAnimator::UpdateAnimations()
+// ADDED BY MICHAEL
+void NeoPixelAnimator::UpdateAnimations(uint8_t segment_index)
 {
     if (_isRunning)
     {

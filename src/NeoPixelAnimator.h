@@ -111,7 +111,8 @@ public:
 
     void ChangeAnimationDuration(uint16_t indexAnimation, uint16_t newDuration);
 
-    void UpdateAnimations();
+    // ADDED BY MICHAEL
+    void UpdateAnimations(uint8_t segment_index = 0);
 
     bool IsPaused()
     {

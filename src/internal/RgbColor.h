@@ -26,10 +26,19 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #include <Arduino.h>
+// ADDED BY MICHAEL
+#include "lib8tion/math8.h"
 #include "NeoSettings.h"
 #include "RgbColorBase.h"
 
+// struct RgbwColor;
+// ADDED BY MICHAEL
 struct RgbwColor;
+struct HslColor;
+struct HsbColor;
+struct RgbcctColor;
+struct HtmlColor;
+
 
 // ------------------------------------------------------------------------
 // RgbColor represents a color object that is represented by Red, Green, Blue
@@ -84,6 +93,17 @@ struct RgbColor : RgbColorBase
     RgbColor(const HsbColor& color);
 
 
+    
+    // ------------------------------------------------------------------------
+    // Construct a RgbColor using RgbcctColor
+    // ------------------------------------------------------------------------
+    RgbColor(const RgbcctColor& color);
+
+    // ------------------------------------------------------------------------
+    // Construct a RgbColor using RgbcctColor
+    // ------------------------------------------------------------------------
+    // RgbColor(const uint32_t color32bit_WRGB);
+
     // ------------------------------------------------------------------------
     // Construct a RgbColor that will have its values set in latter operations
     // CAUTION:  The R,G,B members are not initialized and may not be consistent
@@ -92,6 +112,33 @@ struct RgbColor : RgbColorBase
     {
     };
 
+   /// add one RGB to another, saturating at 0xFF for each channel
+    inline RgbColor& operator+= (const RgbColor& rhs )
+    {
+        // Serial.println("operator+= (const RgbcctColor& rhs )");
+        // delay(4000);
+        R = qadd8( R, rhs.R);
+        G = qadd8( G, rhs.G);
+        B = qadd8( B, rhs.B);
+        // WW = qadd8( WW, rhs.WW);
+        // WC = qadd8( WC, rhs.WC);
+        return *this;
+    }
+
+
+
+   /// add one RGB to another, saturating at 0xFF for each channel
+    inline RgbColor& operator-= (const RgbColor& rhs )
+    {
+        // Serial.println("operator+= (const RgbcctColor& rhs )");
+        // delay(4000);
+        R = qsub8( R, rhs.R);
+        G = qsub8( G, rhs.G);
+        B = qsub8( B, rhs.B);
+        // WW = qadd8( WW, rhs.WW);
+        // WC = qadd8( WC, rhs.WC);
+        return *this;
+    }
     // ------------------------------------------------------------------------
     // Comparison operators
     // ------------------------------------------------------------------------
