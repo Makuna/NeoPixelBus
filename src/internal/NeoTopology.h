@@ -47,7 +47,7 @@ public:
 
     uint16_t Map(int16_t x, int16_t y) const
     {   
-        if (x >= _width)
+        if (x >= static_cast<int16_t>(_width))
         {
             x = _width - 1;
         }
@@ -55,7 +55,7 @@ public:
         {
             x = 0;
         }
-        if (y >= _height)
+        if (y >= static_cast<int16_t>(_height))
         {
             y = _height - 1;
         }
