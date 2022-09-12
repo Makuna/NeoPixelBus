@@ -396,5 +396,4 @@ typedef NeoEsp8266BitBangSk6812InvertedMethod NeoEsp8266BitBangLc8812InvertedMet
 
 // ESP bitbang doesn't have defaults and should avoided except for testing
 
-#endif // !defined(CONFIG_IDF_TARGET_ESP32C3)
 #endif // defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)

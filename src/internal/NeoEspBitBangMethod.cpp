@@ -64,7 +64,7 @@ void IRAM_ATTR NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint
 
         // set pin state
 #if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1ts = pinRegister;
+        GPIO.out_w1ts.val = pinRegister;
 #else
         GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
 #endif
@@ -74,7 +74,7 @@ void IRAM_ATTR NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint
 
         // reset pin start
 #if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1tc = pinRegister;
+        GPIO.out_w1tc.val = pinRegister;
 #else
         GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 #endif
@@ -177,7 +177,7 @@ void IRAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, 
 
         // set pin state
 #if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1tc = pinRegister;
+        GPIO.out_w1tc.val = pinRegister;
 #else
         GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
 #endif
@@ -187,7 +187,7 @@ void IRAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, 
 
         // reset pin start
 #if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1ts = pinRegister;
+        GPIO.out_w1ts.val = pinRegister;
 #else
         GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
 #endif
