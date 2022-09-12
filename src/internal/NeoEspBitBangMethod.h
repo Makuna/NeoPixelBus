@@ -28,9 +28,6 @@ License along with NeoPixel.  If not, see
 
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
 
-// ESP32C3 I2S is not supported yet 
-#if !defined(CONFIG_IDF_TARGET_ESP32C3)
-
 #if defined(ARDUINO_ARCH_ESP8266)
 #include <eagle_soc.h>
 #endif
