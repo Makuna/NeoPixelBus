@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
-RgbwColor provides a color object that can be directly consumed by NeoPixelBus
+MonoColor provides a color object that can be directly consumed by NeoPixelBus
 
-Written by Michael C. Miller.
+Written by Grzegorz Bialokziewicz (based on Michael C. Miller code).
 
 I invest time and resources providing this open source code,
 please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
@@ -26,93 +26,71 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #include <Arduino.h>
+#include "NeoSettings.h"
 
-struct MonoColor;
 struct RgbColor;
+struct RgbwColor;
 struct HslColor;
 struct HsbColor;
+struct HtmlColor;
 
 // ------------------------------------------------------------------------
-// RgbwColor represents a color object that is represented by Red, Green, Blue
-// component values and an extra White component.  It contains helpful color 
-// routines to manipulate the color.
+// MonoColor represents a color object that is represented by only White
+// component. It contains helpful color routines to manipulate the color.
 // ------------------------------------------------------------------------
-struct RgbwColor
+struct MonoColor
 {
-    typedef NeoRgbwCurrentSettings SettingsObject;
+    typedef NeoMonoCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwColor using R, G, B, W values (0-255)
+    // Construct a MonoColor using R, G, B, W values (0-255)
     // ------------------------------------------------------------------------
-    RgbwColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w = 0) :
-        R(r), G(g), B(b), W(w)
-    {
-    };
+    MonoColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w = 0);
 
     // ------------------------------------------------------------------------
-    // Construct a RgbColor using a single brightness value (0-255)
+    // Construct a MonoColor using a single brightness value (0-255)
     // This works well for creating gray tone colors
     // (0) = black, (255) = white, (128) = gray
     // ------------------------------------------------------------------------
-    RgbwColor(uint8_t brightness) :
-        R(0), G(0), B(0), W(brightness)
-    {
-    };
+    MonoColor(uint8_t brightness);
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwColor using MonoColor
+    // Construct a MonoColor using RgbColor
     // ------------------------------------------------------------------------
-    RgbwColor(const MonoColor& color) :
-        R(0),
-        G(0),
-        B(0),
-        W(color.W)
-    {
-    }
+    MonoColor(const RgbColor& color);
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwColor using RgbColor
+    // Construct a MonoColor using HtmlColor
     // ------------------------------------------------------------------------
-    RgbwColor(const RgbColor& color) :
-        R(color.R),
-        G(color.G),
-        B(color.B),
-        W(0)
-    {
-    };
+    MonoColor(const HtmlColor& color);
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwColor using HtmlColor
+    // Construct a MonoColor using HslColor
     // ------------------------------------------------------------------------
-    RgbwColor(const HtmlColor& color);
+    MonoColor(const HslColor& color);
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwColor using HslColor
+    // Construct a MonoColor using HsbColor
     // ------------------------------------------------------------------------
-    RgbwColor(const HslColor& color);
+    MonoColor(const HsbColor& color);
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwColor using HsbColor
-    // ------------------------------------------------------------------------
-    RgbwColor(const HsbColor& color);
-
-    // ------------------------------------------------------------------------
-    // Construct a RgbwColor that will have its values set in latter operations
+    // Construct a MonoColor that will have its values set in latter operations
     // CAUTION:  The R,G,B, W members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
-    RgbwColor()
+    MonoColor()
     {
     };
 
     // ------------------------------------------------------------------------
     // Comparison operators
     // ------------------------------------------------------------------------
-    bool operator==(const RgbwColor& other) const
+    bool operator==(const MonoColor& other) const
     {
-        return (R == other.R && G == other.G && B == other.B && W == other.W);
+        return (W == other.W);
     };
 
-    bool operator!=(const RgbwColor& other) const
+    bool operator!=(const MonoColor& other) const
     {
         return !(*this == other);
     };
@@ -122,7 +100,7 @@ struct RgbwColor
     // ------------------------------------------------------------------------
     bool IsMonotone() const
     {
-        return (R == B && R == G);
+        return true;
     };
 
     // ------------------------------------------------------------------------
@@ -131,7 +109,7 @@ struct RgbwColor
     // ------------------------------------------------------------------------
     bool IsColorLess() const
     {
-        return (R == 0 && B == 0 && G == 0);
+        return true;
     };
 
     // ------------------------------------------------------------------------
@@ -146,7 +124,7 @@ struct RgbwColor
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    RgbwColor Dim(uint8_t ratio) const;
+    MonoColor Dim(uint8_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Brighten will return a new color that is blended to white with the given ratio
@@ -154,7 +132,7 @@ struct RgbwColor
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    RgbwColor Brighten(uint8_t ratio) const;
+    MonoColor Brighten(uint8_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
@@ -177,8 +155,8 @@ struct RgbwColor
     // progress - (0.0 - 1.0) value where 0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static RgbwColor LinearBlend(const RgbwColor& left, const RgbwColor& right, float progress);
-    
+    static MonoColor LinearBlend(const MonoColor& left, const MonoColor& right, float progress);
+
     // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
     // c00 - upper left quadrant color
@@ -188,33 +166,22 @@ struct RgbwColor
     // x - unit value (0.0 - 1.0) that defines the blend progress in horizontal space
     // y - unit value (0.0 - 1.0) that defines the blend progress in vertical space
     // ------------------------------------------------------------------------
-    static RgbwColor BilinearBlend(const RgbwColor& c00, 
-        const RgbwColor& c01, 
-        const RgbwColor& c10, 
-        const RgbwColor& c11, 
-        float x, 
+    static MonoColor BilinearBlend(const MonoColor& c00, 
+        const MonoColor& c01,
+        const MonoColor& c10,
+        const MonoColor& c11,
+        float x,
         float y);
 
     uint16_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
     {
-        auto total = 0;
-
-        total += R * settings.RedTenthMilliAmpere / Max;
-        total += G * settings.GreenTenthMilliAmpere / Max;
-        total += B * settings.BlueTenthMilliAmpere / Max;
-        total += W * settings.WhiteTenthMilliAmpere / Max;
-
-        return total;
+        return W * settings.WhiteTenthMilliAmpere / Max;
     }
 
     // ------------------------------------------------------------------------
-    // Red, Green, Blue, White color members (0-255) where 
-    // (0,0,0,0) is black and (255,255,255, 0) and (0,0,0,255) is white
-    // Note (255,255,255,255) is extreme bright white
+    // White color members (0-255) where 
+    // (0) is black and (255) is white
     // ------------------------------------------------------------------------
-    uint8_t R;
-    uint8_t G;
-    uint8_t B;
     uint8_t W;
 
     const static uint8_t Max = 255;
@@ -240,4 +207,3 @@ private:
         return element;
     }
 };
-

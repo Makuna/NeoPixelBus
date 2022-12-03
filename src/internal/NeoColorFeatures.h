@@ -26,6 +26,61 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+class Neo1ByteElements
+{
+public:
+    static const size_t PixelSize = 1;
+
+    static uint8_t* getPixelAddress(uint8_t* pPixels, uint16_t indexPixel)
+    {
+        return pPixels + indexPixel * PixelSize;
+    }
+    static const uint8_t* getPixelAddress(const uint8_t* pPixels, uint16_t indexPixel)
+    {
+        return pPixels + indexPixel * PixelSize;
+    }
+
+    static void replicatePixel(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
+    {
+        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        while (pPixelDest < pEnd)
+        {
+            *pPixelDest++ = *pPixelSrc;
+        }
+    }
+
+    static void movePixelsInc(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
+    {
+        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        while (pPixelDest < pEnd)
+        {
+            *pPixelDest++ = *pPixelSrc++;
+        }
+    }
+
+    static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
+    {
+        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        const uint8_t* pSrc = reinterpret_cast<const uint8_t*>(pPixelSrc);
+        while (pPixelDest < pEnd)
+        {
+            *pPixelDest++ = pgm_read_byte(pSrc++);
+        }
+    }
+
+    static void movePixelsDec(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
+    {
+        uint8_t* pDestBack = pPixelDest + (count * PixelSize);
+        const uint8_t* pSrcBack = pPixelSrc + (count * PixelSize);
+        while (pDestBack > pPixelDest)
+        {
+            *--pDestBack = *--pSrcBack;
+        }
+    }
+
+    typedef MonoColor ColorObject;
+};
+
 class Neo3ByteElements
 {
 public:
@@ -273,6 +328,27 @@ public:
     typedef Rgbw64Color ColorObject;
 };
 
+class Neo1ByteElementsNoSettings : public Neo1ByteElements
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    static const size_t SettingsSize = 0;
+
+    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    {
+    }
+
+    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    {
+        return pData;
+    }
+
+    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    {
+        return pData;
+    }
+};
+
 class Neo3ByteElementsNoSettings : public Neo3ByteElements
 {
 public:
@@ -355,6 +431,38 @@ public:
     {
         return pData;
     }
+};
+
+class NeoMonoFeature : public Neo1ByteElementsNoSettings
+{
+public:
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        *p = color.W;
+    }
+
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        color.W = *p;
+
+        return color;
+    }
+
+    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
+
+        color.W = pgm_read_byte(p);
+
+        return color;
+    }
+
 };
 
 class NeoGrbFeature : public Neo3ByteElementsNoSettings

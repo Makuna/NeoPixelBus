@@ -29,6 +29,17 @@ class NeoNoSettings
 {
 };
 
+class NeoMonoCurrentSettings
+{
+public:
+    NeoMonoCurrentSettings(uint16_t white) :
+        WhiteTenthMilliAmpere(white)
+    {
+    }
+
+    const uint16_t WhiteTenthMilliAmpere; // in 1/10th ma
+};
+
 class NeoRgbCurrentSettings
 {
 public:

@@ -23,7 +23,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
-
+#include "MonoColor.h"
 #include "RgbColor.h"
 #include "RgbwColor.h"
 #include "Rgb48Color.h"
