@@ -304,6 +304,126 @@ private:
     uint8_t _muxId; 
 };
 
+class NeoEsp32I2s1Mux8Bus
+{
+public:
+    const static uint8_t I2sBusNumber = 1;
+
+    NeoEsp32I2s1Mux8Bus() :
+        _muxId(NeoEspI2sContext::InvalidMuxId)
+    {
+    }
+
+    void RegisterNewMuxBus(size_t dataSize)
+    {
+        _muxId = s_context.RegisterNewMuxBus(dataSize);
+    }
+
+    void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
+    {
+        s_context.Construct(I2sBusNumber, i2sSampleRate);
+        i2sSetPins(I2sBusNumber, pin, _muxId, invert);
+
+        Serial.print(" muxid ");
+        Serial.println(_muxId);
+    }
+
+    void DeregisterMuxBus()
+    {
+        if (s_context.DeregisterMuxBus(_muxId))
+        {
+            s_context.Destruct(I2sBusNumber);
+        }
+        // disconnect muxed pin?
+        _muxId = NeoEspI2sContext::InvalidMuxId;
+    }
+
+    void StartWrite()
+    {
+        if (s_context.IsAllMuxBusesUpdated())
+        {
+            Serial.println("writing");
+            s_context.ResetMuxBusesUpdated();
+            i2sWrite(I2sBusNumber, reinterpret_cast<uint8_t*>(s_context.I2sBuffer), s_context.I2sBufferSize, false, false);
+        }
+    }
+
+    bool IsWriteDone()
+    {
+        return i2sWriteDone(I2sBusNumber);
+    }
+
+    void FillBuffers(const uint8_t* data, size_t  sizeData)
+    {
+        // 8 channel bits layout for DMA 32bit value
+        //
+        //  mux bus id     01234567 01234567 01234567 01234567
+        //  encode bit #   0        1        2        3
+        //  value zero     1        0        0        0
+        //  value one      1        1        1        0    
+        const uint32_t EncodedZeroBit = 0x80000000;
+        const uint32_t EncodedOneBit = 0x80808000;
+        const uint32_t EncodedBitMask = 0x80808080;
+
+        const uint64_t EncodedZeroBit64 = 0x0001000000000000;
+        const uint64_t EncodedOneBit64 = 0x0001000100010000;
+        const uint64_t EncodedBitMask64 = 0x0001000100010001;
+
+        const uint64_t EncodedZeroBit64Inv = 0x0100000000000000;
+        const uint64_t EncodedOneBit64Inv = 0x0100010001000000;
+        const uint64_t EncodedBitMask64Inv = 0x0100010001000100;
+
+        uint32_t* pDma = s_context.I2sBuffer;
+        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sBuffer);
+
+        const uint8_t* pEnd = data + sizeData;
+        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
+        {
+            uint8_t value = *pPixel++;
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+				if (I2sBusNumber == 0)
+				{	
+					uint64_t dma64 = *(pDma64);
+					// clear previous data for mux bus
+
+					#if defined(CONFIG_IDF_TARGET_ESP32S2)
+					   dma64 &= ~(EncodedBitMask64 << (_muxId));
+					   dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
+					#else
+					   dma64 &= ~(EncodedBitMask64Inv << (_muxId));
+					   dma64 |= (((value & 0x80) ? EncodedOneBit64Inv : EncodedZeroBit64Inv) << (_muxId));
+					#endif
+					*(pDma64++) = dma64;
+				}
+				else
+				{
+					uint32_t dma = *(pDma);
+					// clear previous data for mux bus
+					dma &= ~(EncodedBitMask >> (7-_muxId));
+					// apply new data for mux bus
+					dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) >> (7-_muxId));
+					*(pDma++) = dma;
+				}
+
+                value <<= 1;
+            }
+        }
+
+        s_context.MarkMuxBusUpdated(_muxId);
+    }
+
+    void MarkUpdated()
+    {
+        s_context.MarkMuxBusUpdated(_muxId);
+    }
+
+private:
+    static NeoEspI2sContext s_context;
+    uint8_t _muxId; 
+};
+
 template<typename T_SPEED, typename T_BUS, typename T_INVERT> class NeoEsp32I2sXMethodBase
 {
 public:
@@ -385,9 +505,11 @@ private:
 
 // NORMAL
 typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Ws2812Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Ws2812Method;
 
 
 // INVERTED
 typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Ws2812InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X8Ws2812InvertedMethod;
 
 #endif
