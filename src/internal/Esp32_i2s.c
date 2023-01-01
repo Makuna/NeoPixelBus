@@ -307,11 +307,11 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
             }
             else
             {
-				#if !defined(CONFIG_IDF_TARGET_ESP32S2)
-                	i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
-				#else
-					i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;
-				#endif
+                #if !defined(CONFIG_IDF_TARGET_ESP32S2)
+                    i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
+                #else
+                    i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;
+                #endif
             }
         }
 

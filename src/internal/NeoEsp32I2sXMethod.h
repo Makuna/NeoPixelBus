@@ -245,9 +245,9 @@ public:
         const uint32_t EncodedOneBit = 0x80808000;
         const uint32_t EncodedBitMask = 0x80808080;
 
-        const uint64_t EncodedZeroBit64 = 0x0080000000000000;
-        const uint64_t EncodedOneBit64 = 0x0080008000800000;
-        const uint64_t EncodedBitMask64 = 0x0080008000800080;
+        const uint64_t EncodedZeroBit64 = 0x0001000000000000;
+        const uint64_t EncodedOneBit64 = 0x0001000100010000;
+        const uint64_t EncodedBitMask64 = 0x0001000100010001;
 
         uint32_t* pDma = s_context.I2sBuffer;
         uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sBuffer);
@@ -263,9 +263,9 @@ public:
 				{	
 					uint64_t dma64 = *(pDma64);
 					// clear previous data for mux bus
-					dma64 &= ~(EncodedBitMask64 >> (7-_muxId));
+					dma64 &= ~(EncodedBitMask64 << (_muxId));
 					// apply new data for mux bus
-					dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) >> (7-_muxId));
+					dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
 					*(pDma64++) = dma64;
 				}
 				else
