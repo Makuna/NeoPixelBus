@@ -129,7 +129,7 @@ public:
         // construct only once on first time called
         if (I2sBuffer == nullptr)
         {
-            I2sBufferSize = DmaBytesPerPixelBytes * MaxBusDataSize;
+            I2sBufferSize = DmaBytesPerPixelBytes * MaxBusDataSize * ((busNumber == 0) ? 2 : 1);
 
             // must have a 4 byte aligned buffer for i2s
             uint32_t alignment = I2sBufferSize % 4;
@@ -245,23 +245,39 @@ public:
         const uint32_t EncodedOneBit = 0x80808000;
         const uint32_t EncodedBitMask = 0x80808080;
 
+        const uint64_t EncodedZeroBit64 = 0x0080000000000000;
+        const uint64_t EncodedOneBit64 = 0x0080008000800000;
+        const uint64_t EncodedBitMask64 = 0x0080008000800080;
+
         uint32_t* pDma = s_context.I2sBuffer;
+        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sBuffer);
+
         const uint8_t* pEnd = data + sizeData;
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
         {
             uint8_t value = *pPixel++;
+
             for (uint8_t bit = 0; bit < 8; bit++)
             {
-                uint32_t dma = *(pDma);
+				if (I2sBusNumber == 0)
+				{	
+					uint64_t dma64 = *(pDma64);
+					// clear previous data for mux bus
+					dma64 &= ~(EncodedBitMask64 >> (7-_muxId));
+					// apply new data for mux bus
+					dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) >> (7-_muxId));
+					*(pDma64++) = dma64;
+				}
+				else
+				{
+					uint32_t dma = *(pDma);
+					// clear previous data for mux bus
+					dma &= ~(EncodedBitMask >> (7-_muxId));
+					// apply new data for mux bus
+					dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) >> (7-_muxId));
+					*(pDma++) = dma;
+				}
 
-                // clear previous data for mux bus
-                dma &= ~(EncodedBitMask >> _muxId);
-                // apply new data for mux bus
-                dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) >> _muxId);
-// debug
-//                dma = 0x00;// 0xc0c00303;
-
-                *(pDma++) = dma;
                 value <<= 1;
             }
         }
