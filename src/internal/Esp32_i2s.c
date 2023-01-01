@@ -453,7 +453,23 @@ void i2sInit(uint8_t bus_num,
     i2s->pdm_conf.tx_pdm_en = 0;
 #endif
 
-    i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
+    
+
+	if (bus_num == 1 && bits_per_sample == 8)
+	{
+		i2sSetSampleRate(bus_num, sample_rate * 2, bits_per_sample);
+		i2s->fifo_conf.val = 0;
+		i2s->fifo_conf.rx_fifo_mod_force_en = 1; 
+		i2s->fifo_conf.tx_fifo_mod_force_en = 1; // HN
+		i2s->fifo_conf.rx_fifo_mod = 1; // HN
+		i2s->fifo_conf.tx_fifo_mod = 1;
+		i2s->fifo_conf.rx_data_num = 32; //Thresholds. 
+		i2s->fifo_conf.tx_data_num = 32;
+	}
+	else
+	{
+		i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);		
+	}
 
 
     /* */

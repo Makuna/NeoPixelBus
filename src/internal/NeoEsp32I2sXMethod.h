@@ -242,7 +242,7 @@ public:
         //  value zero     1        0        0        0
         //  value one      1        1        1        0    
         const uint32_t EncodedZeroBit = 0x80000000;
-        const uint32_t EncodedOneBit = 0x80808000;
+        const uint32_t EncodedOneBit = 0x80008080;
         const uint32_t EncodedBitMask = 0x80808080;
 
         const uint64_t EncodedZeroBit64 = 0x0000000000000001;
