@@ -245,8 +245,8 @@ public:
         const uint32_t EncodedOneBit = 0x80808000;
         const uint32_t EncodedBitMask = 0x80808080;
 
-        const uint64_t EncodedZeroBit64 = 0x0001000000000000;
-        const uint64_t EncodedOneBit64 = 0x0001000100010000;
+        const uint64_t EncodedZeroBit64 = 0x0000000000000001;
+        const uint64_t EncodedOneBit64 = 0x0000000100010001;
         const uint64_t EncodedBitMask64 = 0x0001000100010001;
 
         const uint64_t EncodedZeroBit64Inv = 0x0100000000000000;
