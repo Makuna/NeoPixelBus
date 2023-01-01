@@ -249,6 +249,10 @@ public:
         const uint64_t EncodedOneBit64 = 0x0001000100010000;
         const uint64_t EncodedBitMask64 = 0x0001000100010001;
 
+        const uint64_t EncodedZeroBit64Inv = 0x0100000000000000;
+        const uint64_t EncodedOneBit64Inv = 0x0100010001000000;
+        const uint64_t EncodedBitMask64Inv = 0x0100010001000100;
+
         uint32_t* pDma = s_context.I2sBuffer;
         uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sBuffer);
 
@@ -263,9 +267,14 @@ public:
 				{	
 					uint64_t dma64 = *(pDma64);
 					// clear previous data for mux bus
-					dma64 &= ~(EncodedBitMask64 << (_muxId));
-					// apply new data for mux bus
-					dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
+
+					#if defined(CONFIG_IDF_TARGET_ESP32S2)
+					   dma64 &= ~(EncodedBitMask64 << (_muxId));
+					   dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
+					#else
+					   dma64 &= ~(EncodedBitMask64Inv << (_muxId));
+					   dma64 |= (((value & 0x80) ? EncodedOneBit64Inv : EncodedZeroBit64Inv) << (_muxId));
+					#endif
 					*(pDma64++) = dma64;
 				}
 				else
