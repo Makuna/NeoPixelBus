@@ -307,11 +307,7 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
             }
             else
             {
-                #if !defined(CONFIG_IDF_TARGET_ESP32S2)
-                    i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
-                #else
-                    i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;
-                #endif
+				i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;                
             }
         }
 
@@ -393,8 +389,8 @@ void i2sInit(uint8_t bus_num,
     {
         typeof(i2s->conf2) conf2;
         conf2.val = 0;
-        conf2.lcd_en = (bits_per_sample == 8);
-        conf2.lcd_tx_wrx2_en = (bits_per_sample == 8);
+        conf2.lcd_en = (bits_per_sample == 8 || bits_per_sample == 16);
+        conf2.lcd_tx_wrx2_en = 0;//(bits_per_sample == 8 || bits_per_sample == 16);
         i2s->conf2.val = conf2.val;
     }
 
@@ -454,10 +450,11 @@ void i2sInit(uint8_t bus_num,
 #endif
 
     
-	i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
+	
 
-	if (bus_num == 1 && bits_per_sample == 8)
+	if (bits_per_sample == 8 || bits_per_sample == 16)
 	{		
+		i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
 		i2s->fifo_conf.val = 0;
 		i2s->fifo_conf.rx_fifo_mod_force_en = 1; 
 		i2s->fifo_conf.tx_fifo_mod_force_en = 1; // HN
@@ -465,6 +462,10 @@ void i2sInit(uint8_t bus_num,
 		i2s->fifo_conf.tx_fifo_mod = 1;
 		i2s->fifo_conf.rx_data_num = 32; //Thresholds. 
 		i2s->fifo_conf.tx_data_num = 32;
+	}
+	else
+	{
+		i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
 	}
 
     /* */
@@ -552,7 +553,7 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits)
 
     // due to conf2.lcd_tx_wrx2_en being set for p8, bit rate is doubled
     // adjust by using bck here
-    uint8_t bck = (bits == 8) ? 24 : 12;
+    uint8_t bck = (bits == 8 || bits == 16) ? 24 : 12;
 
     i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bits);
 
