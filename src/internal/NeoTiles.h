@@ -52,7 +52,7 @@ public:
         uint16_t totalWidth = getWidth();
         uint16_t totalHeight = getHeight();
 
-        if (x >= totalWidth)
+        if (x >= static_cast<int16_t>(totalWidth))
         {
             x = totalWidth - 1;
         }
@@ -61,7 +61,7 @@ public:
             x = 0;
         }
 
-        if (y >= totalHeight)
+        if (y >= static_cast<int16_t>(totalHeight))
         {
             y = totalHeight - 1;
         }
@@ -101,7 +101,8 @@ public:
         uint16_t totalWidth = getWidth();
         uint16_t totalHeight = getHeight();
 
-        if (x < 0 || x >= totalWidth || y < 0 || y >= totalHeight)
+        if (x < 0 || x >= static_cast<int16_t>(totalWidth) ||
+                y < 0 || y >= static_cast<int16_t>(totalHeight))
         {
             return NeoTopologyHint_OutOfBounds; 
         }
