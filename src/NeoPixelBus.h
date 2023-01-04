@@ -27,22 +27,6 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-// some platforms do not come with STL or properly defined one, specifically functional
-// if you see...
-// undefined reference to `std::__throw_bad_function_call()'
-// ...then you can either add the platform symbol to the list so NEOPIXEBUS_NO_STL gets defined or
-// go to boards.txt and enable c++ by adding (teensy31.build.flags.libs=-lstdc++) and set to "smallest code" option in Arduino
-//
-#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR) || defined(STM32L432xx) || defined(STM32L476xx) || defined(ARDUINO_ARCH_SAM)
-#define NEOPIXEBUS_NO_STL 1
-#endif
-
-// some platforms do not define this standard progmem type for some reason
-//
-#ifndef PGM_VOID_P
-#define PGM_VOID_P const void *
-#endif
-
 // '_state' flags for internal state
 #define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
 
