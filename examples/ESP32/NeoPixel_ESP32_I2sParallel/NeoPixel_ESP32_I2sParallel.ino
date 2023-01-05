@@ -10,16 +10,16 @@ const uint8_t DebugPin = 5; // used for logic anaylyser trigger capture
 
 // moved construction into Setup() so we can capture log output into Serial
 //
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method>* strip0;
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method>* strip1;
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method>* strip2;
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method>* strip3;
+NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>* strip0;
+NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>* strip1;
+NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>* strip2;
+NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>* strip3;
 
 // focusing on the first four channels for now
-//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method> strip4(PixelCount, PixelPin);
-//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method> strip5(PixelCount, PixelPin);
-//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method> strip6(PixelCount, PixelPin);
-//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method> strip7(PixelCount, PixelPin);
+//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method> strip4(PixelCount, PixelPin);
+//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method> strip5(PixelCount, PixelPin);
+//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method> strip6(PixelCount, PixelPin);
+//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method> strip7(PixelCount, PixelPin);
 
 void setup() {
     Serial.begin(115200);
@@ -29,10 +29,10 @@ void setup() {
     Serial.println("Initializing...");
     Serial.flush();
 
-    strip0 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method>(PixelCount, 15);
-    strip1 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method>(PixelCount, 2);
-    strip2 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method>(PixelCount, 4);
-    strip3 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s0X8Ws2812Method>(PixelCount, 16);
+    strip0 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>(PixelCount, 15);
+    strip1 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>(PixelCount, 2);
+    strip2 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>(PixelCount, 4);
+    strip3 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>(PixelCount, 16);
       
     strip0->Begin();
     Serial.println(" 1");
