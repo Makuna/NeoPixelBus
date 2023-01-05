@@ -39,6 +39,7 @@
 #include "esp_intr.h"
 #endif
 
+#include "rom/lldesc.h"
 #include "soc/gpio_reg.h"
 #include "soc/gpio_sig_map.h"
 #include "soc/io_mux_reg.h"
@@ -58,7 +59,6 @@
 
 #include "Esp32_i2s.h"
 #include "esp32-hal.h"
-#include "rom/lldesc.h"
 
 esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits_per_sample);
 esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_per_sample);
@@ -292,7 +292,7 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
             }
             else
             {
-				i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;                
+                i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;                
             }
         }
 
@@ -435,23 +435,19 @@ void i2sInit(uint8_t bus_num,
 #endif
 
     
-	
+    
+    i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
 
-	if (bits_per_sample == 8 || bits_per_sample == 16)
-	{		
-		i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
-		i2s->fifo_conf.val = 0;
-		i2s->fifo_conf.rx_fifo_mod_force_en = 1; 
-		i2s->fifo_conf.tx_fifo_mod_force_en = 1; // HN
-		i2s->fifo_conf.rx_fifo_mod = 1; // HN
-		i2s->fifo_conf.tx_fifo_mod = 1;
-		i2s->fifo_conf.rx_data_num = 32; //Thresholds. 
-		i2s->fifo_conf.tx_data_num = 32;
-	}
-	else
-	{
-		i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
-	}
+    if (bits_per_sample == 8 || bits_per_sample == 16)
+    {
+        i2s->fifo_conf.val = 0;
+        i2s->fifo_conf.rx_fifo_mod_force_en = 1; 
+        i2s->fifo_conf.tx_fifo_mod_force_en = 1; // HN
+        i2s->fifo_conf.rx_fifo_mod = 1; // HN
+        i2s->fifo_conf.tx_fifo_mod = 1;
+        i2s->fifo_conf.rx_data_num = 32; //Thresholds. 
+        i2s->fifo_conf.tx_data_num = 32;
+    }
 
     /* */
     //Reset FIFO/DMA -> needed? Doesn't dma_reset/fifo_reset do this?
