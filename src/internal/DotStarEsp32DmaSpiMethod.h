@@ -208,7 +208,10 @@ public:
 
     void Update(bool)
     {
-        while(!IsReadyToUpdate()) portYIELD();
+        while(!IsReadyToUpdate()) 
+        {
+            portYIELD();
+        }
 
         memcpy(_dmadata, _data, _spiBufferSize);
 
