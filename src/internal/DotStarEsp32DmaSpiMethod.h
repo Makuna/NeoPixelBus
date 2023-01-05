@@ -40,7 +40,6 @@ class Esp32VspiBus
 {
 public:
     const static spi_host_device_t SpiHostDevice = VSPI_HOST;
-    const static int DmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     const static int ParallelBits = 1;
 };
 #endif
@@ -49,7 +48,6 @@ class Esp32HspiBus
 {
 public:
     const static spi_host_device_t SpiHostDevice = HSPI_HOST;
-    const static int DmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     const static int ParallelBits = 1;
 };
 
@@ -58,7 +56,6 @@ class Esp32Vspi2BitBus
 {
 public:
     const static spi_host_device_t SpiHostDevice = VSPI_HOST;
-    const static int DmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     const static int ParallelBits = 2;
 };
 #endif
@@ -67,7 +64,6 @@ class Esp32Hspi2BitBus
 {
 public:
     const static spi_host_device_t SpiHostDevice = HSPI_HOST;
-    const static int DmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     const static int ParallelBits = 2;
 };
 
@@ -76,7 +72,6 @@ class Esp32Vspi4BitBus
 {
 public:
     const static spi_host_device_t SpiHostDevice = VSPI_HOST;
-    const static int DmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     const static int ParallelBits = 4;
 };
 #endif
@@ -85,7 +80,6 @@ class Esp32Hspi4BitBus
 {
 public:
     const static spi_host_device_t SpiHostDevice = HSPI_HOST;
-    const static int DmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
     const static int ParallelBits = 4;
 };
 
@@ -161,7 +155,7 @@ public:
         buscfg.max_transfer_sz = _spiBufferSize;
 
         //Initialize the SPI bus
-        ret = spi_bus_initialize(T_SPIBUS::SpiHostDevice, &buscfg, T_SPIBUS::DmaChannel);
+        ret = spi_bus_initialize(T_SPIBUS::SpiHostDevice, &buscfg, SPI_DMA_CH_AUTO);
         ESP_ERROR_CHECK(ret);
 
         initSpiDevice();
@@ -212,7 +206,6 @@ public:
         _spiTransaction.tx_buffer = _dmadata;
 
         esp_err_t ret = spi_device_queue_trans(_spiHandle, &_spiTransaction, 0);  //Transmit!
-        assert(ret == ESP_OK);            //Should have had no issues.
     }
 
     uint8_t* getData() const
