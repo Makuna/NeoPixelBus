@@ -139,10 +139,12 @@ public:
     {
         spi_transaction_t t;
         spi_transaction_t * tptr = &t;
+
         esp_err_t ret = spi_device_get_trans_result(_spiHandle, &tptr, 0);
 
-        // We know the previous transaction completed if we got ESP_OK, and we know there's no transactions queued if tptr is unmodified
-        return (ret == ESP_OK || tptr == &t);
+        // we are ready if prev result is back (ESP_OK) or if we got a timeout and
+        // transaction length of 0 (we didn't start a transaction)
+        return (ret == ESP_OK || (ret == ESP_ERR_TIMEOUT && 0 == _spiTransaction.length));
     }
 
     void Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
@@ -206,7 +208,7 @@ public:
 
     void Update(bool)
     {
-        while(!IsReadyToUpdate());
+        while(!IsReadyToUpdate()) portYIELD();
 
         memcpy(_dmadata, _data, _spiBufferSize);
 
@@ -231,6 +233,7 @@ public:
         _spiTransaction.tx_buffer = _dmadata;
 
         esp_err_t ret = spi_device_queue_trans(_spiHandle, &_spiTransaction, 0);  //Transmit!
+        ESP_ERROR_CHECK(ret);
     }
 
     uint8_t* getData() const
