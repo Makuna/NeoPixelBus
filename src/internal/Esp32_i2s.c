@@ -323,12 +323,25 @@ void i2sInit(uint8_t bus_num,
         return;
     }
 
-    I2S[bus_num].dma_count = dma_count + I2S_DMA_SILENCE_BLOCK_COUNT; // an extra two for looping silence
+    size_t extraEndBuffers = 0;
+    
+    if (bus_num == 1 && bits_per_sample == 8)
+        extraEndBuffers = 2;
+    else if (bits_per_sample == 8 || bits_per_sample == 16)
+        extraEndBuffers = 3;
+
+    I2S[bus_num].dma_count = dma_count + I2S_DMA_SILENCE_BLOCK_COUNT + extraEndBuffers; // an extra two for looping silence and extra for parallel mode to avoid doubling
     I2S[bus_num].dma_buf_len = dma_len & 0xFFF;
 
     if (!i2sInitDmaItems(bus_num)) 
     {
         return;
+    }
+
+    // eof to extra silence buffers at the end for the parallel mode
+    for(size_t resetIndex = 0; resetIndex < extraEndBuffers; resetIndex++)
+    {
+        I2S[bus_num].dma_items[I2S[bus_num].dma_count - resetIndex - 2].eof = 1;        
     }
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
@@ -534,7 +547,11 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits)
 
     // due to conf2.lcd_tx_wrx2_en being set for p8, bit rate is doubled
     // adjust by using bck here
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)   
     uint8_t bck = (bits == 8 || bits == 16) ? 24 : 12;
+#else
+    uint8_t bck = (bits == 8 || bits == 16) ? 6 : 12;
+#endif
 
     i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bits);
 
