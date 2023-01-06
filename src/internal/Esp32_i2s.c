@@ -326,9 +326,13 @@ void i2sInit(uint8_t bus_num,
     size_t extraEndBuffers = 0;
     
     if (bus_num == 1 && bits_per_sample == 8)
+    {
         extraEndBuffers = 2;
+    }
     else if (bits_per_sample == 8 || bits_per_sample == 16)
+    {
         extraEndBuffers = 3;
+    }
 
     I2S[bus_num].dma_count = dma_count + I2S_DMA_SILENCE_BLOCK_COUNT + extraEndBuffers; // an extra two for looping silence and extra for parallel mode to avoid doubling
     I2S[bus_num].dma_buf_len = dma_len & 0xFFF;
@@ -550,6 +554,9 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits)
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)   
     uint8_t bck = (bits == 8 || bits == 16) ? 24 : 12;
 #else
+    // parallel modes on ESP32-S2 need higher rate (x4) to work properly e.g. producing 800KHz signal
+    // it won't work (and ESP32-S2 becomes highly unstable/jumping into the bootloader mode) for present structure just by modyfing 'rate' like for ESP32
+    // but it can be done other way by lowering tx_bck_div_num (bck) by 4   
     uint8_t bck = (bits == 8 || bits == 16) ? 6 : 12;
 #endif
 
