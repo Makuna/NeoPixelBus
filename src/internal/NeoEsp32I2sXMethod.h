@@ -142,6 +142,18 @@ public:
 
             size_t dmaBlockCount = (I2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
 
+            // parallel modes need higher frequency on esp32
+#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)           
+            if (BusMaxCount == 8 || BusMaxCount == 16)
+            {
+                // 8 bits mode on i2s1 needs two times lower frequency than other parallel modes
+                if (busNumber == 1 && BusMaxCount == 8)
+                    i2sSampleRate *= 2;
+                else
+                    i2sSampleRate *= 4;
+            }
+#endif
+
             i2sInit(busNumber,
                 BusMaxCount,
                 i2sSampleRate,
@@ -333,17 +345,17 @@ private:
     private:
         static NeoEspI2sContext s_context0;
     };
-#endif
 
-class NeoEsp32I2s1Mux8Bus : public NeoEsp32I2sMuxBus
-{
-public:
-    NeoEsp32I2s1Mux8Bus() : NeoEsp32I2sMuxBus(1, s_context1)
+    class NeoEsp32I2s1Mux8Bus : public NeoEsp32I2sMuxBus
     {
-    }
-private:
-    static NeoEspI2sContext s_context1;
-};
+    public:
+        NeoEsp32I2s1Mux8Bus() : NeoEsp32I2sMuxBus(1, s_context1)
+        {
+        }
+    private:
+        static NeoEspI2sContext s_context1;
+    };
+#endif
 
 
 
@@ -429,18 +441,24 @@ private:
 // NORMAL
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Ws2812Method;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Sk6812Method;
 #else
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Ws2812Method;
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Ws2812Method;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Sk6812Method;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Sk6812Method;
 #endif
 
 
 // INVERTED
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Ws2812InvertedMethod;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Sk6812InvertedMethod;    
 #else
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X16Ws2812InvertedMethod;
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X8Ws2812InvertedMethod;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X16Sk6812InvertedMethod;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X8Sk6812InvertedMethod;
 #endif
 
 #endif
