@@ -201,22 +201,22 @@ public:
 class NeoEsp32I2sMuxBus
 {
 public:    
-    NeoEsp32I2sMuxBus(uint8_t _I2sBusNumber, NeoEspI2sContext& _context) :
-        _muxId(NeoEspI2sContext::InvalidMuxId),
-        s_context(_context),
-        I2sBusNumber(_I2sBusNumber)
+    NeoEsp32I2sMuxBus(uint8_t i2sBusNumber, NeoEspI2sContext& context) :
+        _i2sBusNumber(i2sBusNumber),
+        _context(context),
+        _muxId(NeoEspI2sContext::InvalidMuxId)
     {
     }
 
     void RegisterNewMuxBus(size_t dataSize)
     {
-        _muxId = s_context.RegisterNewMuxBus(dataSize);
+        _muxId = _context.RegisterNewMuxBus(dataSize);
     }
 
     void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
     {
-        s_context.Construct(I2sBusNumber, i2sSampleRate);
-        i2sSetPins(I2sBusNumber, pin, _muxId, invert);
+        _context.Construct(_i2sBusNumber, i2sSampleRate);
+        i2sSetPins(_i2sBusNumber, pin, _muxId, invert);
 
         Serial.print(" muxid ");
         Serial.println(_muxId);
@@ -224,9 +224,9 @@ public:
 
     void DeregisterMuxBus()
     {
-        if (s_context.DeregisterMuxBus(_muxId))
+        if (_context.DeregisterMuxBus(_muxId))
         {
-            s_context.Destruct(I2sBusNumber);
+            _context.Destruct(_i2sBusNumber);
         }
         // disconnect muxed pin?
         _muxId = NeoEspI2sContext::InvalidMuxId;
@@ -234,17 +234,17 @@ public:
 
     void StartWrite()
     {
-        if (s_context.IsAllMuxBusesUpdated())
+        if (_context.IsAllMuxBusesUpdated())
         {
             Serial.println("writing");
-            s_context.ResetMuxBusesUpdated();
-            i2sWrite(I2sBusNumber, reinterpret_cast<uint8_t*>(s_context.I2sBuffer), s_context.I2sBufferSize, false, false);
+            _context.ResetMuxBusesUpdated();
+            i2sWrite(_i2sBusNumber, reinterpret_cast<uint8_t*>(_context.I2sBuffer), _context.I2sBufferSize, false, false);
         }
     }
 
     bool IsWriteDone()
     {
-        return i2sWriteDone(I2sBusNumber);
+        return i2sWriteDone(_i2sBusNumber);
     }
 
     void FillBuffers(const uint8_t* data, size_t  sizeData)
@@ -255,22 +255,24 @@ public:
         //  encode bit #   0        1        2        3
         //  value zero     1        0        0        0
         //  value one      1        1        1        0    
-
+        
         // due to indianess between peripheral and cpu, bytes within the words are swapped in the const
         const uint32_t EncodedZeroBit = 0x00800000;
         const uint32_t EncodedOneBit = 0x80800080;
         const uint32_t EncodedBitMask = 0x80808080;
 
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
         const uint64_t EncodedZeroBit64 = 0x0000000000000001;
         const uint64_t EncodedOneBit64 = 0x0000000100010001;
         const uint64_t EncodedBitMask64 = 0x0001000100010001;
-
+#else
         const uint64_t EncodedZeroBit64Inv = 0x0000000001000000;
         const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
         const uint64_t EncodedBitMask64Inv = 0x0100010001000100;
+#endif
 
-        uint32_t* pDma = s_context.I2sBuffer;
-        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sBuffer);
+        uint32_t* pDma = _context.I2sBuffer;
+        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(_context.I2sBuffer);
 
         const uint8_t* pEnd = data + sizeData;
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
@@ -280,18 +282,18 @@ public:
             for (uint8_t bit = 0; bit < 8; bit++)
             {
                 // $REVIEW to revaulate. These are the sorts of things that would get templatized.
-                if (I2sBusNumber == 0)
+                if (_i2sBusNumber == 0)
                 {   
                     uint64_t dma64 = *(pDma64);
                     // clear previous data for mux bus
 
-                    #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
-                       dma64 &= ~(EncodedBitMask64 << (_muxId));
-                       dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
-                    #else
-                       dma64 &= ~(EncodedBitMask64Inv << (_muxId));
-                       dma64 |= (((value & 0x80) ? EncodedOneBit64Inv : EncodedZeroBit64Inv) << (_muxId));
-                    #endif
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
+                    dma64 &= ~(EncodedBitMask64 << (_muxId));
+                    dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
+#else
+                    dma64 &= ~(EncodedBitMask64Inv << (_muxId));
+                    dma64 |= (((value & 0x80) ? EncodedOneBit64Inv : EncodedZeroBit64Inv) << (_muxId));
+#endif
                     *(pDma64++) = dma64;
                 }
                 else
@@ -308,53 +310,55 @@ public:
             }
         }
 
-        s_context.MarkMuxBusUpdated(_muxId);
+        _context.MarkMuxBusUpdated(_muxId);
     }
 
     void MarkUpdated()
     {
-        s_context.MarkMuxBusUpdated(_muxId);
+        _context.MarkMuxBusUpdated(_muxId);
     }
 
-protected:
-    uint8_t I2sBusNumber;
-
 private:
-    NeoEspI2sContext& s_context;
+    const uint8_t _i2sBusNumber;
+    NeoEspI2sContext& _context;
     uint8_t _muxId; 
 };
 
 
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
-    class NeoEsp32I2s0Mux8Bus : public NeoEsp32I2sMuxBus
-    {
-    public:
-        NeoEsp32I2s0Mux8Bus() : NeoEsp32I2sMuxBus(0, s_context0)
-        {
-        }
-    private:
-        static NeoEspI2sContext s_context0;
-    };
-#else
-    class NeoEsp32I2s0Mux16Bus : public NeoEsp32I2sMuxBus
-    {
-    public:
-        NeoEsp32I2s0Mux16Bus() : NeoEsp32I2sMuxBus(0, s_context0)
-        {
-        }
-    private:
-        static NeoEspI2sContext s_context0;
-    };
 
-    class NeoEsp32I2s1Mux8Bus : public NeoEsp32I2sMuxBus
+class NeoEsp32I2s0Mux8Bus : public NeoEsp32I2sMuxBus
+{
+public:
+    NeoEsp32I2s0Mux8Bus() : NeoEsp32I2sMuxBus(0, s_context0)
     {
-    public:
-        NeoEsp32I2s1Mux8Bus() : NeoEsp32I2sMuxBus(1, s_context1)
-        {
-        }
-    private:
-        static NeoEspI2sContext s_context1;
-    };
+    }
+private:
+    static NeoEspI2sContext s_context0;
+};
+
+#else
+
+class NeoEsp32I2s0Mux16Bus : public NeoEsp32I2sMuxBus
+{
+public:
+    NeoEsp32I2s0Mux16Bus() : NeoEsp32I2sMuxBus(0, s_context0)
+    {
+    }
+private:
+    static NeoEspI2sContext s_context0;
+};
+
+class NeoEsp32I2s1Mux8Bus : public NeoEsp32I2sMuxBus
+{
+public:
+    NeoEsp32I2s1Mux8Bus() : NeoEsp32I2sMuxBus(1, s_context1)
+    {
+    }
+private:
+    static NeoEspI2sContext s_context1;
+};
+
 #endif
 
 
