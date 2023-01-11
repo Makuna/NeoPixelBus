@@ -85,7 +85,6 @@ typedef struct
     int8_t  in;
     uint32_t rate;
     intr_handle_t isr_handle;
-    xQueueHandle tx_queue;
 
     uint8_t* silence_buf;
     size_t silence_len;
@@ -108,13 +107,13 @@ static uint8_t i2s_silence_buf[I2S_DMA_SILENCE_SIZE] = { 0 };
 // (I2S_NUM_MAX == 2)
 static i2s_bus_t I2S[I2S_NUM_MAX] = 
 {
-    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle},
-    {&I2S1, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle}
+    {&I2S0, -1, -1, -1, -1, 0, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle},
+    {&I2S1, -1, -1, -1, -1, 0, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle}
 };
 #else
 static i2s_bus_t I2S[I2S_NUM_MAX] = 
 {
-    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle}
+    {&I2S0, -1, -1, -1, -1, 0, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle}
 };
 #endif
 
@@ -126,12 +125,6 @@ bool i2sInitDmaItems(uint8_t bus_num)
     if (bus_num >= I2S_NUM_MAX) 
     {
         return false;
-    }
-    if (I2S[bus_num].tx_queue) 
-    {
-        log_i("tx queue already initialized");
-        // already set
-        return true;
     }
 
     size_t dmaCount = I2S[bus_num].dma_count;
@@ -168,15 +161,6 @@ bool i2sInitDmaItems(uint8_t bus_num)
     itemPrev->eof = 1;
     item->eof = 1;
 
-    I2S[bus_num].tx_queue = xQueueCreate(I2S_DMA_QUEUE_COUNT, sizeof(lldesc_t*));
-    if (I2S[bus_num].tx_queue == NULL) 
-    {
-        // memory error
-        log_e("MEM ERROR!");
-        heap_caps_free(I2S[bus_num].dma_items);
-        I2S[bus_num].dma_items = NULL;
-        return false;
-    }
     return true;
 }
 
@@ -186,13 +170,7 @@ bool i2sDeinitDmaItems(uint8_t bus_num)
     {
         return false;
     }
-    if (!I2S[bus_num].tx_queue) 
-    {
-        return false; // nothing to deinit
-    }
 
-    vQueueDelete(I2S[bus_num].tx_queue);
-    I2S[bus_num].tx_queue = NULL;
     heap_caps_free(I2S[bus_num].dma_items);
     I2S[bus_num].dma_items = NULL;
 
@@ -593,7 +571,7 @@ void IRAM_ATTR i2sDmaISR(void* arg)
 
 size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free_when_sent) 
 {
-    if (bus_num >= I2S_NUM_MAX || !I2S[bus_num].tx_queue) 
+    if (bus_num >= I2S_NUM_MAX) 
     {
         return 0;
     }
@@ -630,10 +608,6 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     item = &I2S[bus_num].dma_items[1];
     item->qe.stqe_next = &I2S[bus_num].dma_items[2];
     I2S[bus_num].is_sending_data = I2s_Is_Sending;
-        
-
-    xQueueReset(I2S[bus_num].tx_queue);
-    xQueueSend(I2S[bus_num].tx_queue, (void*)&I2S[bus_num].dma_items[0], 10);
 
     return len;
 }
