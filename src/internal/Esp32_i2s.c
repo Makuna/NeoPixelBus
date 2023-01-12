@@ -86,9 +86,6 @@ typedef struct
     uint32_t rate;
     intr_handle_t isr_handle;
 
-    uint8_t* silence_buf;
-    size_t silence_len;
-
     lldesc_t* dma_items;
     size_t dma_count;
     uint32_t dma_buf_len :12;
@@ -101,19 +98,19 @@ typedef struct
 #define I2s_Is_Pending 1
 #define I2s_Is_Sending 2
 
-static uint8_t i2s_silence_buf[I2S_DMA_SILENCE_SIZE] = { 0 };
+static uint8_t* s_i2s_silence_buf = NULL;
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
 // (I2S_NUM_MAX == 2)
 static i2s_bus_t I2S[I2S_NUM_MAX] = 
 {
-    {&I2S0, -1, -1, -1, -1, 0, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle},
-    {&I2S1, -1, -1, -1, -1, 0, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle}
+    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle},
+    {&I2S1, -1, -1, -1, -1, 0, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle}
 };
 #else
 static i2s_bus_t I2S[I2S_NUM_MAX] = 
 {
-    {&I2S0, -1, -1, -1, -1, 0, NULL, i2s_silence_buf, I2S_DMA_SILENCE_SIZE, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle}
+    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, 0, 0, I2s_Is_Idle}
 };
 #endif
 
@@ -128,6 +125,12 @@ bool i2sInitDmaItems(uint8_t bus_num)
     }
 
     size_t dmaCount = I2S[bus_num].dma_count;
+
+    if (s_i2s_silence_buf == NULL)
+    {
+        s_i2s_silence_buf = heap_caps_malloc(I2S_DMA_SILENCE_SIZE, MALLOC_CAP_DMA);
+        memset(s_i2s_silence_buf, 0x00, I2S_DMA_SILENCE_SIZE);
+    }
 
     if (I2S[bus_num].dma_items == NULL) 
     {
@@ -153,9 +156,9 @@ bool i2sInitDmaItems(uint8_t bus_num)
         item->owner = 1;
         item->sosf = 0;
         item->offset = 0;
-        item->buf = I2S[bus_num].silence_buf;
-        item->size = I2S[bus_num].silence_len;
-        item->length = I2S[bus_num].silence_len;
+        item->buf = s_i2s_silence_buf;
+        item->size = I2S_DMA_SILENCE_SIZE;
+        item->length = I2S_DMA_SILENCE_SIZE;
         item->qe.stqe_next = &I2S[bus_num].dma_items[i2];   
     }
     itemPrev->eof = 1;
@@ -578,6 +581,7 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
     size_t blockSize = len;
 
     lldesc_t* item = &I2S[bus_num].dma_items[0]; 
+    lldesc_t* itemsEnd = item + I2S[bus_num].dma_count;
     size_t dataLeft = len;
     uint8_t* pos = data;
 
@@ -603,10 +607,35 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
         pos += blockSize;
     }
 
+    // at the end of the data is the encoded silence
+    uint8_t* posSilence = data + len - I2S_DMA_SILENCE_SIZE;
 
-    // reset silence item to not loop
-    item = &I2S[bus_num].dma_items[1];
+    // fix any extra blocks we have to point to silence
+    while (item < itemsEnd)
+    {
+        item->buf = posSilence;
+        item->size = I2S_DMA_SILENCE_SIZE;
+        item->length = I2S_DMA_SILENCE_SIZE;
+
+        log_i("i2sWrite extra items %#010x %#010x",
+            item,
+            itemsEnd);
+
+        item++;
+    }
+
+    // set silence item to silence 
+    item = &I2S[bus_num].dma_items[0];
+    item->buf = posSilence;
+    item->size = I2S_DMA_SILENCE_SIZE;
+    item->length = I2S_DMA_SILENCE_SIZE;
+    item++;
+    item->buf = posSilence;
+    item->size = I2S_DMA_SILENCE_SIZE;
+    item->length = I2S_DMA_SILENCE_SIZE;
+    // and not loop
     item->qe.stqe_next = &I2S[bus_num].dma_items[2];
+
     I2S[bus_num].is_sending_data = I2s_Is_Sending;
 
     return len;
