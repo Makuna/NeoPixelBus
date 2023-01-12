@@ -162,12 +162,6 @@ public:
                 dmaBlockCount,
                 0);
 
-            Serial.print("MaxBusDataSize = ");
-            Serial.println(MaxBusDataSize);
-
-            Serial.print("I2sBufferSize = ");
-            Serial.println(I2sBufferSize);
-
             I2sBuffer = static_cast<uint32_t*>(heap_caps_malloc(I2sBufferSize, MALLOC_CAP_DMA));
             // no need to initialize all of it, but since it contains
             // "reset" bits that don't later get overwritten we just clear it all
@@ -201,7 +195,7 @@ public:
 class NeoEsp32I2sMuxBus
 {
 public:    
-    NeoEsp32I2sMuxBus(uint8_t i2sBusNumber, NeoEspI2sContext& context) :
+    NeoEsp32I2sMuxBus(uint8_t i2sBusNumber, NeoEspI2sContext* context) :
         _i2sBusNumber(i2sBusNumber),
         _context(context),
         _muxId(NeoEspI2sContext::InvalidMuxId)
@@ -210,23 +204,20 @@ public:
 
     void RegisterNewMuxBus(size_t dataSize)
     {
-        _muxId = _context.RegisterNewMuxBus(dataSize);
+        _muxId = _context->RegisterNewMuxBus(dataSize);
     }
 
     void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
     {
-        _context.Construct(_i2sBusNumber, i2sSampleRate);
+        _context->Construct(_i2sBusNumber, i2sSampleRate);
         i2sSetPins(_i2sBusNumber, pin, _muxId, invert);
-
-        Serial.print(" muxid ");
-        Serial.println(_muxId);
     }
 
     void DeregisterMuxBus()
     {
-        if (_context.DeregisterMuxBus(_muxId))
+        if (_context->DeregisterMuxBus(_muxId))
         {
-            _context.Destruct(_i2sBusNumber);
+            _context->Destruct(_i2sBusNumber);
         }
         // disconnect muxed pin?
         _muxId = NeoEspI2sContext::InvalidMuxId;
@@ -234,11 +225,10 @@ public:
 
     void StartWrite()
     {
-        if (_context.IsAllMuxBusesUpdated())
+        if (_context->IsAllMuxBusesUpdated())
         {
-            Serial.println("writing");
-            _context.ResetMuxBusesUpdated();
-            i2sWrite(_i2sBusNumber, reinterpret_cast<uint8_t*>(_context.I2sBuffer), _context.I2sBufferSize, false, false);
+            _context->ResetMuxBusesUpdated();
+            i2sWrite(_i2sBusNumber, reinterpret_cast<uint8_t*>(_context->I2sBuffer), _context->I2sBufferSize, false, false);
         }
     }
 
@@ -271,8 +261,8 @@ public:
         const uint64_t EncodedBitMask64Inv = 0x0100010001000100;
 #endif
 
-        uint32_t* pDma = _context.I2sBuffer;
-        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(_context.I2sBuffer);
+        uint32_t* pDma = _context->I2sBuffer;
+        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(_context->I2sBuffer);
 
         const uint8_t* pEnd = data + sizeData;
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
@@ -310,17 +300,17 @@ public:
             }
         }
 
-        _context.MarkMuxBusUpdated(_muxId);
+        _context->MarkMuxBusUpdated(_muxId);
     }
 
     void MarkUpdated()
     {
-        _context.MarkMuxBusUpdated(_muxId);
+        _context->MarkMuxBusUpdated(_muxId);
     }
 
 private:
     const uint8_t _i2sBusNumber;
-    NeoEspI2sContext& _context;
+    NeoEspI2sContext* _context;
     uint8_t _muxId; 
 };
 
@@ -330,9 +320,10 @@ private:
 class NeoEsp32I2s0Mux8Bus : public NeoEsp32I2sMuxBus
 {
 public:
-    NeoEsp32I2s0Mux8Bus() : NeoEsp32I2sMuxBus(0, s_context0)
+    NeoEsp32I2s0Mux8Bus() : NeoEsp32I2sMuxBus(0, &s_context0)
     {
     }
+
 private:
     static NeoEspI2sContext s_context0;
 };
@@ -342,9 +333,10 @@ private:
 class NeoEsp32I2s0Mux16Bus : public NeoEsp32I2sMuxBus
 {
 public:
-    NeoEsp32I2s0Mux16Bus() : NeoEsp32I2sMuxBus(0, s_context0)
+    NeoEsp32I2s0Mux16Bus() : NeoEsp32I2sMuxBus(0, &s_context0)
     {
     }
+
 private:
     static NeoEspI2sContext s_context0;
 };
@@ -352,7 +344,7 @@ private:
 class NeoEsp32I2s1Mux8Bus : public NeoEsp32I2sMuxBus
 {
 public:
-    NeoEsp32I2s1Mux8Bus() : NeoEsp32I2sMuxBus(1, s_context1)
+    NeoEsp32I2s1Mux8Bus() : NeoEsp32I2sMuxBus(1, &s_context1)
     {
     }
 private:
@@ -372,9 +364,6 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        Serial.print("_sizeData = ");
-        Serial.println(_sizeData);
-        
         _bus.RegisterNewMuxBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);        
     }
 

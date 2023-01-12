@@ -191,6 +191,7 @@ esp_err_t i2sSetClock(uint8_t bus_num,
     {
         return ESP_FAIL;
     }
+/*
     log_i("i2sSetClock bus %u, clkm_div_num %u, clk_div_a %u, clk_div_b %u, bck_div_num %u, bits_mod %u",
         bus_num,
         div_num,
@@ -198,6 +199,7 @@ esp_err_t i2sSetClock(uint8_t bus_num,
         div_b,
         bck,
         bits);
+*/
 
     i2s_dev_t* i2s = I2S[bus_num].bus;
 
@@ -597,10 +599,6 @@ size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free
         item->buf = posSilence;
         item->size = I2S_DMA_SILENCE_SIZE;
         item->length = I2S_DMA_SILENCE_SIZE;
-
-        log_i("i2sWrite extra items %#010x %#010x",
-            item,
-            itemsEnd);
 
         item++;
     }
