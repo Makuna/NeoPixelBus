@@ -72,7 +72,7 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_p
 #define I2S_DMA_BLOCK_COUNT_DEFAULT      16
 // 24 bytes gives us enough time if we use single stage idle
 // with the two stage idle we can use the minimum of 4 bytes
-#define I2S_DMA_SILENCE_SIZE     4*1 
+#define I2S_DMA_SILENCE_SIZE     64 // 4 byte increments 
 #define I2S_DMA_SILENCE_BLOCK_COUNT  3 // two front, one back
 #define I2S_DMA_QUEUE_COUNT 2
 
@@ -98,6 +98,7 @@ typedef struct
 #define I2s_Is_Pending 1
 #define I2s_Is_Sending 2
 
+#define I2S_DMA_STATIC_SILENCE_SIZE     4 // 4 byte increments 
 static uint8_t* s_i2s_silence_buf = NULL;
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
@@ -128,8 +129,8 @@ bool i2sInitDmaItems(uint8_t bus_num)
 
     if (s_i2s_silence_buf == NULL)
     {
-        s_i2s_silence_buf = heap_caps_malloc(I2S_DMA_SILENCE_SIZE, MALLOC_CAP_DMA);
-        memset(s_i2s_silence_buf, 0x00, I2S_DMA_SILENCE_SIZE);
+        s_i2s_silence_buf = heap_caps_malloc(I2S_DMA_STATIC_SILENCE_SIZE, MALLOC_CAP_DMA);
+        memset(s_i2s_silence_buf, 0x00, I2S_DMA_STATIC_SILENCE_SIZE);
     }
 
     if (I2S[bus_num].dma_items == NULL) 
@@ -142,15 +143,11 @@ bool i2sInitDmaItems(uint8_t bus_num)
         }
     }
 
-    int i, i2;
     lldesc_t* item = NULL;
-    lldesc_t* itemPrev = NULL;
 
-    for(i=0; i< dmaCount; i++) 
+    for (size_t i = 0; i < dmaCount; i++) 
     {
-        itemPrev = item;
-
-        i2 = (i+1) % dmaCount;
+        size_t i2 = (i+1) % dmaCount;
         item = &I2S[bus_num].dma_items[i];
         item->eof = 0;
         item->owner = 1;
@@ -161,8 +158,9 @@ bool i2sInitDmaItems(uint8_t bus_num)
         item->length = I2S_DMA_SILENCE_SIZE;
         item->qe.stqe_next = &I2S[bus_num].dma_items[i2];   
     }
-    itemPrev->eof = 1;
-    item->eof = 1;
+
+    I2S[bus_num].dma_items[dmaCount - 2].eof = 1;
+    I2S[bus_num].dma_items[dmaCount - 1].eof = 1;
 
     return true;
 }
@@ -304,29 +302,12 @@ void i2sInit(uint8_t bus_num,
         return;
     }
 
-    size_t extraEndBuffers = 0;
-    
-    if (bus_num == 1 && bits_per_sample == 8)
-    {
-        extraEndBuffers = 2;
-    }
-    else if (bits_per_sample == 8 || bits_per_sample == 16)
-    {
-        extraEndBuffers = 3;
-    }
-
-    I2S[bus_num].dma_count = dma_count + I2S_DMA_SILENCE_BLOCK_COUNT + extraEndBuffers; // an extra two for looping silence and extra for parallel mode to avoid doubling
+    I2S[bus_num].dma_count = dma_count + I2S_DMA_SILENCE_BLOCK_COUNT; 
     I2S[bus_num].dma_buf_len = dma_len & 0xFFF;
 
     if (!i2sInitDmaItems(bus_num)) 
     {
         return;
-    }
-
-    // eof to extra silence buffers at the end for the parallel mode
-    for(size_t resetIndex = 0; resetIndex < extraEndBuffers; resetIndex++)
-    {
-        I2S[bus_num].dma_items[I2S[bus_num].dma_count - resetIndex - 2].eof = 1;        
     }
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
