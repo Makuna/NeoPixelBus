@@ -39,6 +39,7 @@ extern "C"
     void send_data_12mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
     void send_data_16mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
     void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
+    void send_data_32mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
 }
 
 class NeoAvrSpeed800KbpsBase
@@ -64,6 +65,8 @@ public:
 
 #elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000L)  // 16Mhz CPU
         send_data_16mhz_800(data, sizeData, port, pinMask);
+#elif (F_CPU >= 31000000UL) && (F_CPU <= 35000000L)  // 32Mhz CPU
+        send_data_32mhz_800(data, sizeData, port, pinMask);
 #else
 #error "CPU SPEED NOT SUPPORTED"
 #endif
