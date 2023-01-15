@@ -153,12 +153,11 @@ bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize)
     uint8_t* posSilence = data + dataSize - I2S_DMA_SILENCE_SIZE;
 
     // front two are silent items used for looping to micmic single fire
-    //
+    //  default to looping
     dmaItemInit(item, posSilence, I2S_DMA_SILENCE_SIZE, itemNext);
+    dmaItemInit(itemNext, posSilence, I2S_DMA_SILENCE_SIZE, item);
     item = itemNext;
     itemNext++;
-    dmaItemInit(item, posSilence, I2S_DMA_SILENCE_SIZE, itemNext);
-
 
     // init blocks with avialable data
     //
@@ -182,9 +181,8 @@ bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize)
     // last item also silent that loops to front
     dmaItemInit(itemNext, posSilence, I2S_DMA_SILENCE_SIZE, itemFirst);
 
-    // last two items are EOF to manage send state using EOF ISR
+    // last actual data item is EOF to manage send state using EOF ISR
     item->eof = 1;
-    itemNext->eof = 1;
     
     return true;
 }
@@ -559,11 +557,7 @@ void IRAM_ATTR i2sDmaISR(void* arg)
     if (i2s->bus->int_st.out_eof) 
     {
  //       lldesc_t* item = (lldesc_t*)(i2s->bus->out_eof_des_addr);
-        if (i2s->is_sending_data == I2s_Is_Pending)
-        {
-            i2s->is_sending_data = I2s_Is_Idle;
-        }
-        else if (i2s->is_sending_data == I2s_Is_Sending)
+        if (i2s->is_sending_data != I2s_Is_Idle)
         {
             // the second item (last of the two front silent items) is 
             // silent looping item
@@ -572,7 +566,7 @@ void IRAM_ATTR i2sDmaISR(void* arg)
             // set to loop on silent items
             itemLoopBreaker->qe.stqe_next = itemLoop;
 
-            i2s->is_sending_data = I2s_Is_Pending;
+            i2s->is_sending_data = I2s_Is_Idle;
         }
     }
 
