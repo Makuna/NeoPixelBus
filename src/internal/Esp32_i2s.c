@@ -70,11 +70,10 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_p
 #endif
 
 #define I2S_DMA_BLOCK_COUNT_DEFAULT      16
-// 24 bytes gives us enough time if we use single stage idle
-// with the two stage idle we can use the minimum of 4 bytes
+// 64 bytes gives us enough time if we use single stage idle
 #define I2S_DMA_SILENCE_SIZE     64 // 4 byte increments 
-#define I2S_DMA_SILENCE_BLOCK_COUNT  3 // two front, one back
-#define I2S_DMA_QUEUE_COUNT 2
+#define I2S_DMA_SILENCE_BLOCK_COUNT  2 // two front
+
 
 typedef struct 
 {
@@ -178,10 +177,10 @@ bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize)
         pos += blockSize;
     }
 
-    // last item also silent that loops to front
-    dmaItemInit(itemNext, posSilence, I2S_DMA_SILENCE_SIZE, itemFirst);
+    // last data item loops to front
+    item->qe.stqe_next = itemFirst;
 
-    // last actual data item is EOF to manage send state using EOF ISR
+    // last data item is EOF to manage send state using EOF ISR
     item->eof = 1;
     
     return true;

@@ -53,6 +53,7 @@ public:
 
     size_t I2sBufferSize; // total size of I2sBuffer
     uint8_t* I2sBuffer;    // holds the DMA buffer that is referenced by I2sBufDesc
+    uint8_t* I2sEditBuffer; // hold a editable buffer that is copied to I2sBuffer
 
     size_t MaxBusDataSize; // max size of stream data from any single mux bus
     uint8_t UpdateMap;     // bitmap flags of mux buses to track update state
@@ -63,6 +64,7 @@ public:
         BusMaxCount(_BusMaxCount),
         I2sBufferSize(0),
         I2sBuffer(nullptr),
+        I2sEditBuffer(nullptr),
         MaxBusDataSize(0),
         UpdateMap(0),
         UpdateMapMask(0),
@@ -159,13 +161,11 @@ public:
             }
 #endif
 
-            log_i("Construct size %u", I2sBufferSize);
-
             I2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(I2sBufferSize, MALLOC_CAP_DMA));
-            
-            // no need to initialize all of it, but since it contains
-            // "reset" bits that don't later get overwritten we just clear it all
             memset(I2sBuffer, 0x00, I2sBufferSize);
+
+            I2sEditBuffer = static_cast<uint8_t*>(malloc(I2sBufferSize));
+            memset(I2sEditBuffer, 0x00, I2sBufferSize);
 
             i2sInit(busNumber,
                 BusMaxCount,
@@ -188,10 +188,12 @@ public:
         i2sSetPins(busNumber, -1, -1, false);
         i2sDeinit(busNumber);
 
+        free(I2sEditBuffer);
         heap_caps_free(I2sBuffer);
 
         I2sBufferSize = 0;
         I2sBuffer = nullptr;
+        I2sEditBuffer = nullptr;
         MaxBusDataSize = 0;
         UpdateMap = 0;
         UpdateMapMask = 0;
@@ -237,6 +239,14 @@ public:
         if (_context->IsAllMuxBusesUpdated())
         {
             _context->ResetMuxBusesUpdated();
+
+            // wait for not actively sending data
+            while (!IsWriteDone())
+            {
+                yield();
+            }
+            // copy edit buffer to sending buffer
+            memcpy(_context->I2sBuffer, _context->I2sEditBuffer, _context->I2sBufferSize);
             i2sWrite(_i2sBusNumber);
         }
     }
@@ -251,7 +261,7 @@ public:
         if (_context->IsNoMuxBusesUpdate())
         {
             // clear all the data in preperation for each mux channel to add
-            memset(_context->I2sBuffer, 0x00, _context->I2sBufferSize);
+            memset(_context->I2sEditBuffer, 0x00, _context->I2sBufferSize);
         }
 
         // 8 channel bits layout for DMA 32bit value
@@ -296,8 +306,8 @@ public:
         const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
 #endif
 
-        uint32_t* pDma = reinterpret_cast<uint32_t*>(_context->I2sBuffer);
-        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(_context->I2sBuffer);
+        uint32_t* pDma = reinterpret_cast<uint32_t*>(_context->I2sEditBuffer);
+        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(_context->I2sEditBuffer);
 
         const uint8_t* pEnd = data + sizeData;
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
@@ -430,12 +440,6 @@ public:
 
     void Update(bool)
     {
-        // wait for not actively sending data
-        while (!_bus.IsWriteDone())
-        {
-            yield();
-        }
-
         _bus.FillBuffers(_data, _sizeData);
         _bus.StartWrite(); // only triggers actual write after all mux busses have updated
     }
