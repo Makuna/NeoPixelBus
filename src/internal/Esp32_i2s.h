@@ -25,14 +25,11 @@ void i2sInit(uint8_t bus_num,
     i2s_tx_chan_mod_t chan_mod, 
     i2s_tx_fifo_mod_t fifo_mod, 
     size_t dma_count, 
-    size_t dma_len);
-
+    uint8_t* data,
+    size_t dataSize);
 void i2sDeinit(uint8_t bus_num);
-
 void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert);
-
-
-size_t i2sWrite(uint8_t bus_num, uint8_t* data, size_t len, bool copy, bool free_when_sent);
+bool i2sWrite(uint8_t bus_num);
 bool i2sWriteDone(uint8_t bus_num);
 
 #ifdef __cplusplus

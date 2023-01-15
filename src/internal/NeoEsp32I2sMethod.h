@@ -191,7 +191,8 @@ public:
             I2S_CHAN_STEREO, 
             I2S_FIFO_16BIT_DUAL, 
             dmaBlockCount,
-            0);
+            _i2sBuffer,
+            _i2sBufferSize);
         i2sSetPins(_bus.I2sBusNumber, _pin, -1, T_INVERT::Inverted);
     }
 
@@ -205,7 +206,7 @@ public:
 
         FillBuffers();
 
-        i2sWrite(_bus.I2sBusNumber, _i2sBuffer, _i2sBufferSize, false, false);
+        i2sWrite(_bus.I2sBusNumber);
     }
 
     void MarkUpdated()
@@ -234,7 +235,7 @@ private:
 
     uint8_t*  _data;        // Holds LED color values
 
-    uint32_t _i2sBufferSize; // total size of _i2sBuffer
+    size_t _i2sBufferSize; // total size of _i2sBuffer
     uint8_t* _i2sBuffer;  // holds the DMA buffer that is referenced by _i2sBufDesc
 
     void construct(uint16_t pixelCount, size_t elementSize, size_t settingsSize) 
