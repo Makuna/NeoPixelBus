@@ -114,6 +114,11 @@ public:
         return (UpdateMap == UpdateMapMask);
     }
 
+    bool IsNoMuxBusesUpdate()
+    {
+        return (UpdateMap == 0);
+    }
+
     void MarkMuxBusUpdated(uint8_t muxId)
     {
         UpdateMap |= (1 << muxId);
@@ -243,6 +248,12 @@ public:
 
     void FillBuffers(const uint8_t* data, size_t  sizeData)
     {
+        if (_context->IsNoMuxBusesUpdate())
+        {
+            // clear all the data in preperation for each mux channel to add
+            memset(_context->I2sBuffer, 0x00, _context->I2sBufferSize);
+        }
+
         // 8 channel bits layout for DMA 32bit value
         //
         //  mux bus id     01234567 01234567 01234567 01234567
@@ -251,18 +262,38 @@ public:
         //  value one      1        1        1        0    
         
         // due to indianess between peripheral and cpu, bytes within the words are swapped in the const
-        const uint32_t EncodedZeroBit = 0x00800000;
-        const uint32_t EncodedOneBit = 0x80800080;
-        const uint32_t EncodedBitMask = 0x80808080;
-
+        const uint32_t EncodedZeroBit = 0x00010000;
+        const uint32_t EncodedOneBit = 0x01010001;
+        /*  The above was faster than below, even when using [][] to remove branch
+        const uint32_t LutZeroBit[8] =
+            {
+                0x00010000,
+                0x00020000,
+                0x00040000,
+                0x00080000,
+                0x00100000,
+                0x00200000,
+                0x00400000,
+                0x00800000
+            };
+        const uint32_t LutOneBit[8] =
+            {
+                0x01010001,
+                0x02020002,
+                0x04040004,
+                0x08080008,
+                0x10100010,
+                0x20200020,
+                0x40400040,
+                0x80800080
+            };
+            */
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
         const uint64_t EncodedZeroBit64 = 0x0000000000000001;
         const uint64_t EncodedOneBit64 = 0x0000000100010001;
-        const uint64_t EncodedBitMask64 = 0x0001000100010001;
 #else
         const uint64_t EncodedZeroBit64Inv = 0x0000000001000000;
         const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
-        const uint64_t EncodedBitMask64Inv = 0x0100010001000100;
 #endif
 
         uint32_t* pDma = reinterpret_cast<uint32_t*>(_context->I2sBuffer);
@@ -282,10 +313,8 @@ public:
                     // clear previous data for mux bus
 
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
-                    dma64 &= ~(EncodedBitMask64 << (_muxId));
                     dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
 #else
-                    dma64 &= ~(EncodedBitMask64Inv << (_muxId));
                     dma64 |= (((value & 0x80) ? EncodedOneBit64Inv : EncodedZeroBit64Inv) << (_muxId));
 #endif
                     *(pDma64++) = dma64;
@@ -293,10 +322,13 @@ public:
                 else
                 {
                     uint32_t dma = *(pDma);
-                    // clear previous data for mux bus
-                    dma &= ~(EncodedBitMask >> (7-_muxId));
                     // apply new data for mux bus
-                    dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) >> (7-_muxId));
+                    dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) << (_muxId));
+
+                    // below not close and slower
+                    //dma |= ((value & 0x80) ? LutOneBit[_muxId] : LutZeroBit[_muxId]);
+                    // below close but slower
+                    //  dma |= LutBit[!!(value & 0x80)][_muxId];
                     *(pDma++) = dma;
                 }
 
