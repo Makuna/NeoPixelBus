@@ -168,10 +168,11 @@ public:
             memset(I2sEditBuffer, 0x00, I2sBufferSize);
 
             i2sInit(busNumber,
+                true,
                 BusMaxCount,
                 i2sSampleRate,
                 I2S_CHAN_RIGHT_TO_LEFT,
-                I2S_FIFO_32BIT_SINGLE,
+                I2S_FIFO_16BIT_SINGLE,
                 dmaBlockCount,
                 I2sBuffer,
                 I2sBufferSize);

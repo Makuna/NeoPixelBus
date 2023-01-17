@@ -61,7 +61,7 @@
 #include "esp32-hal.h"
 
 esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits_per_sample);
-esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_per_sample);
+esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_per_sample, bool parallel_mode);
 
 #define MATRIX_DETACH_OUT_SIG 0x100
 
@@ -69,11 +69,13 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_p
 #define I2S_BASE_CLK (160000000L)
 #endif
 
-#define I2S_DMA_BLOCK_COUNT_DEFAULT      16
-// 64 bytes gives us enough time if we use single stage idle
-#define I2S_DMA_SILENCE_SIZE     64 // 4 byte increments 
-#define I2S_DMA_SILENCE_BLOCK_COUNT  2 // two front
-
+#define I2S_DMA_BLOCK_COUNT_DEFAULT      0
+// 20 bytes gives us enough time if we use single stage idle
+// But it can't be longer due to non-parrallel mode and 50us reset time
+// there just isn't enough silence at the end to fill more than 20 bytes
+#define I2S_DMA_SILENCE_SIZE     20 // 4 byte increments
+#define I2S_DMA_SILENCE_BLOCK_COUNT_FRONT  2 // two front
+#define I2S_DMA_SILENCE_BLOCK_COUNT_BACK  1 // one back, required for non parallel
 
 typedef struct 
 {
@@ -148,7 +150,7 @@ bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize)
     lldesc_t* itemNext = item + 1;
     size_t dataLeft = dataSize;
     uint8_t* pos = data;
-    // at the end of the data is the encoded silence
+    // at the end of the data is the encoded silence reset
     uint8_t* posSilence = data + dataSize - I2S_DMA_SILENCE_SIZE;
 
     // front two are silent items used for looping to micmic single fire
@@ -177,12 +179,13 @@ bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize)
         pos += blockSize;
     }
 
-    // last data item loops to front
-    item->qe.stqe_next = itemFirst;
-
     // last data item is EOF to manage send state using EOF ISR
     item->eof = 1;
-    
+
+    // last block, the back silent item, loops to front
+    item = itemNext;
+    dmaItemInit(item, posSilence, I2S_DMA_SILENCE_SIZE, itemFirst);
+
     return true;
 }
 
@@ -313,6 +316,7 @@ bool i2sWriteDone(uint8_t bus_num)
 }
 
 void i2sInit(uint8_t bus_num, 
+        bool parallel_mode,
         uint32_t bits_per_sample, 
         uint32_t sample_rate, 
         i2s_tx_chan_mod_t chan_mod, 
@@ -326,7 +330,9 @@ void i2sInit(uint8_t bus_num,
         return;
     }
 
-    I2S[bus_num].dma_count = dma_count + I2S_DMA_SILENCE_BLOCK_COUNT; 
+    I2S[bus_num].dma_count = dma_count + 
+            I2S_DMA_SILENCE_BLOCK_COUNT_FRONT +
+            I2S_DMA_SILENCE_BLOCK_COUNT_BACK;
 
     if (!i2sInitDmaItems(bus_num, data, dataSize)) 
     {
@@ -376,7 +382,7 @@ void i2sInit(uint8_t bus_num,
     {
         typeof(i2s->conf2) conf2;
         conf2.val = 0;
-        conf2.lcd_en = (bits_per_sample == 8 || bits_per_sample == 16);
+        conf2.lcd_en = (parallel_mode) && (bits_per_sample == 8 || bits_per_sample == 16);
         conf2.lcd_tx_wrx2_en = 0;//(bits_per_sample == 8 || bits_per_sample == 16);
         i2s->conf2.val = conf2.val;
     }
@@ -397,13 +403,20 @@ void i2sInit(uint8_t bus_num,
 
     {
         typeof(i2s->fifo_conf) fifo_conf;
+
         fifo_conf.val = 0;
+        fifo_conf.rx_fifo_mod_force_en = 1;
+        fifo_conf.tx_fifo_mod_force_en = 1;
         fifo_conf.tx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
         fifo_conf.rx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
+        fifo_conf.rx_data_num = 32; //Thresholds.
+        fifo_conf.tx_data_num = 32;
+
         i2s->fifo_conf.val = fifo_conf.val;
     }
 
-    {
+    // $REVIEW old code didn't set this
+    { 
         typeof(i2s->conf1) conf1;
         conf1.val = 0;
         conf1.tx_stop_en = 0;
@@ -422,34 +435,20 @@ void i2sInit(uint8_t bus_num,
     {
         typeof(i2s->conf) conf;
         conf.val = 0;
-        conf.tx_msb_shift = 0; // (bits_per_sample != 8);// 0:DAC/PCM, 1:I2S
-        conf.tx_right_first = 0; // (bits_per_sample == 8);
+        conf.tx_msb_shift = !parallel_mode; // 0:DAC/PCM, 1:I2S
+        conf.tx_right_first = 0; // parallel_mode?;
         i2s->conf.val = conf.val;
     }
 
     i2s->timing.val = 0;
 
-    i2s->fifo_conf.tx_fifo_mod_force_en = 1;
-
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
     i2s->pdm_conf.rx_pdm_en = 0;
     i2s->pdm_conf.tx_pdm_en = 0;
 #endif
-
+   
     
-    
-    i2sSetSampleRate(bus_num, sample_rate, bits_per_sample);
-
-    if (bits_per_sample == 8 || bits_per_sample == 16)
-    {
-        i2s->fifo_conf.val = 0;
-        i2s->fifo_conf.rx_fifo_mod_force_en = 1; 
-        i2s->fifo_conf.tx_fifo_mod_force_en = 1; // HN
-        i2s->fifo_conf.rx_fifo_mod = 1; // HN
-        i2s->fifo_conf.tx_fifo_mod = 1;
-        i2s->fifo_conf.rx_data_num = 32; //Thresholds. 
-        i2s->fifo_conf.tx_data_num = 32;
-    }
+    i2sSetSampleRate(bus_num, sample_rate, bits_per_sample, parallel_mode);
 
     /* */
     //Reset FIFO/DMA -> needed? Doesn't dma_reset/fifo_reset do this?
@@ -502,7 +501,7 @@ void i2sDeinit(uint8_t bus_num)
     i2sDeinitDmaItems(bus_num);
 }
 
-esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits) 
+esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits, bool parallel_mode)
 {
     if (bus_num >= I2S_NUM_MAX) 
     {
@@ -536,12 +535,12 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits)
     // due to conf2.lcd_tx_wrx2_en being set for p8, bit rate is doubled
     // adjust by using bck here
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)   
-    uint8_t bck = (bits == 8 || bits == 16) ? 24 : 12;
+    uint8_t bck = parallel_mode ? 24 : 12;
 #else
     // parallel modes on ESP32-S2 need higher rate (x4) to work properly e.g. producing 800KHz signal
     // it won't work (and ESP32-S2 becomes highly unstable/jumping into the bootloader mode) for present structure just by modyfing 'rate' like for ESP32
     // but it can be done other way by lowering tx_bck_div_num (bck) by 4   
-    uint8_t bck = (bits == 8 || bits == 16) ? 6 : 12;
+    uint8_t bck = parallel_mode ? 6 : 12;
 #endif
 
     i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bits);

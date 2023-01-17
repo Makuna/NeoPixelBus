@@ -20,6 +20,7 @@ typedef enum {
 } i2s_tx_fifo_mod_t;
 
 void i2sInit(uint8_t bus_num, 
+    bool parallel_mode,
     uint32_t bits_per_sample, 
     uint32_t sample_rate, 
     i2s_tx_chan_mod_t chan_mod, 
