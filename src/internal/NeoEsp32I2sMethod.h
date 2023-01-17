@@ -186,6 +186,7 @@ public:
         size_t dmaBlockCount = (_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
 
         i2sInit(_bus.I2sBusNumber, 
+            false,
             16, 
             T_SPEED::I2sSampleRate, 
             I2S_CHAN_STEREO, 
