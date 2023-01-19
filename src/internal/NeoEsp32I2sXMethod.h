@@ -470,9 +470,12 @@ public:
         _bus.StartWrite(); // only triggers actual write after all mux busses have updated
     }
 
-    void MarkUpdated()
+    bool AlwaysUpdate()
     {
-        _bus.MarkUpdated();
+        // this method requires update to be called even if no changes to method buffer
+        // as edit buffer is always cleared and then copied to send buffer and all
+        // mux bus needs to included
+        return true;
     }
 
     uint8_t* getData() const
