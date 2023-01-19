@@ -44,31 +44,55 @@ extern "C"
 // ESP32C3 I2S is not supported yet due to significant changes to interface
 #if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 
-class NeoEspI2sContext
+//
+// true size of mux channel, 8 bit
+//
+class NeoEspI2sMuxBusSize8Bit
 {
 public:
-    const static size_t DmaBytesPerPixelBits = 4;
-    const uint8_t BusMaxCount;
-    const static uint8_t InvalidMuxId = -1;
+    NeoEspI2sMuxBusSize8Bit() {};
 
-    size_t I2sBufferSize; // total size of I2sBuffer
-    uint8_t* I2sBuffer;    // holds the DMA buffer that is referenced by I2sBufDesc
-    uint8_t* I2sEditBuffer; // hold a editable buffer that is copied to I2sBuffer
+    const static size_t MuxBusDataSize = 1;
+};
+
+//
+// true size of mux channel, 16 bit
+//
+class NeoEspI2sMuxBusSize16Bit
+{
+public:
+    NeoEspI2sMuxBusSize16Bit() {};
+
+    const static size_t MuxBusDataSize = 2;
+};
+
+//
+// tracks mux channels used and if updated
+// 
+// T_FLAG - type used to store bit flags, UINT8_t for 8 channels, UINT16_t for 16
+// T_MUXSIZE - true size of mux channel = NeoEspI2sMuxBusSize8Bit or NeoEspI2sMuxBusSize16Bit
+//
+template<typename T_FLAG, typename T_MUXSIZE> class NeoEspI2sMuxMap : public T_MUXSIZE
+{
+public:
+    const static uint8_t InvalidMuxId = -1;
+    const static size_t BusMaxCount = sizeof(T_FLAG) * 8;
 
     size_t MaxBusDataSize; // max size of stream data from any single mux bus
-    uint8_t UpdateMap;     // bitmap flags of mux buses to track update state
-    uint8_t UpdateMapMask; // mask to used bits in s_UpdateMap
-    uint8_t BusCount;      // count of mux buses
+    T_FLAG UpdateMap;     // bitmap flags of mux buses to track update state
+    T_FLAG UpdateMapMask; // mask to used bits in s_UpdateMap
+    T_FLAG BusCount;      // count of mux buses
 
-    NeoEspI2sContext(uint8_t _BusMaxCount) :
-        BusMaxCount(_BusMaxCount),
-        I2sBufferSize(0),
-        I2sBuffer(nullptr),
-        I2sEditBuffer(nullptr),
-        MaxBusDataSize(0),
-        UpdateMap(0),
-        UpdateMapMask(0),
-        BusCount(0)
+    // as a static instance, all members get initialized to zero
+    // and the constructor is called at inconsistent time to other globals
+    // so its not useful to have or rely on, 
+    // but without it presence they get zeroed far too late
+    NeoEspI2sMuxMap() 
+    //    //:
+    //    //MaxBusDataSize(0),
+    //    //UpdateMap(0),
+    //    //UpdateMapMask(0),
+    //    //BusCount(0)
     {
     }
 
@@ -78,7 +102,7 @@ public:
         uint8_t muxId = 0;
         while (muxId < BusMaxCount)
         {
-            uint8_t muxIdField = (1 << muxId);
+            T_FLAG muxIdField = (1 << muxId);
             if ((UpdateMapMask & muxIdField) == 0)
             {
                 // complete registration
@@ -95,9 +119,10 @@ public:
         return muxId;
     }
 
+
     bool DeregisterMuxBus(uint8_t muxId)
     {
-        uint8_t muxIdField = (1 << muxId);
+        T_FLAG muxIdField = (1 << muxId);
         if (UpdateMapMask & muxIdField)
         {
             // complete deregistration
@@ -131,14 +156,57 @@ public:
         UpdateMap = 0;
     }
 
+    void Reset()
+    {
+        MaxBusDataSize = 0;
+        UpdateMap = 0;
+        UpdateMapMask = 0;
+        BusCount = 0;
+    }
+};
+
+//
+// Implementation of a Double Buffered version of a I2sContext
+// Manages the underlying I2S details including the buffer(s)
+// This creates a front buffer that can be filled while actively sending
+// the back buffer, thus improving async operation of the i2s DMA.
+// Note that the back buffer must be DMA memory, a limited resource, so
+// the front buffer uses normal memory and copies rather than swap pointers
+// 
+// T_MUXMAP - NeoEspI2sMuxMap - tracking class for mux state
+//
+template<typename T_MUXMAP> class NeoEspI2sDblBuffContext 
+{
+public:
+    const static size_t DmaBitsPerPixelBit = 4;
+
+    size_t I2sBufferSize; // total size of I2sBuffer
+    uint8_t* I2sBuffer;    // holds the DMA buffer that is referenced by I2sBufDesc
+    uint8_t* I2sEditBuffer; // hold a editable buffer that is copied to I2sBuffer
+    T_MUXMAP MuxMap;
+
+    // as a static instance, all members get initialized to zero
+    // and the constructor is called at inconsistent time to other globals
+    // so its not useful to have or rely on, 
+    // but without it presence they get zeroed far too late
+    NeoEspI2sDblBuffContext() 
+    //    //:
+    //    //I2sBufferSize(0),
+    //    //I2sBuffer(nullptr),
+    //    //I2sEditBuffer(nullptr),
+    //    //MuxMap()
+    {
+    }
+
     void Construct(const uint8_t busNumber, uint32_t i2sSampleRate)
     {
         // construct only once on first time called
         if (I2sBuffer == nullptr)
         {
-            // $REVIEW this change to evaluate for cleanup. Its best to keep branching like this to a single location and wrap the concept into a const like the original.
-            // 1 byte on the input => 8 (bits) * DmaBytesPerPixelBits (bits of 4 bytes are used for neopixel) * only x8 on I2S1 is true 8bits mode and requires less memory than 16bits modes
-            I2sBufferSize = MaxBusDataSize * 8 * DmaBytesPerPixelBits * ((busNumber == 1 && BusMaxCount == 8) ? 1 : 2);
+            // MuxMap.MaxBusDataSize = max size in bytes of a single channel
+            // DmaBitsPerPixelBit = how many dma bits/byte are needed for each source (pixel) bit/byte
+            // T_MUXMAP::MuxBusDataSize = the true size of data for selected mux mode (not exposed size as i2s0 only supports 16bit mode)
+            I2sBufferSize = MuxMap.MaxBusDataSize * 8 * DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
 
             // must have a 4 byte aligned buffer for i2s
             uint32_t alignment = I2sBufferSize % 4;
@@ -151,25 +219,33 @@ public:
 
             // parallel modes need higher frequency on esp32
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)           
-            if (BusMaxCount == 8 || BusMaxCount == 16)
+            if (T_MUXMAP::MuxBusDataSize == 1 || T_MUXMAP::MuxBusDataSize == 2)
             {
-                // 8 bits mode on i2s1 needs two times lower frequency than other parallel modes
-                if (busNumber == 1 && BusMaxCount == 8)
-                    i2sSampleRate *= 2;
-                else
-                    i2sSampleRate *= 4;
+                // Does this scale to 24 bit mode? 
+                // true 8 bits mode uses half the frequency than 16 bit parallel mode
+                i2sSampleRate *= (2 * T_MUXMAP::MuxBusDataSize);
             }
 #endif
 
             I2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(I2sBufferSize, MALLOC_CAP_DMA));
+            if (I2sBuffer == nullptr)
+            {
+                log_e("send buffer memory allocation failure (size %u)",
+                    I2sBufferSize);
+            }
             memset(I2sBuffer, 0x00, I2sBufferSize);
 
             I2sEditBuffer = static_cast<uint8_t*>(malloc(I2sBufferSize));
+            if (I2sEditBuffer == nullptr)
+            {
+                log_e("edit buffer memory allocation failure (size %u)",
+                    I2sBufferSize);
+            }
             memset(I2sEditBuffer, 0x00, I2sBufferSize);
 
             i2sInit(busNumber,
                 true,
-                BusMaxCount,
+                T_MUXMAP::MuxBusDataSize * 8,
                 i2sSampleRate,
                 I2S_CHAN_RIGHT_TO_LEFT,
                 I2S_FIFO_16BIT_SINGLE,
@@ -195,51 +271,54 @@ public:
         I2sBufferSize = 0;
         I2sBuffer = nullptr;
         I2sEditBuffer = nullptr;
-        MaxBusDataSize = 0;
-        UpdateMap = 0;
-        UpdateMapMask = 0;
-        BusCount = 0;
+
+        MuxMap.Reset();
     }
 };
 
-// $REVIEW duplicate/refactor to support i2s bus one also
 //
-class NeoEsp32I2sMuxBus
+// Implementation of the low leverl interface into i2s mux bus
+// 
+// T_BUSCONTEXT - the context to use, currently only NeoEspI2sDblBuffContext but there is
+//      a plan to provide one that doesn't implement the front buffer but would be less
+//      async as it would have to wait until the last frame was completely sent before
+//      updating and new data
+// T_BUS - the bus id, NeoEsp32I2sBusZero, NeoEsp32I2sBusOne
+//
+template<typename T_BUSCONTEXT, typename T_BUS> class NeoEsp32I2sMuxBus
 {
 public:    
-    NeoEsp32I2sMuxBus(uint8_t i2sBusNumber, NeoEspI2sContext* context) :
-        _i2sBusNumber(i2sBusNumber),
-        _context(context),
-        _muxId(NeoEspI2sContext::InvalidMuxId)
+    NeoEsp32I2sMuxBus() :
+        _muxId(s_context.MuxMap.InvalidMuxId)
     {
     }
 
     void RegisterNewMuxBus(size_t dataSize)
     {
-        _muxId = _context->RegisterNewMuxBus(dataSize);
+        _muxId = s_context.MuxMap.RegisterNewMuxBus(dataSize);
     }
 
     void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
     {
-        _context->Construct(_i2sBusNumber, i2sSampleRate);
-        i2sSetPins(_i2sBusNumber, pin, _muxId, invert);
+        s_context.Construct(T_BUS::I2sBusNumber, i2sSampleRate);
+        i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, invert);
     }
 
     void DeregisterMuxBus()
     {
-        if (_context->DeregisterMuxBus(_muxId))
+        if (s_context.MuxMap.DeregisterMuxBus(_muxId))
         {
-            _context->Destruct(_i2sBusNumber);
+            s_context.Destruct(T_BUS::I2sBusNumber);
         }
         // disconnect muxed pin?
-        _muxId = NeoEspI2sContext::InvalidMuxId;
+        _muxId = s_context.MuxMap.InvalidMuxId;
     }
 
     void StartWrite()
     {
-        if (_context->IsAllMuxBusesUpdated())
+        if (s_context.MuxMap.IsAllMuxBusesUpdated())
         {
-            _context->ResetMuxBusesUpdated();
+            s_context.MuxMap.ResetMuxBusesUpdated();
 
             // wait for not actively sending data
             while (!IsWriteDone())
@@ -247,22 +326,22 @@ public:
                 yield();
             }
             // copy edit buffer to sending buffer
-            memcpy(_context->I2sBuffer, _context->I2sEditBuffer, _context->I2sBufferSize);
-            i2sWrite(_i2sBusNumber);
+            memcpy(s_context.I2sBuffer, s_context.I2sEditBuffer, s_context.I2sBufferSize);
+            i2sWrite(T_BUS::I2sBusNumber);
         }
     }
 
     bool IsWriteDone()
     {
-        return i2sWriteDone(_i2sBusNumber);
+        return i2sWriteDone(T_BUS::I2sBusNumber);
     }
 
-    void FillBuffers(const uint8_t* data, size_t  sizeData)
+    void FillBuffers(const uint8_t* data, size_t sizeData)
     {
-        if (_context->IsNoMuxBusesUpdate())
+        if (s_context.MuxMap.IsNoMuxBusesUpdate())
         {
             // clear all the data in preperation for each mux channel to add
-            memset(_context->I2sEditBuffer, 0x00, _context->I2sBufferSize);
+            memset(s_context.I2sEditBuffer, 0x00, s_context.I2sBufferSize);
         }
 
         // 8 channel bits layout for DMA 32bit value
@@ -275,30 +354,7 @@ public:
         // due to indianess between peripheral and cpu, bytes within the words are swapped in the const
         const uint32_t EncodedZeroBit = 0x00010000;
         const uint32_t EncodedOneBit = 0x01010001;
-        /*  The above was faster than below, even when using [][] to remove branch
-        const uint32_t LutZeroBit[8] =
-            {
-                0x00010000,
-                0x00020000,
-                0x00040000,
-                0x00080000,
-                0x00100000,
-                0x00200000,
-                0x00400000,
-                0x00800000
-            };
-        const uint32_t LutOneBit[8] =
-            {
-                0x01010001,
-                0x02020002,
-                0x04040004,
-                0x08080008,
-                0x10100010,
-                0x20200020,
-                0x40400040,
-                0x80800080
-            };
-            */
+
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
         const uint64_t EncodedZeroBit64 = 0x0000000000000001;
         const uint64_t EncodedOneBit64 = 0x0000000100010001;
@@ -307,21 +363,21 @@ public:
         const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
 #endif
 
-        uint32_t* pDma = reinterpret_cast<uint32_t*>(_context->I2sEditBuffer);
-        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(_context->I2sEditBuffer);
+        uint32_t* pDma = reinterpret_cast<uint32_t*>(s_context.I2sEditBuffer);
+        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sEditBuffer);
 
         const uint8_t* pEnd = data + sizeData;
+
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
         {
             uint8_t value = *pPixel;
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
-                // $REVIEW to revaulate. These are the sorts of things that would get templatized.
-                if (_i2sBusNumber == 0)
-                {   
+                if (s_context.MuxMap.MuxBusDataSize == 2)
+                {  
+                    // 16 bit mux
                     uint64_t dma64 = *(pDma64);
-                    // clear previous data for mux bus
 
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
                     dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
@@ -332,14 +388,11 @@ public:
                 }
                 else
                 {
+                    // 8 bit mux
                     uint32_t dma = *(pDma);
-                    // apply new data for mux bus
+                    
                     dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) << (_muxId));
 
-                    // below not close and slower
-                    //dma |= ((value & 0x80) ? LutOneBit[_muxId] : LutZeroBit[_muxId]);
-                    // below close but slower
-                    //  dma |= LutBit[!!(value & 0x80)][_muxId];
                     *(pDma++) = dma;
                 }
 
@@ -347,61 +400,28 @@ public:
             }
         }
 
-        _context->MarkMuxBusUpdated(_muxId);
+        s_context.MuxMap.MarkMuxBusUpdated(_muxId);
     }
 
     void MarkUpdated()
     {
-        _context->MarkMuxBusUpdated(_muxId);
+        s_context.MuxMap.MarkMuxBusUpdated(_muxId);
     }
 
 private:
-    const uint8_t _i2sBusNumber;
-    NeoEspI2sContext* _context;
+    static T_BUSCONTEXT s_context;
     uint8_t _muxId; 
 };
 
+template<typename T_BUSCONTEXT, typename T_BUS> T_BUSCONTEXT NeoEsp32I2sMuxBus<T_BUSCONTEXT, T_BUS>::s_context = T_BUSCONTEXT();
 
-#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
-
-class NeoEsp32I2s0Mux8Bus : public NeoEsp32I2sMuxBus
-{
-public:
-    NeoEsp32I2s0Mux8Bus() : NeoEsp32I2sMuxBus(0, &s_context0)
-    {
-    }
-
-private:
-    static NeoEspI2sContext s_context0;
-};
-
-#else
-
-class NeoEsp32I2s0Mux16Bus : public NeoEsp32I2sMuxBus
-{
-public:
-    NeoEsp32I2s0Mux16Bus() : NeoEsp32I2sMuxBus(0, &s_context0)
-    {
-    }
-
-private:
-    static NeoEspI2sContext s_context0;
-};
-
-class NeoEsp32I2s1Mux8Bus : public NeoEsp32I2sMuxBus
-{
-public:
-    NeoEsp32I2s1Mux8Bus() : NeoEsp32I2sMuxBus(1, &s_context1)
-    {
-    }
-private:
-    static NeoEspI2sContext s_context1;
-};
-
-#endif
-
-
-
+//
+// wrapping layer of the i2s mux bus as a NeoMethod
+// 
+// T_SPEED - NeoEsp32I2sSpeed* (ex NeoEsp32I2sSpeedWs2812x) used to define output signal form
+// T_BUS - NeoEsp32I2sMuxBus, the bus to use
+// T_INVERT - NeoEsp32I2sNotInverted or NeoEsp32I2sInverted, will invert output signal
+//
 template<typename T_SPEED, typename T_BUS, typename T_INVERT> class NeoEsp32I2sXMethodBase
 {
 public:
@@ -409,7 +429,8 @@ public:
 
     NeoEsp32I2sXMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
-        _pin(pin)
+        _pin(pin),
+        _bus()
     {
         _bus.RegisterNewMuxBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);        
     }
@@ -436,6 +457,10 @@ public:
         _bus.Initialize(_pin, T_SPEED::I2sSampleRate, T_INVERT::Inverted);
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (_data == nullptr)
+        {
+            log_e("front buffer memory allocation failure");
+        }
         // data cleared later in Begin()
     }
 
@@ -472,6 +497,10 @@ private:
     uint8_t* _data;      // Holds LED color values
 };
 
+typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux8Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux16Bus;
+
+
 // NORMAL
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
 
@@ -497,6 +526,8 @@ private:
     typedef NeoEsp32I2s0X8Apa106Method NeoEsp32I2s0X8Apa106Method;
 
 #else
+
+typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux8Bus;
 
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Ws2812xMethod;
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Sk6812Method;
