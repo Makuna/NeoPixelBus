@@ -472,7 +472,9 @@ public:
 
     bool AlwaysUpdate()
     {
-        // this method requires update to be called even if no changes to buffer
+        // this method requires update to be called even if no changes to method buffer
+        // as edit buffer is always cleared and then copied to send buffer and all
+        // mux bus needs to included
         return true;
     }
 
