@@ -189,9 +189,8 @@ public:
 
     void Show(bool maintainBufferConsistency = true)
     {
-        if (!IsDirty())
+        if (!IsDirty() && !_method.AlwaysUpdate())
         {
-            _method.MarkUpdated();
             return;
         }
 

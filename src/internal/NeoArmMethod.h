@@ -91,9 +91,10 @@ public:
         _endTime = micros();
     }
 
-    void MarkUpdated()
+    bool AlwaysUpdate()
     {
-        // unused method functionality
+        // this method requires update to be called only if changes to buffer
+        return false;
     }
 
     uint8_t* getData() const

@@ -1,83 +1,54 @@
-
-// NeoPixel_ESP32_I2sParallel - This example only works on the ESP32
+//
+// NeoPixel_ESP32_I2sParallel - 
 // This sketch demonstrates the use of the I2S Parallel method allowing upto 8 hardware updated channels
-// WARNING:  Currently underdevelopement and this sketch is used for testing/demonstration; do not consider it a best practices sketch.
-
+// This example only works on the ESP32
+// 
+// The key part of the method name is Esp32I2s1X8, 
+//    E2p32 (platform specific method),
+//    I2s Channel 1 (most commonly available), 
+//    X8 (8 parallel channel mode)
+//
+// In this example, it demonstrates different ColorFeatures, Method specification, and count per strip
+//
 #include <NeoPixelBus.h>
 
-const uint16_t PixelCount = 32; // this example assumes 4 pixels, making it smaller will cause a failure
-const uint8_t DebugPin = 5; // used for logic anaylyser trigger capture 
-
-// moved construction into Setup() so we can capture log output into Serial
-//
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>* strip0;
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>* strip1;
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>* strip2;
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>* strip3;
-
-// focusing on the first four channels for now
-//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method> strip4(PixelCount, PixelPin);
-//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method> strip5(PixelCount, PixelPin);
-//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method> strip6(PixelCount, PixelPin);
-//NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method> strip7(PixelCount, PixelPin);
+// Demonstrating the use of the first four channels, but the method used allows for eight
+NeoPixelBus<NeoBgrFeature, NeoEsp32I2s1X8Ws2811Method> strip1(120, 15); // note: older WS2811 and longer strip
+NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812xMethod> strip2(100, 2); // note: modern WS2812 with letter like WS2812b
+NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812xInvertedMethod> strip3(100, 4); // note: inverted
+NeoPixelBus<NeoGrbwFeature, NeoEsp32I2s1X8Sk6812Method> strip4(50, 16); // note: RGBW and Sk6812 and smaller strip
 
 void setup() {
     Serial.begin(115200);
     while (!Serial); // wait for serial attach
-    
+
     Serial.println();
     Serial.println("Initializing...");
     Serial.flush();
 
-    strip0 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>(PixelCount, 15);
-    strip1 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>(PixelCount, 2);
-    strip2 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>(PixelCount, 4);
-    strip3 = new NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812Method>(PixelCount, 16);
-      
-    strip0->Begin();
-    Serial.println(" 1");
-    strip1->Begin();
-    Serial.println(" 2");
-    strip2->Begin();
-    Serial.println(" 3");
-    strip3->Begin();
-    Serial.println(" 4");
+    // must call begin on all the strips
+    strip1.Begin();
+    strip2.Begin();
+    strip3.Begin();
+    strip4.Begin();
 
-    pinMode(DebugPin, OUTPUT);
-    digitalWrite(DebugPin, LOW);
-  
     Serial.println();
     Serial.println("Running...");
 }
 
 void loop() {
-    delay(5000);
+    delay(1000);
 
-    Serial.println("On ...");
-    strip0->SetPixelColor(0, 255);
-    strip1->SetPixelColor(0, 127);
-    strip2->SetPixelColor(0, 63);
-    strip3->SetPixelColor(0, 31);
+    // draw on the strips
+    strip1.SetPixelColor(0, RgbColor(255, 0, 0));      // red
+    strip2.SetPixelColor(0, RgbColor(0, 127, 0));      // green
+    strip3.SetPixelColor(0, RgbColor(0, 0, 53));       // blue
+    strip4.SetPixelColor(0, RgbwColor(0, 0, 128, 255)); // white channel with a little blue
 
-    digitalWrite(DebugPin, HIGH);
-    
-    strip0->Show();
-    strip1->Show();
-    strip2->Show();
-    strip3->Show();
-    
-    digitalWrite(DebugPin, LOW);
-
-    delay(5000);
-
-    Serial.println("Off ...");
-    strip0->SetPixelColor(0, 0);
-    strip1->SetPixelColor(0, 0);
-    strip2->SetPixelColor(0, 0);
-    strip3->SetPixelColor(0, 0);
-
-    strip0->Show();
-    strip1->Show();
-    strip2->Show();
-    strip3->Show();
+    // show them, 
+    // only on the last show, no matter the order, will the data be sent
+    strip1.Show();
+    strip2.Show();
+    strip3.Show();
+    strip4.Show();
 }
