@@ -515,14 +515,18 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits, bool pa
 
     //               160,000,000L / (100,000 * 384)
     double clkmdiv = (double)I2S_BASE_CLK / ((rate * 384) + 1);
-    if (clkmdiv > 256) 
+    if (clkmdiv > 256.0) 
     {
         log_e("rate is too low");
         return ESP_FAIL;
     } 
-    else if (clkmdiv < 2) 
+    else if (clkmdiv < 2.0) 
     {
-        log_e("rate is too fast");
+        log_e("rate is too fast, clkmdiv = %f (%u, %u, %u)",
+            clkmdiv,
+            rate,
+            bits,
+            parallel_mode);
         return ESP_FAIL;
     }
     I2S[bus_num].rate = rate;
@@ -535,12 +539,12 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits, bool pa
     // due to conf2.lcd_tx_wrx2_en being set for p8, bit rate is doubled
     // adjust by using bck here
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)   
-    uint8_t bck = parallel_mode ? 24 : 12;
+    uint8_t bck = parallel_mode ? 12 : 12;
 #else
     // parallel modes on ESP32-S2 need higher rate (x4) to work properly e.g. producing 800KHz signal
     // it won't work (and ESP32-S2 becomes highly unstable/jumping into the bootloader mode) for present structure just by modyfing 'rate' like for ESP32
     // but it can be done other way by lowering tx_bck_div_num (bck) by 4   
-    uint8_t bck = parallel_mode ? 6 : 12;
+    uint8_t bck = parallel_mode ? 3 : 12;
 #endif
 
     i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bits);
