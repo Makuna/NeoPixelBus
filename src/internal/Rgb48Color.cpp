@@ -135,9 +135,9 @@ void Rgb48Color::Lighten(uint16_t delta)
 
 Rgb48Color Rgb48Color::LinearBlend(const Rgb48Color& left, const Rgb48Color& right, float progress)
 {
-    return Rgb48Color( left.R + ((right.R - left.R) * progress),
-        left.G + ((right.G - left.G) * progress),
-        left.B + ((right.B - left.B) * progress));
+    return Rgb48Color( left.R + (((int32_t)right.R - left.R) * progress),
+        left.G + (((int32_t)right.G - left.G) * progress),
+        left.B + (((int32_t)right.B - left.B) * progress));
 }
 
 Rgb48Color Rgb48Color::BilinearBlend(const Rgb48Color& c00, 
