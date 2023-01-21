@@ -29,7 +29,11 @@ void i2sInit(uint8_t bus_num,
     uint8_t* data,
     size_t dataSize);
 void i2sDeinit(uint8_t bus_num);
-void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert);
+void i2sSetPins(uint8_t bus_num, 
+        int8_t out, 
+        int8_t parallel, 
+        uint32_t bits_per_sample, 
+        bool invert);
 bool i2sWrite(uint8_t bus_num);
 bool i2sWriteDone(uint8_t bus_num);
 

@@ -32,14 +32,18 @@ extern "C"
 #include "Esp32_i2s.h"
 }
 
-//16 channel layout if it ever gets supported
-//
-//01234567 89abcdef 01234567 89abcdef 01234567 89abcdef 01234567 89abcdef
-//encode 0          encode 1          encode 2          encode 3
-//1                 0                 0                 0
-//1                 1                 1                 0
-
 #pragma once
+
+// ESP32 Endian Map
+// uint16_t
+//   1234
+//   3412
+// uint32_t
+//   12345678
+//   78563412
+// uint64_t
+//   0123456789abcdef
+//   efcdab8967452301
 
 // ESP32C3 I2S is not supported yet due to significant changes to interface
 #if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3)
@@ -262,7 +266,7 @@ public:
             return;
         }
 
-        i2sSetPins(busNumber, -1, -1, false);
+        i2sSetPins(busNumber, -1, -1, 8, false);
         i2sDeinit(busNumber);
 
         free(I2sEditBuffer);
@@ -301,7 +305,7 @@ public:
     void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
     {
         s_context.Construct(T_BUS::I2sBusNumber, i2sSampleRate);
-        i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, invert);
+        i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, s_context.MuxMap.MuxBusDataSize * 8, invert);
     }
 
     void DeregisterMuxBus()
@@ -344,63 +348,13 @@ public:
             memset(s_context.I2sEditBuffer, 0x00, s_context.I2sBufferSize);
         }
 
-        // 8 channel bits layout for DMA 32bit value
-        //
-        //  mux bus id     01234567 01234567 01234567 01234567
-        //  encode bit #   0        1        2        3
-        //  value zero     1        0        0        0
-        //  value one      1        1        1        0    
-        
-        // due to indianess between peripheral and cpu, bytes within the words are swapped in the const
-        const uint32_t EncodedZeroBit = 0x00010000;
-        const uint32_t EncodedOneBit = 0x01010001;
-
-#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
-        const uint64_t EncodedZeroBit64 = 0x0000000000000001;
-        const uint64_t EncodedOneBit64 = 0x0000000100010001;
-#else
-        const uint64_t EncodedZeroBit64Inv = 0x0000000001000000;
-        const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
-#endif
-
-        uint32_t* pDma = reinterpret_cast<uint32_t*>(s_context.I2sEditBuffer);
-        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sEditBuffer);
-
-        const uint8_t* pEnd = data + sizeData;
-
-        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
+        if (s_context.MuxMap.MuxBusDataSize == 2)
+        {  
+            Fillx16(data, sizeData);
+        }
+        else
         {
-            uint8_t value = *pPixel;
-
-            // $REVIEW - while 16 bit parrallel is support
-            // this fill buffers only works for 8 bits
-            // due to this for loop!
-            for (uint8_t bit = 0; bit < 8; bit++)
-            {
-                if (s_context.MuxMap.MuxBusDataSize == 2)
-                {  
-                    // 16 bit mux
-                    uint64_t dma64 = *(pDma64);
-
-#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
-                    dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
-#else
-                    dma64 |= (((value & 0x80) ? EncodedOneBit64Inv : EncodedZeroBit64Inv) << (_muxId));
-#endif
-                    *(pDma64++) = dma64;
-                }
-                else
-                {
-                    // 8 bit mux
-                    uint32_t dma = *(pDma);
-                    
-                    dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) << (_muxId));
-
-                    *(pDma++) = dma;
-                }
-
-                value <<= 1;
-            }
+            Fillx8(data, sizeData);
         }
 
         s_context.MuxMap.MarkMuxBusUpdated(_muxId);
@@ -414,6 +368,82 @@ public:
 private:
     static T_BUSCONTEXT s_context;
     uint8_t _muxId; 
+
+    void Fillx8(const uint8_t* data, size_t sizeData)
+    {
+        //  8 channel bits layout for DMA 32bit value
+        //  note, right to left
+        //  mux bus id     76543210 76543210 76543210 76543210
+        //  encode bit #   3        2        1        0
+        //  value zero     0        0        0        1
+        //  value one      0        1        1        1    
+
+        // due to indianness between peripheral and cpu, bytes within the words are swapped in the const
+        // 1234  - order
+        // 3412  = actual due to endianness
+        //                                00000001
+        const uint32_t EncodedZeroBit = 0x00010000;
+        //                               00010101
+        const uint32_t EncodedOneBit = 0x01010001;
+
+        uint32_t* pDma = reinterpret_cast<uint32_t*>(s_context.I2sEditBuffer);
+        const uint8_t* pEnd = data + sizeData;
+
+        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
+        {
+            uint8_t value = *pPixel;
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                uint32_t dma = *(pDma);
+
+                dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) << (_muxId));
+                *(pDma++) = dma;
+                value <<= 1;
+            }
+        }
+    }
+
+    void Fillx16(const uint8_t* data, size_t sizeData)
+    {
+        //  16 channel bits layout for DMA 64bit value
+        //  note, right to left
+        //  mux bus id     fedcba9876543210 fedcba9876543210 fedcba9876543210 fedcba9876543210
+        //  encode bit #   3                2                1                0
+        //  value zero     0                0                0                1
+        //  value one      0                1                1                1     
+        // values used before on bus 0, 
+        // const uint64_t EncodedZeroBit64Inv = 0x0000000001000000;
+        // const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
+
+        // due to indianness between peripheral and cpu, bytes within the words are swapped in the const
+        // 
+        //  0123 4567 89ab cdef - order desired
+        //  efcd ab89 6745 2301 - order on ESP32 due to Endianness
+        //                                    0000 0000 0000 0001
+        const uint64_t EncodedZeroBit64 = 0x0100000000000000;
+        //                               0000 0001 0001 0001
+        const uint64_t EncodedOneBit64 = 0x0100010001000000;
+
+        uint64_t* pDma = reinterpret_cast<uint64_t*>(s_context.I2sEditBuffer);
+
+        const uint8_t* pEnd = data + sizeData;
+
+        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
+        {
+            uint8_t value = *pPixel;
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                uint64_t dma = *(pDma);
+
+                dma |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
+                *(pDma++) = dma;
+                value <<= 1;
+            }
+        }
+    }
+
 };
 
 template<typename T_BUSCONTEXT, typename T_BUS> T_BUSCONTEXT NeoEsp32I2sMuxBus<T_BUSCONTEXT, T_BUS>::s_context = T_BUSCONTEXT();
@@ -508,7 +538,6 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoE
 
 
 // NORMAL
-#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
 
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Ws2812xMethod;
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Sk6812Method;
@@ -531,7 +560,7 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoE
     typedef NeoEsp32I2s0X8Sk6812Method NeoEsp32I2s0X8Lc8812Method;
     typedef NeoEsp32I2s0X8Apa106Method NeoEsp32I2s0X8Apa106Method;
 
-#else
+
 
 typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux8Bus;
 typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux16Bus;
@@ -598,11 +627,10 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoE
     typedef NeoEsp32I2s1X16Tm1914Method NeoEsp32I2s1X16Tm1914Method;
     typedef NeoEsp32I2s1X16Sk6812Method NeoEsp32I2s1X16Lc8812Method;
     typedef NeoEsp32I2s1X16Apa106Method NeoEsp32I2s1X16Apa106Method;
-#endif
+
 
 
 // INVERTED
-#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
 
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Ws2812xInvertedMethod;
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Sk6812InvertedMethod;
@@ -624,8 +652,6 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoE
     typedef NeoEsp32I2s0X8Tm1914InvertedMethod NeoEsp32I2s0X8Tm1914InvertedMethod;
     typedef NeoEsp32I2s0X8Sk6812InvertedMethod NeoEsp32I2s0X8Lc8812InvertedMethod;
     typedef NeoEsp32I2s0X8Apa106InvertedMethod NeoEsp32I2s0X8Apa106InvertedMethod;
-
-#else
 
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X16Ws2812xInvertedMethod;
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X16Sk6812InvertedMethod;
@@ -689,6 +715,6 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoE
     typedef NeoEsp32I2s1X16Tm1914InvertedMethod NeoEsp32I2s1X16Tm1914InvertedMethod;
     typedef NeoEsp32I2s1X16Sk6812InvertedMethod NeoEsp32I2s1X16Lc8812InvertedMethod;
     typedef NeoEsp32I2s1X16Apa106InvertedMethod NeoEsp32I2s1X16Apa106InvertedMethod;
-#endif
+
 
 #endif

@@ -252,32 +252,34 @@ esp_err_t i2sSetClock(uint8_t bus_num,
     return ESP_OK;
 }
 
-void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert) 
+void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, uint32_t bits_per_sample, bool invert)
 {
     if (bus_num >= I2S_NUM_MAX) 
     {
         return;
     }
-    /* cant really track this with parrallel
-    int8_t outOld = I2S[bus_num].out;
 
-    I2S[bus_num].out = out;
-
-    // disable old pin
-    if (outOld >= 0)
-    {
-        gpio_matrix_out(outOld, MATRIX_DETACH_OUT_SIG, false, false);
-        pinMode(outOld, INPUT);
-    }
-    */
     if (out >= 0) 
     {
         pinMode(out, OUTPUT);
 
         uint32_t i2sSignal;
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-//            (I2S_NUM_MAX == 2)
-        if (bus_num == 1) 
+        // ESP32, but what about ESP32S2?
+        if (bus_num == 0)
+        {
+            //  8bit mode : I2S0O_DATA_OUT16_IDX ~I2S0O_DATA_OUT23_IDX
+            //  16bit mode : I2S0O_DATA_OUT8_IDX ~I2S0O_DATA_OUT23_IDX
+            //  24bit mode : I2S0O_DATA_OUT0_IDX ~I2S0O_DATA_OUT23_IDX
+            if (parallel == -1)
+            {
+                i2sSignal = I2S0O_DATA_OUT23_IDX;
+            }
+            else
+            {
+                i2sSignal = (I2S0O_DATA_OUT23_IDX - bits_per_sample + 1) + parallel;
+            }
+        }
+        else
         {
             if (parallel == -1)
             {
@@ -286,18 +288,6 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
             else
             {
                 i2sSignal = I2S1O_DATA_OUT0_IDX + parallel;
-            }
-        }
-        else
-#endif
-        {
-            if (parallel == -1)
-            {
-                i2sSignal = I2S0O_DATA_OUT23_IDX;
-            }
-            else
-            {
-                i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;                
             }
         }
 
