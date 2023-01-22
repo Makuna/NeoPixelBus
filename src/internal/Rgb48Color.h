@@ -63,9 +63,9 @@ struct Rgb48Color : RgbColorBase
     // ------------------------------------------------------------------------
     Rgb48Color(const RgbColor& color)
     {
-        R = (color.R == 0) ? 0 : (color.R << 8 | 0xff);
-        G = (color.G == 0) ? 0 : (color.G << 8 | 0xff);
-        B = (color.B == 0) ? 0 : (color.B << 8 | 0xff);
+        R = (uint16_t)color.R * 257; // 257 = MAXUINT16/MAXUINT8 = 65535/255
+        G = (uint16_t)color.R * 257;
+        B = (uint16_t)color.R * 257;
     };
 
     // ------------------------------------------------------------------------

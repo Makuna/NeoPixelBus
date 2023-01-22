@@ -165,10 +165,10 @@ void RgbwColor::Lighten(uint8_t delta)
 
 RgbwColor RgbwColor::LinearBlend(const RgbwColor& left, const RgbwColor& right, float progress)
 {
-    return RgbwColor( left.R + ((right.R - left.R) * progress),
-        left.G + ((right.G - left.G) * progress),
-        left.B + ((right.B - left.B) * progress),
-        left.W + ((right.W - left.W) * progress) );
+    return RgbwColor( left.R + (((int16_t)right.R - left.R) * progress),
+        left.G + (((int16_t)right.G - left.G) * progress),
+        left.B + (((int16_t)right.B - left.B) * progress),
+        left.W + (((int16_t)right.W - left.W) * progress) );
 }
 
 RgbwColor RgbwColor::BilinearBlend(const RgbwColor& c00, 
