@@ -162,9 +162,9 @@ void RgbColor::Lighten(uint8_t delta)
 
 RgbColor RgbColor::LinearBlend(const RgbColor& left, const RgbColor& right, float progress)
 {
-    return RgbColor( left.R + ((right.R - left.R) * progress),
-        left.G + ((right.G - left.G) * progress),
-        left.B + ((right.B - left.B) * progress));
+    return RgbColor( left.R + (((int16_t)right.R - left.R) * progress),
+        left.G + (((int16_t)right.G - left.G) * progress),
+        left.B + (((int16_t)right.B - left.B) * progress));
 }
 
 RgbColor RgbColor::BilinearBlend(const RgbColor& c00, 

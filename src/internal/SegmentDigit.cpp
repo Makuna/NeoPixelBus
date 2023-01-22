@@ -159,7 +159,7 @@ SevenSegDigit SevenSegDigit::LinearBlend(const SevenSegDigit& left, const SevenS
 
     for (uint8_t iSegment = 0; iSegment < SegmentCount; iSegment++)
     {
-        result.Segment[iSegment] = left.Segment[iSegment] + ((right.Segment[iSegment] - left.Segment[iSegment]) * progress);
+        result.Segment[iSegment] = left.Segment[iSegment] + (((int16_t)right.Segment[iSegment] - left.Segment[iSegment]) * progress);
     }
     return result;
 }
