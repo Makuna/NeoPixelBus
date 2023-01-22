@@ -222,14 +222,12 @@ public:
             size_t dmaBlockCount = (I2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
 
             // parallel modes need higher frequency on esp32
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)           
             if (T_MUXMAP::MuxBusDataSize == 1 || T_MUXMAP::MuxBusDataSize == 2)
             {
                 // Does this scale to 24 bit mode? 
                 // true 8 bits mode uses half the frequency than 16 bit parallel mode
                 i2sSampleRate *= (T_MUXMAP::MuxBusDataSize);
             }
-#endif
 
             I2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(I2sBufferSize, MALLOC_CAP_DMA));
             if (I2sBuffer == nullptr)
@@ -407,25 +405,30 @@ private:
     void Fillx16(const uint8_t* data, size_t sizeData)
     {
         //  16 channel bits layout for DMA 64bit value
-        //  note, right to left
+        //  note, right to left, destination is 32bit chunks
         //  mux bus id     fedcba9876543210 fedcba9876543210 fedcba9876543210 fedcba9876543210
-        //  encode bit #   3                2                1                0
-        //  value zero     0                0                0                1
-        //  value one      0                1                1                1     
+        //  encode bit #   1                0                3                2
+        //  value zero     0                1                0                0
+        //  value one      1                1                0                1     
         // values used before on bus 0, 
+        //                                        00000001 00000000
         // const uint64_t EncodedZeroBit64Inv = 0x0000000001000000;
+        //                                       0001000100000001
         // const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
 
         // due to indianness between peripheral and cpu, bytes within the words are swapped in the const
-        // 
+        //  {       } {       }
         //  0123 4567 89ab cdef - order desired
-        //  efcd ab89 6745 2301 - order on ESP32 due to Endianness
-        //                                    0000 0000 0000 0001
-        const uint64_t EncodedZeroBit64 = 0x0100000000000000;
-        //                               0000 0001 0001 0001
-        const uint64_t EncodedOneBit64 = 0x0100010001000000;
+        //  6745 2301 efcd ab89 - order on ESP32 due to Endianness and 32 bit dest
 
-        uint64_t* pDma = reinterpret_cast<uint64_t*>(s_context.I2sEditBuffer);
+        //                                   00000000
+        const uint32_t EncodedNoPulse      = 0;
+        //                                   00000001
+        const uint32_t EncodedQuarterPulse = 0x00010000;
+        //                                   00010001
+        const uint32_t EncodedHalfPulse    = 00010001;
+
+        uint32_t* pDma = reinterpret_cast<uint32_t*>(s_context.I2sEditBuffer);
 
         const uint8_t* pEnd = data + sizeData;
 
@@ -435,9 +438,18 @@ private:
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
-                uint64_t dma = *(pDma);
-
-                dma |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
+                bool isOneBit = (value & 0x80);
+                uint32_t dma = *(pDma);
+                // for shifting to work correctly, we need to shift within
+                // the size of data at destination
+                // dma |= ((isOneBit ? EncodedHalfPulse : EncodedQuarterPulse) << (_muxId));
+                
+                dma |= 0x00000002;
+                *(pDma++) = dma;
+                
+                dma = *(pDma);
+                // dma |= ((isOneBit ? EncodedQuarterPulse : EncodedNoPulse) << (_muxId));
+                dma |= 0x00000001;
                 *(pDma++) = dma;
                 value <<= 1;
             }
@@ -537,6 +549,10 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEs
 typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux16Bus;
 
 
+typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux8Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux16Bus;
+
+
 // NORMAL
 
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Ws2812xMethod;
@@ -560,10 +576,6 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoE
     typedef NeoEsp32I2s0X8Sk6812Method NeoEsp32I2s0X8Lc8812Method;
     typedef NeoEsp32I2s0X8Apa106Method NeoEsp32I2s0X8Apa106Method;
 
-
-
-typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux8Bus;
-typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux16Bus;
 
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Ws2812xMethod;
     typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Sk6812Method;
@@ -607,14 +619,14 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoE
     typedef NeoEsp32I2s1X8Sk6812Method NeoEsp32I2s1X8Lc8812Method;
     typedef NeoEsp32I2s1X8Apa106Method NeoEsp32I2s1X8Apa106Method;
 
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Ws2812xMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Sk6812Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1814Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1829Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1914Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16800KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16400KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Apa106Method;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Ws2812xMethod;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Sk6812Method;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1814Method;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1829Method;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1914Method;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16800KbpsMethod;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16400KbpsMethod;
+    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Apa106Method;
 
     typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2813Method;
     typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2812dMethod;

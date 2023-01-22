@@ -290,7 +290,10 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, uint32_t bits_per_
                 i2sSignal = I2S1O_DATA_OUT0_IDX + parallel;
             }
         }
-
+        log_i("i2sSetPins bus %u, i2sSignal %u, pin %u",
+            bus_num,
+            i2sSignal,
+            out);
         gpio_matrix_out(out, i2sSignal, invert, false);
     } 
 }
@@ -319,6 +322,12 @@ void i2sInit(uint8_t bus_num,
     {
         return;
     }
+
+    
+    log_i("i2sSetClock bus %u, parallel_mode %u, bits_per_sample %u",
+        bus_num,
+        parallel_mode,
+        bits_per_sample);
 
     I2S[bus_num].dma_count = dma_count + 
             I2S_DMA_SILENCE_BLOCK_COUNT_FRONT +
@@ -373,7 +382,7 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf2) conf2;
         conf2.val = 0;
         conf2.lcd_en = (parallel_mode) && (bits_per_sample == 8 || bits_per_sample == 16);
-        conf2.lcd_tx_wrx2_en = 0;//(bits_per_sample == 8 || bits_per_sample == 16);
+        conf2.lcd_tx_wrx2_en = 0; // (parallel_mode) && (bits_per_sample == 16);
         i2s->conf2.val = conf2.val;
     }
 
@@ -526,16 +535,14 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits, bool pa
     uint8_t clkmInteger = clkmdiv;
     uint8_t clkmFraction = (clkmdiv - clkmInteger) * 63.0;
 
+    // $REVIEW this comment is no longer true, so why the x4
     // due to conf2.lcd_tx_wrx2_en being set for p8, bit rate is doubled
     // adjust by using bck here
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)   
-    uint8_t bck = parallel_mode ? 12 : 12;
-#else
+
     // parallel modes on ESP32-S2 need higher rate (x4) to work properly e.g. producing 800KHz signal
     // it won't work (and ESP32-S2 becomes highly unstable/jumping into the bootloader mode) for present structure just by modyfing 'rate' like for ESP32
     // but it can be done other way by lowering tx_bck_div_num (bck) by 4   
     uint8_t bck = parallel_mode ? 3 : 12;
-#endif
 
     i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bits);
 
