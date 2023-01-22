@@ -32,11 +32,11 @@ class NeoGammaEquationMethod
 public:
     static uint8_t Correct(uint8_t value)
     {
-        return static_cast<uint8_t>(255.0f * NeoEase::Gamma(value / 255.0f) + 0.5f);
+        return static_cast<uint8_t>(255.0f * NeoEase::Gamma((float)value / 255.0f) + 0.5f);
     }
     static uint16_t Correct(uint16_t value)
     {
-        return static_cast<uint16_t>(65535.0f * NeoEase::Gamma(value / 65535.0f) + 0.5f);
+        return static_cast<uint16_t>(65535.0f * NeoEase::Gamma((float)value / 65535.0f) + 0.5f);
     }
 };
 
@@ -82,7 +82,7 @@ public:
 
     Rgb48Color Correct(const Rgb48Color& original)
     {
-        return RgbColor(T_METHOD::Correct(original.R),
+        return Rgb48Color(T_METHOD::Correct(original.R),
             T_METHOD::Correct(original.G),
             T_METHOD::Correct(original.B));
     }
