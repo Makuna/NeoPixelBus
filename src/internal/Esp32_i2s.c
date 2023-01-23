@@ -290,10 +290,12 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, uint32_t bits_per_
                 i2sSignal = I2S1O_DATA_OUT0_IDX + parallel;
             }
         }
-        log_i("i2sSetPins bus %u, i2sSignal %u, pin %u",
+        log_i("i2sSetPins bus %u, i2sSignal %u, pin %u, mux %u, bits_per_sample %u",
             bus_num,
             i2sSignal,
-            out);
+            out,
+            parallel,
+            bits_per_sample);
         gpio_matrix_out(out, i2sSignal, invert, false);
     } 
 }
@@ -542,7 +544,7 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits, bool pa
     // parallel modes on ESP32-S2 need higher rate (x4) to work properly e.g. producing 800KHz signal
     // it won't work (and ESP32-S2 becomes highly unstable/jumping into the bootloader mode) for present structure just by modyfing 'rate' like for ESP32
     // but it can be done other way by lowering tx_bck_div_num (bck) by 4   
-    uint8_t bck = parallel_mode ? 3 : 12;
+    uint8_t bck = parallel_mode ? 12 : 12;
 
     i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bits);
 

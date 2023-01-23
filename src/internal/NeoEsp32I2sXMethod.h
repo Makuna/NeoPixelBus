@@ -298,11 +298,16 @@ public:
     void RegisterNewMuxBus(size_t dataSize)
     {
         _muxId = s_context.MuxMap.RegisterNewMuxBus(dataSize);
+        log_i("RegisterNewMuxBus mux %u",
+            _muxId);
     }
 
     void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
     {
         s_context.Construct(T_BUS::I2sBusNumber, i2sSampleRate);
+        log_i("Initialize mux %u, pin %u",
+            _muxId,
+            pin);
         i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, s_context.MuxMap.MuxBusDataSize * 8, invert);
     }
 
@@ -410,26 +415,26 @@ private:
         //  encode bit #   1                0                3                2
         //  value zero     0                1                0                0
         //  value one      1                1                0                1     
-        // values used before on bus 0, 
-        //                                        00000001 00000000
-        // const uint64_t EncodedZeroBit64Inv = 0x0000000001000000;
-        //                                       0001000100000001
-        // const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
-
-        // due to indianness between peripheral and cpu, bytes within the words are swapped in the const
+        // due to indianness between peripheral and cpu, 
+        // bytes within the words are swapped and words within dwords
+        // in the literal constant
         //  {       } {       }
-        //  0123 4567 89ab cdef - order desired
-        //  6745 2301 efcd ab89 - order on ESP32 due to Endianness and 32 bit dest
+        //  0123 4567 89ab cdef - order of bytes in literal constant
+        //  efcd ab89 6745 2301 - order of memory on ESP32 due to Endianness
+        //  6745 2301 efcd ab89 - 32bit dest means only map within 32bits
 
-        //                                   00000000
-        const uint32_t EncodedNoPulse      = 0;
-        //                                   00000001
-        const uint32_t EncodedQuarterPulse = 0x00010000;
-        //                                   00010001
-        const uint32_t EncodedHalfPulse    = 00010001;
 
-        uint32_t* pDma = reinterpret_cast<uint32_t*>(s_context.I2sEditBuffer);
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
+        const uint64_t EncodedZeroBit64 = 0x0000000000000001;
+        const uint64_t EncodedOneBit64 = 0x0000000100010001;
+#else
+        // endian + dest swap                  0000000000000001
+        const uint64_t EncodedZeroBit64Inv = 0x0000000001000000;
+        //  endian + dest swap                0000000100010001
+        const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
+#endif
 
+        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sEditBuffer);
         const uint8_t* pEnd = data + sizeData;
 
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
@@ -438,19 +443,15 @@ private:
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
-                bool isOneBit = (value & 0x80);
-                uint32_t dma = *(pDma);
-                // for shifting to work correctly, we need to shift within
-                // the size of data at destination
-                // dma |= ((isOneBit ? EncodedHalfPulse : EncodedQuarterPulse) << (_muxId));
-                
-                dma |= 0x00000002;
-                *(pDma++) = dma;
-                
-                dma = *(pDma);
-                // dma |= ((isOneBit ? EncodedQuarterPulse : EncodedNoPulse) << (_muxId));
-                dma |= 0x00000001;
-                *(pDma++) = dma;
+                uint64_t dma64 = *(pDma64);
+
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
+                dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
+#else
+                dma64 |= (((value & 0x80) ? EncodedOneBit64Inv : EncodedZeroBit64Inv) << (_muxId));
+#endif
+                *(pDma64++) = dma64;
+
                 value <<= 1;
             }
         }
