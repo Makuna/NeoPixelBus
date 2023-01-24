@@ -57,6 +57,41 @@ public:
     NeoEspI2sMuxBusSize8Bit() {};
 
     const static size_t MuxBusDataSize = 1;
+
+    static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
+    {
+        //  8 channel bits layout for DMA 32bit value
+        //  note, right to left
+        //  mux bus id     76543210 76543210 76543210 76543210
+        //  encode bit #   3        2        1        0
+        //  value zero     0        0        0        1
+        //  value one      0        1        1        1    
+
+        // due to indianness between peripheral and cpu, bytes within the words are swapped in the const
+        // 1234  - order
+        // 3412  = actual due to endianness
+        //                                00000001
+        const uint32_t EncodedZeroBit = 0x00010000;
+        //                               00010101
+        const uint32_t EncodedOneBit = 0x01010001;
+
+        uint32_t* pDma = reinterpret_cast<uint32_t*>(dmaBuffer);
+        const uint8_t* pEnd = data + sizeData;
+
+        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
+        {
+            uint8_t value = *pPixel;
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                uint32_t dma = *(pDma);
+
+                dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) << (muxId));
+                *(pDma++) = dma;
+                value <<= 1;
+            }
+        }
+    }
 };
 
 //
@@ -68,6 +103,77 @@ public:
     NeoEspI2sMuxBusSize16Bit() {};
 
     const static size_t MuxBusDataSize = 2;
+
+    static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
+    {
+        // 16 channel bits layout for DMA 64bit value
+        // note, right to left, destination is 32bit chunks
+        // due to indianness between peripheral and cpu, 
+        // bytes within the words are swapped and words within dwords
+        // in the literal constants
+        //  {       } {       }
+        //  0123 4567 89ab cdef - order of bytes in literal constant
+        //  efcd ab89 6745 2301 - order of memory on ESP32 due to Endianness
+        //  6745 2301 efcd ab89 - 32bit dest means only map using 32bits so swap upper and lower
+        //
+        // Due to final bit locations, can't shift encoded one bit
+        // either left more than 7 or right more than 7 so we have to
+        // split the updates and use different encodings
+        if (muxId < 8)
+        {
+            // endian + dest swap               0000000000000001 
+            const uint64_t EncodedZeroBit64 = 0x0000000001000000;
+            //  endian + dest swap             0000000100010001 
+            const uint64_t EncodedOneBit64 = 0x0100000001000100; // cant be shifted by 8!
+            Fillx16(dmaBuffer,
+                data,
+                sizeData,
+                muxId,
+                EncodedZeroBit64,
+                EncodedOneBit64);
+        }
+        else
+        {
+            // endian + dest swap               0000000000000001 
+            // then pre shift by 8              0000000000000100
+            const uint64_t EncodedZeroBit64 = 0x0000000000010000;
+            //  endian + dest swap             0000000100010001 
+            // then pre shift by 8             0000010001000100
+            const uint64_t EncodedOneBit64 = 0x0001000000010001;
+            Fillx16(dmaBuffer,
+                data,
+                sizeData,
+                muxId - 8, // preshifted
+                EncodedZeroBit64,
+                EncodedOneBit64);
+        }
+    }
+
+protected:
+    static void Fillx16(uint8_t* dmaBuffer, 
+        const uint8_t* data,
+        size_t sizeData,
+        uint8_t muxShift,
+        const uint64_t EncodedZeroBit64,
+        const uint64_t EncodedOneBit64)
+    {
+        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(dmaBuffer);
+        const uint8_t* pEnd = data + sizeData;
+
+        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
+        {
+            uint8_t value = *pPixel;
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                uint64_t dma64 = *(pDma64);
+
+                dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (muxShift));
+                *(pDma64++) = dma64;
+                value <<= 1;
+            }
+        }
+    }
 };
 
 //
@@ -347,52 +453,10 @@ public:
             memset(s_context.I2sEditBuffer, 0x00, s_context.I2sBufferSize);
         }
 
-        if (s_context.MuxMap.MuxBusDataSize == 2)
-        {  
-            // 16 channel bits layout for DMA 64bit value
-            // note, right to left, destination is 32bit chunks
-            // due to indianness between peripheral and cpu, 
-            // bytes within the words are swapped and words within dwords
-            // in the literal constants
-            //  {       } {       }
-            //  0123 4567 89ab cdef - order of bytes in literal constant
-            //  efcd ab89 6745 2301 - order of memory on ESP32 due to Endianness
-            //  6745 2301 efcd ab89 - 32bit dest means only map within 32bits
-            //
-            // Due to final bit locations, can't shift encoded one bit
-            // either left more than 7 or right more than 7 so we have to
-            // split the updates and use different encodings
-            if (_muxId < 8)
-            {
-                // endian + dest swap               0000000000000001 
-                const uint64_t EncodedZeroBit64 = 0x0000000001000000;
-                //  endian + dest swap             0000000100010001 
-                const uint64_t EncodedOneBit64 = 0x0100000001000100; // cant be shifted by 8!
-                Fillx16(data, 
-                    sizeData,
-                    _muxId,
-                    EncodedZeroBit64,
-                    EncodedOneBit64);
-            }
-            else
-            {
-                // endian + dest swap               0000000000000001 
-                // then pre shift by 8              0000000000000100
-                const uint64_t EncodedZeroBit64 = 0x0000000000010000;
-                //  endian + dest swap             0000000100010001 
-                // then pre shift by 8             0000010001000100
-                const uint64_t EncodedOneBit64 = 0x0001000000010001;
-                Fillx16(data,
-                    sizeData,
-                    _muxId - 8, // preshifted
-                    EncodedZeroBit64,
-                    EncodedOneBit64);
-            }
-        }
-        else
-        {
-            Fillx8(data, sizeData);
-        }
+        s_context.MuxMap.EncodeIntoDma(s_context.I2sEditBuffer,
+                data,
+                sizeData,
+                _muxId );
 
         s_context.MuxMap.MarkMuxBusUpdated(_muxId);
     }
@@ -405,66 +469,6 @@ public:
 private:
     static T_BUSCONTEXT s_context;
     uint8_t _muxId; 
-
-    void Fillx8(const uint8_t* data, size_t sizeData)
-    {
-        //  8 channel bits layout for DMA 32bit value
-        //  note, right to left
-        //  mux bus id     76543210 76543210 76543210 76543210
-        //  encode bit #   3        2        1        0
-        //  value zero     0        0        0        1
-        //  value one      0        1        1        1    
-
-        // due to indianness between peripheral and cpu, bytes within the words are swapped in the const
-        // 1234  - order
-        // 3412  = actual due to endianness
-        //                                00000001
-        const uint32_t EncodedZeroBit = 0x00010000;
-        //                               00010101
-        const uint32_t EncodedOneBit = 0x01010001;
-
-        uint32_t* pDma = reinterpret_cast<uint32_t*>(s_context.I2sEditBuffer);
-        const uint8_t* pEnd = data + sizeData;
-
-        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
-        {
-            uint8_t value = *pPixel;
-
-            for (uint8_t bit = 0; bit < 8; bit++)
-            {
-                uint32_t dma = *(pDma);
-
-                dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) << (_muxId));
-                *(pDma++) = dma;
-                value <<= 1;
-            }
-        }
-    }
-
-    void Fillx16(const uint8_t* data, 
-            size_t sizeData,
-            uint8_t muxShift,
-            const uint64_t EncodedZeroBit64,
-            const uint64_t EncodedOneBit64)
-    {
-        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sEditBuffer);
-        const uint8_t* pEnd = data + sizeData;
-
-        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
-        {
-            uint8_t value = *pPixel;
-
-            for (uint8_t bit = 0; bit < 8; bit++)
-            {
-                uint64_t dma64 = *(pDma64);
-
-                dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (muxShift));
-                *(pDma64++) = dma64;
-                value <<= 1;
-            }
-        }
-    }
-
 };
 
 template<typename T_BUSCONTEXT, typename T_BUS> T_BUSCONTEXT NeoEsp32I2sMuxBus<T_BUSCONTEXT, T_BUS>::s_context = T_BUSCONTEXT();
