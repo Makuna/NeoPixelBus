@@ -187,7 +187,7 @@ public:
 
         i2sInit(_bus.I2sBusNumber, 
             false,
-            16, 
+            2, // bytes per sample 
             T_SPEED::I2sSampleRate, 
             I2S_CHAN_STEREO, 
             I2S_FIFO_16BIT_DUAL, 
