@@ -423,16 +423,10 @@ private:
         //  efcd ab89 6745 2301 - order of memory on ESP32 due to Endianness
         //  6745 2301 efcd ab89 - 32bit dest means only map within 32bits
 
-
-#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
-        const uint64_t EncodedZeroBit64 = 0x0000000000000001;
-        const uint64_t EncodedOneBit64 = 0x0000000100010001;
-#else
         // endian + dest swap                  0000000000000001
-        const uint64_t EncodedZeroBit64Inv = 0x0000000001000000;
+        const uint64_t EncodedZeroBit64 = 0x0000000001000000;
         //  endian + dest swap                0000000100010001
-        const uint64_t EncodedOneBit64Inv = 0x0100000001000100;
-#endif
+        const uint64_t EncodedOneBit64 = 0x0100000001000100;
 
         uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sEditBuffer);
         const uint8_t* pEnd = data + sizeData;
@@ -445,13 +439,8 @@ private:
             {
                 uint64_t dma64 = *(pDma64);
 
-#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
                 dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
-#else
-                dma64 |= (((value & 0x80) ? EncodedOneBit64Inv : EncodedZeroBit64Inv) << (_muxId));
-#endif
                 *(pDma64++) = dma64;
-
                 value <<= 1;
             }
         }
