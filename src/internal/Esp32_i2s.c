@@ -267,16 +267,25 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, uint32_t bits_per_
         // ESP32, but what about ESP32S2?
         if (bus_num == 0)
         {
-            //  8bit mode : I2S0O_DATA_OUT16_IDX ~I2S0O_DATA_OUT23_IDX
-            //  16bit mode : I2S0O_DATA_OUT8_IDX ~I2S0O_DATA_OUT23_IDX
-            //  24bit mode : I2S0O_DATA_OUT0_IDX ~I2S0O_DATA_OUT23_IDX
+            //  in parallel mode
+            //  0-7 bits   : I2S0O_DATA_OUT16_IDX ~I2S0O_DATA_OUT23_IDX
+            //  8-15 bits  : I2S0O_DATA_OUT8_IDX ~I2S0O_DATA_OUT23_IDX
+            //  16-23 bits : I2S0O_DATA_OUT0_IDX ~I2S0O_DATA_OUT23_IDX
             if (parallel == -1)
             {
                 i2sSignal = I2S0O_DATA_OUT23_IDX;
             }
+            else if (parallel < 8)
+            {
+                i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;
+            }
+            else if (parallel < 16)
+            {
+                i2sSignal = I2S0O_DATA_OUT8_IDX + parallel;
+            }
             else
             {
-                i2sSignal = (I2S0O_DATA_OUT23_IDX - bits_per_sample + 1) + parallel;
+                i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
             }
         }
         else
