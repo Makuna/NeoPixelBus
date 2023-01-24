@@ -392,7 +392,7 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf2) conf2;
         conf2.val = 0;
         conf2.lcd_en = parallel_mode;
-        conf2.lcd_tx_wrx2_en = 0; // (parallel_mode) && (bytes_per_sample == 2);
+        conf2.lcd_tx_wrx2_en = 0; // ((parallel_mode) && (bytes_per_sample == 2));
         i2s->conf2.val = conf2.val;
     }
 
@@ -517,11 +517,14 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, bool parallel_mode, s
         return ESP_FAIL;
     }
 
+    uint8_t bck = 12;
+
     // parallel mode needs a higher sample rate
     //
     if (parallel_mode)
     {
-        rate *= bytes_per_sample;
+        rate *= bytes_per_sample; // * 2; //  ESP32S2? only
+        bck = 12; //  6; // ESP32S2? only
     }
 
     //               160,000,000L / (100,000 * 384)
@@ -545,15 +548,6 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, bool parallel_mode, s
     // 
     uint8_t clkmInteger = clkmdiv;
     uint8_t clkmFraction = (clkmdiv - clkmInteger) * 63.0;
-
-    // $REVIEW this comment is no longer true, so why the x4
-    // due to conf2.lcd_tx_wrx2_en being set for p8, bit rate is doubled
-    // adjust by using bck here
-
-    // parallel modes on ESP32-S2 need higher rate (x4) to work properly e.g. producing 800KHz signal
-    // it won't work (and ESP32-S2 becomes highly unstable/jumping into the bootloader mode) for present structure just by modyfing 'rate' like for ESP32
-    // but it can be done other way by lowering tx_bck_div_num (bck) by 4   
-    uint8_t bck = parallel_mode ? 12 : 12;
 
     i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bytes_per_sample * 8);
 
