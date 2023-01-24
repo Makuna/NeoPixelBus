@@ -353,7 +353,45 @@ public:
 
         if (s_context.MuxMap.MuxBusDataSize == 2)
         {  
-            Fillx16(data, sizeData);
+            // 16 channel bits layout for DMA 64bit value
+            // note, right to left, destination is 32bit chunks
+            // due to indianness between peripheral and cpu, 
+            // bytes within the words are swapped and words within dwords
+            // in the literal constants
+            //  {       } {       }
+            //  0123 4567 89ab cdef - order of bytes in literal constant
+            //  efcd ab89 6745 2301 - order of memory on ESP32 due to Endianness
+            //  6745 2301 efcd ab89 - 32bit dest means only map within 32bits
+            //
+            // Due to final bit locations, can't shift encoded one bit
+            // either left more than 7 or right more than 7 so we have to
+            // split the updates and use different encodings
+            if (_muxId < 8)
+            {
+                // endian + dest swap               0000000000000001 
+                const uint64_t EncodedZeroBit64 = 0x0000000001000000;
+                //  endian + dest swap             0000000100010001 
+                const uint64_t EncodedOneBit64 = 0x0100000001000100; // cant be shifted by 8!
+                Fillx16(data, 
+                    sizeData,
+                    _muxId,
+                    EncodedZeroBit64,
+                    EncodedOneBit64);
+            }
+            else
+            {
+                // endian + dest swap               0000000000000001 
+                // then pre shift by 8              0000000000000100
+                const uint64_t EncodedZeroBit64 = 0x0000000000010000;
+                //  endian + dest swap             0000000100010001 
+                // then pre shift by 8             0000010001000100
+                const uint64_t EncodedOneBit64 = 0x0001000000010001;
+                Fillx16(data,
+                    sizeData,
+                    _muxId - 8, // preshifted
+                    EncodedZeroBit64,
+                    EncodedOneBit64);
+            }
         }
         else
         {
@@ -407,27 +445,12 @@ private:
         }
     }
 
-    void Fillx16(const uint8_t* data, size_t sizeData)
+    void Fillx16(const uint8_t* data, 
+            size_t sizeData,
+            uint8_t muxShift,
+            const uint64_t EncodedZeroBit64,
+            const uint64_t EncodedOneBit64)
     {
-        //  16 channel bits layout for DMA 64bit value
-        //  note, right to left, destination is 32bit chunks
-        //  mux bus id     fedcba9876543210 fedcba9876543210 fedcba9876543210 fedcba9876543210
-        //  encode bit #   1                0                3                2
-        //  value zero     0                1                0                0
-        //  value one      1                1                0                1     
-        // due to indianness between peripheral and cpu, 
-        // bytes within the words are swapped and words within dwords
-        // in the literal constant
-        //  {       } {       }
-        //  0123 4567 89ab cdef - order of bytes in literal constant
-        //  efcd ab89 6745 2301 - order of memory on ESP32 due to Endianness
-        //  6745 2301 efcd ab89 - 32bit dest means only map within 32bits
-
-        // endian + dest swap                  0000000000000001
-        const uint64_t EncodedZeroBit64 = 0x0000000001000000;
-        //  endian + dest swap                0000000100010001
-        const uint64_t EncodedOneBit64 = 0x0100000001000100;
-
         uint64_t* pDma64 = reinterpret_cast<uint64_t*>(s_context.I2sEditBuffer);
         const uint8_t* pEnd = data + sizeData;
 
@@ -439,7 +462,7 @@ private:
             {
                 uint64_t dma64 = *(pDma64);
 
-                dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (_muxId));
+                dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (muxShift));
                 *(pDma64++) = dma64;
                 value <<= 1;
             }
