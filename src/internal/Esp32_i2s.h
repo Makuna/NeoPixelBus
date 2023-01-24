@@ -21,7 +21,7 @@ typedef enum {
 
 void i2sInit(uint8_t bus_num, 
     bool parallel_mode,
-    uint32_t bits_per_sample, 
+    size_t bytes_per_sample,
     uint32_t sample_rate, 
     i2s_tx_chan_mod_t chan_mod, 
     i2s_tx_fifo_mod_t fifo_mod, 
@@ -32,7 +32,6 @@ void i2sDeinit(uint8_t bus_num);
 void i2sSetPins(uint8_t bus_num, 
         int8_t out, 
         int8_t parallel, 
-        uint32_t bits_per_sample, 
         bool invert);
 bool i2sWrite(uint8_t bus_num);
 bool i2sWriteDone(uint8_t bus_num);

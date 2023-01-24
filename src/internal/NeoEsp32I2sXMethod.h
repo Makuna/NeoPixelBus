@@ -120,6 +120,10 @@ public:
             }
             muxId++;
         }
+        if (muxId == BusMaxCount)
+        {
+            log_e("exceded channel limit of %u on bus", BusMaxCount);
+        }
         return muxId;
     }
 
@@ -221,14 +225,6 @@ public:
 
             size_t dmaBlockCount = (I2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
 
-            // parallel modes need higher frequency on esp32
-            if (T_MUXMAP::MuxBusDataSize == 1 || T_MUXMAP::MuxBusDataSize == 2)
-            {
-                // Does this scale to 24 bit mode? 
-                // true 8 bits mode uses half the frequency than 16 bit parallel mode
-                i2sSampleRate *= (T_MUXMAP::MuxBusDataSize);
-            }
-
             I2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(I2sBufferSize, MALLOC_CAP_DMA));
             if (I2sBuffer == nullptr)
             {
@@ -247,7 +243,7 @@ public:
 
             i2sInit(busNumber,
                 true,
-                T_MUXMAP::MuxBusDataSize * 8,
+                T_MUXMAP::MuxBusDataSize,
                 i2sSampleRate,
                 I2S_CHAN_RIGHT_TO_LEFT,
                 I2S_FIFO_16BIT_SINGLE,
@@ -264,7 +260,7 @@ public:
             return;
         }
 
-        i2sSetPins(busNumber, -1, -1, 8, false);
+        i2sSetPins(busNumber, -1, -1, false);
         i2sDeinit(busNumber);
 
         free(I2sEditBuffer);
@@ -308,7 +304,7 @@ public:
         log_i("Initialize mux %u, pin %u",
             _muxId,
             pin);
-        i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, s_context.MuxMap.MuxBusDataSize * 8, invert);
+        i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, invert);
     }
 
     void DeregisterMuxBus()

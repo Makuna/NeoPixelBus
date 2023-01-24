@@ -61,7 +61,7 @@
 #include "esp32-hal.h"
 
 esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits_per_sample);
-esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, uint8_t bits_per_sample, bool parallel_mode);
+esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, bool parallel_mode, size_t bytes_per_sample);
 
 #define MATRIX_DETACH_OUT_SIG 0x100
 
@@ -84,7 +84,7 @@ typedef struct
     int8_t  bck;
     int8_t  out;
     int8_t  in;
-    uint32_t rate;
+
     intr_handle_t isr_handle;
     lldesc_t* dma_items;
     size_t dma_count;
@@ -101,13 +101,13 @@ typedef struct
 // (I2S_NUM_MAX == 2)
 static i2s_bus_t I2S[I2S_NUM_MAX] = 
 {
-    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, I2s_Is_Idle},
-    {&I2S1, -1, -1, -1, -1, 0, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, I2s_Is_Idle}
+    {&I2S0, -1, -1, -1, -1, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, I2s_Is_Idle},
+    {&I2S1, -1, -1, -1, -1, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, I2s_Is_Idle}
 };
 #else
 static i2s_bus_t I2S[I2S_NUM_MAX] = 
 {
-    {&I2S0, -1, -1, -1, -1, 0, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, I2s_Is_Idle}
+    {&I2S0, -1, -1, -1, -1, NULL, NULL, I2S_DMA_BLOCK_COUNT_DEFAULT, I2s_Is_Idle}
 };
 #endif
 
@@ -252,7 +252,7 @@ esp_err_t i2sSetClock(uint8_t bus_num,
     return ESP_OK;
 }
 
-void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, uint32_t bits_per_sample, bool invert)
+void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
 {
     if (bus_num >= I2S_NUM_MAX) 
     {
@@ -299,12 +299,11 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, uint32_t bits_per_
                 i2sSignal = I2S1O_DATA_OUT0_IDX + parallel;
             }
         }
-        log_i("i2sSetPins bus %u, i2sSignal %u, pin %u, mux %u, bits_per_sample %u",
+        log_i("i2sSetPins bus %u, i2sSignal %u, pin %u, mux %u",
             bus_num,
             i2sSignal,
             out,
-            parallel,
-            bits_per_sample);
+            parallel);
         gpio_matrix_out(out, i2sSignal, invert, false);
     } 
 }
@@ -321,7 +320,7 @@ bool i2sWriteDone(uint8_t bus_num)
 
 void i2sInit(uint8_t bus_num, 
         bool parallel_mode,
-        uint32_t bits_per_sample, 
+        size_t bytes_per_sample, 
         uint32_t sample_rate, 
         i2s_tx_chan_mod_t chan_mod, 
         i2s_tx_fifo_mod_t fifo_mod, 
@@ -335,10 +334,10 @@ void i2sInit(uint8_t bus_num,
     }
 
     
-    log_i("i2sSetClock bus %u, parallel_mode %u, bits_per_sample %u",
+    log_i("i2sSetClock bus %u, parallel_mode %u, bytes_per_sample %u",
         bus_num,
         parallel_mode,
-        bits_per_sample);
+        bytes_per_sample);
 
     I2S[bus_num].dma_count = dma_count + 
             I2S_DMA_SILENCE_BLOCK_COUNT_FRONT +
@@ -392,8 +391,8 @@ void i2sInit(uint8_t bus_num,
     {
         typeof(i2s->conf2) conf2;
         conf2.val = 0;
-        conf2.lcd_en = (parallel_mode) && (bits_per_sample == 8 || bits_per_sample == 16);
-        conf2.lcd_tx_wrx2_en = 0; // (parallel_mode) && (bits_per_sample == 16);
+        conf2.lcd_en = parallel_mode;
+        conf2.lcd_tx_wrx2_en = 0; // (parallel_mode) && (bytes_per_sample == 2);
         i2s->conf2.val = conf2.val;
     }
 
@@ -458,7 +457,7 @@ void i2sInit(uint8_t bus_num,
 #endif
    
     
-    i2sSetSampleRate(bus_num, sample_rate, bits_per_sample, parallel_mode);
+    i2sSetSampleRate(bus_num, sample_rate, parallel_mode, bytes_per_sample);
 
     /* */
     //Reset FIFO/DMA -> needed? Doesn't dma_reset/fifo_reset do this?
@@ -511,16 +510,18 @@ void i2sDeinit(uint8_t bus_num)
     i2sDeinitDmaItems(bus_num);
 }
 
-esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits, bool parallel_mode)
+esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, bool parallel_mode, size_t bytes_per_sample)
 {
     if (bus_num >= I2S_NUM_MAX) 
     {
         return ESP_FAIL;
     }
 
-    if (I2S[bus_num].rate == rate) 
+    // parallel mode needs a higher sample rate
+    //
+    if (parallel_mode)
     {
-        return ESP_OK;
+        rate *= bytes_per_sample;
     }
 
     //               160,000,000L / (100,000 * 384)
@@ -535,11 +536,10 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits, bool pa
         log_e("rate is too fast, clkmdiv = %f (%u, %u, %u)",
             clkmdiv,
             rate,
-            bits,
-            parallel_mode);
+            parallel_mode,
+            bytes_per_sample);
         return ESP_FAIL;
     }
-    I2S[bus_num].rate = rate;
 
     // calc integer and franctional for more precise timing
     // 
@@ -555,7 +555,7 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, uint8_t bits, bool pa
     // but it can be done other way by lowering tx_bck_div_num (bck) by 4   
     uint8_t bck = parallel_mode ? 12 : 12;
 
-    i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bits);
+    i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bytes_per_sample * 8);
 
     return ESP_OK;
 }
