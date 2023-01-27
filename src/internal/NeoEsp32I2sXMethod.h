@@ -26,6 +26,9 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+// ESP32C3/S3 I2S is not supported yet due to significant changes to interface
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
+
 extern "C"
 {
 #include <Arduino.h>
@@ -44,9 +47,6 @@ extern "C"
 // uint64_t
 //   0123456789abcdef
 //   efcdab8967452301
-
-// ESP32C3 I2S is not supported yet due to significant changes to interface
-#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 
 //
 // true size of mux channel, 8 bit
@@ -378,8 +378,16 @@ public:
                 true,
                 T_MUXMAP::MuxBusDataSize,
                 i2sSampleRate,
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+// using these modes on ESP32S2 actually allows it to function
+// in both x8 and x16
                 I2S_CHAN_STEREO,
                 I2S_FIFO_16BIT_DUAL,
+#else
+// but they won't work on ESP32 in parallel mode, but these will
+                I2S_CHAN_RIGHT_TO_LEFT,
+                I2S_FIFO_16BIT_SINGLE,
+#endif
                 dmaBlockCount,
                 I2sBuffer,
                 I2sBufferSize);
@@ -427,16 +435,11 @@ public:
     void RegisterNewMuxBus(size_t dataSize)
     {
         _muxId = s_context.MuxMap.RegisterNewMuxBus(dataSize);
-        log_i("RegisterNewMuxBus mux %u",
-            _muxId);
     }
 
     void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
     {
         s_context.Construct(T_BUS::I2sBusNumber, i2sSampleRate);
-        log_i("Initialize mux %u, pin %u",
-            _muxId,
-            pin);
         i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, s_context.MuxMap.MuxBusDataSize, invert);
     }
 
@@ -602,203 +605,192 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint16_t, NeoE
 #endif
 
 // NORMAL
+//
 
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Ws2812xMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Sk6812Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X8Tm1814Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X8Tm1829Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X8Tm1914Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8800KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8400KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Apa106Method;
-
-    typedef NeoEsp32I2s0X8Ws2812xMethod NeoEsp32I2s0X8Ws2813Method;
-    typedef NeoEsp32I2s0X8Ws2812xMethod NeoEsp32I2s0X8Ws2812dMethod;
-    typedef NeoEsp32I2s0X8Ws2812xMethod NeoEsp32I2s0X8Ws2811Method;
-    typedef NeoEsp32I2s0X8Ws2812xMethod NeoEsp32I2s0X8Ws2816Method;
-    typedef NeoEsp32I2s0X8800KbpsMethod NeoEsp32I2s0X8Ws2812Method;
-    typedef NeoEsp32I2s0X8Sk6812Method  NeoEsp32I2s0X8Sk6812Method;
-    typedef NeoEsp32I2s0X8Tm1814Method  NeoEsp32I2s0X8Tm1814Method;
-    typedef NeoEsp32I2s0X8Tm1829Method  NeoEsp32I2s0X8Tm1829Method;
-    typedef NeoEsp32I2s0X8Tm1914Method  NeoEsp32I2s0X8Tm1914Method;
-    typedef NeoEsp32I2s0X8Sk6812Method  NeoEsp32I2s0X8Lc8812Method;
-    typedef NeoEsp32I2s0X8Apa106Method  NeoEsp32I2s0X8Apa106Method;
-
-
+// I2s0x8
 typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Ws2812xMethod;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Sk6812Method;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Tm1814Method;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Tm1829Method;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Tm1914Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Sk6812Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X8Tm1814Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X8Tm1829Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X8Tm1914Method;
 typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8800KbpsMethod;
 typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8400KbpsMethod;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Apa106Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Apa106Method;
 
 typedef NeoEsp32I2s0X8Ws2812xMethod NeoEsp32I2s0X8Ws2813Method;
 typedef NeoEsp32I2s0X8Ws2812xMethod NeoEsp32I2s0X8Ws2812dMethod;
 typedef NeoEsp32I2s0X8Ws2812xMethod NeoEsp32I2s0X8Ws2811Method;
 typedef NeoEsp32I2s0X8Ws2812xMethod NeoEsp32I2s0X8Ws2816Method;
 typedef NeoEsp32I2s0X8800KbpsMethod NeoEsp32I2s0X8Ws2812Method;
-typedef NeoEsp32I2s0X8Sk6812Method NeoEsp32I2s0X8Sk6812Method;
-typedef NeoEsp32I2s0X8Tm1814Method NeoEsp32I2s0X8Tm1814Method;
-typedef NeoEsp32I2s0X8Tm1829Method NeoEsp32I2s0X8Tm1829Method;
-typedef NeoEsp32I2s0X8Tm1914Method NeoEsp32I2s0X8Tm1914Method;
-typedef NeoEsp32I2s0X8Sk6812Method NeoEsp32I2s0X8Lc8812Method;
-typedef NeoEsp32I2s0X8Apa106Method NeoEsp32I2s0X8Apa106Method;
+typedef NeoEsp32I2s0X8Sk6812Method  NeoEsp32I2s0X8Sk6812Method;
+typedef NeoEsp32I2s0X8Tm1814Method  NeoEsp32I2s0X8Tm1814Method;
+typedef NeoEsp32I2s0X8Tm1829Method  NeoEsp32I2s0X8Tm1829Method;
+typedef NeoEsp32I2s0X8Tm1914Method  NeoEsp32I2s0X8Tm1914Method;
+typedef NeoEsp32I2s0X8Sk6812Method  NeoEsp32I2s0X8Lc8812Method;
+typedef NeoEsp32I2s0X8Apa106Method  NeoEsp32I2s0X8Apa106Method;
 
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Ws2812xMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Sk6812Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Tm1814Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Tm1829Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Tm1914Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16800KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16400KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Apa106Method;
+// I2s0x16
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Ws2812xMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Sk6812Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Tm1814Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Tm1829Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Tm1914Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16800KbpsMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16400KbpsMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Apa106Method;
 
-    typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2813Method;
-    typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2812dMethod;
-    typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2811Method;
-    typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2816Method;
-    typedef NeoEsp32I2s0X16800KbpsMethod NeoEsp32I2s0X16Ws2812Method;
-    typedef NeoEsp32I2s0X16Sk6812Method  NeoEsp32I2s0X16Sk6812Method;
-    typedef NeoEsp32I2s0X16Tm1814Method  NeoEsp32I2s0X16Tm1814Method;
-    typedef NeoEsp32I2s0X16Tm1829Method  NeoEsp32I2s0X16Tm1829Method;
-    typedef NeoEsp32I2s0X16Tm1914Method  NeoEsp32I2s0X16Tm1914Method;
-    typedef NeoEsp32I2s0X16Sk6812Method  NeoEsp32I2s0X16Lc8812Method;
-    typedef NeoEsp32I2s0X16Apa106Method  NeoEsp32I2s0X16Apa106Method;
+typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2813Method;
+typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2812dMethod;
+typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2811Method;
+typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2816Method;
+typedef NeoEsp32I2s0X16800KbpsMethod NeoEsp32I2s0X16Ws2812Method;
+typedef NeoEsp32I2s0X16Sk6812Method  NeoEsp32I2s0X16Sk6812Method;
+typedef NeoEsp32I2s0X16Tm1814Method  NeoEsp32I2s0X16Tm1814Method;
+typedef NeoEsp32I2s0X16Tm1829Method  NeoEsp32I2s0X16Tm1829Method;
+typedef NeoEsp32I2s0X16Tm1914Method  NeoEsp32I2s0X16Tm1914Method;
+typedef NeoEsp32I2s0X16Sk6812Method  NeoEsp32I2s0X16Lc8812Method;
+typedef NeoEsp32I2s0X16Apa106Method  NeoEsp32I2s0X16Apa106Method;
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2)
 
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Ws2812xMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Sk6812Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Tm1814Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Tm1829Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Tm1914Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8800KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8400KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Apa106Method;
+// I2s1x8
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Ws2812xMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Sk6812Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Tm1814Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Tm1829Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Tm1914Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8800KbpsMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8400KbpsMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Apa106Method;
 
-    typedef NeoEsp32I2s1X8Ws2812xMethod NeoEsp32I2s1X8Ws2813Method;
-    typedef NeoEsp32I2s1X8Ws2812xMethod NeoEsp32I2s1X8Ws2812dMethod;
-    typedef NeoEsp32I2s1X8Ws2812xMethod NeoEsp32I2s1X8Ws2811Method;
-    typedef NeoEsp32I2s1X8Ws2812xMethod NeoEsp32I2s1X8Ws2816Method;
-    typedef NeoEsp32I2s1X8800KbpsMethod NeoEsp32I2s1X8Ws2812Method;
-    typedef NeoEsp32I2s1X8Sk6812Method  NeoEsp32I2s1X8Sk6812Method;
-    typedef NeoEsp32I2s1X8Tm1814Method  NeoEsp32I2s1X8Tm1814Method;
-    typedef NeoEsp32I2s1X8Tm1829Method  NeoEsp32I2s1X8Tm1829Method;
-    typedef NeoEsp32I2s1X8Tm1914Method  NeoEsp32I2s1X8Tm1914Method;
-    typedef NeoEsp32I2s1X8Sk6812Method  NeoEsp32I2s1X8Lc8812Method;
-    typedef NeoEsp32I2s1X8Apa106Method  NeoEsp32I2s1X8Apa106Method;
+typedef NeoEsp32I2s1X8Ws2812xMethod NeoEsp32I2s1X8Ws2813Method;
+typedef NeoEsp32I2s1X8Ws2812xMethod NeoEsp32I2s1X8Ws2812dMethod;
+typedef NeoEsp32I2s1X8Ws2812xMethod NeoEsp32I2s1X8Ws2811Method;
+typedef NeoEsp32I2s1X8Ws2812xMethod NeoEsp32I2s1X8Ws2816Method;
+typedef NeoEsp32I2s1X8800KbpsMethod NeoEsp32I2s1X8Ws2812Method;
+typedef NeoEsp32I2s1X8Sk6812Method  NeoEsp32I2s1X8Sk6812Method;
+typedef NeoEsp32I2s1X8Tm1814Method  NeoEsp32I2s1X8Tm1814Method;
+typedef NeoEsp32I2s1X8Tm1829Method  NeoEsp32I2s1X8Tm1829Method;
+typedef NeoEsp32I2s1X8Tm1914Method  NeoEsp32I2s1X8Tm1914Method;
+typedef NeoEsp32I2s1X8Sk6812Method  NeoEsp32I2s1X8Lc8812Method;
+typedef NeoEsp32I2s1X8Apa106Method  NeoEsp32I2s1X8Apa106Method;
 
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Ws2812xMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Sk6812Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1814Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1829Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1914Method;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16800KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16400KbpsMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Apa106Method;
+// I2s1x16
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Ws2812xMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Sk6812Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1814Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1829Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted> NeoEsp32I2s1X16Tm1914Method;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16800KbpsMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16400KbpsMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Apa106Method;
 
-    typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2813Method;
-    typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2812dMethod;
-    typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2811Method;
-    typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2816Method;
-    typedef NeoEsp32I2s1X16800KbpsMethod NeoEsp32I2s1X16Ws2812Method;
-    typedef NeoEsp32I2s1X16Sk6812Method NeoEsp32I2s1X16Sk6812Method;
-    typedef NeoEsp32I2s1X16Tm1814Method NeoEsp32I2s1X16Tm1814Method;
-    typedef NeoEsp32I2s1X16Tm1829Method NeoEsp32I2s1X16Tm1829Method;
-    typedef NeoEsp32I2s1X16Tm1914Method NeoEsp32I2s1X16Tm1914Method;
-    typedef NeoEsp32I2s1X16Sk6812Method NeoEsp32I2s1X16Lc8812Method;
-    typedef NeoEsp32I2s1X16Apa106Method NeoEsp32I2s1X16Apa106Method;
+typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2813Method;
+typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2812dMethod;
+typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2811Method;
+typedef NeoEsp32I2s1X16Ws2812xMethod NeoEsp32I2s1X16Ws2816Method;
+typedef NeoEsp32I2s1X16800KbpsMethod NeoEsp32I2s1X16Ws2812Method;
+typedef NeoEsp32I2s1X16Sk6812Method NeoEsp32I2s1X16Sk6812Method;
+typedef NeoEsp32I2s1X16Tm1814Method NeoEsp32I2s1X16Tm1814Method;
+typedef NeoEsp32I2s1X16Tm1829Method NeoEsp32I2s1X16Tm1829Method;
+typedef NeoEsp32I2s1X16Tm1914Method NeoEsp32I2s1X16Tm1914Method;
+typedef NeoEsp32I2s1X16Sk6812Method NeoEsp32I2s1X16Lc8812Method;
+typedef NeoEsp32I2s1X16Apa106Method NeoEsp32I2s1X16Apa106Method;
 
-#endif
+#endif // !defined(CONFIG_IDF_TARGET_ESP32S2)
 
 // INVERTED
+//
+// I2s0x8 INVERTED
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Ws2812xInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Sk6812InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Tm1814InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Tm1829InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Tm1914InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8800KbpsInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8400KbpsInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Apa106InvertedMethod;
 
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Ws2812xInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Sk6812InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Tm1814InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Tm1829InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8Tm1914InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8800KbpsInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8400KbpsInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2s0Mux8Bus, NeoEsp32I2sInverted> NeoEsp32I2s0X8Apa106InvertedMethod;
+typedef NeoEsp32I2s0X8Ws2812xInvertedMethod NeoEsp32I2s0X8Ws2813InvertedMethod;
+typedef NeoEsp32I2s0X8Ws2812xInvertedMethod NeoEsp32I2s0X8Ws2812xInvertedMethod;
+typedef NeoEsp32I2s0X8Ws2812xInvertedMethod NeoEsp32I2s0X8Ws2811InvertedMethod;
+typedef NeoEsp32I2s0X8Ws2812xInvertedMethod NeoEsp32I2s0X8Ws2816InvertedMethod;
+typedef NeoEsp32I2s0X8800KbpsInvertedMethod NeoEsp32I2s0X8Ws2812InvertedMethod;
+typedef NeoEsp32I2s0X8Sk6812InvertedMethod  NeoEsp32I2s0X8Sk6812InvertedMethod;
+typedef NeoEsp32I2s0X8Tm1814InvertedMethod  NeoEsp32I2s0X8Tm1814InvertedMethod;
+typedef NeoEsp32I2s0X8Tm1829InvertedMethod  NeoEsp32I2s0X8Tm1829InvertedMethod;
+typedef NeoEsp32I2s0X8Tm1914InvertedMethod  NeoEsp32I2s0X8Tm1914InvertedMethod;
+typedef NeoEsp32I2s0X8Sk6812InvertedMethod  NeoEsp32I2s0X8Lc8812InvertedMethod;
+typedef NeoEsp32I2s0X8Apa106InvertedMethod  NeoEsp32I2s0X8Apa106InvertedMethod;
 
-    typedef NeoEsp32I2s0X8Ws2812xInvertedMethod NeoEsp32I2s0X8Ws2813InvertedMethod;
-    typedef NeoEsp32I2s0X8Ws2812xInvertedMethod NeoEsp32I2s0X8Ws2812xInvertedMethod;
-    typedef NeoEsp32I2s0X8Ws2812xInvertedMethod NeoEsp32I2s0X8Ws2811InvertedMethod;
-    typedef NeoEsp32I2s0X8Ws2812xInvertedMethod NeoEsp32I2s0X8Ws2816InvertedMethod;
-    typedef NeoEsp32I2s0X8800KbpsInvertedMethod NeoEsp32I2s0X8Ws2812InvertedMethod;
-    typedef NeoEsp32I2s0X8Sk6812InvertedMethod  NeoEsp32I2s0X8Sk6812InvertedMethod;
-    typedef NeoEsp32I2s0X8Tm1814InvertedMethod  NeoEsp32I2s0X8Tm1814InvertedMethod;
-    typedef NeoEsp32I2s0X8Tm1829InvertedMethod  NeoEsp32I2s0X8Tm1829InvertedMethod;
-    typedef NeoEsp32I2s0X8Tm1914InvertedMethod  NeoEsp32I2s0X8Tm1914InvertedMethod;
-    typedef NeoEsp32I2s0X8Sk6812InvertedMethod  NeoEsp32I2s0X8Lc8812InvertedMethod;
-    typedef NeoEsp32I2s0X8Apa106InvertedMethod  NeoEsp32I2s0X8Apa106InvertedMethod;
-
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Ws2812xInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Sk6812InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Tm1814InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Tm1829InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Tm1914InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16800KbpsInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16400KbpsInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Apa106InvertedMethod;
+// I2s0x16 INVERTED
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Ws2812xInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Sk6812InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Tm1814InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Tm1829InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Tm1914InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16800KbpsInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16400KbpsInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Apa106InvertedMethod;
     
-    typedef NeoEsp32I2s0X16Ws2812xInvertedMethod NeoEsp32I2s0X16Ws2813InvertedMethod;
-    typedef NeoEsp32I2s0X16Ws2812xInvertedMethod NeoEsp32I2s0X16Ws2812xInvertedMethod;
-    typedef NeoEsp32I2s0X16Ws2812xInvertedMethod NeoEsp32I2s0X16Ws2811InvertedMethod;
-    typedef NeoEsp32I2s0X16Ws2812xInvertedMethod NeoEsp32I2s0X16Ws2816InvertedMethod;
-    typedef NeoEsp32I2s0X16800KbpsInvertedMethod NeoEsp32I2s0X16Ws2812InvertedMethod;
-    typedef NeoEsp32I2s0X16Sk6812InvertedMethod  NeoEsp32I2s0X16Sk6812InvertedMethod;
-    typedef NeoEsp32I2s0X16Tm1814InvertedMethod  NeoEsp32I2s0X16Tm1814InvertedMethod;
-    typedef NeoEsp32I2s0X16Tm1829InvertedMethod  NeoEsp32I2s0X16Tm1829InvertedMethod;
-    typedef NeoEsp32I2s0X16Tm1914InvertedMethod  NeoEsp32I2s0X16Tm1914InvertedMethod;
-    typedef NeoEsp32I2s0X16Sk6812InvertedMethod  NeoEsp32I2s0X16Lc8812InvertedMethod;
-    typedef NeoEsp32I2s0X16Apa106InvertedMethod  NeoEsp32I2s0X16Apa106InvertedMethod;
+typedef NeoEsp32I2s0X16Ws2812xInvertedMethod NeoEsp32I2s0X16Ws2813InvertedMethod;
+typedef NeoEsp32I2s0X16Ws2812xInvertedMethod NeoEsp32I2s0X16Ws2812xInvertedMethod;
+typedef NeoEsp32I2s0X16Ws2812xInvertedMethod NeoEsp32I2s0X16Ws2811InvertedMethod;
+typedef NeoEsp32I2s0X16Ws2812xInvertedMethod NeoEsp32I2s0X16Ws2816InvertedMethod;
+typedef NeoEsp32I2s0X16800KbpsInvertedMethod NeoEsp32I2s0X16Ws2812InvertedMethod;
+typedef NeoEsp32I2s0X16Sk6812InvertedMethod  NeoEsp32I2s0X16Sk6812InvertedMethod;
+typedef NeoEsp32I2s0X16Tm1814InvertedMethod  NeoEsp32I2s0X16Tm1814InvertedMethod;
+typedef NeoEsp32I2s0X16Tm1829InvertedMethod  NeoEsp32I2s0X16Tm1829InvertedMethod;
+typedef NeoEsp32I2s0X16Tm1914InvertedMethod  NeoEsp32I2s0X16Tm1914InvertedMethod;
+typedef NeoEsp32I2s0X16Sk6812InvertedMethod  NeoEsp32I2s0X16Lc8812InvertedMethod;
+typedef NeoEsp32I2s0X16Apa106InvertedMethod  NeoEsp32I2s0X16Apa106InvertedMethod;
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2)
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Ws2812xInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Sk6812InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Tm1814InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Tm1829InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Tm1914InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8800KbpsInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8400KbpsInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Apa106InvertedMethod;
+
+// I2s1x8 INVERTED
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Ws2812xInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Sk6812InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Tm1814InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Tm1829InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Tm1914InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8800KbpsInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8400KbpsInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X8Apa106InvertedMethod;
     
-    typedef NeoEsp32I2s1X8Ws2812xInvertedMethod NeoEsp32I2s1X8Ws2813InvertedMethod;
-    typedef NeoEsp32I2s1X8Ws2812xInvertedMethod NeoEsp32I2s1X8Ws2812xInvertedMethod;
-    typedef NeoEsp32I2s1X8Ws2812xInvertedMethod NeoEsp32I2s1X8Ws2811InvertedMethod;
-    typedef NeoEsp32I2s1X8Ws2812xInvertedMethod NeoEsp32I2s1X8Ws2816InvertedMethod;
-    typedef NeoEsp32I2s1X8800KbpsInvertedMethod NeoEsp32I2s1X8Ws2812InvertedMethod;
-    typedef NeoEsp32I2s1X8Sk6812InvertedMethod  NeoEsp32I2s1X8Sk6812InvertedMethod;
-    typedef NeoEsp32I2s1X8Tm1814InvertedMethod  NeoEsp32I2s1X8Tm1814InvertedMethod;
-    typedef NeoEsp32I2s1X8Tm1829InvertedMethod  NeoEsp32I2s1X8Tm1829InvertedMethod;
-    typedef NeoEsp32I2s1X8Tm1914InvertedMethod  NeoEsp32I2s1X8Tm1914InvertedMethod;
-    typedef NeoEsp32I2s1X8Sk6812InvertedMethod  NeoEsp32I2s1X8Lc8812InvertedMethod;
-    typedef NeoEsp32I2s1X8Apa106InvertedMethod  NeoEsp32I2s1X8Apa106InvertedMethod;
+typedef NeoEsp32I2s1X8Ws2812xInvertedMethod NeoEsp32I2s1X8Ws2813InvertedMethod;
+typedef NeoEsp32I2s1X8Ws2812xInvertedMethod NeoEsp32I2s1X8Ws2812xInvertedMethod;
+typedef NeoEsp32I2s1X8Ws2812xInvertedMethod NeoEsp32I2s1X8Ws2811InvertedMethod;
+typedef NeoEsp32I2s1X8Ws2812xInvertedMethod NeoEsp32I2s1X8Ws2816InvertedMethod;
+typedef NeoEsp32I2s1X8800KbpsInvertedMethod NeoEsp32I2s1X8Ws2812InvertedMethod;
+typedef NeoEsp32I2s1X8Sk6812InvertedMethod  NeoEsp32I2s1X8Sk6812InvertedMethod;
+typedef NeoEsp32I2s1X8Tm1814InvertedMethod  NeoEsp32I2s1X8Tm1814InvertedMethod;
+typedef NeoEsp32I2s1X8Tm1829InvertedMethod  NeoEsp32I2s1X8Tm1829InvertedMethod;
+typedef NeoEsp32I2s1X8Tm1914InvertedMethod  NeoEsp32I2s1X8Tm1914InvertedMethod;
+typedef NeoEsp32I2s1X8Sk6812InvertedMethod  NeoEsp32I2s1X8Lc8812InvertedMethod;
+typedef NeoEsp32I2s1X8Apa106InvertedMethod  NeoEsp32I2s1X8Apa106InvertedMethod;
 
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16Ws2812xInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16Sk6812InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Tm1814InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Tm1829InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Tm1914InvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16800KbpsInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16400KbpsInvertedMethod;
-    typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16Apa106InvertedMethod;
+// I2s1x16 INVERTED
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16Ws2812xInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16Sk6812InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Tm1814InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Tm1829InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X16Tm1914InvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16800KbpsInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16400KbpsInvertedMethod;
+typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s1Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s1X16Apa106InvertedMethod;
 
-    typedef NeoEsp32I2s1X16Ws2812xInvertedMethod NeoEsp32I2s1X16Ws2813InvertedMethod;
-    typedef NeoEsp32I2s1X16Ws2812xInvertedMethod NeoEsp32I2s1X16Ws2812xInvertedMethod;
-    typedef NeoEsp32I2s1X16Ws2812xInvertedMethod NeoEsp32I2s1X16Ws2811InvertedMethod;
-    typedef NeoEsp32I2s1X16Ws2812xInvertedMethod NeoEsp32I2s1X16Ws2816InvertedMethod;
-    typedef NeoEsp32I2s1X16800KbpsInvertedMethod NeoEsp32I2s1X16Ws2812InvertedMethod;
-    typedef NeoEsp32I2s1X16Sk6812InvertedMethod  NeoEsp32I2s1X16Sk6812InvertedMethod;
-    typedef NeoEsp32I2s1X16Tm1814InvertedMethod  NeoEsp32I2s1X16Tm1814InvertedMethod;
-    typedef NeoEsp32I2s1X16Tm1829InvertedMethod  NeoEsp32I2s1X16Tm1829InvertedMethod;
-    typedef NeoEsp32I2s1X16Tm1914InvertedMethod  NeoEsp32I2s1X16Tm1914InvertedMethod;
-    typedef NeoEsp32I2s1X16Sk6812InvertedMethod  NeoEsp32I2s1X16Lc8812InvertedMethod;
-    typedef NeoEsp32I2s1X16Apa106InvertedMethod  NeoEsp32I2s1X16Apa106InvertedMethod;
-#endif
+typedef NeoEsp32I2s1X16Ws2812xInvertedMethod NeoEsp32I2s1X16Ws2813InvertedMethod;
+typedef NeoEsp32I2s1X16Ws2812xInvertedMethod NeoEsp32I2s1X16Ws2812xInvertedMethod;
+typedef NeoEsp32I2s1X16Ws2812xInvertedMethod NeoEsp32I2s1X16Ws2811InvertedMethod;
+typedef NeoEsp32I2s1X16Ws2812xInvertedMethod NeoEsp32I2s1X16Ws2816InvertedMethod;
+typedef NeoEsp32I2s1X16800KbpsInvertedMethod NeoEsp32I2s1X16Ws2812InvertedMethod;
+typedef NeoEsp32I2s1X16Sk6812InvertedMethod  NeoEsp32I2s1X16Sk6812InvertedMethod;
+typedef NeoEsp32I2s1X16Tm1814InvertedMethod  NeoEsp32I2s1X16Tm1814InvertedMethod;
+typedef NeoEsp32I2s1X16Tm1829InvertedMethod  NeoEsp32I2s1X16Tm1829InvertedMethod;
+typedef NeoEsp32I2s1X16Tm1914InvertedMethod  NeoEsp32I2s1X16Tm1914InvertedMethod;
+typedef NeoEsp32I2s1X16Sk6812InvertedMethod  NeoEsp32I2s1X16Lc8812InvertedMethod;
+typedef NeoEsp32I2s1X16Apa106InvertedMethod  NeoEsp32I2s1X16Apa106InvertedMethod;
 
-#endif
+#endif // !defined(CONFIG_IDF_TARGET_ESP32S2)
+
+#endif // defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
