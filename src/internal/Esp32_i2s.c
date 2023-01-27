@@ -557,11 +557,10 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, bool parallel_mode, s
     if (parallel_mode)
     {
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
-        rate *= bytes_per_sample; //  ESP32S2? only
-        bck *= bytes_per_sample; // ESP32S2? only
+        rate /= bytes_per_sample;
+        bck /= bytes_per_sample; 
 #else
-        rate *= bytes_per_sample; // * 2; //  ESP32S2? only
-        bck = 12; //  6; // ESP32S2? only
+        rate *= bytes_per_sample;
 #endif
     }
 
