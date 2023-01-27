@@ -64,9 +64,9 @@ public:
         // 1234  - order
         // 3412  = actual due to endianness
         //                                00000001
-        const uint32_t EncodedZeroBit = 0x00000001;
-        //                               00010101
-        const uint32_t EncodedOneBit = 0x00010101;
+        const uint32_t EncodedZeroBit = 0x00000100;
+        //                                00010101
+        const uint32_t EncodedOneBit =  0x01000101;
 #else
         //  8 channel bits layout for DMA 32bit value
         //  note, right to left
@@ -116,10 +116,12 @@ public:
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
-        // not swap               0000000000000001 
-        const uint64_t EncodedZeroBit64 = 0000000000000001;
-        //  no swap             0000000100010001 
-        const uint64_t EncodedOneBit64 = 0000000100010001; 
+        // 1234 5678 - order
+        // 3412 7856 = actual due to endianness
+        // not swap                         0000000000000001 
+        const uint64_t EncodedZeroBit64 = 0x0000000000010000;
+        //  no swap                         0000000100010001 
+        const uint64_t EncodedOneBit64 =  0x0001000000010001; 
         // can be shifted by 8!
         Fillx16(dmaBuffer,
             data,
@@ -376,8 +378,8 @@ public:
                 true,
                 T_MUXMAP::MuxBusDataSize,
                 i2sSampleRate,
-                I2S_CHAN_RIGHT_TO_LEFT,
-                I2S_FIFO_16BIT_SINGLE,
+                I2S_CHAN_STEREO,
+                I2S_FIFO_16BIT_DUAL,
                 dmaBlockCount,
                 I2sBuffer,
                 I2sBufferSize);
