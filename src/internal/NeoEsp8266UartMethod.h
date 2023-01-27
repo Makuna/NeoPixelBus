@@ -396,6 +396,12 @@ public:
         this->UpdateUart(maintainBufferConsistency);
     }
 
+    bool AlwaysUpdate()
+    {
+        // this method requires update to be called only if changes to buffer
+        return false;
+    }
+
     uint8_t* getData() const
     {
         return this->_data;

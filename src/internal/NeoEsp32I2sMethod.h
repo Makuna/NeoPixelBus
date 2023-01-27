@@ -170,7 +170,7 @@ public:
             yield();
         }
 
-        i2sSetPins(_bus.I2sBusNumber, -1, false);
+        i2sSetPins(_bus.I2sBusNumber, -1, -1, -1, false);
         i2sDeinit(_bus.I2sBusNumber);
         free(_data);
         heap_caps_free(_i2sBuffer);
@@ -186,13 +186,15 @@ public:
         size_t dmaBlockCount = (_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
 
         i2sInit(_bus.I2sBusNumber, 
-            16, 
+            false,
+            2, // bytes per sample 
             T_SPEED::I2sSampleRate, 
             I2S_CHAN_STEREO, 
             I2S_FIFO_16BIT_DUAL, 
             dmaBlockCount,
-            0);
-        i2sSetPins(_bus.I2sBusNumber, _pin, T_INVERT::Inverted);
+            _i2sBuffer,
+            _i2sBufferSize);
+        i2sSetPins(_bus.I2sBusNumber, _pin, -1, -1, T_INVERT::Inverted);
     }
 
     void Update(bool)
@@ -205,7 +207,13 @@ public:
 
         FillBuffers();
 
-        i2sWrite(_bus.I2sBusNumber, _i2sBuffer, _i2sBufferSize, false, false);
+        i2sWrite(_bus.I2sBusNumber);
+    }
+
+    bool AlwaysUpdate()
+    {
+        // this method requires update to be called only if changes to buffer
+        return false;
     }
 
     uint8_t* getData() const
@@ -229,7 +237,7 @@ private:
 
     uint8_t*  _data;        // Holds LED color values
 
-    uint32_t _i2sBufferSize; // total size of _i2sBuffer
+    size_t _i2sBufferSize; // total size of _i2sBuffer
     uint8_t* _i2sBuffer;  // holds the DMA buffer that is referenced by _i2sBufDesc
 
     void construct(uint16_t pixelCount, size_t elementSize, size_t settingsSize) 
