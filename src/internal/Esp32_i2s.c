@@ -215,25 +215,26 @@ esp_err_t i2sSetClock(uint8_t bus_num,
     {
         return ESP_FAIL;
     }
-/*
-    log_i("i2sSetClock bus %u, clkm_div_num %u, clk_div_a %u, clk_div_b %u, bck_div_num %u, bits_mod %u",
-        bus_num,
-        div_num,
-        div_a,
-        div_b,
-        bck,
-        bits);
-*/
+
+    //log_i("i2sSetClock bus %u, clkm_div_num %u, clk_div_a %u, clk_div_b %u, bck_div_num %u, bits_mod %u",
+    //    bus_num,
+    //    div_num,
+    //    div_a,
+    //    div_b,
+    //    bck,
+    //    bits);
 
     i2s_dev_t* i2s = I2S[bus_num].bus;
 
     typeof(i2s->clkm_conf) clkm_conf;
 
     clkm_conf.val = 0;
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-    clkm_conf.clka_en = 0;
+
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)
+    clkm_conf.clk_sel = 2; // APPL = 1 APB = 2
+    clkm_conf.clk_en = 1; // examples of i2s show this being set if sel is set to 2
 #else
-    clkm_conf.clk_sel = 2;
+    clkm_conf.clka_en = 0;
 #endif
 
     clkm_conf.clkm_div_a = div_a;
@@ -252,7 +253,11 @@ esp_err_t i2sSetClock(uint8_t bus_num,
     return ESP_OK;
 }
 
-void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
+void i2sSetPins(uint8_t bus_num, 
+        int8_t out, 
+        int8_t parallel,
+        int8_t busSampleSize, 
+        bool invert)
 {
     if (bus_num >= I2S_NUM_MAX) 
     {
@@ -261,10 +266,36 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
 
     if (out >= 0) 
     {
+        uint32_t i2sSignal;
+
         pinMode(out, OUTPUT);
 
-        uint32_t i2sSignal;
-        // ESP32, but what about ESP32S2?
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+
+        // S2 only has one bus
+        // 
+        //  in parallel mode
+        //  8bit mode   : I2S0O_DATA_OUT16_IDX ~I2S0O_DATA_OUT23_IDX
+        //  16bit mode  : I2S0O_DATA_OUT8_IDX ~I2S0O_DATA_OUT23_IDX
+        //  24bit mode  : I2S0O_DATA_OUT0_IDX ~I2S0O_DATA_OUT23_IDX
+        if (parallel == -1)
+        {
+            i2sSignal = I2S0O_DATA_OUT23_IDX;
+        }
+        else if (busSampleSize == 1)
+        {
+            i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;
+        }
+        else if (busSampleSize == 2)
+        {
+            i2sSignal = I2S0O_DATA_OUT8_IDX + parallel;
+        }
+        else
+        {
+            i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
+        }
+
+#else
         if (bus_num == 0)
         {
             //  in parallel mode
@@ -281,11 +312,11 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
             }
             else if (parallel < 16)
             {
-                i2sSignal = I2S0O_DATA_OUT8_IDX + parallel;
+                i2sSignal = I2S0O_DATA_OUT8_IDX + parallel - 8;
             }
             else
             {
-                i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
+                i2sSignal = I2S0O_DATA_OUT0_IDX + parallel - 16;
             }
         }
         else
@@ -299,11 +330,12 @@ void i2sSetPins(uint8_t bus_num, int8_t out, int8_t parallel, bool invert)
                 i2sSignal = I2S1O_DATA_OUT0_IDX + parallel;
             }
         }
-        log_i("i2sSetPins bus %u, i2sSignal %u, pin %u, mux %u",
-            bus_num,
-            i2sSignal,
-            out,
-            parallel);
+#endif
+        //log_i("i2sSetPins bus %u, i2sSignal %u, pin %u, mux %u",
+        //    bus_num,
+        //    i2sSignal,
+        //    out,
+        //    parallel);
         gpio_matrix_out(out, i2sSignal, invert, false);
     } 
 }
@@ -332,12 +364,6 @@ void i2sInit(uint8_t bus_num,
     {
         return;
     }
-
-    
-    log_i("i2sSetClock bus %u, parallel_mode %u, bytes_per_sample %u",
-        bus_num,
-        parallel_mode,
-        bytes_per_sample);
 
     I2S[bus_num].dma_count = dma_count + 
             I2S_DMA_SILENCE_BLOCK_COUNT_FRONT +
@@ -392,7 +418,7 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf2) conf2;
         conf2.val = 0;
         conf2.lcd_en = parallel_mode;
-        conf2.lcd_tx_wrx2_en = 0; // ((parallel_mode) && (bytes_per_sample == 2));
+        conf2.lcd_tx_wrx2_en = 0; // parallel_mode; // ((parallel_mode) && (bytes_per_sample == 2));
         i2s->conf2.val = conf2.val;
     }
 
@@ -523,8 +549,15 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, bool parallel_mode, s
     //
     if (parallel_mode)
     {
-        rate *= bytes_per_sample; // * 2; //  ESP32S2? only
-        bck = 12; //  6; // ESP32S2? only
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+        rate *= bytes_per_sample;
+        bck *= bytes_per_sample;
+
+        //rate /= bytes_per_sample;
+        //bck /= bytes_per_sample; 
+#else
+        rate *= bytes_per_sample;
+#endif
     }
 
     //               160,000,000L / (100,000 * 384)

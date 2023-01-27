@@ -170,7 +170,7 @@ public:
             yield();
         }
 
-        i2sSetPins(_bus.I2sBusNumber, -1, -1, false);
+        i2sSetPins(_bus.I2sBusNumber, -1, -1, -1, false);
         i2sDeinit(_bus.I2sBusNumber);
         free(_data);
         heap_caps_free(_i2sBuffer);
@@ -194,7 +194,7 @@ public:
             dmaBlockCount,
             _i2sBuffer,
             _i2sBufferSize);
-        i2sSetPins(_bus.I2sBusNumber, _pin, -1, T_INVERT::Inverted);
+        i2sSetPins(_bus.I2sBusNumber, _pin, -1, -1, T_INVERT::Inverted);
     }
 
     void Update(bool)
