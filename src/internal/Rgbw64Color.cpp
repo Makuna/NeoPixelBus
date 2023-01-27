@@ -162,10 +162,10 @@ void Rgbw64Color::Lighten(uint16_t delta)
 
 Rgbw64Color Rgbw64Color::LinearBlend(const Rgbw64Color& left, const Rgbw64Color& right, float progress)
 {
-    return Rgbw64Color( left.R + ((right.R - left.R) * progress),
-        left.G + ((right.G - left.G) * progress),
-        left.B + ((right.B - left.B) * progress),
-        left.W + ((right.W - left.W) * progress) );
+    return Rgbw64Color( left.R + (((int32_t)right.R - left.R) * progress),
+        left.G + (((int32_t)right.G - left.G) * progress),
+        left.B + (((int32_t)right.B - left.B) * progress),
+        left.W + (((int32_t)right.W - left.W) * progress) );
 }
 
 Rgbw64Color Rgbw64Color::BilinearBlend(const Rgbw64Color& c00, 

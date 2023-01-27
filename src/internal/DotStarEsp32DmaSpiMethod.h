@@ -29,72 +29,13 @@ License along with NeoPixel.  If not, see
 
 #include "driver/spi_master.h"
 
-#if (defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32S3)) && !defined(HSPI_HOST)
-// HSPI_HOST depreciated in C3 & S3
-#define HSPI_HOST   SPI2_HOST
-#endif
 
-
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-class Esp32VspiBus
-{
-public:
-    const static spi_host_device_t SpiHostDevice = VSPI_HOST;
-    const static int DmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
-    const static int ParallelBits = 1;
-};
-#endif
-
-class Esp32HspiBus
-{
-public:
-    const static spi_host_device_t SpiHostDevice = HSPI_HOST;
-    const static int DmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
-    const static int ParallelBits = 1;
-};
-
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-class Esp32Vspi2BitBus
-{
-public:
-    const static spi_host_device_t SpiHostDevice = VSPI_HOST;
-    const static int DmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
-    const static int ParallelBits = 2;
-};
-#endif
-
-class Esp32Hspi2BitBus
-{
-public:
-    const static spi_host_device_t SpiHostDevice = HSPI_HOST;
-    const static int DmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
-    const static int ParallelBits = 2;
-};
-
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-class Esp32Vspi4BitBus
-{
-public:
-    const static spi_host_device_t SpiHostDevice = VSPI_HOST;
-    const static int DmaChannel = 1;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
-    const static int ParallelBits = 4;
-};
-#endif
-
-class Esp32Hspi4BitBus
-{
-public:
-    const static spi_host_device_t SpiHostDevice = HSPI_HOST;
-    const static int DmaChannel = 2;    // arbitrary assignment, but based on the fact there are only two DMA channels and two available SPI ports, we need to split them somehow
-    const static int ParallelBits = 4;
-};
-
-template<typename T_SPISPEED, typename T_SPIBUS> class DotStarEsp32DmaSpiMethod
+template<typename T_SPISPEED, typename T_SPIBUS> class _DotStarEsp32DmaSpiMethod
 {
 public:
     typedef typename T_SPISPEED::SettingsObject SettingsObject;
 
-    DotStarEsp32DmaSpiMethod(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+    _DotStarEsp32DmaSpiMethod(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizePixelData(pixelCount * elementSize + settingsSize),
         _sizeEndFrame((pixelCount + 15) / 16) // 16 = div 2 (bit for every two pixels) div 8 (bits to bytes)
     {
@@ -114,12 +55,12 @@ public:
     }
 
     // Support constructor specifying pins by ignoring pins
-    DotStarEsp32DmaSpiMethod(uint8_t, uint8_t, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        DotStarEsp32DmaSpiMethod(pixelCount, elementSize, settingsSize)
+    _DotStarEsp32DmaSpiMethod(uint8_t, uint8_t, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        _DotStarEsp32DmaSpiMethod(pixelCount, elementSize, settingsSize)
     {
     }
 
-    ~DotStarEsp32DmaSpiMethod()
+    ~_DotStarEsp32DmaSpiMethod()
     {
         if (_spiHandle)
         {
@@ -136,13 +77,15 @@ public:
     {
         spi_transaction_t t;
         spi_transaction_t * tptr = &t;
+
         esp_err_t ret = spi_device_get_trans_result(_spiHandle, &tptr, 0);
 
-        // We know the previous transaction completed if we got ESP_OK, and we know there's no transactions queued if tptr is unmodified
-        return (ret == ESP_OK || tptr == &t);
+        // we are ready if prev result is back (ESP_OK) or if we got a timeout and
+        // transaction length of 0 (we didn't start a transaction)
+        return (ret == ESP_OK || (ret == ESP_ERR_TIMEOUT && 0 == _spiTransaction.length));
     }
 
-    void Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
+    void Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
     {
         memset(_data, 0x00, _sizeStartFrame);
         memset(_data + _sizeStartFrame + _sizePixelData, 0x00, _spiBufferSize - (_sizeStartFrame + _sizePixelData));
@@ -153,18 +96,30 @@ public:
         spi_bus_config_t buscfg;
         memset(&buscfg, 0x00, sizeof(buscfg));
 
-        buscfg.miso_io_num = dat1;
-        buscfg.mosi_io_num = dat0;
         buscfg.sclk_io_num = sck;
-        buscfg.quadwp_io_num = dat2;
-        buscfg.quadhd_io_num = dat3;
+        buscfg.data0_io_num = dat0;
+        buscfg.data1_io_num = dat1;
+        buscfg.data2_io_num = dat2;
+        buscfg.data3_io_num = dat3;
+        buscfg.data4_io_num = dat4;
+        buscfg.data5_io_num = dat5;
+        buscfg.data6_io_num = dat6;
+        buscfg.data7_io_num = dat7;
         buscfg.max_transfer_sz = _spiBufferSize;
+        if (T_SPIBUS::ParallelBits == 8) {
+            buscfg.flags = SPICOMMON_BUSFLAG_OCTAL;
+        }
 
         //Initialize the SPI bus
-        ret = spi_bus_initialize(T_SPIBUS::SpiHostDevice, &buscfg, T_SPIBUS::DmaChannel);
+        ret = spi_bus_initialize(T_SPIBUS::SpiHostDevice, &buscfg, SPI_DMA_CH_AUTO);
         ESP_ERROR_CHECK(ret);
 
         initSpiDevice();
+    }
+
+    void Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
+    {
+        Initialize(sck, dat0, dat1, dat2, dat3, -1, -1, -1, -1, ss);
     }
 
     void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
@@ -191,7 +146,10 @@ public:
 
     void Update(bool)
     {
-        while(!IsReadyToUpdate());
+        while(!IsReadyToUpdate()) 
+        {
+            portYIELD();
+        }
 
         memcpy(_dmadata, _data, _spiBufferSize);
 
@@ -209,10 +167,14 @@ public:
         {
             _spiTransaction.flags = SPI_TRANS_MODE_QIO;
         }
+        if (T_SPIBUS::ParallelBits == 8)
+        {
+            _spiTransaction.flags = SPI_TRANS_MODE_OCT;
+        }
         _spiTransaction.tx_buffer = _dmadata;
 
         esp_err_t ret = spi_device_queue_trans(_spiHandle, &_spiTransaction, 0);  //Transmit!
-        assert(ret == ESP_OK);            //Should have had no issues.
+        ESP_ERROR_CHECK(ret);
     }
 
     bool AlwaysUpdate()
@@ -284,80 +246,80 @@ private:
     int8_t                  _ssPin;
 };
 
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-// Clock Speed and Default Definitions for DotStarEsp32DmaVspi
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed40Mhz, Esp32VspiBus> DotStarEsp32DmaVspi40MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed20Mhz, Esp32VspiBus> DotStarEsp32DmaVspi20MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32VspiBus> DotStarEsp32DmaVspi10MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed5Mhz, Esp32VspiBus> DotStarEsp32DmaVspi5MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed2Mhz, Esp32VspiBus> DotStarEsp32DmaVspi2MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed1Mhz, Esp32VspiBus> DotStarEsp32DmaVspi1MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed500Khz, Esp32VspiBus> DotStarEsp32DmaVspi500KhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeedHz, Esp32VspiBus> DotStarEsp32DmaVspiHzMethod;
 
-typedef DotStarEsp32DmaVspi10MhzMethod DotStarEsp32DmaVspiMethod;
+// Unfortunately we have a bit of a mess with SPI bus names across different version of the ESP32
+// e.g ESP32 has SPI, HSPI, and VSPI (1, 2, and 3), ESP32-S2 has SPI, FSPI, and HSPI (1, 2, and 3)
+// and the S3 and C3 dropped the silly names entirely and just uses SPI1, SPI2, and SPI3.
+//
+// SPI1 can be only be used by ESP32 and supports up to 4 bit
+// SPI2 supports up to 4 bit output across all of those devices (!) and supports 8 bit on S2 and S3
+// SPI3 supports up to 4 bit output on ESP32 and S3, and 1 bit only on the S2
+
+enum spi_bus_width_t {
+    WIDTH1 = 1,
+    WIDTH2 = 2,
+    WIDTH4 = 4,
+    WIDTH8 = 8,
+};
+
+template <spi_host_device_t bus, spi_bus_width_t bits=WIDTH1>
+struct Esp32SpiBus
+{
+    const static spi_host_device_t SpiHostDevice = bus;
+    const static int ParallelBits = bits;
+};
+
+// Define all valid ESP32 SPI Buses with a default speed
+
+// SPI1 -- ESP32 Only
+#if defined(CONFIG_IDF_TARGET_ESP32)
+typedef Esp32SpiBus<SPI1_HOST, WIDTH1> Esp32Spi1Bus;
+typedef Esp32SpiBus<SPI1_HOST, WIDTH2> Esp32Spi12BitBus;
+typedef Esp32SpiBus<SPI1_HOST, WIDTH4> Esp32Spi14BitBus;
+
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi1Bus> DotStarEsp32DmaSpi1Method;
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi12BitBus> DotStarEsp32DmaSpi12BitMethod;
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi14BitBus> DotStarEsp32DmaSpi14BitMethod;
 #endif
 
-// Clock Speed and Default Definitions for DotStarEsp32DmaHspi
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed40Mhz, Esp32HspiBus> DotStarEsp32DmaHspi40MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed20Mhz, Esp32HspiBus> DotStarEsp32DmaHspi20MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32HspiBus> DotStarEsp32DmaHspi10MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed5Mhz, Esp32HspiBus> DotStarEsp32DmaHspi5MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed2Mhz, Esp32HspiBus> DotStarEsp32DmaHspi2MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed1Mhz, Esp32HspiBus> DotStarEsp32DmaHspi1MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed500Khz, Esp32HspiBus> DotStarEsp32DmaHspi500KhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeedHz, Esp32HspiBus> DotStarEsp32DmaHspiHzMethod;
-
-typedef DotStarEsp32DmaHspi10MhzMethod DotStarEsp32DmaHspiMethod;
-
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-// Clock Speed and Default Definitions for DotStarEsp32DmaVspi2Bit
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed40Mhz,Esp32Vspi2BitBus> DotStarEsp32DmaVspi2Bit40MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed20Mhz,Esp32Vspi2BitBus> DotStarEsp32DmaVspi2Bit20MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32Vspi2BitBus> DotStarEsp32DmaVspi2Bit10MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed5Mhz,Esp32Vspi2BitBus> DotStarEsp32DmaVspi2Bit5MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed2Mhz,Esp32Vspi2BitBus> DotStarEsp32DmaVspi2Bit2MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed1Mhz,Esp32Vspi2BitBus> DotStarEsp32DmaVspi2Bit1MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed500Khz,Esp32Vspi2BitBus> DotStarEsp32DmaVspi2Bit500KhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeedHz,Esp32Vspi2BitBus> DotStarEsp32DmaVspi2BitHzMethod;
-
-typedef DotStarEsp32DmaVspi2Bit10MhzMethod DotStarEsp32DmaVspi2BitMethod;
+// SPI2
+typedef Esp32SpiBus<SPI2_HOST, WIDTH1> Esp32Spi2Bus;
+typedef Esp32SpiBus<SPI2_HOST, WIDTH2> Esp32Spi22BitBus;
+typedef Esp32SpiBus<SPI2_HOST, WIDTH4> Esp32Spi24BitBus;
+#if SOC_SPI_SUPPORT_OCT
+typedef Esp32SpiBus<SPI2_HOST, WIDTH8> Esp32Spi28BitBus;
 #endif
 
-// Clock Speed and Default Definitions for DotStarEsp32DmaHspi2Bit
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed40Mhz,Esp32Hspi2BitBus> DotStarEsp32DmaHspi2Bit40MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed20Mhz,Esp32Hspi2BitBus> DotStarEsp32DmaHspi2Bit20MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32Hspi2BitBus> DotStarEsp32DmaHspi2Bit10MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed5Mhz,Esp32Hspi2BitBus> DotStarEsp32DmaHspi2Bit5MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed2Mhz,Esp32Hspi2BitBus> DotStarEsp32DmaHspi2Bit2MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed1Mhz,Esp32Hspi2BitBus> DotStarEsp32DmaHspi2Bit1MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed500Khz,Esp32Hspi2BitBus> DotStarEsp32DmaHspi2Bit500KhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeedHz,Esp32Hspi2BitBus> DotStarEsp32DmaHspi2BitHzMethod;
-
-typedef DotStarEsp32DmaHspi2Bit10MhzMethod DotStarEsp32DmaHspi2BitMethod;
-
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-// Clock Speed and Default Definitions for DotStarEsp32DmaVspi4Bit
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed40Mhz,Esp32Vspi4BitBus> DotStarEsp32DmaVspi4Bit40MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed20Mhz,Esp32Vspi4BitBus> DotStarEsp32DmaVspi4Bit20MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32Vspi4BitBus> DotStarEsp32DmaVspi4Bit10MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed5Mhz,Esp32Vspi4BitBus> DotStarEsp32DmaVspi4Bit5MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed2Mhz,Esp32Vspi4BitBus> DotStarEsp32DmaVspi4Bit2MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed1Mhz,Esp32Vspi4BitBus> DotStarEsp32DmaVspi4Bit1MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed500Khz,Esp32Vspi4BitBus> DotStarEsp32DmaVspi4Bit500KhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeedHz,Esp32Vspi4BitBus> DotStarEsp32DmaVspi4BitHzMethod;
-
-typedef DotStarEsp32DmaVspi4Bit10MhzMethod DotStarEsp32DmaVspi4BitMethod;
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi2Bus> DotStarEsp32DmaSpi2Method;
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi22BitBus> DotStarEsp32DmaSpi22BitMethod;
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi24BitBus> DotStarEsp32DmaSpi24BitMethod;
+#if SOC_SPI_SUPPORT_OCT
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi28BitBus> DotStarEsp32DmaSpi28BitMethod;
 #endif
 
-// Clock Speed and Default Definitions for DotStarEsp32DmaHspi4Bit
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed40Mhz,Esp32Hspi4BitBus> DotStarEsp32DmaHspi4Bit40MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed20Mhz,Esp32Hspi4BitBus> DotStarEsp32DmaHspi4Bit20MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz,Esp32Hspi4BitBus> DotStarEsp32DmaHspi4Bit10MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed5Mhz,Esp32Hspi4BitBus> DotStarEsp32DmaHspi4Bit5MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed2Mhz,Esp32Hspi4BitBus> DotStarEsp32DmaHspi4Bit2MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed1Mhz,Esp32Hspi4BitBus> DotStarEsp32DmaHspi4Bit1MhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeed500Khz,Esp32Hspi4BitBus> DotStarEsp32DmaHspi4Bit500KhzMethod;
-typedef DotStarEsp32DmaSpiMethod<SpiSpeedHz,Esp32Hspi4BitBus> DotStarEsp32DmaHspi4BitHzMethod;
 
-typedef DotStarEsp32DmaHspi4Bit10MhzMethod DotStarEsp32DmaHspi4BitMethod;
+// SPI3
+#if (defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S3))
+typedef Esp32SpiBus<SPI3_HOST, WIDTH1> Esp32Spi3Bus;
+typedef Esp32SpiBus<SPI3_HOST, WIDTH2> Esp32Spi32BitBus;
+typedef Esp32SpiBus<SPI3_HOST, WIDTH4> Esp32Spi34BitBus;
+
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi3Bus> DotStarEsp32DmaSpi3Method;
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi32BitBus> DotStarEsp32DmaSpi32BitMethod;
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi34BitBus> DotStarEsp32DmaSpi34BitMethod;
+#endif
+
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+typedef Esp32SpiBus<SPI3_HOST, WIDTH1> Esp32Spi3Bus;
+typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi3Bus> DotStarEsp32DmaSpi3Method;
+#endif
+
+// Default SpiDma methods if we don't care about bus. It's nice that every single ESP32 out there
+// supports up to 4 bits on SPI2
+
+typedef DotStarEsp32DmaSpi2Method DotStarEsp32DmaSpiMethod;
+typedef DotStarEsp32DmaSpi22BitMethod DotStarEsp32DmaSpi2BitMethod;
+typedef DotStarEsp32DmaSpi24BitMethod DotStarEsp32DmaSpi4BitMethod;
+#if SOC_SPI_SUPPORT_OCT
+typedef DotStarEsp32DmaSpi28BitMethod DotStarEsp32DmaSpi8BitMethod;
+#endif

@@ -82,14 +82,14 @@ public:
 
     Rgb48Color Correct(const Rgb48Color& original)
     {
-        return RgbColor(T_METHOD::Correct(original.R),
+        return Rgb48Color(T_METHOD::Correct(original.R),
             T_METHOD::Correct(original.G),
             T_METHOD::Correct(original.B));
     }
 
     Rgbw64Color Correct(const Rgbw64Color& original)
     {
-        return RgbwColor(T_METHOD::Correct(original.R),
+        return Rgbw64Color(T_METHOD::Correct(original.R),
             T_METHOD::Correct(original.G),
             T_METHOD::Correct(original.B),
             T_METHOD::Correct(original.W));
