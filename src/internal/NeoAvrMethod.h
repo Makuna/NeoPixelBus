@@ -39,6 +39,7 @@ extern "C"
     void send_data_12mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
     void send_data_16mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
     void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
+    void send_data_32mhz(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask, const uint8_t cycleTiming);
 }
 
 class NeoAvrSpeed800KbpsBase
@@ -62,8 +63,10 @@ public:
 #endif // PORTD
             send_data_12mhz_800_PortB(data, sizeData, pinMask);
 
-#elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000L)  // 16Mhz CPU
+#elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000UL)  // 16Mhz CPU
         send_data_16mhz_800(data, sizeData, port, pinMask);
+#elif (F_CPU >= 31000000UL) && (F_CPU <= 35000000UL)  // 32Mhz CPU
+        send_data_32mhz(data, sizeData, port, pinMask, 3);
 #else
 #error "CPU SPEED NOT SUPPORTED"
 #endif
@@ -112,8 +115,10 @@ public:
 #elif (F_CPU >= 11100000UL) && (F_CPU <= 14300000UL)  // 12Mhz CPU
         send_data_12mhz_400(data, sizeData, port, pinMask);
 
-#elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000L)  // 16Mhz CPU
+#elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000UL)  // 16Mhz CPU
         send_data_16mhz_400(data, sizeData, port, pinMask);
+#elif (F_CPU >= 31000000UL) && (F_CPU <= 35000000UL)  // 32Mhz CPU
+        send_data_32mhz(data, sizeData, port, pinMask, 7);
 #else
 #error "CPU SPEED NOT SUPPORTED"
 #endif
