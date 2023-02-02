@@ -643,7 +643,11 @@ void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port,
 
 #elif (F_CPU >= 31000000UL) && (F_CPU <= 35000000UL)  // 32Mhz CPU
 
-void send_data_32mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
+void send_data_32mhz(uint8_t* data,
+        size_t sizeData, 
+        volatile uint8_t* port, 
+        uint8_t pinMask,
+        const uint8_t cycleTiming)
 {
     volatile uint16_t i = (uint16_t)sizeData; // Loop counter
     volatile uint8_t* ptr = data; // Pointer to next byte
@@ -651,135 +655,59 @@ void send_data_32mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port,
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
 
-    // WS2811 and WS2812 have different hi/lo duty cycles; this is
-    // similar but NOT an exact copy of the prior 400-on-8 code.
-
-    // 40 inst. clocks per bit: HHHHHxxxxxxxxLLLLLLL
-    // ST instructions:         ^   ^        ^       (T=0,10,26)
-
     volatile uint8_t next;
     volatile uint8_t bit;
+    volatile uint8_t cycle;
+    volatile uint8_t cycleCount;
 
     hi = *port | pinMask;
     lo = *port & ~pinMask;
     next = lo;
     bit = 8;
+    cycleCount = cycleTiming;
 
     asm volatile(
-        "head20:"                   "\n\t" // Clk  Pseudocode    (T =  0)
-        "st   %a[port],  %[hi]"    "\n\t" // 2    PORT = hi     (T =  2)
-        "sbrc %[byte],  7"         "\n\t" // 1-2  if(b & 128)
-        "mov  %[next], %[hi]"     "\n\t" // 0-1   next = hi    (T =  4)
-        "dec  %[bit]"              "\n\t" // 1    bit--         (T =  5)
-
-        "nop"                      "\n\t" // 1    nop           (T = 6)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 8)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 10)
-
-        "st   %a[port],  %[next]"  "\n\t" // 2    PORT = next   (T =  12)
-
-        "mov  %[next] ,  %[lo]"    "\n\t" // 1    next = lo     (T =  13)
-        "breq nextbyte20"          "\n\t" // 1-2  if(bit == 0) (from dec above)
-        "rol  %[byte]"             "\n\t" // 1    b <<= 1       (T = 15)
-
-        "nop"                      "\n\t" // 1    nop           (T = 16)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 18)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 20)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 22)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 24)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 26)
-
-        "st   %a[port],  %[lo]"    "\n\t" // 2    PORT = lo     (T = 28)
-
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 30)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 32)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 34)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 36)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 38)
-
-        "rjmp head20"              "\n\t" // 2    -> head20 (next bit out)
-
-        "nextbyte20:"               "\n\t" //                   (T = 15)
-        "ldi  %[bit]  ,  8"        "\n\t" // 1    bit = 8       (T = 16)
-        "ld   %[byte] ,  %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 18)
-        "st   %a[port], %[lo]"     "\n\t" // 2    PORT = lo     (T = 20)
-
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 22)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 24)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 26)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 28)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 30)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 32)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 34)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 36)
-
-        "sbiw %[count], 1"         "\n\t" // 2    i--           (T = 38)
-
-        "brne head20"             "\n"   // 2    if(i != 0) -> (next byte)
-        : [port] "+e" (port),
-        [byte]  "+r" (b),
-        [bit]   "+r" (bit),
-        [next]  "+r" (next),
-        [count] "+w" (i)
-        : [ptr] "e" (ptr),
-        [hi]     "r" (hi),
-        [lo]     "r" (lo));
-}
-
-// same as send_data_16mhz_800
-void send_data_32mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
-{
-    volatile uint16_t i = (uint16_t)sizeData; // Loop counter
-    volatile uint8_t* ptr = data; // Pointer to next byte
-    volatile uint8_t b = *ptr++;    // Current byte value
-    volatile uint8_t hi;            // PORT w/output bit set high
-    volatile uint8_t lo;            // PORT w/output bit set low
-
-    // WS2811 and WS2812 have different hi/lo duty cycles; this is
-    // similar but NOT an exact copy of the prior 400-on-8 code.
-
-    // 20 inst. clocks per bit: HHHHHxxxxxxxxLLLLLLL
-    // ST instructions:         ^   ^        ^       (T=0,5,13)
-
-    volatile uint8_t next;
-    volatile uint8_t bit;
-
-    hi = *port | pinMask;
-    lo = *port & ~pinMask;
-    next = lo;
-    bit = 8;
-
-    asm volatile(
-        "head20:"                   "\n\t" // Clk  Pseudocode    (T =  0)
-        "st   %a[port],  %[hi]"    "\n\t" // 2    PORT = hi     (T =  2)
-        "sbrc %[byte],  7"         "\n\t" // 1-2  if(b & 128)
-        "mov  %[next], %[hi]"     "\n\t" // 0-1   next = hi    (T =  4)
-        "dec  %[bit]"              "\n\t" // 1    bit--         (T =  5)
-        "st   %a[port],  %[next]"  "\n\t" // 2    PORT = next   (T =  7)
-        "mov  %[next] ,  %[lo]"    "\n\t" // 1    next = lo     (T =  8)
-        "breq nextbyte20"          "\n\t" // 1-2  if(bit == 0) (from dec above)
-        "rol  %[byte]"             "\n\t" // 1    b <<= 1       (T = 10)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 12)
-        "nop"                      "\n\t" // 1    nop           (T = 13)
-        "st   %a[port],  %[lo]"    "\n\t" // 2    PORT = lo     (T = 15)
-        "nop"                      "\n\t" // 1    nop           (T = 16)
-        "rjmp .+0"                 "\n\t" // 2    nop nop       (T = 18)
-        "rjmp head20"              "\n\t" // 2    -> head20 (next bit out)
-        "nextbyte20:"               "\n\t" //                    (T = 10)
-        "ldi  %[bit]  ,  8"        "\n\t" // 1    bit = 8       (T = 11)
-        "ld   %[byte] ,  %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 13)
-        "st   %a[port], %[lo]"     "\n\t" // 2    PORT = lo     (T = 15)
-        "nop"                      "\n\t" // 1    nop           (T = 16)
-        "sbiw %[count], 1"         "\n\t" // 2    i--           (T = 18)
-        "brne head20"             "\n"   // 2    if(i != 0) -> (next byte)
-        : [port] "+e" (port),
-        [byte]  "+r" (b),
-        [bit]   "+r" (bit),
-        [next]  "+r" (next),
-        [count] "+w" (i)
-        : [ptr] "e" (ptr),
-        [hi]     "r" (hi),
-        [lo]     "r" (lo));
+        "head20:"                              "\n\t" // Clk  Pseudocode    
+            "st   %a[port],  %[hi]"            "\n\t" // 2    PORT = hi     
+            "sbrc %[byte],  7"                 "\n\t" // 1-2  if(b & 128)
+            "mov  %[next], %[hi]"              "\n\t" // 0-1   next = hi    
+        "mov  %[cycle], %[cycleCount]"     "\n\t" // 0-1   cycle = shortCycle
+        "cycleLoop1:"                          "\n\t"
+            "dec  %[cycle]"                    "\n\t" // 1    cycle--   
+            "brne   cycleLoop1"                "\n\t" // 2    if(cycle != 0) -> (cycleLoop1)
+            "st   %a[port],  %[next]"          "\n\t" // 2    PORT = next   
+        "mov  %[cycle], %[cycleCount]"     "\n\t" // 0-1   cycle = shortCycle
+        "cycleLoop2:"                          "\n\t"
+            "dec  %[cycle]"                    "\n\t" // 1    cycle--   
+            "brne   cycleLoop2"                "\n\t" // 2    if(cycle != 0) -> (cycleLoop2)
+            "rjmp .+0"                         "\n\t" // 2    nop nop       (timing tuning)
+            "st   %a[port],  %[lo]"            "\n\t" // 2    PORT = lo     
+            "mov  %[next] ,  %[lo]"            "\n\t" // 1    next = lo     
+        "mov  %[cycle], %[cycleCount]"     "\n\t" // 0-1   cycle = shortCycle
+        "cycleLoop3:"                          "\n\t"
+            "dec  %[cycle]"                    "\n\t" // 1    cycle--   
+            "brne   cycleLoop3"                "\n\t" // 2    if(cycle != 0) -> (cycleLoop3)
+            "dec  %[bit]"                      "\n\t" // 1    bit--         
+            "breq nextbyte20"                  "\n\t" // 1-2  if(bit == 0) (from dec above)
+            "rol  %[byte]"                     "\n\t" // 1    b <<= 1       (T = 15)
+            "rjmp head20"                      "\n\t" // 2    -> head20 (next bit out)
+        "nextbyte20:"                          "\n\t" //                   (T = 15)
+            "ldi  %[bit]  ,  8"                "\n\t" // 1    bit = 8       (T = 16)
+            "ld   %[byte] ,  %a[ptr]+"         "\n\t" // 2    b = *ptr++    (T = 18)
+            "sbiw %[count], 1"                 "\n\t" // 2    i--           (T = 38)
+            "brne head20"                      "\n"   // 2    if(i != 0) -> (next byte)
+        // outputs
+        :   [port] "+e" (port),
+            [byte]  "+r" (b),
+            [bit]   "+r" (bit),
+            [next]  "+r" (next),
+            [cycle]  "+r" (cycle),
+            [count] "+w" (i)
+        // inputs
+        :   [ptr]    "e" (ptr),
+            [hi]     "r" (hi),
+            [lo]     "r" (lo),
+            [cycleCount] "r" (cycleCount));
 }
 
 #else
