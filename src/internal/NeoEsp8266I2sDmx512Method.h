@@ -33,11 +33,13 @@ License along with NeoPixel.  If not, see
 class NeoEsp8266I2sDmx512SpeedBase
 {
 public:
-    // 4.2 us bit send, 250Kbps
-    static const uint32_t I2sClockDivisor = 21; // 0-63
+    // 4 us bit send, 250Kbps
+    static const uint32_t I2sClockDivisor = 20; // 0-63
     static const uint32_t I2sBaseClockDivisor = 32; // 0-63
-    static const uint32_t ByteSendTimeUs = 47; // us it takes to send a single pixel element
-    static const uint32_t MtbpUs = 100; // min 88
+    static const uint32_t ByteSendTimeUs = 44; // us it takes to send a single pixel element of 11 bits
+    static const uint32_t MtbpUs = 100; // // Break, min 88
+    static const uint32_t MtbpBits = 25; // (MtbpUs/4) count of bits needed for the Mtbp timing
+
     // DMX requires the first slot to be zero
     static const size_t HeaderSize = 1;
 };
@@ -76,11 +78,12 @@ public:
 class NeoEsp8266I2sWs2821SpeedBase
 {
 public:
-    // 1.4 us bit send, 750Kbps
-    static const uint32_t I2sClockDivisor = 7; // 0-63
-    static const uint32_t I2sBaseClockDivisor = 32; // 0-63
-    static const uint32_t ByteSendTimeUs = 16; // us it takes to send a single pixel element
-    static const uint32_t MtbpUs = 33; // min 88
+    // 1.35 us bit send, 750Kbps
+    static const uint32_t I2sClockDivisor = 27; // 0-63
+    static const uint32_t I2sBaseClockDivisor = 8; // 0-63
+    static const uint32_t ByteSendTimeUs = 15; // us it takes to send a single pixel element of 11 bits
+    static const uint32_t MtbpUs = 33; // Break
+    static const uint32_t MtbpBits = 25; // (MtbpUs/1.35) count of bits needed for the Mtbp timing
     // DMX/WS2821 requires the first slot to be zero
     static const size_t HeaderSize = 1;
 };
@@ -134,9 +137,8 @@ public:
         // size is rounded up to nearest I2sByteBoundarySize
         i2sBufferSize = NeoUtil::RoundUp(i2sBufferSize, I2sByteBoundarySize);
 
-        // 4.2 us per bit
-        size_t i2sZeroesBitsSize = (T_SPEED::MtbpUs) / 4;
-        size_t i2sZeroesSize = NeoUtil::RoundUp(i2sZeroesBitsSize, 8) / 8;
+        // 
+        size_t i2sZeroesSize = NeoUtil::RoundUp(T_SPEED::MtbpBits, 8) / 8;
         
         // protocol limits use of full block size to I2sByteBoundarySize
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / I2sByteBoundarySize) * I2sByteBoundarySize;
