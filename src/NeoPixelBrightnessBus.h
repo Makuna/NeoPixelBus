@@ -35,6 +35,10 @@ private:
 
     void ScaleColor(uint16_t scale, typename T_COLOR_FEATURE::ColorObject* color)
     {
+        // This is the similiar as calling Dim on the color object
+        // there is an assumption that all color elements are byte aligned
+        // so if any future color object gets introduced that is not it will 
+        // cause a problem
         uint8_t* ptr = (uint8_t*)color;
         uint8_t* ptrEnd = ptr + sizeof(typename T_COLOR_FEATURE::ColorObject);
 
@@ -47,12 +51,17 @@ private:
 
     void ConvertColor(typename T_COLOR_FEATURE::ColorObject* color)
     {
+        // This is the same as calling Dim on the color object
         uint16_t scale = _brightness + 1;
         ScaleColor(scale, color);
     }
 
     void RecoverColor(typename T_COLOR_FEATURE::ColorObject* color) const
     {
+        // this is the same as calling Brighton on the color object
+        // there is an assumption that all color elements are byte aligned
+        // so if any future color object gets introduced that is not it will 
+        // cause a problem
         uint8_t* ptr = (uint8_t*)color;
         uint8_t* ptrEnd = ptr + sizeof(typename T_COLOR_FEATURE::ColorObject);
         uint16_t scale = _brightness + 1;
