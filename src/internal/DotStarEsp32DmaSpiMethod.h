@@ -29,6 +29,8 @@ License along with NeoPixel.  If not, see
 
 #include "driver/spi_master.h"
 
+// API and type use require newer IDF versions
+#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 1)
 
 template<typename T_SPISPEED, typename T_SPIBUS> class _DotStarEsp32DmaSpiMethod
 {
@@ -323,3 +325,5 @@ typedef DotStarEsp32DmaSpi24BitMethod DotStarEsp32DmaSpi4BitMethod;
 #if SOC_SPI_SUPPORT_OCT
 typedef DotStarEsp32DmaSpi28BitMethod DotStarEsp32DmaSpi8BitMethod;
 #endif
+
+#endif // ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 1)
