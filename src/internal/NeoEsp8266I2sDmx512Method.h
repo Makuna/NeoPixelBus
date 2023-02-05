@@ -37,9 +37,10 @@ public:
     static const uint32_t I2sClockDivisor = 20; // 0-63
     static const uint32_t I2sBaseClockDivisor = 32; // 0-63
     static const uint32_t ByteSendTimeUs = 44; // us it takes to send a single pixel element of 11 bits
-    static const uint32_t MtbpUs = 100; // // Break, min 88
-    static const uint32_t MtbpBits = 25; // (MtbpUs/4) count of bits needed for the Mtbp timing
-
+    static const uint32_t BreakMabUs = 96; // Break min 92, Mab min 12
+    static const size_t BreakMabSize = 4; // roundupby((BreakMabUs/4us)/8,4) count of bytes needed for the Break+Mab timing
+    static const uint32_t MtbpUs = 11; // Mtbp, min 0, buy we use at least one byte of space (8*1.35)
+    static const size_t MtbpSize = 1; // (MtbpUs/1.35)/8 count of bytes needed for the Mtbp timing
     // DMX requires the first slot to be zero
     static const size_t HeaderSize = 1;
 };
@@ -50,6 +51,7 @@ public:
     static const uint8_t MtbpLevel = 0x1; // high
     static const uint8_t StartBit = 0b00000000; 
     static const uint8_t StopBits = 0b00000011; 
+    static const uint32_t Break = 0x00000000; // Break
     static const uint32_t BreakMab = 0x00000007; // Break + Mab
 
     static uint8_t Convert(uint8_t value)
@@ -65,6 +67,7 @@ public:
     static const uint8_t MtbpLevel = 0x00; // low
     static const uint8_t StartBit = 0b00000001;
     static const uint8_t StopBits = 0b00000000;
+    static const uint32_t Break = 0xffffffff; // Break
     static const uint32_t BreakMab = 0xfffffff8; // Break + Mab
 
     static uint8_t Convert(uint8_t value)
@@ -82,8 +85,11 @@ public:
     static const uint32_t I2sClockDivisor = 27; // 0-63
     static const uint32_t I2sBaseClockDivisor = 8; // 0-63
     static const uint32_t ByteSendTimeUs = 15; // us it takes to send a single pixel element of 11 bits
-    static const uint32_t MtbpUs = 33; // Break
-    static const uint32_t MtbpBits = 25; // (MtbpUs/1.35) count of bits needed for the Mtbp timing
+    static const uint32_t BreakMabUs = 92; // Break min 88, Mab min 4
+    static const size_t BreakMabSize = 12; // roundupby((BreakMabUs/1.35)/8,4) count of bytes needed for the Break+Mab timing
+    static const uint32_t MtbpUs = 88; // Mtbp, min 88
+    static const size_t MtbpSize = 9; // (MtbpUs/1.35)/8 count of bytes needed for the Mtbp timing
+    
     // DMX/WS2821 requires the first slot to be zero
     static const size_t HeaderSize = 1;
 };
@@ -94,7 +100,8 @@ public:
     static const uint8_t MtbpLevel = 0x1; // high
     static const uint8_t StartBit = 0b00000000;
     static const uint8_t StopBits = 0b00000011;
-    static const uint32_t BreakMab = 0x00000007; // Break + Mab
+    static const uint32_t Break = 0x00000000; // Break
+    static const uint32_t BreakMab = 0x00000007; // Break + Mab (4~12us/1.35us)
 
     static uint8_t Convert(uint8_t value)
     {
@@ -109,6 +116,7 @@ public:
     static const uint8_t MtbpLevel = 0x00; // low
     static const uint8_t StartBit = 0b00000001;
     static const uint8_t StopBits = 0b00000000;
+    static const uint32_t Break = 0xffffffff; // Break
     static const uint32_t BreakMab = 0xfffffff8; // Break + Mab
 
     static uint8_t Convert(uint8_t value)
@@ -132,14 +140,14 @@ public:
         // bits + half rounding byte of bits / bits per byte
         size_t i2sBufferSize = (pixelCount * dmaPixelBits + dmaSettingsBits + 4) / 8;
 
-        i2sBufferSize = i2sBufferSize + sizeof(T_SPEED::BreakMab);
+        i2sBufferSize = i2sBufferSize + T_SPEED::BreakMabSize;
 
         // size is rounded up to nearest I2sByteBoundarySize
         i2sBufferSize = NeoUtil::RoundUp(i2sBufferSize, I2sByteBoundarySize);
-
-        // 
-        size_t i2sZeroesSize = NeoUtil::RoundUp(T_SPEED::MtbpBits, 8) / 8;
         
+        // size of a looping silent space rounded up to nearest I2sByteBoundarySize
+        size_t i2sZeroesSize = NeoUtil::RoundUp(T_SPEED::MtbpSize, I2sByteBoundarySize);
+
         // protocol limits use of full block size to I2sByteBoundarySize
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / I2sByteBoundarySize) * I2sByteBoundarySize;
 
@@ -315,10 +323,14 @@ private:
         uint32_t* pDma32 = reinterpret_cast<uint32_t*>(_i2sBuffer);
         const uint32_t* pDma32End = reinterpret_cast<uint32_t*>(_i2sBuffer + _i2sBufferSize);
 
-        // first put Break and MAB at front
-        // 
-        // BREAK 121.8us @ 4.2us per bit 
-        // MAB 12.6us
+        // first insert Break space as needed
+        for (size_t count = 1; 
+            count < (T_SPEED::BreakMabSize/sizeof(T_SPEED::Break));
+            count++)
+        {
+            *(pDma32++) = T_SPEED::Break;
+        }
+        // then tail of break with mab
         *(pDma32++) = T_SPEED::BreakMab;
         
         Encoder(_data, _data + _sizeData, pDma32, pDma32End);
