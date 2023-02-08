@@ -7,6 +7,7 @@
 #######################################
 
 NeoPixelBus	KEYWORD1
+NeoPixelBusLg	KEYWORD1
 NeoPixelSegmentBus	KEYWORD1
 RgbwColor	KEYWORD1
 RgbColor	KEYWORD1
@@ -760,6 +761,9 @@ PixelCount	KEYWORD2
 SetPixelColor	KEYWORD2
 GetPixelColor	KEYWORD2
 SwapPixelColor	KEYWORD2
+SetLuminance	KEYWORD2
+GetLuminance	KEYWORD2
+ApplyPostAdjustments	KEYWORD2
 SetString	KEYWORD2
 CalculateBrightness	KEYWORD2
 Dim	KEYWORD2

@@ -60,19 +60,32 @@ private:
     static const uint8_t _table[256];
 };
 
+// no gamma correction at all
+class NeoGammaNullMethod
+{
+public:
+    static uint8_t Correct(uint8_t value)
+    {
+        return value;
+    }
+    static uint16_t Correct(uint16_t value)
+    {
+        return value;
+    }
+};
 
 // use one of the method classes above as a converter for this template class
 template<typename T_METHOD> class NeoGamma
 {
 public:
-    RgbColor Correct(const RgbColor& original)
+    static RgbColor Correct(const RgbColor& original)
     {
         return RgbColor(T_METHOD::Correct(original.R),
             T_METHOD::Correct(original.G),
             T_METHOD::Correct(original.B));
     }
 
-    RgbwColor Correct(const RgbwColor& original)
+    static RgbwColor Correct(const RgbwColor& original)
     {
         return RgbwColor(T_METHOD::Correct(original.R),
             T_METHOD::Correct(original.G),
@@ -80,14 +93,14 @@ public:
             T_METHOD::Correct(original.W) );
     }
 
-    Rgb48Color Correct(const Rgb48Color& original)
+    static Rgb48Color Correct(const Rgb48Color& original)
     {
         return Rgb48Color(T_METHOD::Correct(original.R),
             T_METHOD::Correct(original.G),
             T_METHOD::Correct(original.B));
     }
 
-    Rgbw64Color Correct(const Rgbw64Color& original)
+    static Rgbw64Color Correct(const Rgbw64Color& original)
     {
         return Rgbw64Color(T_METHOD::Correct(original.R),
             T_METHOD::Correct(original.G),
