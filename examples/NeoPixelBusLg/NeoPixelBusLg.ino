@@ -22,11 +22,11 @@ RgbColor white(255, 255, 255);
 // for your NeoPixels
 NeoPixelBusLg<NeoRgbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 
-// If speed is an issue and memory is not, then you can use the gama table variant
+// If speed is an issue and memory is not, then you can use the gamma table variant
 // which is much faster but uses 256 bytes of RAM
 // NeoPixelBusLg<NeoRgbFeature, NeoWs2812xMethod, NeoGammaTableMethod> strip(PixelCount, PixelPin);
 
-// If you want to turn gama correction off, then you can use the null gama method
+// If you want to turn gamma correction off, then you can use the null gamma method
 // NeoPixelBusLg<NeoRgbFeature, NeoWs2812xMethod, NeoGammaNullMethod> strip(PixelCount, PixelPin);
 
 void setup()
