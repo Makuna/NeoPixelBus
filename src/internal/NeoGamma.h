@@ -87,15 +87,11 @@ public:
         }
         else
         {
-            // adjust the lo value to mimic the curve from table at hi
-            // this improves the results over just a linear between
-            uint16_t loAdjusted = (lo * hiResult) / hi;
-
             // check the _table for duplicate or jumps to adjust the range of lowbyte
             if (hiResult == _table[hi - 1])
             {
                 // this result is an upper duplicate
-                lowResult = (loAdjusted >> 1) | 0x80; // lo / 2 + 128
+                lowResult = (lo >> 1) | 0x80; // lo / 2 + 128
             }
             else
             {
@@ -104,20 +100,22 @@ public:
                 if (delta == 0)
                 {
                     // this result is a lower duplicate
-                    lowResult = (loAdjusted >> 1); // lo / 2
+                    lowResult = (lo >> 1); // lo / 2
                 }
                 else if (delta == 1)
                 {
                     // this result is incremental and thus linear
-                    lowResult = loAdjusted;
+                    lowResult = lo;
                 }
                 else
                 {
                     // this result jumps by more than one, so need to spread across
-                    lowResult = delta * loAdjusted;
+                    lowResult = delta * lo;
                 }
             }
+            
         }
+        
         return (static_cast<uint16_t>(hiResult) << 8) + lowResult;
     }
     
