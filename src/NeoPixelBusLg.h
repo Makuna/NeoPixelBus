@@ -74,7 +74,7 @@ public:
     {
         // does NOT affect current pixel data as there is no safe way
         // to reconstruct the original color values after being
-        // modified with both luminance and gama without storing them
+        // modified with both luminance and gamma without storing them
         _luminance = luminance;
     }
 
