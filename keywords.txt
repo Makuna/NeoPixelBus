@@ -722,6 +722,7 @@ NeoTopology	KEYWORD1
 NeoRingTopology	KEYWORD1
 NeoTiles	KEYWORD1
 NeoMosaic	KEYWORD1
+NeoGammaCieLabEquationMethod	KEYWORD1
 NeoGammaEquationMethod	KEYWORD1
 NeoGammaTableMethod	KEYWORD1
 NeoGamma	KEYWORD1
@@ -817,6 +818,7 @@ CircularOut	KEYWORD2
 CircularInOut	KEYWORD2
 CircularCenter	KEYWORD2
 Gamma	KEYWORD2
+GammaCieLab	KEYWORD2
 Map	KEYWORD2
 MapProbe	KEYWORD2
 getWidth	KEYWORD2
