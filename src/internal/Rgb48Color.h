@@ -120,6 +120,19 @@ struct Rgb48Color : RgbColorBase
     }
 
     // ------------------------------------------------------------------------
+    // Compare method
+    // compares two colors with the given epsilon (delta allowed)
+    // returns the greatest difference of a set of elements, 
+    //   0 = equal within epsilon delta
+    //   negative - this is less than other
+    //   positive - this is greater than other
+    // ------------------------------------------------------------------------
+    static int32_t Compare(const Rgb48Color& left, const Rgb48Color& right, uint16_t epsilon = 256)
+    {
+        return _Compare<Rgb48Color, int32_t>(left, right, epsilon);
+    }
+
+    // ------------------------------------------------------------------------
     // operator [] - readonly
     // access elements in order by index rather than R,G,B
     // see static Count for the number of elements

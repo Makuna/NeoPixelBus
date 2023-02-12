@@ -113,9 +113,22 @@ struct RgbwColor : RgbColorBase
     // ------------------------------------------------------------------------
     int16_t CompareTo(const RgbwColor& other, uint8_t epsilon = 1)
     {
-        return RgbColorBase::_Compare<RgbwColor, int16_t>(*this, other, epsilon);
+        return _Compare<RgbwColor, int16_t>(*this, other, epsilon);
     }
-        
+
+    // ------------------------------------------------------------------------
+    // Compare method
+    // compares two colors with the given epsilon (delta allowed)
+    // returns the greatest difference of a set of elements, 
+    //   0 = equal within epsilon delta
+    //   negative - this is less than other
+    //   positive - this is greater than other
+    // ------------------------------------------------------------------------
+    static int16_t Compare(const RgbwColor& left, const RgbwColor& right, uint8_t epsilon = 1)
+    {
+        return _Compare<RgbwColor, int16_t>(left, right, epsilon);
+    }
+
     // ------------------------------------------------------------------------
     // operator [] - readonly
     // access elements in order by index rather than R,G,B
