@@ -27,7 +27,6 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #ifdef ARDUINO_ARCH_ESP8266
-#include <Arduino.h>
 
 // this template method class is used to track the data being sent on the uart
 // when using the default serial ISR installed by the core

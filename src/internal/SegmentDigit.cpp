@@ -24,6 +24,7 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+#include <Arduino.h>
 #include "SegmentDigit.h"
 
 //
@@ -59,7 +60,7 @@ const uint8_t SevenSegDigit::DecodeSpecial[] = {
 
 void SevenSegDigit::init(uint8_t bitmask, uint8_t brightness, uint8_t defaultBrightness)
 {
-    for (uint8_t iSegment = 0; iSegment < SegmentCount; iSegment++)
+    for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
     {
         Segment[iSegment] = (bitmask & 0x01) ? brightness : defaultBrightness;
         bitmask >>= 1;
@@ -111,17 +112,17 @@ uint8_t SevenSegDigit::CalculateBrightness() const
 {
     uint16_t sum = 0;
 
-    for (uint8_t iSegment = 0; iSegment < SegmentCount; iSegment++)
+    for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
     {
         sum += Segment[iSegment];
     }
 
-    return static_cast<uint8_t>(sum / SegmentCount);
+    return static_cast<uint8_t>(sum / Count);
 }
 
 void SevenSegDigit::Darken(uint8_t delta)
 {
-    for (uint8_t iSegment = 0; iSegment < SegmentCount; iSegment++)
+    for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
     {
         uint8_t element = Segment[iSegment];
         if (element > delta)
@@ -138,7 +139,7 @@ void SevenSegDigit::Darken(uint8_t delta)
 
 void SevenSegDigit::Lighten(uint8_t delta)
 {
-    for (uint8_t iSegment = 0; iSegment < SegmentCount; iSegment++)
+    for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
     {
         uint8_t element = Segment[iSegment];
         if (element < 255 - delta)
@@ -157,9 +158,22 @@ SevenSegDigit SevenSegDigit::LinearBlend(const SevenSegDigit& left, const SevenS
 {
     SevenSegDigit result;
 
-    for (uint8_t iSegment = 0; iSegment < SegmentCount; iSegment++)
+    for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
     {
-        result.Segment[iSegment] = left.Segment[iSegment] + (((int16_t)right.Segment[iSegment] - left.Segment[iSegment]) * progress);
+        result.Segment[iSegment] = left.Segment[iSegment] + ((static_cast<int16_t>(right.Segment[iSegment]) - left.Segment[iSegment]) * progress);
     }
     return result;
 }
+
+SevenSegDigit SevenSegDigit::LinearBlend(const SevenSegDigit& left, const SevenSegDigit& right, uint8_t progress)
+{
+    SevenSegDigit result;
+
+    for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
+    {
+        result.Segment[iSegment] = left.Segment[iSegment] +
+            (((static_cast<int32_t>(right.Segment[iSegment]) - left.Segment[iSegment]) * static_cast<int32_t>(progress) + 1) >> 8);
+    }
+    return result;
+}
+

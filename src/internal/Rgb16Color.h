@@ -25,7 +25,6 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include <Arduino.h>
 #include "NeoSettings.h"
 #include "RgbColorBase.h"
 
@@ -243,7 +242,16 @@ struct Rgb16Color : RgbColorBase
 
         return Rgb16Color(result.R, result.G, result.B);
     };
-    
+    // progress - (0 - 255) value where 0 will return left and 255 will return right
+    //     and a value between will blend the color weighted linearly between them
+    // ------------------------------------------------------------------------
+    static Rgb16Color LinearBlend(const Rgb16Color& left, const Rgb16Color& right, uint8_t progress)
+    {
+        RgbColor result = RgbColor::LinearBlend(left, right, progress);
+
+        return Rgb16Color(result.R, result.G, result.B);
+    };
+
     // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
     // c00 - upper left quadrant color

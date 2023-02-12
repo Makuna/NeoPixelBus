@@ -25,7 +25,6 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include <Arduino.h>
 #include "NeoSettings.h"
 #include "RgbColorBase.h"
 #include "RgbColor.h"
@@ -108,6 +107,68 @@ struct Rgb48Color : RgbColorBase
     };
 
     // ------------------------------------------------------------------------
+    // CompareTo method
+    // compares against another color with the given epsilon (delta allowed)
+    // returns the greatest difference of a set of elements, 
+    //   0 = equal within epsilon delta
+    //   negative - this is less than other
+    //   positive - this is greater than other
+    // ------------------------------------------------------------------------
+    int32_t CompareTo(const Rgb48Color& other, uint16_t epsilon = 256)
+    {
+        return _Compare<Rgb48Color, int32_t>(*this, other, epsilon);
+    }
+
+    // ------------------------------------------------------------------------
+    // Compare method
+    // compares two colors with the given epsilon (delta allowed)
+    // returns the greatest difference of a set of elements, 
+    //   0 = equal within epsilon delta
+    //   negative - this is less than other
+    //   positive - this is greater than other
+    // ------------------------------------------------------------------------
+    static int32_t Compare(const Rgb48Color& left, const Rgb48Color& right, uint16_t epsilon = 256)
+    {
+        return _Compare<Rgb48Color, int32_t>(left, right, epsilon);
+    }
+
+    // ------------------------------------------------------------------------
+    // operator [] - readonly
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint16_t operator[](size_t idx) const
+    {
+        switch (idx)
+        {
+        case 0:
+            return R;
+        case 1:
+            return G;
+        default:
+            return B;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // operator [] - read write
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint16_t& operator[](size_t idx)
+    {
+        switch (idx)
+        {
+        case 0:
+            return R;
+        case 1:
+            return G;
+        default:
+            return B;
+        }
+    }
+
+    // ------------------------------------------------------------------------
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
@@ -151,7 +212,11 @@ struct Rgb48Color : RgbColorBase
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
     static Rgb48Color LinearBlend(const Rgb48Color& left, const Rgb48Color& right, float progress);
-    
+    // progress - (0 - 255) value where 0 will return left and 255 will return right
+    //     and a value between will blend the color weighted linearly between them
+    // ------------------------------------------------------------------------
+    static Rgb48Color LinearBlend(const Rgb48Color& left, const Rgb48Color& right, uint8_t progress);
+
     // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
     // c00 - upper left quadrant color
@@ -188,6 +253,7 @@ struct Rgb48Color : RgbColorBase
     uint16_t B;
 
     const static uint16_t Max = 65535;
+    const static size_t Count = 3; // three elements in []
 
 private:
     inline static uint16_t _elementDim(uint16_t value, uint16_t ratio)

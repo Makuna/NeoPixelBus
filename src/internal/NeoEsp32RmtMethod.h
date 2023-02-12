@@ -43,8 +43,6 @@ Esp32-hal-rmt.h
 Esp32-hal-rmt.c
 */
 
-#include <Arduino.h>
-
 extern "C"
 {
 #include <driver/rmt.h>

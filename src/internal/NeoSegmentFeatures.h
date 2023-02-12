@@ -112,7 +112,7 @@ public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
-        uint8_t commonSize = (PixelSize < color.SegmentCount) ? PixelSize : color.SegmentCount;
+        uint8_t commonSize = (PixelSize < color.Count) ? PixelSize : color.Count;
         for (uint8_t iSegment = 0; iSegment < commonSize; iSegment++)
         {
             *p++ = color.Segment[iSegment];
@@ -123,7 +123,7 @@ public:
     {
         ColorObject color;
         const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-        uint8_t commonSize = (PixelSize < color.SegmentCount) ? PixelSize : color.SegmentCount;
+        uint8_t commonSize = (PixelSize < color.Count) ? PixelSize : color.Count;
 
         for (uint8_t iSegment = 0; iSegment < commonSize; iSegment++)
         {
@@ -136,7 +136,7 @@ public:
     {
         ColorObject color;
         const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-        uint8_t commonSize = (PixelSize < color.SegmentCount) ? PixelSize : color.SegmentCount;
+        uint8_t commonSize = (PixelSize < color.Count) ? PixelSize : color.Count;
 
         for (uint8_t iSegment = 0; iSegment < commonSize; iSegment++)
         {
