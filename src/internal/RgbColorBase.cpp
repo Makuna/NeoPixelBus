@@ -24,6 +24,7 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+#include <Arduino.h>
 #include "RgbColorBase.h"
 #include "RgbColor.h"
 #include "Rgb48Color.h"

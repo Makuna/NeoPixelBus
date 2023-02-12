@@ -26,8 +26,6 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include <Arduino.h>
-
 // ------------------------------------------------------------------------
 // HsbColor represents a color object that is represented by Hue, Saturation, Brightness
 // component values.  It contains helpful color routines to manipulate the 

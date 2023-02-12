@@ -39,4 +39,31 @@ protected:
     static void _HslToRgb(const HslColor& color, float* r, float* g, float* b);
 
     static void _HsbToRgb(const HsbColor& color, float* r, float* g, float* b);
+
+    template <typename T_COLOR, typename T_RESULT> static T_RESULT _Compare(
+        const T_COLOR& left,
+        const T_COLOR& right,
+        T_RESULT epsilon)
+    {
+        T_RESULT result = 0;
+        T_RESULT resultAbs = 0;
+
+        for (size_t elem = 0; elem < T_COLOR::Count; elem++)
+        {
+            T_RESULT delta = static_cast<T_RESULT>(left[elem]) - right[elem];
+            T_RESULT deltaAbs = abs(delta);
+
+            if (deltaAbs > resultAbs)
+            {
+                resultAbs = deltaAbs;
+                result = delta;
+            }
+        }
+
+        if (resultAbs > epsilon)
+        {
+            return result;
+        }
+        return 0;
+    }
 };

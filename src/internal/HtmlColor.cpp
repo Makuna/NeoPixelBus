@@ -23,6 +23,8 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
+
+#include <Arduino.h>
 #include "HtmlColor.h"
 
 static inline char hexdigit(uint8_t v)

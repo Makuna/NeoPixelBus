@@ -25,7 +25,6 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include <Arduino.h>
 #include "NeoSettings.h"
 #include "RgbColorBase.h"
 
@@ -106,6 +105,55 @@ struct RgbColor : RgbColorBase
     };
 
     // ------------------------------------------------------------------------
+    // CompareTo method
+    // compares against another color with the given epsilon (delta allowed)
+    // returns the greatest difference of a set of elements, 
+    //   0 = equal within epsilon delta
+    //   negative - this is less than other
+    //   positive - this is greater than other
+    // ------------------------------------------------------------------------
+    int16_t CompareTo(const RgbColor& other, uint8_t epsilon = 1)
+    {
+        return _Compare<RgbColor, int16_t>(*this, other, epsilon);
+    }
+
+    // ------------------------------------------------------------------------
+    // operator [] - readonly
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint8_t operator[](size_t idx) const
+    { 
+        switch (idx)
+        {
+        case 0:
+            return R;
+        case 1:
+            return G;
+        default:
+            return B;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // operator [] - read write
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint8_t& operator[](size_t idx)
+    {
+        switch (idx)
+        {
+        case 0:
+            return R;
+        case 1:
+            return G;
+        default:
+            return B;
+        }
+    }
+
+    // ------------------------------------------------------------------------
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
@@ -149,7 +197,11 @@ struct RgbColor : RgbColorBase
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
     static RgbColor LinearBlend(const RgbColor& left, const RgbColor& right, float progress);
-    
+    // progress - (0 - 255) value where 0 will return left and 255 will return right
+    //     and a value between will blend the color weighted linearly between them
+    // ------------------------------------------------------------------------
+    static RgbColor LinearBlend(const RgbColor& left, const RgbColor& right, uint8_t progress);
+
     // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
     // c00 - upper left quadrant color
@@ -186,6 +238,7 @@ struct RgbColor : RgbColorBase
     uint8_t B;
 
     const static uint8_t Max = 255;
+    const static size_t Count = 3; // three elements in []
 
 private:
     inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)

@@ -32,7 +32,6 @@ License along with NeoPixel.  If not, see
 
 extern "C"
 {
-#include <Arduino.h>
 #include "Esp32_i2s.h"
 }
 

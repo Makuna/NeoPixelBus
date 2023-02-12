@@ -25,8 +25,6 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include <Arduino.h>
-
 struct RgbColor;
 struct HslColor;
 struct HsbColor;
@@ -36,7 +34,7 @@ struct HsbColor;
 // component values and an extra White component.  It contains helpful color 
 // routines to manipulate the color.
 // ------------------------------------------------------------------------
-struct RgbwColor
+struct RgbwColor : RgbColorBase
 {
     typedef NeoRgbwCurrentSettings SettingsObject;
 
@@ -106,6 +104,59 @@ struct RgbwColor
     };
 
     // ------------------------------------------------------------------------
+    // CompareTo method
+    // compares against another color with the given epsilon (delta allowed)
+    // returns the greatest difference of a set of elements, 
+    //   0 = equal within epsilon delta
+    //   negative - this is less than other
+    //   positive - this is greater than other
+    // ------------------------------------------------------------------------
+    int16_t CompareTo(const RgbwColor& other, uint8_t epsilon = 1)
+    {
+        return RgbColorBase::_Compare<RgbwColor, int16_t>(*this, other, epsilon);
+    }
+        
+    // ------------------------------------------------------------------------
+    // operator [] - readonly
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint8_t operator[](size_t idx) const
+    {
+        switch (idx)
+        {
+        case 0:
+            return R;
+        case 1:
+            return G;
+        case 2:
+            return B;
+        default:
+            return W;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // operator [] - read write
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint8_t& operator[](size_t idx)
+    {
+        switch (idx)
+        {
+        case 0:
+            return R;
+        case 1:
+            return G;
+        case 2:
+            return B;
+        default:
+            return W;
+        }
+    }
+
+    // ------------------------------------------------------------------------
     // Returns if the color is grey, all values are equal other than white
     // ------------------------------------------------------------------------
     bool IsMonotone() const
@@ -166,7 +217,11 @@ struct RgbwColor
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
     static RgbwColor LinearBlend(const RgbwColor& left, const RgbwColor& right, float progress);
-    
+    // progress - (0 - 255) value where 0 will return left and 255 will return right
+    //     and a value between will blend the color weighted linearly between them
+    // ------------------------------------------------------------------------
+    static RgbwColor LinearBlend(const RgbwColor& left, const RgbwColor& right, uint8_t progress);
+
     // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
     // c00 - upper left quadrant color
@@ -206,6 +261,7 @@ struct RgbwColor
     uint8_t W;
 
     const static uint8_t Max = 255;
+    const static size_t Count = 4; // four elements in []
 
 private:
     inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)

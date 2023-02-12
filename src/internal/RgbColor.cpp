@@ -24,6 +24,7 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+#include <Arduino.h>
 #include "RgbColor.h"
 #include "Rgb16Color.h"
 #include "Rgb48Color.h"
@@ -162,9 +163,16 @@ void RgbColor::Lighten(uint8_t delta)
 
 RgbColor RgbColor::LinearBlend(const RgbColor& left, const RgbColor& right, float progress)
 {
-    return RgbColor( left.R + (((int16_t)right.R - left.R) * progress),
-        left.G + (((int16_t)right.G - left.G) * progress),
-        left.B + (((int16_t)right.B - left.B) * progress));
+    return RgbColor( left.R + ((static_cast<int16_t>(right.R) - left.R) * progress),
+        left.G + ((static_cast<int16_t>(right.G) - left.G) * progress),
+        left.B + ((static_cast<int16_t>(right.B) - left.B) * progress));
+}
+
+RgbColor RgbColor::LinearBlend(const RgbColor& left, const RgbColor& right, uint8_t progress)
+{
+    return RgbColor(left.R + (((static_cast<int32_t>(right.R) - left.R) * static_cast<int32_t>(progress) + 1) >> 8),
+        left.G + (((static_cast<int32_t>(right.G) - left.G) * static_cast<int32_t>(progress) + 1) >> 8),
+        left.B + (((static_cast<int32_t>(right.B) - left.B) * static_cast<int32_t>(progress) + 1) >> 8));
 }
 
 RgbColor RgbColor::BilinearBlend(const RgbColor& c00, 

@@ -24,6 +24,7 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+#include <Arduino.h>
 #include "RgbColor.h"
 #include "RgbwColor.h"
 #include "Rgb48Color.h"
@@ -162,10 +163,17 @@ void Rgbw64Color::Lighten(uint16_t delta)
 
 Rgbw64Color Rgbw64Color::LinearBlend(const Rgbw64Color& left, const Rgbw64Color& right, float progress)
 {
-    return Rgbw64Color( left.R + (((int32_t)right.R - left.R) * progress),
-        left.G + (((int32_t)right.G - left.G) * progress),
-        left.B + (((int32_t)right.B - left.B) * progress),
-        left.W + (((int32_t)right.W - left.W) * progress) );
+    return Rgbw64Color( left.R + ((static_cast<int32_t>(right.R) - left.R) * progress),
+        left.G + ((static_cast<int32_t>(right.G) - left.G) * progress),
+        left.B + ((static_cast<int32_t>(right.B) - left.B) * progress),
+        left.W + ((static_cast<int32_t>(right.W) - left.W) * progress) );
+}
+Rgbw64Color Rgbw64Color::LinearBlend(const Rgbw64Color& left, const Rgbw64Color& right, uint8_t progress)
+{
+    return Rgbw64Color(left.R + (((static_cast<int64_t>(right.R) - left.R) * static_cast<int64_t>(progress) + 1) >> 8),
+        left.G + (((static_cast<int64_t>(right.G) - left.G) * static_cast<int64_t>(progress) + 1) >> 8),
+        left.B + (((static_cast<int64_t>(right.B) - left.B) * static_cast<int64_t>(progress) + 1) >> 8),
+        left.W + (((static_cast<int64_t>(right.W) - left.W) * static_cast<int64_t>(progress) + 1) >> 8));
 }
 
 Rgbw64Color Rgbw64Color::BilinearBlend(const Rgbw64Color& c00, 

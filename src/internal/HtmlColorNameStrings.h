@@ -26,8 +26,6 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-#include <Arduino.h>
-
 /* HTML4 color names */
 extern const char c_HtmlNameAqua[] PROGMEM;
 extern const char c_HtmlNameBlack[] PROGMEM;

@@ -25,8 +25,6 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include <Arduino.h>
-
 enum LedSegment
 {
     LedSegment_A,
@@ -107,7 +105,7 @@ struct SevenSegDigit
     // ------------------------------------------------------------------------
     bool operator==(const SevenSegDigit& other) const
     {
-        for (uint8_t iSegment = 0; iSegment < SegmentCount; iSegment++)
+        for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
         {
             if (Segment[iSegment] != other.Segment[iSegment])
             {
@@ -121,6 +119,26 @@ struct SevenSegDigit
     {
         return !(*this == other);
     };
+
+    // ------------------------------------------------------------------------
+    // operator [] - readonly
+    // access elements in order of the Segments
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint8_t operator[](size_t idx) const
+    {
+        return Segment[idx];
+    }
+
+    // ------------------------------------------------------------------------
+    // operator [] - read write
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint8_t& operator[](size_t idx)
+    {
+        return Segment[idx];
+    }
 
     // ------------------------------------------------------------------------
     // CalculateBrightness will calculate the overall brightness
@@ -151,19 +169,23 @@ struct SevenSegDigit
     //     weighted linearly between them
     // ------------------------------------------------------------------------
     static SevenSegDigit LinearBlend(const SevenSegDigit& left, const SevenSegDigit& right, float progress);
+    // progress - (0 - 255) value where 0 will return left and 255 will return right
+    //     and a value between will blend the color weighted linearly between them
+    // ------------------------------------------------------------------------
+    static SevenSegDigit LinearBlend(const SevenSegDigit& left, const SevenSegDigit& right, uint8_t progress);
 
 
     uint32_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
     {
         auto total = 0;
 
-        for (uint8_t segment = LedSegment_A; segment < SegmentCount - 2; segment++)
+        for (uint8_t segment = LedSegment_A; segment < Count - 2; segment++)
         {
             total += Segment[segment] * settings.SegmentTenthMilliAmpere / Max;
         }
 
-        total += Segment[SegmentCount - 2] * settings.DecimalTenthMilliAmpere / Max;
-        total += Segment[SegmentCount - 1] * settings.SpecialTenthMilliAmpere / Max;
+        total += Segment[Count - 2] * settings.DecimalTenthMilliAmpere / Max;
+        total += Segment[Count - 1] * settings.SpecialTenthMilliAmpere / Max;
 
         return total;
     }
@@ -249,8 +271,8 @@ struct SevenSegDigit
     // segment members (0-255) where each represents the segment location
     // and the value defines the brightnes (0) is off and (255) is full brightness
     // ------------------------------------------------------------------------
-    static const uint8_t SegmentCount = 9;
-    uint8_t Segment[SegmentCount];
+    static const uint8_t Count = 9;
+    uint8_t Segment[Count];
 
     const static uint8_t Max = 255;
 
