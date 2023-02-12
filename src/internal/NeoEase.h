@@ -312,4 +312,16 @@ public:
     {
         return pow(unitValue, 1.0f / 0.45f);
     }
+
+    static float GammaCieLab(float unitValue)
+    {
+        if (unitValue <= 0.08f)
+        {
+            return unitValue / 9.033f;
+        }
+        else
+        {
+            return pow((unitValue + 0.16f) / 1.16f, 3.0f);
+        }
+    }
 };

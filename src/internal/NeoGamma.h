@@ -40,6 +40,20 @@ public:
     }
 };
 
+// Alternative equation to provide at least one official model for specific LEDs
+class NeoGammaCieLabEquationMethod
+{
+public:
+    static uint8_t Correct(uint8_t value)
+    {
+        return static_cast<uint8_t>(255.0f * NeoEase::GammaCieLab(value / 255.0f) + 0.5f);
+    }
+    static uint16_t Correct(uint16_t value)
+    {
+        return static_cast<uint16_t>(65535.0f * NeoEase::GammaCieLab(value / 65535.0f) + 0.5f);
+    }
+};
+
 struct NeoGamma16LowHint
 {
     uint8_t pos;
