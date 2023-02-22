@@ -340,6 +340,42 @@ void i2sSetPins(uint8_t bus_num,
     } 
 }
 
+void i2sSetClkWsPins(uint8_t bus_num,
+    int8_t outClk,
+    bool invertClk,
+    int8_t outWs,
+    bool invertWs)
+{
+
+    if (bus_num >= I2S_NUM_MAX)
+    {
+        return;
+    }
+
+    uint32_t i2sSignalClk = I2S0O_BCK_OUT_IDX;
+    uint32_t i2sSignalWs = I2S0O_WS_OUT_IDX;
+
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+    if (bus_num == 1)
+    {
+        i2sSignalClk = I2S1O_BCK_OUT_IDX;
+        i2sSignalWs = I2S1O_WS_OUT_IDX;
+    }
+#endif
+
+    if (outClk >= 0)
+    {
+        pinMode(outClk, OUTPUT);
+        gpio_matrix_out(outClk, i2sSignalClk, invertClk, false);
+    }
+
+    if (outWs >= 0)
+    {
+        pinMode(outWs, OUTPUT);
+        gpio_matrix_out(outWs, i2sSignalWs, invertWs, false);
+    }
+}
+
 bool i2sWriteDone(uint8_t bus_num) 
 {
     if (bus_num >= I2S_NUM_MAX) 
