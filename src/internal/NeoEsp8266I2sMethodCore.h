@@ -81,6 +81,12 @@ const uint8_t c_I2sPin = 3; // due to I2S hardware, the pin used is restricted t
 
 class NeoEsp8266I2sMethodCore
 {
+private:
+    static const uint8_t c_StateBlockCount = 2;
+
+    // i2s sends 4 byte elements, 
+    static const uint16_t c_I2sByteBoundarySize = 4;
+
 protected:
     static NeoEsp8266I2sMethodCore* s_this; // for the ISR
 
@@ -92,11 +98,16 @@ protected:
     size_t _i2sBufferSize; // total size of _i2sBuffer
     uint8_t* _i2sBuffer;  // holds the DMA buffer that is referenced by _i2sBufDesc
 
-    size_t _i2sZeroesSize; // total size of _i2sZeroes
-    uint8_t* _i2sZeroes;
+    size_t _i2sIdleDataTotalSize; // total size of represented zeroes, mulitple uses of _i2sIdleData
+    size_t _i2sIdleDataSize; // size of _i2sIdleData
+    uint8_t* _i2sIdleData;
 
     uint16_t _is2BufMaxBlockSize; // max size based on size of a pixel of a single block
 
+    size_t GetSendSize() const
+    {
+        return _i2sBufferSize + _i2sIdleDataTotalSize;
+    }
 
     // This routine is called as soon as the DMA routine has something to tell us. All we
     // handle here is the RX_EOF_INT status, which indicate the DMA has sent a buffer whose
@@ -123,7 +134,7 @@ protected:
 
                 // data block has pending data waiting to send, prepare it
                 // point last state block to top 
-                (finished_item + 1)->next_link_ptr = s_this->_i2sBufDesc;
+                (finished_item + c_StateBlockCount - 1)->next_link_ptr = s_this->_i2sBufDesc;
 
                 s_this->_dmaState = NeoDmaState_Sending;
             }
@@ -136,7 +147,7 @@ protected:
                 // the data block had actual data sent
                 // point last state block to first state block thus
                 // just looping and not sending the data blocks
-                (finished_item + 1)->next_link_ptr = finished_item;
+                (finished_item + c_StateBlockCount - 1)->next_link_ptr = finished_item;
 
                 s_this->_dmaState = NeoDmaState_Zeroing;
             }
@@ -154,21 +165,37 @@ protected:
     NeoEsp8266I2sMethodCore() 
     { };
 
-    void AllocateI2s(const size_t i2sBufferSize, 
-            const size_t i2sZeroesSize,
+    void AllocateI2s(const size_t i2sBufferSize, // expected multiples of c_I2sByteBoundarySize
+            const size_t i2sZeroesSize, // expected multiples of c_I2sByteBoundarySize
             const size_t is2BufMaxBlockSize,
             const uint8_t idleLevel)
     {
         _i2sBufferSize = i2sBufferSize;
-        _i2sZeroesSize = i2sZeroesSize;
+        _i2sIdleDataTotalSize = i2sZeroesSize;
+        _i2sIdleDataSize = _i2sIdleDataTotalSize;
+
+        size_t countIdleQueueItems = 1;
+        if (_i2sIdleDataSize > 256)
+        {
+            // reuse a single idle data buffer of 256 with multiple dma slc_queue_items
+            countIdleQueueItems = _i2sIdleDataSize / 256 + 1;
+            _i2sIdleDataSize = 256;
+        }
+        else
+        {
+            _i2sIdleDataSize = NeoUtil::RoundUp(_i2sIdleDataSize, c_I2sByteBoundarySize);
+        }
         _is2BufMaxBlockSize = is2BufMaxBlockSize;
 
         _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
         // no need to initialize it, it gets overwritten on every send
-        _i2sZeroes = static_cast<uint8_t*>(malloc(_i2sZeroesSize));
-        memset(_i2sZeroes, idleLevel * 0xff, _i2sZeroesSize);
+        _i2sIdleData = static_cast<uint8_t*>(malloc(_i2sIdleDataSize));
+        memset(_i2sIdleData, idleLevel * 0xff, _i2sIdleDataSize);
 
-        _i2sBufDescCount = (_i2sBufferSize / _is2BufMaxBlockSize) + 1 + 2; // need two more for state/latch blocks
+        _i2sBufDescCount = (_i2sBufferSize / _is2BufMaxBlockSize) + 1 + 
+                countIdleQueueItems +
+                c_StateBlockCount; // need more for state/latch blocks
+
         _i2sBufDesc = (slc_queue_item*)malloc(_i2sBufDescCount * sizeof(slc_queue_item));
 
         s_this = this; // store this for the ISR
@@ -183,7 +210,7 @@ protected:
 
         free(_i2sBuffer);
         free(_i2sBufDesc);
-        free(_i2sZeroes);
+        free(_i2sIdleData);
     }
 
     bool IsIdle() const
@@ -198,13 +225,21 @@ protected:
         pinMode(c_I2sPin, FUNCTION_1); // I2S0_DATA
 
         uint8_t* is2Buffer = _i2sBuffer;
+        uint8_t* is2BufferEnd = _i2sBuffer + _i2sBufferSize;
         uint32_t is2BufferSize = _i2sBufferSize;
-        uint16_t indexDesc;
+        uint16_t indexDesc = 0;
+
+        Serial.print(" buf desc ");
+        Serial.println(_i2sBufDescCount);
 
         // prepare main data block decriptors that point into our one static dma buffer
-        for (indexDesc = 0; indexDesc < (_i2sBufDescCount - 2); indexDesc++)
+        while (is2Buffer < is2BufferEnd)
         {
             uint32_t blockSize = (is2BufferSize > _is2BufMaxBlockSize) ? _is2BufMaxBlockSize : is2BufferSize;
+            
+            Serial.print(indexDesc);
+            Serial.print(" data ");
+            Serial.println(blockSize);
 
             _i2sBufDesc[indexDesc].owner = 1;
             _i2sBufDesc[indexDesc].eof = 0; // no need to trigger interrupt generally
@@ -217,25 +252,59 @@ protected:
 
             is2Buffer += blockSize;
             is2BufferSize -= blockSize;
+            indexDesc++;
         }
 
-        // prepare the two state/latch descriptors
-        for (; indexDesc < _i2sBufDescCount; indexDesc++)
+        is2BufferSize = _i2sIdleDataTotalSize;
+
+        // prepare idle block decriptors that point into our one idle dma buffer
+        while (indexDesc < (_i2sBufDescCount - c_StateBlockCount))
         {
+            uint32_t blockSize = (is2BufferSize > _i2sIdleDataSize) ? _i2sIdleDataSize : is2BufferSize;
+            
+            Serial.print(indexDesc);
+            Serial.print(" idle ");
+            Serial.println(blockSize);
+
             _i2sBufDesc[indexDesc].owner = 1;
             _i2sBufDesc[indexDesc].eof = 0; // no need to trigger interrupt generally
             _i2sBufDesc[indexDesc].sub_sof = 0;
-            _i2sBufDesc[indexDesc].datalen = sizeof(_i2sZeroes);
-            _i2sBufDesc[indexDesc].blocksize = sizeof(_i2sZeroes);
-            _i2sBufDesc[indexDesc].buf_ptr = _i2sZeroes;
+            _i2sBufDesc[indexDesc].datalen = blockSize;
+            _i2sBufDesc[indexDesc].blocksize = blockSize;
+            _i2sBufDesc[indexDesc].buf_ptr = _i2sIdleData;
             _i2sBufDesc[indexDesc].unused = 0;
             _i2sBufDesc[indexDesc].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDesc + 1]));
+
+            is2Buffer += blockSize;
+            is2BufferSize -= blockSize;
+            indexDesc++;
         }
 
+        // prepare the two state/latch descriptors
+        uint16_t indexDescFirstState = indexDesc;
+        while (indexDesc < _i2sBufDescCount)
+        {
+            Serial.print(indexDesc);
+            Serial.print(" state ");
+            Serial.println(c_I2sByteBoundarySize);
+
+            _i2sBufDesc[indexDesc].owner = 1;
+            _i2sBufDesc[indexDesc].eof = 0; // no need to trigger interrupt generally
+            _i2sBufDesc[indexDesc].sub_sof = 0;
+            _i2sBufDesc[indexDesc].datalen = c_I2sByteBoundarySize; // minimum
+            _i2sBufDesc[indexDesc].blocksize = c_I2sByteBoundarySize;
+            _i2sBufDesc[indexDesc].buf_ptr = _i2sIdleData;
+            _i2sBufDesc[indexDesc].unused = 0;
+            _i2sBufDesc[indexDesc].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDesc + 1]));
+
+            indexDesc++;
+        }
+
+        uint16_t indexDescLastState = indexDesc - 1;
         // the first state block will trigger the interrupt
-        _i2sBufDesc[indexDesc - 2].eof = 1;
+        _i2sBufDesc[indexDescFirstState].eof = 1;
         // the last state block will loop to the first state block by defualt
-        _i2sBufDesc[indexDesc - 1].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDesc - 2]));
+        _i2sBufDesc[indexDescLastState].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDescFirstState]));
 
         // setup the rest of i2s DMA
         //

@@ -142,14 +142,14 @@ public:
 
         i2sBufferSize = i2sBufferSize + T_SPEED::BreakMabSize;
 
-        // size is rounded up to nearest I2sByteBoundarySize
-        i2sBufferSize = NeoUtil::RoundUp(i2sBufferSize, I2sByteBoundarySize);
+        // size is rounded up to nearest c_I2sByteBoundarySize
+        i2sBufferSize = NeoUtil::RoundUp(i2sBufferSize, c_I2sByteBoundarySize);
         
-        // size of a looping silent space rounded up to nearest I2sByteBoundarySize
-        size_t i2sZeroesSize = NeoUtil::RoundUp(T_SPEED::MtbpSize, I2sByteBoundarySize);
+        // size of a looping silent space rounded up to nearest c_I2sByteBoundarySize
+        size_t i2sZeroesSize = NeoUtil::RoundUp(T_SPEED::MtbpSize, c_I2sByteBoundarySize);
 
-        // protocol limits use of full block size to I2sByteBoundarySize
-        size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / I2sByteBoundarySize) * I2sByteBoundarySize;
+        // protocol limits use of full block size to c_I2sByteBoundarySize
+        size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / c_I2sByteBoundarySize) * c_I2sByteBoundarySize;
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // first "slot" cleared due to protocol requiring it to be zero
@@ -231,8 +231,6 @@ public:
 private:
     // given 11 sending bits per pixel byte, 
     static const uint16_t I2sBitsPerPixelBytes = 11;
-    // i2s sends 4 byte elements, 
-    static const uint16_t I2sByteBoundarySize = 4;
 
     const size_t  _sizeData;    // Size of '_data' buffer 
     uint8_t*  _data;        // Holds LED color values
