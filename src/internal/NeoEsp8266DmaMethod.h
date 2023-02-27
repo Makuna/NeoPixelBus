@@ -279,21 +279,21 @@ public:
         i2sBufferSize = NeoUtil::RoundUp(i2sBufferSize, c_I2sByteBoundarySize);
 
         // calculate a buffer size that takes reset amount of time
-        size_t i2sZeroesSize = T_ENCODER::ResetTimeUs * DmaBytesPerPixelBytes / T_ENCODER::ByteSendTimeUs;
+        size_t i2sResetSize = T_ENCODER::ResetTimeUs * DmaBytesPerPixelBytes / T_ENCODER::ByteSendTimeUs;
         // size is rounded up to nearest c_I2sByteBoundarySize
-        i2sZeroesSize = NeoUtil::RoundUp(i2sZeroesSize, c_I2sByteBoundarySize);
+        i2sResetSize = NeoUtil::RoundUp(i2sResetSize, c_I2sByteBoundarySize);
         Serial.print("ResetTimeUs ");
         Serial.println(T_ENCODER::ResetTimeUs);
-        Serial.print("i2sZeroesSize ");
-        Serial.println(i2sZeroesSize);
+        Serial.print("i2sResetSize ");
+        Serial.println(i2sResetSize);
         Serial.print("time ");
-        Serial.println(i2sZeroesSize * T_ENCODER::ByteSendTimeUs / DmaBytesPerPixelBytes);
+        Serial.println(i2sResetSize * T_ENCODER::ByteSendTimeUs / DmaBytesPerPixelBytes);
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / dmaPixelSize) * dmaPixelSize;
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin()
 
-        AllocateI2s(i2sBufferSize, i2sZeroesSize, is2BufMaxBlockSize, T_ENCODER::IdleLevel);
+        AllocateI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_ENCODER::IdleLevel);
     }
 
     NeoEsp8266DmaMethodBase([[maybe_unused]] uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 

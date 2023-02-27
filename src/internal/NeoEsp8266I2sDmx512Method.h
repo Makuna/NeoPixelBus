@@ -146,7 +146,7 @@ public:
         i2sBufferSize = NeoUtil::RoundUp(i2sBufferSize, c_I2sByteBoundarySize);
         
         // size of a looping silent space rounded up to nearest c_I2sByteBoundarySize
-        size_t i2sZeroesSize = NeoUtil::RoundUp(T_SPEED::MtbpSize, c_I2sByteBoundarySize);
+        size_t i2sResetSize = NeoUtil::RoundUp(T_SPEED::MtbpSize, c_I2sByteBoundarySize);
 
         // protocol limits use of full block size to c_I2sByteBoundarySize
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / c_I2sByteBoundarySize) * c_I2sByteBoundarySize;
@@ -155,7 +155,7 @@ public:
         // first "slot" cleared due to protocol requiring it to be zero
         memset(_data, 0x00, 1);
 
-        AllocateI2s(i2sBufferSize, i2sZeroesSize, is2BufMaxBlockSize, T_SPEED::MtbpLevel);
+        AllocateI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_SPEED::MtbpLevel);
     }
 
     NeoEsp8266I2sDmx512MethodBase([[maybe_unused]] uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 
