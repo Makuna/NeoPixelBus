@@ -116,7 +116,8 @@ public:
         //Initialize the SPI bus
         ret = spi_bus_initialize(T_SPIBUS::SpiHostDevice, &buscfg, SPI_DMA_CH_AUTO);
         ESP_ERROR_CHECK(ret);
-
+        
+        memset(&_spiTransaction, 0, sizeof(spi_transaction_t));
         initSpiDevice();
     }
 
