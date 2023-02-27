@@ -218,17 +218,10 @@ protected:
         uint32_t is2BufferSize; 
         uint16_t indexDesc = 0;
 
-        Serial.print(" buf desc ");
-        Serial.println(_i2sBufDescCount);
-
         // prepare the two state/latch descriptors
         uint16_t stateDataSize = min(c_StateDataSize, _i2sIdleDataSize);
         while (indexDesc < c_StateBlockCount)
         {
-            Serial.print(indexDesc);
-            Serial.print(" state ");
-            Serial.println(stateDataSize);
-
             DmaItemInit(&_i2sBufDesc[indexDesc], _i2sIdleData, stateDataSize, &(_i2sBufDesc[indexDesc + 1]));
 
             indexDesc++;
@@ -239,10 +232,6 @@ protected:
         while (is2Buffer < is2BufferEnd)
         {
             uint32_t blockSize = (is2BufferSize > _is2BufMaxBlockSize) ? _is2BufMaxBlockSize : is2BufferSize;
-            
-            Serial.print(indexDesc);
-            Serial.print(" data ");
-            Serial.println(blockSize);
 
             DmaItemInit(&_i2sBufDesc[indexDesc], is2Buffer, blockSize, &(_i2sBufDesc[indexDesc + 1]));
 
@@ -259,10 +248,6 @@ protected:
         while (indexDesc < _i2sBufDescCount)
         {
             uint32_t blockSize = (is2BufferSize > _i2sIdleDataSize) ? _i2sIdleDataSize : is2BufferSize;
-            
-            Serial.print(indexDesc);
-            Serial.print(" idle ");
-            Serial.println(blockSize);
 
             DmaItemInit(&_i2sBufDesc[indexDesc], _i2sIdleData, blockSize, &(_i2sBufDesc[indexDesc + 1]));
 
