@@ -71,8 +71,7 @@ enum NeoDmaState
 {
     NeoDmaState_Idle,
     NeoDmaState_Pending,
-    NeoDmaState_Sending,
-    NeoDmaState_Zeroing,
+    NeoDmaState_Sending
 };
 
 const uint16_t c_maxDmaBlockSize = 4095;
@@ -83,6 +82,7 @@ class NeoEsp8266I2sMethodCore
 {
 private:
     static const uint8_t c_StateBlockCount = 2;
+    static const size_t c_StateDataSize = 4; // mulitples of c_I2sByteBoundarySize
 
     // i2s sends 4 byte elements, 
     static const uint16_t c_I2sByteBoundarySize = 4;
@@ -123,39 +123,15 @@ protected:
 
         if ((slc_intr_status & SLCIRXEOF) && s_this)
         {
-            switch (s_this->_dmaState)
+            if (s_this->_dmaState != NeoDmaState_Idle)
             {
-            case NeoDmaState_Idle:
-                break;
+                // first two items are the state blocks
+                slc_queue_item* itemLoop = s_this->_i2sBufDesc;
+                slc_queue_item* itemLoopBreaker = itemLoop + 1;
+                // set to loop on idle items
+                itemLoopBreaker->next_link_ptr = itemLoop;
 
-            case NeoDmaState_Pending:
-            {
-                slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
-
-                // data block has pending data waiting to send, prepare it
-                // point last state block to top 
-                (finished_item + c_StateBlockCount - 1)->next_link_ptr = s_this->_i2sBufDesc;
-
-                s_this->_dmaState = NeoDmaState_Sending;
-            }
-            break;
-
-            case NeoDmaState_Sending:
-            {
-                slc_queue_item* finished_item = (slc_queue_item*)SLCRXEDA;
-
-                // the data block had actual data sent
-                // point last state block to first state block thus
-                // just looping and not sending the data blocks
-                (finished_item + c_StateBlockCount - 1)->next_link_ptr = finished_item;
-
-                s_this->_dmaState = NeoDmaState_Zeroing;
-            }
-            break;
-
-            case NeoDmaState_Zeroing:
                 s_this->_dmaState = NeoDmaState_Idle;
-                break;
             }
         }
 
@@ -218,6 +194,19 @@ protected:
         return (_dmaState == NeoDmaState_Idle);
     }
 
+
+    void DmaItemInit(slc_queue_item* item, uint8_t* data, size_t sizeData, slc_queue_item* itemNext)
+    {
+        item->owner = 1;
+        item->eof = 0; // no need to trigger interrupt generally
+        item->sub_sof = 0;
+        item->datalen = sizeData;
+        item->blocksize = sizeData;
+        item->buf_ptr = data;
+        item->unused = 0;
+        item->next_link_ptr = itemNext;
+    }
+
     void InitializeI2s(const uint32_t i2sClockDivisor, const uint32_t i2sBaseClockDivisor)
     {
         StopI2s();
@@ -226,13 +215,27 @@ protected:
 
         uint8_t* is2Buffer = _i2sBuffer;
         uint8_t* is2BufferEnd = _i2sBuffer + _i2sBufferSize;
-        uint32_t is2BufferSize = _i2sBufferSize;
+        uint32_t is2BufferSize; 
         uint16_t indexDesc = 0;
 
         Serial.print(" buf desc ");
         Serial.println(_i2sBufDescCount);
 
+        // prepare the two state/latch descriptors
+        uint16_t stateDataSize = min(c_StateDataSize, _i2sIdleDataSize);
+        while (indexDesc < c_StateBlockCount)
+        {
+            Serial.print(indexDesc);
+            Serial.print(" state ");
+            Serial.println(stateDataSize);
+
+            DmaItemInit(&_i2sBufDesc[indexDesc], _i2sIdleData, stateDataSize, &(_i2sBufDesc[indexDesc + 1]));
+
+            indexDesc++;
+        }
+
         // prepare main data block decriptors that point into our one static dma buffer
+        is2BufferSize = _i2sBufferSize;
         while (is2Buffer < is2BufferEnd)
         {
             uint32_t blockSize = (is2BufferSize > _is2BufMaxBlockSize) ? _is2BufMaxBlockSize : is2BufferSize;
@@ -241,24 +244,19 @@ protected:
             Serial.print(" data ");
             Serial.println(blockSize);
 
-            _i2sBufDesc[indexDesc].owner = 1;
-            _i2sBufDesc[indexDesc].eof = 0; // no need to trigger interrupt generally
-            _i2sBufDesc[indexDesc].sub_sof = 0;
-            _i2sBufDesc[indexDesc].datalen = blockSize;
-            _i2sBufDesc[indexDesc].blocksize = blockSize;
-            _i2sBufDesc[indexDesc].buf_ptr = is2Buffer;
-            _i2sBufDesc[indexDesc].unused = 0;
-            _i2sBufDesc[indexDesc].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDesc + 1]));
+            DmaItemInit(&_i2sBufDesc[indexDesc], is2Buffer, blockSize, &(_i2sBufDesc[indexDesc + 1]));
 
             is2Buffer += blockSize;
             is2BufferSize -= blockSize;
             indexDesc++;
         }
 
-        is2BufferSize = _i2sIdleDataTotalSize;
-
+        // last data item triggers EOF ISR
+        _i2sBufDesc[indexDesc - 1].eof = 1;
+        
         // prepare idle block decriptors that point into our one idle dma buffer
-        while (indexDesc < (_i2sBufDescCount - c_StateBlockCount))
+        is2BufferSize = _i2sIdleDataTotalSize;
+        while (indexDesc < _i2sBufDescCount)
         {
             uint32_t blockSize = (is2BufferSize > _i2sIdleDataSize) ? _i2sIdleDataSize : is2BufferSize;
             
@@ -266,53 +264,26 @@ protected:
             Serial.print(" idle ");
             Serial.println(blockSize);
 
-            _i2sBufDesc[indexDesc].owner = 1;
-            _i2sBufDesc[indexDesc].eof = 0; // no need to trigger interrupt generally
-            _i2sBufDesc[indexDesc].sub_sof = 0;
-            _i2sBufDesc[indexDesc].datalen = blockSize;
-            _i2sBufDesc[indexDesc].blocksize = blockSize;
-            _i2sBufDesc[indexDesc].buf_ptr = _i2sIdleData;
-            _i2sBufDesc[indexDesc].unused = 0;
-            _i2sBufDesc[indexDesc].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDesc + 1]));
+            DmaItemInit(&_i2sBufDesc[indexDesc], _i2sIdleData, blockSize, &(_i2sBufDesc[indexDesc + 1]));
 
             is2Buffer += blockSize;
             is2BufferSize -= blockSize;
             indexDesc++;
         }
 
-        // prepare the two state/latch descriptors
-        uint16_t indexDescFirstState = indexDesc;
-        while (indexDesc < _i2sBufDescCount)
-        {
-            Serial.print(indexDesc);
-            Serial.print(" state ");
-            Serial.println(c_I2sByteBoundarySize);
+        // the last item will loop to the first item
+        _i2sBufDesc[indexDesc - 1].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[0]));
 
-            _i2sBufDesc[indexDesc].owner = 1;
-            _i2sBufDesc[indexDesc].eof = 0; // no need to trigger interrupt generally
-            _i2sBufDesc[indexDesc].sub_sof = 0;
-            _i2sBufDesc[indexDesc].datalen = c_I2sByteBoundarySize; // minimum
-            _i2sBufDesc[indexDesc].blocksize = c_I2sByteBoundarySize;
-            _i2sBufDesc[indexDesc].buf_ptr = _i2sIdleData;
-            _i2sBufDesc[indexDesc].unused = 0;
-            _i2sBufDesc[indexDesc].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDesc + 1]));
-
-            indexDesc++;
-        }
-
-        uint16_t indexDescLastState = indexDesc - 1;
-        // the first state block will trigger the interrupt
-        _i2sBufDesc[indexDescFirstState].eof = 1;
         // the last state block will loop to the first state block by defualt
-        _i2sBufDesc[indexDescLastState].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[indexDescFirstState]));
+        _i2sBufDesc[c_StateBlockCount - 1].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[0]));
 
         // setup the rest of i2s DMA
         //
         ETS_SLC_INTR_DISABLE();
 
-        // start off in sending state as that is what it will be all setup to be
+        // start off in idel state as that is what it will be all setup to be
         // for the interrupt
-        _dmaState = NeoDmaState_Sending;
+        _dmaState = NeoDmaState_Idle;
 
         SLCC0 |= SLCRXLR | SLCTXLR;
         SLCC0 &= ~(SLCRXLR | SLCTXLR);
@@ -368,6 +339,18 @@ protected:
         I2SC |= I2SRF | I2SMR | I2SRSM | I2SRMS | (i2s_bck_div << I2SBD) | (i2s_clock_div << I2SCD);
 
         I2SC |= I2STXS; // Start transmission
+    }
+
+    void WriteI2s()
+    {
+        // first two items are the state blocks
+        slc_queue_item* itemLoopBreaker = &(_i2sBufDesc[1]);
+        slc_queue_item* itemData = itemLoopBreaker + 1;
+
+        // set to NOT loop on idle items
+        itemLoopBreaker->next_link_ptr = itemData;
+
+        _dmaState = NeoDmaState_Sending;
     }
 
     void StopI2s()

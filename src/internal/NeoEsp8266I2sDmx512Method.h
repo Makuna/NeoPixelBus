@@ -204,8 +204,7 @@ public:
         }
         FillBuffers();
         
-        // toggle state so the ISR reacts
-        _dmaState = NeoDmaState_Pending;
+        WriteI2s();
     }
 
     bool AlwaysUpdate()

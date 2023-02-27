@@ -342,8 +342,7 @@ public:
         }
         T_ENCODER::FillBuffers(_i2sBuffer, _data, _sizeData, _sizePixel);
         
-        // toggle state so the ISR reacts
-        _dmaState = NeoDmaState_Pending;
+        WriteI2s();
     }
 
     bool AlwaysUpdate()
