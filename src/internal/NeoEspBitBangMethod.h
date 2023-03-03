@@ -28,9 +28,6 @@ License along with NeoPixel.  If not, see
 
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
 
-// ESP32C3 I2S is not supported yet 
-#if !defined(CONFIG_IDF_TARGET_ESP32C3)
-
 #if defined(ARDUINO_ARCH_ESP8266)
 #include <eagle_soc.h>
 #endif
@@ -85,55 +82,32 @@ public:
     const static uint32_t Period = (F_CPU / 606061 - CYCLES_LOOPTEST); // 1.65us
 };
 
-extern void NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period);
-extern void NeoEspBitBangBase_send_pixels_inv(uint8_t *pixels, uint8_t *end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period);
-#if defined(ARDUINO_ARCH_ESP8266)
-extern void NeoEspBitBangBase_send_pixels_pin16(uint8_t *pixels, uint8_t *end, uint32_t t0h, uint32_t t1h, uint32_t period);
-extern void NeoEspBitBangBase_send_pixels_inv_pin16(uint8_t *pixels, uint8_t *end, uint32_t t0h, uint32_t t1h, uint32_t period);
-#endif
+extern void neoEspBitBangWritePixels(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period, bool invert);
 
 class NeoEspPinset
 {
 public:
     const static uint8_t IdleLevel = LOW;
-
-    inline static void send_pixels_impl(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
-    {
-#if defined(ARDUINO_ARCH_ESP8266)
-        if (pin == 16)
-            NeoEspBitBangBase_send_pixels_pin16(pixels, end, t0h, t1h, period);
-        else
-            NeoEspBitBangBase_send_pixels(pixels, end, pin, t0h, t1h, period);
-#else
-        NeoEspBitBangBase_send_pixels(pixels, end, pin, t0h, t1h, period);
-#endif
-    }
 };
 
 class NeoEspPinsetInverted
 {
 public:
     const static uint8_t IdleLevel = HIGH;
-
-    inline static void send_pixels_impl(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
-    {
-#if defined(ARDUINO_ARCH_ESP8266)
-        if (pin == 16)
-            NeoEspBitBangBase_send_pixels_inv_pin16(pixels, end, t0h, t1h, period);
-        else
-            NeoEspBitBangBase_send_pixels_inv(pixels, end, pin, t0h, t1h, period);
-#else
-        NeoEspBitBangBase_send_pixels_inv(pixels, end, pin, t0h, t1h, period);
-#endif
-    }
 };
 
 template<typename T_SPEED, typename T_PINSET> class NeoEspBitBangBase
 {
 public:
-    static void send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
+    static void writePixels(uint8_t* pixels, uint8_t* end, uint8_t pin)
     {
-        T_PINSET::send_pixels_impl(pixels, end, pin, T_SPEED::T0H, T_SPEED::T1H, T_SPEED::Period);
+        neoEspBitBangWritePixels(pixels, 
+            end, 
+            pin, 
+            T_SPEED::T0H, 
+            T_SPEED::T1H, 
+            T_SPEED::Period,
+            T_PINSET::IdleLevel);
     }
 };
 
@@ -296,7 +270,7 @@ public:
         noInterrupts(); 
 #endif
 
-        T_SPEED::send_pixels(_data, _data + _sizeData, _pin);
+        T_SPEED::writePixels(_data, _data + _sizeData, _pin);
         
 #if defined(ARDUINO_ARCH_ESP32)
         portEXIT_CRITICAL(&updateMux);
@@ -405,5 +379,4 @@ typedef NeoEsp8266BitBangSk6812InvertedMethod NeoEsp8266BitBangLc8812InvertedMet
 
 // ESP bitbang doesn't have defaults and should avoided except for testing
 
-#endif // !defined(CONFIG_IDF_TARGET_ESP32C3)
 #endif // defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
