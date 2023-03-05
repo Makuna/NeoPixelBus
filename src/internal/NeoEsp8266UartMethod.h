@@ -163,6 +163,8 @@ protected:
 // synchronous uart method
 //
 // used by NeoEsp8266UartMethodBase
+// T_UARTFEATURE - (UartFeature0 | UartFeature1)
+// T_UARTCONTEXT - (NeoEsp8266UartContext | NeoEsp8266UartInterruptContext)
 //
 template<typename T_UARTFEATURE, typename T_UARTCONTEXT> class NeoEsp8266Uart : public NeoEsp8266UartBase
 {
@@ -217,6 +219,8 @@ protected:
 // every call to NeoPixelBus.Show() and must not be cached.
 //
 // used by NeoEsp8266UartMethodBase
+// T_UARTFEATURE - (UartFeature0 | UartFeature1)
+// T_UARTCONTEXT - (NeoEsp8266UartContext | NeoEsp8266UartInterruptContext)
 //
 template<typename T_UARTFEATURE, typename T_UARTCONTEXT> class NeoEsp8266AsyncUart : public NeoEsp8266UartBase
 {
@@ -348,6 +352,11 @@ public:
 
 // NeoEsp8266UartMethodBase is a light shell arround NeoEsp8266Uart or NeoEsp8266AsyncUart that
 // implements the methods needed to operate as a NeoPixelBus method.
+//
+// T_SPEED - (NeoEsp8266UartSpeed*)
+// T_BASE - (NeoEsp8266Uart | NeoEsp8266AsyncUart)
+// T_INVERT - (NeoEsp8266UartNotInverted | NeoEsp8266UartInverted)
+//
 template<typename T_SPEED, typename T_BASE, typename T_INVERT>
 class NeoEsp8266UartMethodBase: public T_BASE
 {
