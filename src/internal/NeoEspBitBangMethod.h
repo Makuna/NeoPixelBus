@@ -31,8 +31,13 @@ License along with NeoPixel.  If not, see
 #if defined(ARDUINO_ARCH_ESP8266)
 #include <eagle_soc.h>
 #endif
-
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#define CYCLES_LOOPTEST   (1) // adjustment due to loop exit test instruction cycles
+#elif defined(CONFIG_IDF_TARGET_ESP32S3)
+#define CYCLES_LOOPTEST   (2) // adjustment due to loop exit test instruction cycles
+#else
 #define CYCLES_LOOPTEST   (4) // adjustment due to loop exit test instruction cycles
+#endif
 
 extern void neoEspBitBangWriteSpacingPixels(const uint8_t* pixels, 
     const uint8_t* end, 
@@ -231,7 +236,7 @@ public:
 
         // Need 100% focus on instruction timing
 #if defined(ARDUINO_ARCH_ESP32)
-        delay(1); // required
+        // delay(1); // required ?
         portMUX_TYPE updateMux = portMUX_INITIALIZER_UNLOCKED;
 
         portENTER_CRITICAL(&updateMux);
@@ -289,8 +294,8 @@ private:
 typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeedWs2811, NeoEspNotInverted>> NeoEsp32BitBangWs2811Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeedWs2812x, NeoEspNotInverted>> NeoEsp32BitBangWs2812xMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeedSk6812, NeoEspNotInverted>> NeoEsp32BitBangSk6812Method;
-typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeedTm1814Inverted, NeoEspInverted>> NeoEsp32BitBangTm1814Method;
-typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeedTm1829Inverted, NeoEspInverted>> NeoEsp32BitBangTm1829Method;
+typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeedTm1814, NeoEspInverted>> NeoEsp32BitBangTm1814Method;
+typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeedTm1829, NeoEspInverted>> NeoEsp32BitBangTm1829Method;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeed800Kbps, NeoEspNotInverted>> NeoEsp32BitBang800KbpsMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeed400Kbps, NeoEspNotInverted>> NeoEsp32BitBang400KbpsMethod;
 typedef NeoEspBitBangMethodBase<NeoEspBitBangEncode<NeoEspBitBangSpeedApa106, NeoEspNotInverted>> NeoEsp32BitBangApa106Method;

@@ -33,8 +33,8 @@ static inline uint32_t getCycleCount(void)
     uint32_t ccount;
 
 #if defined(CONFIG_IDF_TARGET_ESP32C3)
-    __asm__ __volatile__("rdcycle %0" : "=r" (ccount));
-    // "csrr %0, mcycle"
+    __asm__ __volatile__("csrr %0,0x7e2":"=r" (ccount));
+    //ccount = esp_cpu_get_ccount();
 #else
     __asm__ __volatile__("rsr %0,ccount":"=a" (ccount));
 #endif
@@ -63,8 +63,8 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
 #if defined(CONFIG_IDF_TARGET_ESP32C3)
     volatile uint32_t* setRegister = &GPIO.out_w1ts.val;
     volatile uint32_t* clearRegister = &GPIO.out_w1tc.val;
-    setValue = _BV(pin + 6); // + 6 due to using bit fields in out_w1ts
-    clearValue = _BV(pin + 6); // + 6 due to using bit fields in out_w1tc
+    setValue = _BV(pin); 
+    clearValue = _BV(pin); 
 #else
     volatile uint32_t* setRegister = &GPIO.out_w1ts;
     volatile uint32_t* clearRegister = &GPIO.out_w1tc;
