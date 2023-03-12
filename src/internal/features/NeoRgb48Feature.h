@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoColorFeatures provides feature classes to describe color order and
+NeoRgb48Feature provides feature classes to describe color order and
 color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
@@ -26,21 +26,39 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "features/Neo3ByteElements.h"
-#include "features/Neo4ByteElements.h"
-#include "features/Neo6ByteElements.h"
-#include "features/Neo8ByteElements.h"
-#include "features/NeoBgrFeature.h"
-#include "features/NeoBrgFeature.h"
-#include "features/NeoGrb48Feature.h"
-#include "features/NeoGrbFeature.h"
-#include "features/NeoGrbwFeature.h"
-#include "features/NeoRbgFeature.h"
-#include "features/NeoRgb48Feature.h"
-#include "features/NeoRgbFeature.h"
-#include "features/NeoRgbw64Feature.h"
-#include "features/NeoRgbwFeature.h"
+class NeoRgb48Feature : public Neo6ByteElementsNoSettings
+{
+public:
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint16_t* p = reinterpret_cast<uint16_t*>(getPixelAddress(pPixels, indexPixel));
 
-typedef NeoRgb48Feature NeoRgbUcs8903Feature;
-typedef NeoRgbw64Feature NeoRgbwUcs8904Feature;
-typedef NeoGrb48Feature NeoGrbWs2816Feature;
+        *p++ = color.R;
+        *p++ = color.G;
+        *p = color.B;
+    }
+
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(pPixels, indexPixel));
+
+        color.R = *p++;
+        color.G = *p++;
+        color.B = *p;
+
+        return color;
+    }
+
+    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel));
+
+        color.R = pgm_read_word(p++);
+        color.G = pgm_read_word(p++);
+        color.B = pgm_read_word(p);
+
+        return color;
+    }
+};

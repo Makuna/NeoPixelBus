@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoColorFeatures provides feature classes to describe color order and
+NeoRbgFeature provides feature classes to describe color order and
 color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
@@ -26,21 +26,41 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "features/Neo3ByteElements.h"
-#include "features/Neo4ByteElements.h"
-#include "features/Neo6ByteElements.h"
-#include "features/Neo8ByteElements.h"
-#include "features/NeoBgrFeature.h"
-#include "features/NeoBrgFeature.h"
-#include "features/NeoGrb48Feature.h"
-#include "features/NeoGrbFeature.h"
-#include "features/NeoGrbwFeature.h"
-#include "features/NeoRbgFeature.h"
-#include "features/NeoRgb48Feature.h"
-#include "features/NeoRgbFeature.h"
-#include "features/NeoRgbw64Feature.h"
-#include "features/NeoRgbwFeature.h"
 
-typedef NeoRgb48Feature NeoRgbUcs8903Feature;
-typedef NeoRgbw64Feature NeoRgbwUcs8904Feature;
-typedef NeoGrb48Feature NeoGrbWs2816Feature;
+class NeoRbgFeature : public Neo3ByteElementsNoSettings
+{
+public:
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        *p++ = color.R;
+        *p++ = color.B;
+        *p = color.G;
+    }
+
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        color.R = *p++;
+        color.B = *p++;
+        color.G = *p;
+
+        return color;
+    }
+
+
+    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
+    {
+        ColorObject color;
+        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
+
+        color.R = pgm_read_byte(p++);
+        color.B = pgm_read_byte(p++);
+        color.G = pgm_read_byte(p);
+
+        return color;
+    }
+};
