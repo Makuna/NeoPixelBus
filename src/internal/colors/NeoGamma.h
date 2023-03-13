@@ -32,6 +32,7 @@ License along with NeoPixel.  If not, see
 //    NeoGammaCieLabEquationMethod
 //    NeoGammaTableMethod
 //    NeoGammaNullMethod
+//    NeoGammaInvert<one of the above>
 //
 template<typename T_METHOD> class NeoGamma
 {

@@ -34,6 +34,7 @@ public:
     {
         return value;
     }
+
     static uint16_t Correct(uint16_t value)
     {
         return value;

@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoColors includes all the color classes that describe color and
-modify colors for NeoPixelBus
+NeoGammaInvertMethod class is used to correct RGB colors for human eye gamma levels equally
+across all color channels
 
 Written by Michael C. Miller.
 
@@ -26,26 +26,23 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "colors/NeoHueBlend.h"
+// use one of the gamma method classes as a base converter for this template class
+// T_METHOD - 
+//    NeoGammaEquationMethod 
+//    NeoGammaCieLabEquationMethod
+//    NeoGammaTableMethod
+//    NeoGammaNullMethod
+//
+template<typename T_METHOD> class NeoGammaInvertMethod
+{
+public:
+    static uint8_t Correct(uint8_t value)
+    {
+        return ~T_METHOD::Correct(value);
+    }
 
-#include "colors/RgbColorBase.h"
-
-#include "colors/RgbColor.h"
-#include "colors/Rgb16Color.h"
-#include "colors/Rgb48Color.h"
-
-#include "colors/HslColor.h"
-#include "colors/HsbColor.h"
-#include "colors/HtmlColor.h"
-
-#include "colors/RgbwColor.h"
-#include "colors/Rgbw64Color.h"
-
-#include "colors/SegmentDigit.h"
-
-#include "colors/NeoGamma.h"
-#include "colors/NeoGammaEquationMethod.h"
-#include "colors/NeoGammaCieLabEquationMethod.h"
-#include "colors/NeoGammaTableMethod.h"
-#include "colors/NeoGammaNullMethod.h"
-#include "colors/NeoGammaInvertMethod.h"
+    static uint16_t Correct(uint16_t value)
+    {
+        return ~T_METHOD::Correct(value);
+    }
+};

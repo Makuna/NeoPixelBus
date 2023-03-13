@@ -29,6 +29,9 @@ NeoPixelBusLg<NeoRgbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 // If you want to turn gamma correction off, then you can use the null gamma method
 // NeoPixelBusLg<NeoRgbFeature, NeoWs2812xMethod, NeoGammaNullMethod> strip(PixelCount, PixelPin);
 
+// If you use a LED driver between the NeoPixel chip and the LEDs that require the PWM range inverted
+// NeoPixelBusLg<NeoRgbFeature, NeoWs2812xMethod, NeoGammaInvertMethod<NeoGammaNullMethod>> strip(PixelCount, PixelPin);
+
 void setup()
 {
     Serial.begin(115200);
