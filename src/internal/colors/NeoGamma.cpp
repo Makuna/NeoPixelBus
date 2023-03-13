@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixelGamma class is used to correct RGB colors for human eye gamma levels
+NeoGamma classes are  used to correct RGB colors for human eye gamma levels
 
 Written by Michael C. Miller.
 
@@ -25,7 +25,16 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #include <Arduino.h>
-#include "NeoPixelBus.h"
+#include "../NeoUtil.h"
+#include "../NeoEase.h"
+#include "../NeoSettings.h"
+#include "RgbColorBase.h"
+#include "RgbColor.h"
+#include "Rgb16Color.h"
+#include "Rgb48Color.h"
+#include "RgbwColor.h"
+#include "Rgbw64Color.h"
+#include "NeoGamma.h"
 
 const uint8_t NeoGammaTableMethod::_table[] = {
     0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   // 16

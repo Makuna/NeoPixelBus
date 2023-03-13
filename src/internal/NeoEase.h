@@ -26,8 +26,6 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-#include "internal/NeoUtil.h"
-
 #if defined(NEOPIXEBUS_NO_STL)
 
 typedef float(*AnimEaseFunction)(float unitValue);

@@ -26,19 +26,21 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "internal/colors/NeoHueBlend.h"
+#include "colors/NeoHueBlend.h"
 
-#include "internal/colors/RgbColorBase.h"
+#include "colors/RgbColorBase.h"
 
-#include "internal/colors/RgbColor.h"
-#include "internal/colors/Rgb16Color.h"
-#include "internal/colors/Rgb48Color.h"
+#include "colors/RgbColor.h"
+#include "colors/Rgb16Color.h"
+#include "colors/Rgb48Color.h"
 
-#include "internal/colors/HslColor.h"
-#include "internal/colors/HsbColor.h"
-#include "internal/colors/HtmlColor.h"
+#include "colors/HslColor.h"
+#include "colors/HsbColor.h"
+#include "colors/HtmlColor.h"
 
-#include "internal/colors/RgbwColor.h"
-#include "internal/colors/Rgbw64Color.h"
+#include "colors/RgbwColor.h"
+#include "colors/Rgbw64Color.h"
 
-#include "internal/colors/SegmentDigit.h"
+#include "colors/SegmentDigit.h"
+
+#include "colors/NeoGamma.h"
