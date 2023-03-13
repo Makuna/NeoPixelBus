@@ -28,6 +28,15 @@ License along with NeoPixel.  If not, see
 
 #include "NeoPixelBus.h"
 
+//
+// 
+// T_GAMMA - 
+//    NeoGammaEquationMethod 
+//    NeoGammaCieLabEquationMethod
+//    NeoGammaTableMethod
+//    NeoGammaNullMethod
+//    NeoGammaInvert<one of the above>
+
 template<typename T_COLOR_FEATURE, typename T_METHOD, typename T_GAMMA = NeoGammaEquationMethod> class NeoPixelBusLg :
     public NeoPixelBus<T_COLOR_FEATURE, T_METHOD>
 {

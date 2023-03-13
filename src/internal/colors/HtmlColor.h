@@ -25,9 +25,6 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-
-#include "RgbColor.h"
-
 #define MAX_HTML_COLOR_NAME_LEN 21
 
 #ifndef pgm_read_ptr

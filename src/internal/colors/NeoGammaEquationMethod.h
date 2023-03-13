@@ -1,7 +1,8 @@
 /*-------------------------------------------------------------------------
-This file contains the HtmlColor implementation
+NeoGammaEquationMethod class is used to correct RGB colors for human eye gamma levels equally
+across all color channels
 
-Written by Unai Uribarri
+Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
 please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
@@ -23,38 +24,21 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
+#pragma once
 
-#include <Arduino.h>
-#include "HtmlColor.h"
 
-static inline char hexdigit(uint8_t v)
+// NeoGammaEquationMethod uses no memory but is slower than NeoGammaTableMethod
+class NeoGammaEquationMethod
 {
-    return v + (v < 10 ? '0' : 'a' - 10);
-}
-
-
-size_t HtmlColor::ToNumericalString(char* buf, size_t bufSize) const
-{
-    size_t bufLen = bufSize - 1;
-
-    if (bufLen-- > 0)
+public:
+    static uint8_t Correct(uint8_t value)
     {
-        if (bufLen > 0)
-        {
-            buf[0] = '#';
-        }
-
-        uint32_t color = Color;
-        for (uint8_t indexDigit = 6; indexDigit > 0; indexDigit--)
-        {
-            if (bufLen > indexDigit)
-            {
-                buf[indexDigit] = hexdigit(color & 0x0000000f);
-            }
-            color >>= 4;
-        }
-
-        buf[(bufLen < 7 ? bufLen : 7)] = 0;
+        return static_cast<uint8_t>(255.0f * NeoEase::Gamma(value / 255.0f) + 0.5f);
     }
-    return 7;
-}
+    static uint16_t Correct(uint16_t value)
+    {
+        return static_cast<uint16_t>(65535.0f * NeoEase::Gamma(value / 65535.0f) + 0.5f);
+    }
+};
+
+

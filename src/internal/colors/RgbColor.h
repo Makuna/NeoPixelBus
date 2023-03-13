@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-Rgb48Color provides a color object that contains 16bit color elements
+RgbColor provides a color object that can be directly consumed by NeoPixelBus
 
 Written by Michael C. Miller.
 
@@ -25,83 +25,78 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "NeoSettings.h"
-#include "RgbColorBase.h"
-#include "RgbColor.h"
-
+struct RgbwColor;
 
 // ------------------------------------------------------------------------
-// Rgb48Color represents a color object that is represented by Red, Green, Blue
+// RgbColor represents a color object that is represented by Red, Green, Blue
 // component values.  It contains helpful color routines to manipulate the 
 // color.
 // ------------------------------------------------------------------------
-struct Rgb48Color : RgbColorBase
+struct RgbColor : RgbColorBase
 {
     typedef NeoRgbCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb48Color using R, G, B values (0-65535)
+    // Construct a RgbColor using R, G, B values (0-255)
     // ------------------------------------------------------------------------
-    Rgb48Color(uint16_t r, uint16_t g, uint16_t b) :
+    RgbColor(uint8_t r, uint8_t g, uint8_t b) :
         R(r), G(g), B(b)
     {
     };
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb48Color using a single brightness value (0-65535)
+    // Construct a RgbColor using a single brightness value (0-255)
     // This works well for creating gray tone colors
-    // (0) = black, (65535) = white, (32768) = gray
+    // (0) = black, (255) = white, (128) = gray
     // ------------------------------------------------------------------------
-    Rgb48Color(uint16_t brightness) :
+    RgbColor(uint8_t brightness) :
         R(brightness), G(brightness), B(brightness)
     {
     };
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb48Color using RgbColor
+    // explicitly Construct a RgbColor using RgbwColor
     // ------------------------------------------------------------------------
-    Rgb48Color(const RgbColor& color)
-    {
-        R = (uint16_t)color.R * 257; // 257 = MAXUINT16/MAXUINT8 = 65535/255
-        G = (uint16_t)color.R * 257;
-        B = (uint16_t)color.R * 257;
-    };
+    explicit RgbColor(const RgbwColor& color);
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb48Color using HtmlColor
+    // Construct a RgbColor using Rgb16Color
     // ------------------------------------------------------------------------
-    Rgb48Color(const HtmlColor& color)
-    {
-        *this = RgbColor(color);
-    };
+    RgbColor(const Rgb16Color& color);
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb48Color using HslColor
+    // Construct a RgbColor using HtmlColor
     // ------------------------------------------------------------------------
-    Rgb48Color(const HslColor& color);
+    RgbColor(const HtmlColor& color);
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb48Color using HsbColor
+    // Construct a RgbColor using HslColor
     // ------------------------------------------------------------------------
-    Rgb48Color(const HsbColor& color);
+    RgbColor(const HslColor& color);
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb48Color that will have its values set in latter operations
+    // Construct a RgbColor using HsbColor
+    // ------------------------------------------------------------------------
+    RgbColor(const HsbColor& color);
+
+
+    // ------------------------------------------------------------------------
+    // Construct a RgbColor that will have its values set in latter operations
     // CAUTION:  The R,G,B members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
-    Rgb48Color()
+    RgbColor()
     {
     };
 
     // ------------------------------------------------------------------------
     // Comparison operators
     // ------------------------------------------------------------------------
-    bool operator==(const Rgb48Color& other) const
+    bool operator==(const RgbColor& other) const
     {
         return (R == other.R && G == other.G && B == other.B);
     };
 
-    bool operator!=(const Rgb48Color& other) const
+    bool operator!=(const RgbColor& other) const
     {
         return !(*this == other);
     };
@@ -114,9 +109,9 @@ struct Rgb48Color : RgbColorBase
     //   negative - this is less than other
     //   positive - this is greater than other
     // ------------------------------------------------------------------------
-    int32_t CompareTo(const Rgb48Color& other, uint16_t epsilon = 256)
+    int16_t CompareTo(const RgbColor& other, uint8_t epsilon = 1)
     {
-        return _Compare<Rgb48Color, int32_t>(*this, other, epsilon);
+        return _Compare<RgbColor, int16_t>(*this, other, epsilon);
     }
 
     // ------------------------------------------------------------------------
@@ -127,9 +122,9 @@ struct Rgb48Color : RgbColorBase
     //   negative - this is less than other
     //   positive - this is greater than other
     // ------------------------------------------------------------------------
-    static int32_t Compare(const Rgb48Color& left, const Rgb48Color& right, uint16_t epsilon = 256)
+    static int16_t Compare(const RgbColor& left, const RgbColor& right, uint8_t epsilon = 1)
     {
-        return _Compare<Rgb48Color, int32_t>(left, right, epsilon);
+        return _Compare<RgbColor, int16_t>(left, right, epsilon);
     }
 
     // ------------------------------------------------------------------------
@@ -137,8 +132,8 @@ struct Rgb48Color : RgbColorBase
     // access elements in order by index rather than R,G,B
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint16_t operator[](size_t idx) const
-    {
+    uint8_t operator[](size_t idx) const
+    { 
         switch (idx)
         {
         case 0:
@@ -155,7 +150,7 @@ struct Rgb48Color : RgbColorBase
     // access elements in order by index rather than R,G,B
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint16_t& operator[](size_t idx)
+    uint8_t& operator[](size_t idx)
     {
         switch (idx)
         {
@@ -172,37 +167,37 @@ struct Rgb48Color : RgbColorBase
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
-    uint16_t CalculateBrightness() const;
+    uint8_t CalculateBrightness() const;
 
     // ------------------------------------------------------------------------
     // Dim will return a new color that is blended to black with the given ratio
-    // ratio - (0-65535) where 65535 will return the original color and 0 will return black
+    // ratio - (0-255) where 255 will return the original color and 0 will return black
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    Rgb48Color Dim(uint16_t ratio) const;
+    RgbColor Dim(uint8_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Brighten will return a new color that is blended to white with the given ratio
-    // ratio - (0-65535) where 65535 will return the original color and 0 will return white
+    // ratio - (0-255) where 255 will return the original color and 0 will return white
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    Rgb48Color Brighten(uint16_t ratio) const;
+    RgbColor Brighten(uint8_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
     // NOTE: This is a simple linear change
-    // delta - (0-65535) the amount to dim the color
+    // delta - (0-255) the amount to dim the color
     // ------------------------------------------------------------------------
-    void Darken(uint16_t delta);
+    void Darken(uint8_t delta);
 
     // ------------------------------------------------------------------------
     // Lighten will adjust the color by the given delta toward white
     // NOTE: This is a simple linear change
-    // delta - (0-65535) the amount to lighten the color
+    // delta - (0-255) the amount to lighten the color
     // ------------------------------------------------------------------------
-    void Lighten(uint16_t delta);
+    void Lighten(uint8_t delta);
 
     // ------------------------------------------------------------------------
     // LinearBlend between two colors by the amount defined by progress variable
@@ -211,11 +206,11 @@ struct Rgb48Color : RgbColorBase
     // progress - (0.0 - 1.0) value where 0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static Rgb48Color LinearBlend(const Rgb48Color& left, const Rgb48Color& right, float progress);
+    static RgbColor LinearBlend(const RgbColor& left, const RgbColor& right, float progress);
     // progress - (0 - 255) value where 0 will return left and 255 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static Rgb48Color LinearBlend(const Rgb48Color& left, const Rgb48Color& right, uint8_t progress);
+    static RgbColor LinearBlend(const RgbColor& left, const RgbColor& right, uint8_t progress);
 
     // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
@@ -226,10 +221,10 @@ struct Rgb48Color : RgbColorBase
     // x - unit value (0.0 - 1.0) that defines the blend progress in horizontal space
     // y - unit value (0.0 - 1.0) that defines the blend progress in vertical space
     // ------------------------------------------------------------------------
-    static Rgb48Color BilinearBlend(const Rgb48Color& c00, 
-        const Rgb48Color& c01, 
-        const Rgb48Color& c10, 
-        const Rgb48Color& c11, 
+    static RgbColor BilinearBlend(const RgbColor& c00, 
+        const RgbColor& c01, 
+        const RgbColor& c10, 
+        const RgbColor& c11, 
         float x, 
         float y);
 
@@ -245,25 +240,25 @@ struct Rgb48Color : RgbColorBase
     }
 
     // ------------------------------------------------------------------------
-    // Red, Green, Blue color members (0-65535) where 
-    // (0,0,0) is black and (65535,65535,65535) is white
+    // Red, Green, Blue color members (0-255) where 
+    // (0,0,0) is black and (255,255,255) is white
     // ------------------------------------------------------------------------
-    uint16_t R;
-    uint16_t G;
-    uint16_t B;
+    uint8_t R;
+    uint8_t G;
+    uint8_t B;
 
-    const static uint16_t Max = 65535;
+    const static uint8_t Max = 255;
     const static size_t Count = 3; // three elements in []
 
 private:
-    inline static uint16_t _elementDim(uint16_t value, uint16_t ratio)
+    inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)
     {
-        return (static_cast<uint32_t>(value) * (static_cast<uint32_t>(ratio) + 1)) >> 16;
+        return (static_cast<uint16_t>(value) * (static_cast<uint16_t>(ratio) + 1)) >> 8;
     }
 
-    inline static uint16_t _elementBrighten(uint16_t value, uint16_t ratio)
+    inline static uint8_t _elementBrighten(uint8_t value, uint8_t ratio)
     { 
-        uint32_t element = ((static_cast<uint32_t>(value) + 1) << 16) / (static_cast<uint32_t>(ratio) + 1);
+        uint16_t element = ((static_cast<uint16_t>(value) + 1) << 8) / (static_cast<uint16_t>(ratio) + 1);
 
         if (element > Max)
         {

@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoGamma class is used to correct RGB colors for human eye gamma levels equally
+NeoGammaTableMethod class is used to correct RGB colors for human eye gamma levels equally
 across all color channels
 
 Written by Michael C. Miller.
@@ -26,51 +26,24 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-// NeoGammaEquationMethod uses no memory but is slower than NeoGammaTableMethod
-class NeoGammaEquationMethod
-{
-public:
-    static uint8_t Correct(uint8_t value)
-    {
-        return static_cast<uint8_t>(255.0f * NeoEase::Gamma(value / 255.0f) + 0.5f);
-    }
-    static uint16_t Correct(uint16_t value)
-    {
-        return static_cast<uint16_t>(65535.0f * NeoEase::Gamma(value / 65535.0f) + 0.5f);
-    }
-};
-
-// Alternative equation to provide at least one official model for specific LEDs
-class NeoGammaCieLabEquationMethod
-{
-public:
-    static uint8_t Correct(uint8_t value)
-    {
-        return static_cast<uint8_t>(255.0f * NeoEase::GammaCieLab(value / 255.0f) + 0.5f);
-    }
-    static uint16_t Correct(uint16_t value)
-    {
-        return static_cast<uint16_t>(65535.0f * NeoEase::GammaCieLab(value / 65535.0f) + 0.5f);
-    }
-};
-
-struct NeoGamma16LowHint
-{
-    uint8_t pos;
-    uint8_t count;
-};
-
 // NeoGammaTableMethod uses 256 bytes of memory, but is significantly faster
 class NeoGammaTableMethod
 {
+protected:
+    struct NeoGamma16LowHint
+    {
+        uint8_t pos;
+        uint8_t count;
+    };
+
 public:
     static uint8_t Correct(uint8_t value)
     {
         return _table[value];
     }
-    
+
     static uint16_t Correct(uint16_t value)
-    { 
+    {
         // since a single monolithic table would be an unreasonable memory usage 
         // this will use a hybrid of two tables, the base 255 table for the hibyte
         // and a smaller table with hints on how to use the table for certain values
@@ -82,7 +55,7 @@ public:
                 {0,6},  {1,6},  {2,6},  {3,6},  {4,6},  {5,6},  {0,4},  {1,4},  {2,4},  {3,4},  {0,4},   {1,4},   {2,4},   {3,4},   {0,3},   {1,3},
                 {2,3},  {0,4},  {1,4},  {2,4},  {3,4},  {0,3},  {1,3},  {2,3},  {0,3},  {1,3},  {2,3},   {0,2},   {1,2},   {0,3},   {1,3},   {2,3},
                 {0,2},  {1,2},  {0,2},  {1,2},  {0,3},  {1,3},  {2,3},  {0,2},  {1,2}
-            };
+        };
 
         uint8_t hi = (value >> 8);
         uint16_t lo = (value & 0x00ff);
@@ -127,66 +100,14 @@ public:
                     lowResult = delta * lo;
                 }
             }
-            
+
         }
-        
+
         return (static_cast<uint16_t>(hiResult) << 8) + lowResult;
     }
-    
+
 
 private:
     static const uint8_t _table[256];
 
 };
-
-// no gamma correction at all
-class NeoGammaNullMethod
-{
-public:
-    static uint8_t Correct(uint8_t value)
-    {
-        return value;
-    }
-    static uint16_t Correct(uint16_t value)
-    {
-        return value;
-    }
-};
-
-// use one of the method classes above as a converter for this template class
-template<typename T_METHOD> class NeoGamma
-{
-public:
-    static RgbColor Correct(const RgbColor& original)
-    {
-        return RgbColor(T_METHOD::Correct(original.R),
-            T_METHOD::Correct(original.G),
-            T_METHOD::Correct(original.B));
-    }
-
-    static RgbwColor Correct(const RgbwColor& original)
-    {
-        return RgbwColor(T_METHOD::Correct(original.R),
-            T_METHOD::Correct(original.G),
-            T_METHOD::Correct(original.B),
-            T_METHOD::Correct(original.W) );
-    }
-
-    static Rgb48Color Correct(const Rgb48Color& original)
-    {
-        return Rgb48Color(T_METHOD::Correct(original.R),
-            T_METHOD::Correct(original.G),
-            T_METHOD::Correct(original.B));
-    }
-
-    static Rgbw64Color Correct(const Rgbw64Color& original)
-    {
-        return Rgbw64Color(T_METHOD::Correct(original.R),
-            T_METHOD::Correct(original.G),
-            T_METHOD::Correct(original.B),
-            T_METHOD::Correct(original.W));
-    }
-};
-
-
-
