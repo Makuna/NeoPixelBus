@@ -26,6 +26,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+#include "features/Neo2ByteElements.h"
 #include "features/Neo3ByteElements.h"
 #include "features/Neo4ByteElements.h"
 #include "features/Neo6ByteElements.h"
@@ -40,6 +41,9 @@ License along with NeoPixel.  If not, see
 #include "features/NeoRgbFeature.h"
 #include "features/NeoRgbw64Feature.h"
 #include "features/NeoRgbwFeature.h"
+#include "features/NeoSm168xxColorFeatures.h"
+#include "features/NeoTm1814ColorFeatures.h"
+#include "features/NeoTm1914ColorFeatures.h"
 
 typedef NeoRgb48Feature NeoRgbUcs8903Feature;
 typedef NeoRgbw64Feature NeoRgbwUcs8904Feature;

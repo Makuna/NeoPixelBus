@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-DotStar3Elements provides feature base classes to describe color elements
-for NeoPixelBus Color Feature template classes when used with DotStars
+Lpd8806GrbFeature provides feature classes to describe color order and
+color depth for NeoPixelBus template class when used with DotStar like chips
 
 Written by Michael C. Miller.
 
@@ -26,23 +26,40 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class DotStar3ElementsNoSettings : public Neo4ByteRgbElements
+class  Lpd8806GrbFeature : public Neo3ByteElementsNoSettings
 {
 public:
-    typedef NeoNoSettings SettingsObject;
-    static const size_t SettingsSize = 0;
-
-    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        *p++ = (color.G >> 1) | 0x80;
+        *p++ = (color.R >> 1) | 0x80;
+        *p = (color.B >> 1) | 0x80;
     }
 
-    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
-        return pData;
+        ColorObject color;
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
+
+        color.G = (*p++) << 1;
+        color.R = (*p++) << 1;
+        color.B = (*p) << 1;
+
+        return color;
     }
 
-    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
     {
-        return pData;
+        ColorObject color;
+        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
+
+        color.G = (pgm_read_byte(p++)) << 1;
+        color.R = (pgm_read_byte(p++)) << 1;
+        color.B = (pgm_read_byte(p)) << 1;
+
+        return color;
     }
+
 };
