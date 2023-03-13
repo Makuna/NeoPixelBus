@@ -50,14 +50,6 @@ License along with NeoPixel.  If not, see
 #include "internal/SegmentDigit.h"
 
 #include "internal/NeoColorFeatures.h"
-#include "internal/NeoTm1814ColorFeatures.h"
-#include "internal/NeoTm1914ColorFeatures.h"
-#include "internal/NeoSm168xxColorFeatures.h"
-#include "internal/DotStarColorFeatures.h"
-#include "internal/Lpd8806ColorFeatures.h"
-#include "internal/Lpd6803ColorFeatures.h"
-#include "internal/P9813ColorFeatures.h"
-#include "internal/NeoSegmentFeatures.h"
 
 #include "internal/Layouts.h"
 #include "internal/NeoTopology.h"

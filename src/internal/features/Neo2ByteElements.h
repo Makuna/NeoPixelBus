@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-P9813ColorFeatures provides feature classes to describe color order and
-color depth for NeoPixelBus template class when used with P9813s
+Neo2ByteElements provides feature base classes to describe color elements
+for NeoPixelBus Color Feature template classes
 
 Written by Michael C. Miller.
 
@@ -26,10 +26,10 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class P98133Elements
+class Neo2ByteElements
 {
 public:
-    static const size_t PixelSize = 4; // still requires 4 to be sent
+    static const size_t PixelSize = 2;   // 1 bit + 555 encoded elements
 
     static uint8_t* getPixelAddress(uint8_t* pPixels, uint16_t indexPixel)
     {
@@ -45,10 +45,10 @@ public:
         uint8_t* pEnd = pPixelDest + (count * PixelSize);
         while (pPixelDest < pEnd)
         {
-            *pPixelDest++ = pPixelSrc[0];
-            *pPixelDest++ = pPixelSrc[1];
-            *pPixelDest++ = pPixelSrc[2];
-            *pPixelDest++ = pPixelSrc[3];
+            for (uint8_t iElement = 0; iElement < PixelSize; iElement++)
+            {
+                *pPixelDest++ = pPixelSrc[iElement];
+            }
         }
     }
 
@@ -57,9 +57,6 @@ public:
         uint8_t* pEnd = pPixelDest + (count * PixelSize);
         while (pPixelDest < pEnd)
         {
-            *pPixelDest++ = *pPixelSrc++;
-            *pPixelDest++ = *pPixelSrc++;
-            *pPixelDest++ = *pPixelSrc++;
             *pPixelDest++ = *pPixelSrc++;
         }
     }
@@ -71,9 +68,6 @@ public:
         while (pPixelDest < pEnd)
         {
             *pPixelDest++ = pgm_read_byte(pSrc++);
-            *pPixelDest++ = pgm_read_byte(pSrc++);
-            *pPixelDest++ = pgm_read_byte(pSrc++);
-            *pPixelDest++ = pgm_read_byte(pSrc++);
         }
     }
 
@@ -84,16 +78,29 @@ public:
         while (pDestBack > pPixelDest)
         {
             *--pDestBack = *--pSrcBack;
-            *--pDestBack = *--pSrcBack;
-            *--pDestBack = *--pSrcBack;
-            *--pDestBack = *--pSrcBack;
         }
     }
 
     typedef RgbColor ColorObject;
+
+protected:
+    static void encodePixel(uint8_t c1, uint8_t c2, uint8_t c3, uint16_t* color555)
+    {
+        *color555 = (0x8000 |
+            ((c1 & 0xf8) << 7) |
+            ((c2 & 0xf8) << 2) |
+            ((c3 & 0xf8) >> 3));
+    }
+
+    static void decodePixel(uint16_t color555, uint8_t* c1, uint8_t* c2, uint8_t* c3)
+    {
+        *c1 = (color555 >> 7) & 0xf8;
+        *c2 = (color555 >> 2) & 0xf8;
+        *c3 = (color555 << 3) & 0xf8;
+    }
 };
 
-class P98133ElementsNoSettings : public P98133Elements
+class Neo2ByteElementsNoSettings : public Neo2ByteElements
 {
 public:
     typedef NeoNoSettings SettingsObject;
@@ -113,50 +120,3 @@ public:
         return pData;
     }
 };
-
-class P9813BgrFeature : public P98133ElementsNoSettings
-{
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = 0xC0 | ((~color.B & 0xC0) >> 2) | ((~color.G & 0xC0) >> 4) | ((~color.R & 0xC0) >> 6);
-        *p++ = color.B;
-        *p++ = color.G;
-        *p = color.R;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        p++; // ignore the first byte
-        color.B = *p++;
-        color.G = *p++;
-        color.R = *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        pgm_read_byte(p++); // ignore the first byte
-        color.B = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p++);
-        color.R = pgm_read_byte(p);
-
-        return color;
-    }
-
-};
-
-
-
-
-
-
