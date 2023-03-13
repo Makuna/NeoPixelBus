@@ -1,5 +1,6 @@
 /*-------------------------------------------------------------------------
-HsbColor provides a color object that can be directly consumed by NeoPixelBus
+HslColor provides a color object that can be directly consumed by NeoPixelBus
+
 
 Written by Michael C. Miller.
 
@@ -25,28 +26,34 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #include <Arduino.h>
+#include "../NeoSettings.h"
+#include "RgbColorBase.h"
 #include "RgbColor.h"
 #include "Rgb48Color.h"
-#include "HsbColor.h"
+#include "HslColor.h"
 
-void HsbColor::_RgbToHsb(float r, float g, float b, HsbColor* color)
+void HslColor::_RgbToHsl(float r, float g, float b, HslColor* color)
 {
     float max = (r > g && r > b) ? r : (g > b) ? g : b;
-    float min = (r < g&& r < b) ? r : (g < b) ? g : b;
+    float min = (r < g && r < b) ? r : (g < b) ? g : b;
 
-    float d = max - min;
+    float h, s, l;
+    l = (max + min) / 2.0f;
 
-    float h = 0.0;
-    float v = max;
-    float s = (v == 0.0f) ? 0 : (d / v);
-
-    if (d != 0.0f)
+    if (max == min) 
     {
-        if (r == max)
+        h = s = 0.0f;
+    }
+    else 
+    {
+        float d = max - min;
+        s = (l > 0.5f) ? d / (2.0f - (max + min)) : d / (max + min);
+
+        if (r > g && r > b)
         {
             h = (g - b) / d + (g < b ? 6.0f : 0.0f);
         }
-        else if (g == max)
+        else if (g > b)
         {
             h = (b - r) / d + 2.0f;
         }
@@ -57,28 +64,27 @@ void HsbColor::_RgbToHsb(float r, float g, float b, HsbColor* color)
         h /= 6.0f;
     }
 
-
     color->H = h;
     color->S = s;
-    color->B = v;
+    color->L = l;
 }
 
-HsbColor::HsbColor(const RgbColor& color)
+HslColor::HslColor(const RgbColor& color)
 {
     // convert colors to float between (0.0 - 1.0)
     float r = color.R / 255.0f;
     float g = color.G / 255.0f;
     float b = color.B / 255.0f;
 
-    _RgbToHsb(r, g, b, this);
+    _RgbToHsl(r, g, b, this);
 }
 
-HsbColor::HsbColor(const Rgb48Color& color)
+HslColor::HslColor(const Rgb48Color& color)
 {
     // convert colors to float between (0.0 - 1.0)
     float r = color.R / 65535.0f;
     float g = color.G / 65535.0f;
     float b = color.B / 65535.0f;
 
-    _RgbToHsb(r, g, b, this);
+    _RgbToHsl(r, g, b, this);
 }

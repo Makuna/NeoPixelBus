@@ -25,8 +25,6 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "NeoSettings.h"
-
 struct RgbColor;
 struct HslColor;
 struct HsbColor;

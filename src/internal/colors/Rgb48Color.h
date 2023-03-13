@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-Rgb16Color provides a color object that stores in only 16 bits, aka 565 format
+Rgb48Color provides a color object that contains 16bit color elements
 
 Written by Michael C. Miller.
 
@@ -25,209 +25,179 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "NeoSettings.h"
-#include "RgbColorBase.h"
-
-
 // ------------------------------------------------------------------------
-// Rgb16Color represents a color object that is represented by Red, Green, Blue
-// component values stored in a single 16 bit value using 565 model.  
-// It contains helpful color routines to manipulate the color.
+// Rgb48Color represents a color object that is represented by Red, Green, Blue
+// component values.  It contains helpful color routines to manipulate the 
+// color.
 // ------------------------------------------------------------------------
-struct Rgb16Color : RgbColorBase
+struct Rgb48Color : RgbColorBase
 {
     typedef NeoRgbCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb16Color using R, G, B values (0-255)
+    // Construct a Rgb48Color using R, G, B values (0-65535)
     // ------------------------------------------------------------------------
-    Rgb16Color(uint8_t r, uint8_t g, uint8_t b) 
+    Rgb48Color(uint16_t r, uint16_t g, uint16_t b) :
+        R(r), G(g), B(b)
     {
-        setR(r);
-        setG(g);
-        setB(b);
     };
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb16Color using a single brightness value (0-255)
+    // Construct a Rgb48Color using a single brightness value (0-65535)
     // This works well for creating gray tone colors
-    // (0) = black, (255) = white, (128) = gray
+    // (0) = black, (65535) = white, (32768) = gray
     // ------------------------------------------------------------------------
-    Rgb16Color(uint8_t brightness) 
-    {
-        setR(brightness);
-        setG(brightness);
-        setB(brightness);
-    };
-
-    // ------------------------------------------------------------------------
-    // Construct a Rgb16Color using a single 16bit encoded value 
-    // CAUTION: the color value must follow a 5/6/5 encoding model otherwise an
-    // incorrect color will be generated
-    // ------------------------------------------------------------------------
-    Rgb16Color(uint16_t color) :
-        Color565(color)
+    Rgb48Color(uint16_t brightness) :
+        R(brightness), G(brightness), B(brightness)
     {
     };
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb16Color using HtmlColor
+    // Construct a Rgb48Color using RgbColor
     // ------------------------------------------------------------------------
-    Rgb16Color(const HtmlColor& color)
+    Rgb48Color(const RgbColor& color)
     {
-        RgbColor converted = color;
-
-        setR(converted.R);
-        setG(converted.G);
-        setB(converted.B);
+        R = (uint16_t)color.R * 257; // 257 = MAXUINT16/MAXUINT8 = 65535/255
+        G = (uint16_t)color.R * 257;
+        B = (uint16_t)color.R * 257;
     };
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb16Color using HslColor
+    // Construct a Rgb48Color using HtmlColor
     // ------------------------------------------------------------------------
-    Rgb16Color(const HslColor& color)
+    Rgb48Color(const HtmlColor& color)
     {
-        RgbColor converted = color;
-
-        setR(converted.R);
-        setG(converted.G);
-        setB(converted.B);
+        *this = RgbColor(color);
     };
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb16Color using HsbColor
+    // Construct a Rgb48Color using HslColor
     // ------------------------------------------------------------------------
-    Rgb16Color(const HsbColor& color)
-    {
-        RgbColor converted = color;
-
-        setR(converted.R);
-        setG(converted.G);
-        setB(converted.B);
-    };
+    Rgb48Color(const HslColor& color);
 
     // ------------------------------------------------------------------------
-    // Construct a Rgb16Color that will have its values set in latter operations
-    // CAUTION:  The Color565 member is not initialized and may not be consistent
+    // Construct a Rgb48Color using HsbColor
     // ------------------------------------------------------------------------
-    Rgb16Color()
-    {
-    };
+    Rgb48Color(const HsbColor& color);
 
     // ------------------------------------------------------------------------
-    // properties
+    // Construct a Rgb48Color that will have its values set in latter operations
+    // CAUTION:  The R,G,B members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
-    void setR(uint8_t r)
+    Rgb48Color()
     {
-        Color565 &= 0x07ff;
-        Color565 |= ((r & 0xf8) << 8);
     };
-    uint8_t getR() const
-    {
-        return (Color565 & 0xf800) >> 8;
-    };
-
-    void setG(uint8_t g)
-    {
-        Color565 &= 0xf81f;
-        Color565 |= ((g & 0xfe) << 3);
-    };
-    uint8_t getG() const
-    {
-        return (Color565 & 0x07e0) >> 3;
-    };
-
-    void setB(uint8_t b)
-    {
-        Color565 &= 0xffe0;
-        Color565 |= ((b & 0xf8) >> 3);
-    };
-    uint8_t getB() const
-    {
-        return (Color565 & 0x001f) << 3;
-    };
-
 
     // ------------------------------------------------------------------------
     // Comparison operators
     // ------------------------------------------------------------------------
-    bool operator==(const Rgb16Color& other) const
+    bool operator==(const Rgb48Color& other) const
     {
-        return (Color565 == other.Color565);
+        return (R == other.R && G == other.G && B == other.B);
     };
 
-    bool operator!=(const Rgb16Color& other) const
+    bool operator!=(const Rgb48Color& other) const
     {
         return !(*this == other);
     };
 
     // ------------------------------------------------------------------------
+    // CompareTo method
+    // compares against another color with the given epsilon (delta allowed)
+    // returns the greatest difference of a set of elements, 
+    //   0 = equal within epsilon delta
+    //   negative - this is less than other
+    //   positive - this is greater than other
+    // ------------------------------------------------------------------------
+    int32_t CompareTo(const Rgb48Color& other, uint16_t epsilon = 256)
+    {
+        return _Compare<Rgb48Color, int32_t>(*this, other, epsilon);
+    }
+
+    // ------------------------------------------------------------------------
+    // Compare method
+    // compares two colors with the given epsilon (delta allowed)
+    // returns the greatest difference of a set of elements, 
+    //   0 = equal within epsilon delta
+    //   negative - this is less than other
+    //   positive - this is greater than other
+    // ------------------------------------------------------------------------
+    static int32_t Compare(const Rgb48Color& left, const Rgb48Color& right, uint16_t epsilon = 256)
+    {
+        return _Compare<Rgb48Color, int32_t>(left, right, epsilon);
+    }
+
+    // ------------------------------------------------------------------------
+    // operator [] - readonly
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint16_t operator[](size_t idx) const
+    {
+        switch (idx)
+        {
+        case 0:
+            return R;
+        case 1:
+            return G;
+        default:
+            return B;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // operator [] - read write
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint16_t& operator[](size_t idx)
+    {
+        switch (idx)
+        {
+        case 0:
+            return R;
+        case 1:
+            return G;
+        default:
+            return B;
+        }
+    }
+
+    // ------------------------------------------------------------------------
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
-    uint8_t CalculateBrightness() const
-    {
-        RgbColor converted = *this;
-        return converted.CalculateBrightness();
-    };
+    uint16_t CalculateBrightness() const;
 
     // ------------------------------------------------------------------------
     // Dim will return a new color that is blended to black with the given ratio
-    // ratio - (0-255) where 255 will return the original color and 0 will return black
+    // ratio - (0-65535) where 65535 will return the original color and 0 will return black
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    Rgb16Color Dim(uint8_t ratio) const
-    {
-        RgbColor converted = *this;
-        RgbColor result = converted.Dim(ratio);
-
-        return Rgb16Color(result.R, result.G, result.B);
-    };
+    Rgb48Color Dim(uint16_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Brighten will return a new color that is blended to white with the given ratio
-    // ratio - (0-255) where 255 will return the original color and 0 will return white
+    // ratio - (0-65535) where 65535 will return the original color and 0 will return white
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    Rgb16Color Brighten(uint8_t ratio) const
-    {
-        RgbColor converted = *this;
-        RgbColor result = converted.Brighten(ratio);
-
-        return Rgb16Color(result.R, result.G, result.B);
-    };
+    Rgb48Color Brighten(uint16_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
     // NOTE: This is a simple linear change
-    // delta - (0-255) the amount to dim the color
+    // delta - (0-65535) the amount to dim the color
     // ------------------------------------------------------------------------
-    void Darken(uint8_t delta)
-    {
-        RgbColor converted = *this;
-
-        converted.Darken(delta);
-        setR(converted.R);
-        setG(converted.G);
-        setB(converted.B);
-    };
+    void Darken(uint16_t delta);
 
     // ------------------------------------------------------------------------
     // Lighten will adjust the color by the given delta toward white
     // NOTE: This is a simple linear change
-    // delta - (0-255) the amount to lighten the color
+    // delta - (0-65535) the amount to lighten the color
     // ------------------------------------------------------------------------
-    void Lighten(uint8_t delta)
-    {
-        RgbColor converted = *this;
-
-        converted.Lighten(delta);
-        setR(converted.R);
-        setG(converted.G);
-        setB(converted.B);
-    };
+    void Lighten(uint16_t delta);
 
     // ------------------------------------------------------------------------
     // LinearBlend between two colors by the amount defined by progress variable
@@ -236,21 +206,11 @@ struct Rgb16Color : RgbColorBase
     // progress - (0.0 - 1.0) value where 0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static Rgb16Color LinearBlend(const Rgb16Color& left, const Rgb16Color& right, float progress)
-    {
-        RgbColor result = RgbColor::LinearBlend(left, right, progress);
-
-        return Rgb16Color(result.R, result.G, result.B);
-    };
+    static Rgb48Color LinearBlend(const Rgb48Color& left, const Rgb48Color& right, float progress);
     // progress - (0 - 255) value where 0 will return left and 255 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static Rgb16Color LinearBlend(const Rgb16Color& left, const Rgb16Color& right, uint8_t progress)
-    {
-        RgbColor result = RgbColor::LinearBlend(left, right, progress);
-
-        return Rgb16Color(result.R, result.G, result.B);
-    };
+    static Rgb48Color LinearBlend(const Rgb48Color& left, const Rgb48Color& right, uint8_t progress);
 
     // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
@@ -261,29 +221,54 @@ struct Rgb16Color : RgbColorBase
     // x - unit value (0.0 - 1.0) that defines the blend progress in horizontal space
     // y - unit value (0.0 - 1.0) that defines the blend progress in vertical space
     // ------------------------------------------------------------------------
-    static Rgb16Color BilinearBlend(const Rgb16Color& c00,
-        const Rgb16Color& c01,
-        const Rgb16Color& c10,
-        const Rgb16Color& c11,
-        float x,
-        float y)
-    {
-        RgbColor result = RgbColor::BilinearBlend(c00, c01, c10, c11, x, y);
-
-        return Rgb16Color(result.R, result.G, result.B);
-    };
+    static Rgb48Color BilinearBlend(const Rgb48Color& c00, 
+        const Rgb48Color& c01, 
+        const Rgb48Color& c10, 
+        const Rgb48Color& c11, 
+        float x, 
+        float y);
 
     uint32_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
     {
         auto total = 0;
 
-        total += getR() * settings.RedTenthMilliAmpere / 255;
-        total += getG() * settings.GreenTenthMilliAmpere / 255;
-        total += getB() * settings.BlueTenthMilliAmpere / 255;
+        total += R * settings.RedTenthMilliAmpere / Max;
+        total += G * settings.GreenTenthMilliAmpere / Max;
+        total += B * settings.BlueTenthMilliAmpere / Max;
 
         return total;
-    };
+    }
 
-    uint16_t Color565;
+    // ------------------------------------------------------------------------
+    // Red, Green, Blue color members (0-65535) where 
+    // (0,0,0) is black and (65535,65535,65535) is white
+    // ------------------------------------------------------------------------
+    uint16_t R;
+    uint16_t G;
+    uint16_t B;
+
+    const static uint16_t Max = 65535;
+    const static size_t Count = 3; // three elements in []
+
+private:
+    inline static uint16_t _elementDim(uint16_t value, uint16_t ratio)
+    {
+        return (static_cast<uint32_t>(value) * (static_cast<uint32_t>(ratio) + 1)) >> 16;
+    }
+
+    inline static uint16_t _elementBrighten(uint16_t value, uint16_t ratio)
+    { 
+        uint32_t element = ((static_cast<uint32_t>(value) + 1) << 16) / (static_cast<uint32_t>(ratio) + 1);
+
+        if (element > Max)
+        {
+            element = Max;
+        }
+        else
+        {
+            element -= 1;
+        }
+        return element;
+    }
 };
 

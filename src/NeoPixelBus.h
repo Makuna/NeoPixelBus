@@ -31,23 +31,9 @@ License along with NeoPixel.  If not, see
 #define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
 
 #include "internal/NeoUtil.h"
-
-#include "internal/NeoHueBlend.h"
-
 #include "internal/NeoSettings.h"
 
-#include "internal/RgbColor.h"
-#include "internal/Rgb16Color.h"
-#include "internal/Rgb48Color.h"
-
-#include "internal/HslColor.h"
-#include "internal/HsbColor.h"
-#include "internal/HtmlColor.h"
-
-#include "internal/RgbwColor.h"
-#include "internal/Rgbw64Color.h"
-
-#include "internal/SegmentDigit.h"
+#include "internal/NeoColors.h"
 
 #include "internal/NeoColorFeatures.h"
 
