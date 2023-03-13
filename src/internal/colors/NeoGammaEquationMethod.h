@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoColors includes all the color classes that describe color and
-modify colors for NeoPixelBus
+NeoGammaEquationMethod class is used to correct RGB colors for human eye gamma levels equally
+across all color channels
 
 Written by Michael C. Miller.
 
@@ -26,25 +26,19 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-#include "colors/NeoHueBlend.h"
 
-#include "colors/RgbColorBase.h"
+// NeoGammaEquationMethod uses no memory but is slower than NeoGammaTableMethod
+class NeoGammaEquationMethod
+{
+public:
+    static uint8_t Correct(uint8_t value)
+    {
+        return static_cast<uint8_t>(255.0f * NeoEase::Gamma(value / 255.0f) + 0.5f);
+    }
+    static uint16_t Correct(uint16_t value)
+    {
+        return static_cast<uint16_t>(65535.0f * NeoEase::Gamma(value / 65535.0f) + 0.5f);
+    }
+};
 
-#include "colors/RgbColor.h"
-#include "colors/Rgb16Color.h"
-#include "colors/Rgb48Color.h"
 
-#include "colors/HslColor.h"
-#include "colors/HsbColor.h"
-#include "colors/HtmlColor.h"
-
-#include "colors/RgbwColor.h"
-#include "colors/Rgbw64Color.h"
-
-#include "colors/SegmentDigit.h"
-
-#include "colors/NeoGamma.h"
-#include "colors/NeoGammaEquationMethod.h"
-#include "colors/NeoGammaCieLabEquationMethod.h"
-#include "colors/NeoGammaTableMethod.h"
-#include "colors/NeoGammaNullMethod.h"
