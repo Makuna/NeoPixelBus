@@ -1,5 +1,3 @@
-#pragma once
-
 /*-------------------------------------------------------------------------
 NeoTopology provides a mapping feature of a 2d cordinate to linear 1d cordinate
 It is used to map a matrix of NeoPixels to a index on the NeoPixelBus
@@ -26,6 +24,7 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
+#pragma once
 
 enum NeoTopologyHint
 {
@@ -35,6 +34,14 @@ enum NeoTopologyHint
     NeoTopologyHint_OutOfBounds
 };
 
+// NeoTopology - 
+// 
+// T_LAYOUT - the following classes and their rotated variants
+//      RowMajorLayout
+//      ColumnMajorLayout
+//      RowMajorAlternatingLayout
+//      ColumnMajorAlternatingLayout
+//
 template <typename T_LAYOUT> class NeoTopology
 {
 public:

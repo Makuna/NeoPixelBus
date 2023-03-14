@@ -1,5 +1,3 @@
-#pragma once
-
 /*-------------------------------------------------------------------------
 NeoRingTopology provides a mapping feature of a 2d polar cordinate to a 
 linear 1d cordinate.
@@ -28,6 +26,26 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
+#pragma once
+
+// NeoRingTopology -
+// 
+// T_LAYOUT - a user provided class that contains the following members with
+//   the Rings[] initialized with the starting index of each ring and
+//   one extra entry for the total count (example below).
+//   Other methods and members can exist to intialize a dynamic layout as needed.
+// 
+//    class RingsLayout  
+//    {
+//    protected:
+//        const uint16_t Rings[] = { 0, 1, 7, 19, 35, 59, PixelCount };
+//    
+//        uint8_t _ringCount() const
+//        {
+//            return sizeof(Rings) / sizeof(Rings[0]);
+//        }
+//    };
+// 
 
 template <typename T_LAYOUT> class NeoRingTopology : public T_LAYOUT
 {

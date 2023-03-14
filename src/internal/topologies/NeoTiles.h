@@ -1,5 +1,3 @@
-#pragma once
-
 /*-------------------------------------------------------------------------
 NeoTiles provides a mapping feature of a 2d cordinate to linear 1d cordinate
 It is used to map tiles of matricies of NeoPixels to a index on the NeoPixelBus
@@ -28,13 +26,18 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
+#pragma once
 
 //-----------------------------------------------------------------------------
 // class NeoTiles
 // Simple template Tile layout class
 // T_MATRIX_LAYOUT = the layout used on the pixel matrix panel (a tile)
 // T_TILE_LAYOUT = the layout used for the tiles.
-//
+//      one of the following classes and their rotated variants
+//      RowMajorLayout
+//      ColumnMajorLayout
+//      RowMajorAlternatingLayout
+//      ColumnMajorAlternatingLayout
 //-----------------------------------------------------------------------------
 template <typename T_MATRIX_LAYOUT, typename T_TILE_LAYOUT> class NeoTiles
 {
