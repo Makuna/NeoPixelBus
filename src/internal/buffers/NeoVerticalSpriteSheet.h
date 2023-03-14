@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library
+NeoVerticalSpriteSheet
 
 Written by Michael C. Miller.
 
@@ -25,7 +25,10 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-
+// T_BUFFER_METHOD - one of
+//      NeoBufferMethod
+//      NeoBufferProgmemMethod
+//
 template<typename T_BUFFER_METHOD> class NeoVerticalSpriteSheet
 {
 public:

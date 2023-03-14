@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library
+NeoShaderBase
 
 Written by Michael C. Miller.
 
@@ -25,24 +25,29 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-// This is used to allow a template classes that share common buffer concept to
-// be able to pass that common information to functions 
-// The template classes just need to expose a conversion operator to this type
-template <typename T_COLOR_FEATURE> struct NeoBufferContext
+class NeoShaderBase
 {
-    NeoBufferContext(uint8_t* pixels, 
-        size_t sizePixels) :
-        Pixels(pixels),
-        SizePixels(sizePixels)
+public:
+    NeoShaderBase() :
+        _state(0)
     {
     }
 
-    uint16_t PixelCount() const
+    bool IsDirty() const
     {
-        return SizePixels / T_COLOR_FEATURE::PixelSize;
+        return  (_state & NEO_DIRTY);
     };
 
-    uint8_t* Pixels;
-    const size_t SizePixels;
-    
+    void Dirty()
+    {
+        _state |= NEO_DIRTY;
+    };
+
+    void ResetDirty()
+    {
+        _state &= ~NEO_DIRTY;
+    };
+
+protected:
+    uint8_t _state;     // internal state
 };
