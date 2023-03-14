@@ -27,20 +27,17 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-// '_state' flags for internal state
-#define NEO_DIRTY   0x80 // a change was made to pixel data that requires a show
+// standard neo definitions
+// 
+const uint8_t NEO_DIRTY = 0x80; // a change was made to pixel data that requires a show
+const uint16_t PixelIndex_OutOfBounds = 0xffff;
 
 #include "internal/NeoUtil.h"
 #include "internal/NeoEase.h"
 #include "internal/NeoSettings.h"
 #include "internal/NeoColors.h"
 #include "internal/NeoColorFeatures.h"
-
-#include "internal/Layouts.h"
-#include "internal/NeoTopology.h"
-#include "internal/NeoRingTopology.h"
-#include "internal/NeoTiles.h"
-#include "internal/NeoMosaic.h"
+#include "internal/NeoTopologies.h"
 
 #include "internal/NeoBufferContext.h"
 #include "internal/NeoBufferMethods.h"
