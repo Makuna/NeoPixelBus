@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoPixel library
+NeoBitmapFile
 
 Written by Michael C. Miller.
 
@@ -67,6 +67,9 @@ enum BmpCompression
     BI_CmykRle4
 };
 
+// T_COLOR_FEATURE - one of the Features
+// T_FILE_METHOD - any standard File object following Arduino File methods/members
+//
 template<typename T_COLOR_FEATURE, typename T_FILE_METHOD> class NeoBitmapFile
 {
 public:

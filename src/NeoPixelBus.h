@@ -33,18 +33,12 @@ const uint8_t NEO_DIRTY = 0x80; // a change was made to pixel data that requires
 const uint16_t PixelIndex_OutOfBounds = 0xffff;
 
 #include "internal/NeoUtil.h"
-#include "internal/NeoEase.h"
+#include "internal/animations/NeoEase.h"
 #include "internal/NeoSettings.h"
 #include "internal/NeoColors.h"
 #include "internal/NeoColorFeatures.h"
 #include "internal/NeoTopologies.h"
-
-#include "internal/NeoBufferContext.h"
-#include "internal/NeoBufferMethods.h"
-#include "internal/NeoBuffer.h"
-#include "internal/NeoSpriteSheet.h"
-#include "internal/NeoDib.h"
-#include "internal/NeoBitmapFile.h"
+#include "internal/NeoBuffers.h"
 
 #include "internal/NeoBusChannel.h"
 

@@ -1,5 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoPixel library
+NeoDib - Device Independant Bitmap, interal data stored in RGB/RGBW format 
+rather than the ColorFeature format
 
 Written by Michael C. Miller.
 
@@ -25,59 +26,14 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-template<typename T_COLOR_OBJECT> class NeoShaderNop
-{
-public:
-    NeoShaderNop()
-    {
-    }
-
-    bool IsDirty() const
-    {
-        return true;
-    };
-
-    void Dirty()
-    {
-    };
-
-    void ResetDirty()
-    {
-    };
-
-    T_COLOR_OBJECT Apply(uint16_t, T_COLOR_OBJECT color)
-    {
-        return color;
-    };
-};
-
-class NeoShaderBase
-{
-public:
-    NeoShaderBase() :
-        _state(0)
-    {
-    }
-
-    bool IsDirty() const
-    {
-        return  (_state & NEO_DIRTY);
-    };
-
-    void Dirty()
-    {
-        _state |= NEO_DIRTY;
-    };
-
-    void ResetDirty()
-    {
-        _state &= ~NEO_DIRTY;
-    };
-
-protected:
-    uint8_t _state;     // internal state
-};
-
+// T_COLOR_OBJECT - one of the color objects
+//      RgbColor
+//      RgbwColor
+//      Rgb16Color
+//      Rgb48Color
+//      Rgbw64Color
+//      SevenSegDigit
+//
 template<typename T_COLOR_OBJECT> class NeoDib
 {
 public:
