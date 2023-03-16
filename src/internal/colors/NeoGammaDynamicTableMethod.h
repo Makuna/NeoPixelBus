@@ -172,10 +172,49 @@ public:
                 }
             }
             // create static hint table and copy temp table to it
-            _hintsCount = entryLastTriplet; // only need to last triplet+
+            _hintsCount = entryLastTriplet; // only need to last triplet
             _hints = new NeoGamma16LowHint[_hintsCount];
             memcpy(_hints, hints, sizeof(NeoGamma16LowHint) * _hintsCount);
         }
+    }
+
+    // SerialDumpTables is used if you want to generate your own static gamma table class
+    // rather than use this dynamically generated table.  Just capture the serial output
+    // and use as your initializers for your tables
+    static void SerialDumpTables()
+    {
+        Serial.println();
+        Serial.println("8 bit:");
+        for (uint16_t entry = 0; entry < 256; entry++)
+        {
+            if (entry % 16 == 0)
+            {
+                Serial.println();
+            }
+            Serial.print(_table[entry]);
+            Serial.print(",  ");
+        }
+
+        Serial.println();
+        Serial.println();
+        Serial.print("16 bit: hintsCount = ");
+        Serial.println(_hintsCount);
+        if (_hints)
+        {
+            for (uint8_t hint = 0; hint < _hintsCount; hint++)
+            {
+                if (hint % 16 == 0)
+                {
+                    Serial.println();
+                }
+                Serial.print("{");
+                Serial.print(_hints[hint].pos);
+                Serial.print(",");
+                Serial.print(_hints[hint].count);
+                Serial.print("}, ");
+            }
+        }
+        Serial.println();
     }
 
 private:
