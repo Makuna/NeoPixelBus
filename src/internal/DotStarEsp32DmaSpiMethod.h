@@ -32,12 +32,12 @@ License along with NeoPixel.  If not, see
 // API and type use require newer IDF versions
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 4, 1)
 
-template<typename T_SPISPEED, typename T_SPIBUS> class _DotStarEsp32DmaSpiMethod
+template<typename T_SPISPEED, typename T_SPIBUS> class DotStarEsp32DmaSpiMethodBase
 {
 public:
     typedef typename T_SPISPEED::SettingsObject SettingsObject;
 
-    _DotStarEsp32DmaSpiMethod(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+    DotStarEsp32DmaSpiMethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeStartFrame(4 * T_SPIBUS::ParallelBits),
         _sizePixelData(pixelCount * elementSize + settingsSize),
         _sizeEndFrame((pixelCount + 15) / 16 * T_SPIBUS::ParallelBits) // 16 = div 2 (bit for every two pixels) div 8 (bits to bytes)
@@ -58,12 +58,12 @@ public:
     }
 
     // Support constructor specifying pins by ignoring pins
-    _DotStarEsp32DmaSpiMethod(uint8_t, uint8_t, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _DotStarEsp32DmaSpiMethod(pixelCount, elementSize, settingsSize)
+    DotStarEsp32DmaSpiMethodBase(uint8_t, uint8_t, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+        DotStarEsp32DmaSpiMethodBase(pixelCount, elementSize, settingsSize)
     {
     }
 
-    ~_DotStarEsp32DmaSpiMethod()
+    ~DotStarEsp32DmaSpiMethodBase()
     {
         if (_spiHandle)
         {
@@ -79,7 +79,7 @@ public:
     bool IsReadyToUpdate() const
     {
         spi_transaction_t t;
-        spi_transaction_t * tptr = &t;
+        spi_transaction_t* tptr = &t;
 
         esp_err_t ret = spi_device_get_trans_result(_spiHandle, &tptr, 0);
 
@@ -96,9 +96,8 @@ public:
         _ssPin = ss;
 
         esp_err_t ret;
-        spi_bus_config_t buscfg;
-        memset(&buscfg, 0x00, sizeof(buscfg));
-
+        spi_bus_config_t buscfg = { 0 };
+ 
         buscfg.sclk_io_num = sck;
         buscfg.data0_io_num = dat0;
         buscfg.data1_io_num = dat1;
@@ -109,7 +108,8 @@ public:
         buscfg.data6_io_num = dat6;
         buscfg.data7_io_num = dat7;
         buscfg.max_transfer_sz = _spiBufferSize;
-        if (T_SPIBUS::ParallelBits == 8) {
+        if (T_SPIBUS::ParallelBits == 8) 
+        {
             buscfg.flags = SPICOMMON_BUSFLAG_OCTAL;
         }
 
@@ -117,6 +117,7 @@ public:
         ret = spi_bus_initialize(T_SPIBUS::SpiHostDevice, &buscfg, SPI_DMA_CH_AUTO);
         ESP_ERROR_CHECK(ret);
 
+        _spiTransaction = { 0 };
         initSpiDevice();
     }
 
@@ -156,8 +157,9 @@ public:
 
         memcpy(_dmadata, _data, _spiBufferSize);
 
-        memset(&_spiTransaction, 0, sizeof(spi_transaction_t));
+        _spiTransaction = { 0 };
         _spiTransaction.length = (_spiBufferSize) * 8; // in bits not bytes!
+
         if (T_SPIBUS::ParallelBits == 1)
         {
             _spiTransaction.flags = 0;
@@ -209,7 +211,7 @@ public:
 private:
     void initSpiDevice()
     {
-        spi_device_interface_config_t devcfg = {};
+        spi_device_interface_config_t devcfg = {0};
 
         devcfg.clock_speed_hz = _speed.Clock;
         devcfg.mode = 0;                 //SPI mode 0
@@ -265,7 +267,7 @@ enum spi_bus_width_t {
     WIDTH8 = 8,
 };
 
-template <spi_host_device_t bus, spi_bus_width_t bits=WIDTH1>
+template <spi_host_device_t bus, spi_bus_width_t bits = WIDTH1>
 struct Esp32SpiBus
 {
     const static spi_host_device_t SpiHostDevice = bus;
@@ -280,9 +282,9 @@ typedef Esp32SpiBus<SPI1_HOST, WIDTH1> Esp32Spi1Bus;
 typedef Esp32SpiBus<SPI1_HOST, WIDTH2> Esp32Spi12BitBus;
 typedef Esp32SpiBus<SPI1_HOST, WIDTH4> Esp32Spi14BitBus;
 
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi1Bus> DotStarEsp32DmaSpi1Method;
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi12BitBus> DotStarEsp32DmaSpi12BitMethod;
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi14BitBus> DotStarEsp32DmaSpi14BitMethod;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi1Bus> DotStarEsp32DmaSpi1Method;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi12BitBus> DotStarEsp32DmaSpi12BitMethod;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi14BitBus> DotStarEsp32DmaSpi14BitMethod;
 #endif
 
 // SPI2
@@ -293,11 +295,11 @@ typedef Esp32SpiBus<SPI2_HOST, WIDTH4> Esp32Spi24BitBus;
 typedef Esp32SpiBus<SPI2_HOST, WIDTH8> Esp32Spi28BitBus;
 #endif
 
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi2Bus> DotStarEsp32DmaSpi2Method;
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi22BitBus> DotStarEsp32DmaSpi22BitMethod;
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi24BitBus> DotStarEsp32DmaSpi24BitMethod;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi2Bus> DotStarEsp32DmaSpi2Method;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi22BitBus> DotStarEsp32DmaSpi22BitMethod;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi24BitBus> DotStarEsp32DmaSpi24BitMethod;
 #if SOC_SPI_SUPPORT_OCT
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi28BitBus> DotStarEsp32DmaSpi28BitMethod;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi28BitBus> DotStarEsp32DmaSpi28BitMethod;
 #endif
 
 
@@ -307,14 +309,14 @@ typedef Esp32SpiBus<SPI3_HOST, WIDTH1> Esp32Spi3Bus;
 typedef Esp32SpiBus<SPI3_HOST, WIDTH2> Esp32Spi32BitBus;
 typedef Esp32SpiBus<SPI3_HOST, WIDTH4> Esp32Spi34BitBus;
 
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi3Bus> DotStarEsp32DmaSpi3Method;
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi32BitBus> DotStarEsp32DmaSpi32BitMethod;
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi34BitBus> DotStarEsp32DmaSpi34BitMethod;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi3Bus> DotStarEsp32DmaSpi3Method;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi32BitBus> DotStarEsp32DmaSpi32BitMethod;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi34BitBus> DotStarEsp32DmaSpi34BitMethod;
 #endif
 
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
 typedef Esp32SpiBus<SPI3_HOST, WIDTH1> Esp32Spi3Bus;
-typedef _DotStarEsp32DmaSpiMethod<SpiSpeed10Mhz, Esp32Spi3Bus> DotStarEsp32DmaSpi3Method;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi3Bus> DotStarEsp32DmaSpi3Method;
 #endif
 
 // Default SpiDma methods if we don't care about bus. It's nice that every single ESP32 out there
