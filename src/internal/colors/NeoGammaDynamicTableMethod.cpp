@@ -1,6 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoColors includes all the color classes that describe color and
-modify colors for NeoPixelBus
+NeoGamma classes are  used to correct RGB colors for human eye gamma levels
 
 Written by Michael C. Miller.
 
@@ -24,29 +23,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
-#pragma once
 
-#include "colors/NeoHueBlend.h"
+#include <Arduino.h>
+#include "../NeoUtil.h"
+#include "NeoGammaDynamicTableMethod.h"
 
-#include "colors/RgbColorBase.h"
 
-#include "colors/RgbColor.h"
-#include "colors/Rgb16Color.h"
-#include "colors/Rgb48Color.h"
-
-#include "colors/HslColor.h"
-#include "colors/HsbColor.h"
-#include "colors/HtmlColor.h"
-
-#include "colors/RgbwColor.h"
-#include "colors/Rgbw64Color.h"
-
-#include "colors/SegmentDigit.h"
-
-#include "colors/NeoGamma.h"
-#include "colors/NeoGammaEquationMethod.h"
-#include "colors/NeoGammaCieLabEquationMethod.h"
-#include "colors/NeoGammaTableMethod.h"
-#include "colors/NeoGammaDynamicTableMethod.h"
-#include "colors/NeoGammaNullMethod.h"
-#include "colors/NeoGammaInvertMethod.h"
+uint8_t NeoGammaDynamicTableMethod::_table[256] = { 0 };
+NeoGammaDynamicTableMethod::NeoGamma16LowHint* NeoGammaDynamicTableMethod::_hints = nullptr;
+uint8_t NeoGammaDynamicTableMethod::_hintsCount = 0;
