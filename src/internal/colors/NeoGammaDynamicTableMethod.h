@@ -112,18 +112,20 @@ public:
 
     static void Initialize(GammaCalcFunction calc, bool optimize16Bit = false)
     {
+        if (_hints)
+        {
+            delete [] _hints;
+            _hints = nullptr;
+        }
+
         // first, iterate and fill 8 bit table
         for (uint16_t entry = 0; entry < 256; entry++)
         {
             _table[entry] = static_cast<uint8_t>(255.0f * calc(entry / 255.0f) + 0.5f);
         }
 
-        if (!optimize16Bit)
-        {
-            // no optimization, so no 16 bit
-            _hints = nullptr;
-        }
-        else
+        // no optimization, so no 16 bit hints table
+        if (optimize16Bit)
         {
             NeoGamma16LowHint hints[256];
 
