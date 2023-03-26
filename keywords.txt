@@ -69,6 +69,7 @@ NeoTm1829Method	KEYWORD1
 NeoTx1812Method	KEYWORD1
 NeoLc8812Method	KEYWORD1
 NeoApa106Method	KEYWORD1
+NeoIntertekMethod	KEYWORD1
 Neo800KbpsInvertedMethod	KEYWORD1
 Neo400KbpsInvertedMethod	KEYWORD1
 NeoWs2813InvertedMethod	KEYWORD1
@@ -83,6 +84,7 @@ NeoTm1829InvertedMethod	KEYWORD1
 NeoTx1812InvertedMethod	KEYWORD1
 NeoLc8812InvertedMethod	KEYWORD1
 NeoApa106InvertedMethod	KEYWORD1
+NeoInvertedIntertekMethod	KEYWORD1
 NeoEsp8266DmaWs2812xMethod	KEYWORD1
 NeoEsp8266DmaWs2816Method	KEYWORD1
 NeoEsp8266DmaSk6812Method	KEYWORD1

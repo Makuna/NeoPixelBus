@@ -28,136 +28,66 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-// ESP32C3 I2S is not supported yet 
-#if !defined(CONFIG_IDF_TARGET_ESP32C3)
-
 static inline uint32_t getCycleCount(void)
 {
     uint32_t ccount;
+
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+    __asm__ __volatile__("csrr %0,0x7e2":"=r" (ccount));
+    //ccount = esp_cpu_get_ccount();
+#else
     __asm__ __volatile__("rsr %0,ccount":"=a" (ccount));
+#endif
     return ccount;
 }
 
-void IRAM_ATTR NeoEspBitBangBase_send_pixels(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
+void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
+    const uint8_t* end,
+    uint8_t pin,
+    uint32_t t0h,
+    uint32_t t1h,
+    uint32_t period,
+    size_t sizePixel,
+    uint32_t tSpacing,
+    bool invert)
 {
-    const uint32_t pinRegister = _BV(pin);
+    uint32_t setValue = _BV(pin);
+    uint32_t clearValue = _BV(pin);
     uint8_t mask = 0x80;
     uint8_t subpix = *pixels++;
+    uint8_t element = 0;
     uint32_t cyclesStart = 0; // trigger emediately
     uint32_t cyclesNext = 0;
 
-    for (;;)
+#if defined(ARDUINO_ARCH_ESP32)
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+    volatile uint32_t* setRegister = &GPIO.out_w1ts.val;
+    volatile uint32_t* clearRegister = &GPIO.out_w1tc.val;
+    setValue = _BV(pin); 
+    clearValue = _BV(pin); 
+#else
+    volatile uint32_t* setRegister = &GPIO.out_w1ts;
+    volatile uint32_t* clearRegister = &GPIO.out_w1tc;
+#endif // defined(CONFIG_IDF_TARGET_ESP32C3)
+#else
+    uint32_t setRegister = PERIPHS_GPIO_BASEADDR + GPIO_OUT_W1TS_ADDRESS;
+    uint32_t clearRegister = PERIPHS_GPIO_BASEADDR + GPIO_OUT_W1TC_ADDRESS;
+    if (pin == 16)
     {
-        // do the checks here while we are waiting on time to pass
-        uint32_t cyclesBit = t0h;
-        if (subpix & mask)
-        {
-            cyclesBit = t1h;
-        }
-
-        // after we have done as much work as needed for this next bit
-        // now wait for the HIGH
-        while (((cyclesStart = getCycleCount()) - cyclesNext) < period);
-
-        // set pin state
-#if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1ts = pinRegister;
-#else
-        GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
-#endif
-
-        // wait for the LOW
-        while ((getCycleCount() - cyclesStart) < cyclesBit);
-
-        // reset pin start
-#if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1tc = pinRegister;
-#else
-        GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
-#endif
-
-        cyclesNext = cyclesStart;
-
-        // next bit
-        mask >>= 1;
-        if (mask == 0)
-        {
-            // no more bits to send in this byte
-            // check for another byte
-            if (pixels >= end)
-            {
-                // no more bytes to send so stop
-                break;
-            }
-            // reset mask to first bit and get the next byte
-            mask = 0x80;
-            subpix = *pixels++;
-        }
+        setRegister = RTC_GPIO_OUT;
+        clearRegister = RTC_GPIO_OUT;
+        // reading AND writing RTC_GPIO_OUT is too slow inside the loop so
+        // we only do writing in the loop
+        clearValue = (READ_PERI_REG(RTC_GPIO_OUT) & (uint32)0xfffffffe);
+        setValue = clearValue | 1;
     }
-}
+#endif // defined(ARDUINO_ARCH_ESP32)
 
-#if defined(ARDUINO_ARCH_ESP8266)
-void IRAM_ATTR NeoEspBitBangBase_send_pixels_pin16(uint8_t *pixels, uint8_t *end, uint32_t t0h, uint32_t t1h, uint32_t period)
-{
-    uint8_t mask = 0x80;
-    uint8_t subpix = *pixels++;
-    uint32_t cyclesStart = 0; // trigger emediately
-    uint32_t cyclesNext = 0;
-
-    // reading and writing RTC_GPIO_OUT is too slow inside the loop
-    uint32_t gpio_clear = (READ_PERI_REG(RTC_GPIO_OUT) & (uint32)0xfffffffe);
-    uint32_t gpio_set = gpio_clear | 1;
-
-    for (;;)
+    if (invert)
     {
-        // do the checks here while we are waiting on time to pass
-        uint32_t cyclesBit = t0h;
-        if (subpix & mask)
-        {
-            cyclesBit = t1h;
-        }
-
-        // after we have done as much work as needed for this next bit
-        // now wait for the HIGH
-        while (((cyclesStart = getCycleCount()) - cyclesNext) < period);
-
-        // set pin state
-        WRITE_PERI_REG(RTC_GPIO_OUT, gpio_set);
-
-        // wait for the LOW
-        while ((getCycleCount() - cyclesStart) < cyclesBit);
-
-        // reset pin start
-        WRITE_PERI_REG(RTC_GPIO_OUT, gpio_clear);
-
-        cyclesNext = cyclesStart;
-
-        // next bit
-        mask >>= 1;
-        if (mask == 0)
-        {
-            // no more bits to send in this byte
-            // check for another byte
-            if (pixels >= end)
-            {
-                // no more bytes to send so stop
-                break;
-            }
-            // reset mask to first bit and get the next byte
-            mask = 0x80;
-            subpix = *pixels++;
-        }
+        std::swap(setRegister, clearRegister);
+        std::swap(setValue, clearValue);
     }
-}
-#endif // defined(ARDUINO_ARCH_ESP8266)
-
-void IRAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, uint8_t pin, uint32_t t0h, uint32_t t1h, uint32_t period)
-{
-    const uint32_t pinRegister = _BV(pin);
-    uint8_t mask = 0x80;
-    uint8_t subpix = *pixels++;
-    uint32_t cyclesStart = 0; // trigger emediately
-    uint32_t cyclesNext = 0;
 
     for (;;)
     {
@@ -174,9 +104,9 @@ void IRAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, 
 
         // set pin state
 #if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1tc = pinRegister;
+        *setRegister = setValue;
 #else
-        GPIO_REG_WRITE(GPIO_OUT_W1TC_ADDRESS, pinRegister);
+        WRITE_PERI_REG(setRegister, setValue);
 #endif
 
         // wait for the LOW
@@ -184,9 +114,9 @@ void IRAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, 
 
         // reset pin start
 #if defined(ARDUINO_ARCH_ESP32)
-        GPIO.out_w1ts = pinRegister;
+        *clearRegister = clearValue;
 #else
-        GPIO_REG_WRITE(GPIO_OUT_W1TS_ADDRESS, pinRegister);
+        WRITE_PERI_REG(clearRegister, clearValue);
 #endif
 
         cyclesNext = cyclesStart;
@@ -205,63 +135,22 @@ void IRAM_ATTR NeoEspBitBangBase_send_pixels_inv(uint8_t* pixels, uint8_t* end, 
             // reset mask to first bit and get the next byte
             mask = 0x80;
             subpix = *pixels++;
-        }
-    }
-}
 
-#if defined(ARDUINO_ARCH_ESP8266)
-void IRAM_ATTR NeoEspBitBangBase_send_pixels_inv_pin16(uint8_t *pixels, uint8_t *end, uint32_t t0h, uint32_t t1h, uint32_t period)
-{
-    uint8_t mask = 0x80;
-    uint8_t subpix = *pixels++;
-    uint32_t cyclesStart = 0; // trigger emediately
-    uint32_t cyclesNext = 0;
-
-    // reading and writing RTC_GPIO_OUT is too slow inside the loop
-    uint32_t gpio_clear = (READ_PERI_REG(RTC_GPIO_OUT) & (uint32)0xfffffffe);
-    uint32_t gpio_set = gpio_clear | 1;
-
-    for (;;)
-    {
-        // do the checks here while we are waiting on time to pass
-        uint32_t cyclesBit = t0h;
-        if (subpix & mask)
-        {
-            cyclesBit = t1h;
-        }
-
-        // after we have done as much work as needed for this next bit
-        // now wait for the HIGH
-        while (((cyclesStart = getCycleCount()) - cyclesNext) < period);
-
-        // set pin state
-        WRITE_PERI_REG(RTC_GPIO_OUT, gpio_clear);
-
-        // wait for the LOW
-        while ((getCycleCount() - cyclesStart) < cyclesBit);
-
-        // reset pin start
-        WRITE_PERI_REG(RTC_GPIO_OUT, gpio_set);
-
-        cyclesNext = cyclesStart;
-
-        // next bit
-        mask >>= 1;
-        if (mask == 0)
-        {
-            // no more bits to send in this byte
-            // check for another byte
-            if (pixels >= end)
+            // if pixel spacing is needed
+            if (tSpacing)
             {
-                // no more bytes to send so stop
-                break;
+                element++;
+                if (element == sizePixel)
+                {
+                    element = 0;
+
+                    // wait for pixel spacing
+                    while ((getCycleCount() - cyclesNext) < tSpacing);
+                }
             }
-            // reset mask to first bit and get the next byte
-            mask = 0x80;
-            subpix = *pixels++;
         }
     }
 }
-#endif // defined(ARDUINO_ARCH_ESP8266)
-#endif // !defined(CONFIG_IDF_TARGET_ESP32C3)
+
+
 #endif //  defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
