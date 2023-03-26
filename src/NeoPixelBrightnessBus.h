@@ -28,7 +28,8 @@ License along with NeoPixel.  If not, see
 
 #include "NeoPixelBus.h"
 
-template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBrightnessBus : 
+
+template<typename T_COLOR_FEATURE, typename T_METHOD> class [[deprecated("Use NeoPixelBusLg instead.")]] NeoPixelBrightnessBus :
     public NeoPixelBus<T_COLOR_FEATURE, T_METHOD>
 {
 private:
