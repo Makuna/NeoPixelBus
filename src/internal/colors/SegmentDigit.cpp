@@ -120,6 +120,28 @@ uint8_t SevenSegDigit::CalculateBrightness() const
     return static_cast<uint8_t>(sum / Count);
 }
 
+SevenSegDigit SevenSegDigit::Dim(uint8_t ratio) const
+{
+    SevenSegDigit result;
+
+    for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
+    {
+        result.Segment[iSegment] = _elementDim(Segment[iSegment], ratio);
+    }
+    return result;
+}
+
+SevenSegDigit SevenSegDigit::Brighten(uint8_t ratio) const
+{
+    SevenSegDigit result;
+
+    for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
+    {
+        result.Segment[iSegment] = _elementBrighten(Segment[iSegment], ratio);
+    }
+    return result;
+}
+
 void SevenSegDigit::Darken(uint8_t delta)
 {
     for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
