@@ -67,6 +67,16 @@ struct Rgb16Color : RgbColorBase
     };
 
     // ------------------------------------------------------------------------
+    // Construct a Rgb16Color using RgbCOlor
+    // ------------------------------------------------------------------------
+    Rgb16Color(const RgbColor& color)
+    {
+        setR(color.R);
+        setG(color.G);
+        setB(color.B);
+    };
+
+    // ------------------------------------------------------------------------
     // Construct a Rgb16Color using HtmlColor
     // ------------------------------------------------------------------------
     Rgb16Color(const HtmlColor& color)
@@ -143,6 +153,23 @@ struct Rgb16Color : RgbColorBase
         return (Color565 & 0x001f) << 3;
     };
 
+    // ------------------------------------------------------------------------
+    // operator [] - readonly
+    // access elements in order by index rather than R,G,B
+    // see static Count for the number of elements
+    // ------------------------------------------------------------------------
+    uint8_t operator[](size_t idx) const
+    {
+        switch (idx)
+        {
+        case 0:
+            return getR();
+        case 1:
+            return getG();
+        default:
+            return getB();
+        }
+    }
 
     // ------------------------------------------------------------------------
     // Comparison operators
@@ -281,5 +308,8 @@ struct Rgb16Color : RgbColorBase
     };
 
     uint16_t Color565;
+
+    const static uint8_t Max = 255;
+    const static size_t Count = 3; // three elements in []
 };
 
