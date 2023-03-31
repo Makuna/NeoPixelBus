@@ -78,7 +78,7 @@ public:
 protected:
     static constexpr uint8_t CurrentLookup[16] = {
             18, 30, 41, 53, 64, 76, 87, 99, 
-            110, 133, 145, 156, 168, 179, 19};
+            110, 133, 145, 156, 168, 179, 190};
 };
 
 class NeoSm16823eSettings : public NeoSm168x3SettingsBase
@@ -162,7 +162,7 @@ public:
 protected:
     static constexpr uint8_t CurrentLookup[16] = {
             18, 30, 41, 53, 64, 76, 87, 99,
-            110, 133, 145, 156, 168, 179, 19 };
+            110, 133, 145, 156, 168, 179, 190 };
 };
 
 class NeoSm16824eSettings : public NeoSm168x4SettingsBase
