@@ -131,20 +131,20 @@ private:
     uint8_t* _data;       // Holds LED color values
 };
 
-typedef Ws2801MethodBase<TwoWireBitBangImple> NeoWs2801Method;
+typedef Ws2801MethodBase<TwoWireBitBangImple> Ws2801Method;
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
 #include "TwoWireSpiImple.h"
-typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> NeoWs2801Spi20MhzMethod;
-typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> NeoWs2801Spi10MhzMethod;
-typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed5Mhz>> NeoWs2801Spi5MhzMethod;
-typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> NeoWs2801Spi2MhzMethod;
-typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> NeoWs2801Spi1MhzMethod;
-typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> NeoWs2801Spi500KhzMethod;
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> Ws2801Spi20MhzMethod;
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> Ws2801Spi10MhzMethod;
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed5Mhz>> Ws2801Spi5MhzMethod;
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> Ws2801Spi2MhzMethod;
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Ws2801Spi1MhzMethod;
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Ws2801Spi500KhzMethod;
 
-typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeedHz>> NeoWs2801SpiHzMethod;
+typedef Ws2801MethodBase<TwoWireSpiImple<SpiSpeedHz>> Ws2801SpiHzMethod;
 
-typedef NeoWs2801Spi10MhzMethod NeoWs2801SpiMethod;
+typedef Ws2801Spi10MhzMethod Ws2801SpiMethod;
 #endif
 
 

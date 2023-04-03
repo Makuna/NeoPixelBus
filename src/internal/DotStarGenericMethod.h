@@ -151,26 +151,26 @@ typedef DotStarSpi10MhzMethod DotStarSpiMethod;
 
 #if defined(ARDUINO_ARCH_ESP32)
 // Give option to use Vspi alias of Spi class if wanting to specify which SPI peripheral is used on the ESP32
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed40Mhz>> DotStarVspi40MhzMethod;
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> DotStarVspi20MhzMethod;
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> DotStarVspi10MhzMethod;
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed5Mhz>> DotStarVspi5MhzMethod;
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> DotStarVspi2MhzMethod;
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> DotStarVspi1MhzMethod;
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed500Khz>> DotStarVspi500KhzMethod;
-typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeedHz>> DotStarVspiHzMethod;
+typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed40Mhz>> DotStarEsp32Vspi40MhzMethod;
+typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed20Mhz>> DotStarEsp32Vspi20MhzMethod;
+typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed10Mhz>> DotStarEsp32Vspi10MhzMethod;
+typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed5Mhz>> DotStarEsp32Vspi5MhzMethod;
+typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed2Mhz>> DotStarEsp32Vspi2MhzMethod;
+typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> DotStarEsp32Vspi1MhzMethod;
+typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeed500Khz>> DotStarEsp32Vspi500KhzMethod;
+typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeedHz>> DotStarEsp32VspiHzMethod;
 
-typedef DotStarSpi10MhzMethod DotStarVspiMethod;
+typedef DotStarSpi10MhzMethod DotStarEsp32VspiMethod;
 
 #include "TwoWireHspiImple.h"
-typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed40Mhz>> DotStarHspi40MhzMethod;
-typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed20Mhz>> DotStarHspi20MhzMethod;
-typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed10Mhz>> DotStarHspi10MhzMethod;
-typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed5Mhz>> DotStarHspi5MhzMethod;
-typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed2Mhz>> DotStarHspi2MhzMethod;
-typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed1Mhz>> DotStarHspi1MhzMethod;
-typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed500Khz>> DotStarHspi500KhzMethod;
-typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeedHz>> DotStarHspiHzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed40Mhz>> DotStarEsp32Hspi40MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed20Mhz>> DotStarEsp32Hspi20MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed10Mhz>> DotStarEsp32Hspi10MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed5Mhz>> DotStarEsp32Hspi5MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed2Mhz>> DotStarEsp32Hspi2MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed1Mhz>> DotStarEsp32Hspi1MhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed500Khz>> DotStarEsp32Hspi500KhzMethod;
+typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeedHz>> DotStarEsp32HspiHzMethod;
 
-typedef DotStarHspi10MhzMethod DotStarHspiMethod;
+typedef DotStarEsp32Hspi10MhzMethod DotStarEsp32HspiMethod;
 #endif
