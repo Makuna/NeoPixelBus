@@ -121,8 +121,8 @@ struct RgbwColor : RgbColorBase
     // compares two colors with the given epsilon (delta allowed)
     // returns the greatest difference of a set of elements, 
     //   0 = equal within epsilon delta
-    //   negative - this is less than other
-    //   positive - this is greater than other
+    //   negative - left is less than right
+    //   positive - left is greater than right
     // ------------------------------------------------------------------------
     static int16_t Compare(const RgbwColor& left, const RgbwColor& right, uint8_t epsilon = 1)
     {
