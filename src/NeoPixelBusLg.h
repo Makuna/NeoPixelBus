@@ -40,42 +40,89 @@ License along with NeoPixel.  If not, see
 template<typename T_COLOR_FEATURE, typename T_METHOD, typename T_GAMMA = NeoGammaEquationMethod> class NeoPixelBusLg :
     public NeoPixelBus<T_COLOR_FEATURE, T_METHOD>
 {
-private:
-    typename T_COLOR_FEATURE::ColorObject ConvertColor(typename T_COLOR_FEATURE::ColorObject color)
+public:
+    class LuminanceShader
     {
-        // dim and then return gamma adjusted
-        color = color.Dim(_luminance);
-        return NeoGamma<T_GAMMA>::Correct(color);
-    }
+    public:
+        LuminanceShader(uint8_t luminance = 255) :
+            _luminance(luminance)
+        {
+        }
+
+        // our shader is always dirty, but these are needed for standard
+        // shader support
+        bool IsDirty() const
+        {
+            return true;
+        };
+
+        void Dirty()
+        {
+        };
+
+        void ResetDirty()
+        {
+        };
+
+        typename T_COLOR_FEATURE::ColorObject Apply(uint16_t, const typename T_COLOR_FEATURE::ColorObject& original)
+        {
+            // dim and then return gamma adjusted
+            typename T_COLOR_FEATURE::ColorObject color = original.Dim(_luminance);
+            return NeoGamma<T_GAMMA>::Correct(color);
+        }
+
+    protected:
+        uint8_t _luminance;
+
+        void setLuminance(uint8_t luminance)
+        {
+            _luminance = luminance;
+        }
+
+        uint8_t getLuminance() const
+        {
+            return _luminance;
+        }
+
+        friend class NeoPixelBusLg;
+    };
+
+    // Exposed Shader instance for use with NeoDib.Render like
+    // 
+    // image.Render<NeoGrbFeature, MyBusType::LuminanceShader>(strip, strip.Shader);
+    // where MyBusType is defined like
+    // typedef NeoPixelBusLg<NeoGrbFeature, NeoWs2812xMethod> MyBusType;
+    //
+    LuminanceShader Shader;
 
 public:
     NeoPixelBusLg(uint16_t countPixels, uint8_t pin) :
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pin),
-        _luminance(255)
+        Shader()
     {
     }
 
     NeoPixelBusLg(uint16_t countPixels, uint8_t pin, NeoBusChannel channel) :
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pin, channel),
-        _luminance(255)
+        Shader()
     {
     }
 
     NeoPixelBusLg(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pinClock, pinData),
-        _luminance(255)
+        Shader()
     {
     }
 
     NeoPixelBusLg(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pinClock, pinData, pinLatch, pinOutputEnable),
-        _luminance(255)
+        Shader()
     {
     }
 
     NeoPixelBusLg(uint16_t countPixels) :
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels),
-        _luminance(255)
+        Shader()
     {
     }
 
@@ -84,17 +131,17 @@ public:
         // does NOT affect current pixel data as there is no safe way
         // to reconstruct the original color values after being
         // modified with both luminance and gamma without storing them
-        _luminance = luminance;
+        Shader.setLuminance(luminance);
     }
 
     uint8_t GetLuminance() const
     {
-        return _luminance;
+        return Shader.getLuminance();
     }
 
     void SetPixelColor(uint16_t indexPixel, typename T_COLOR_FEATURE::ColorObject color)
     {
-        color = ConvertColor(color);
+        color = Shader.Apply(indexPixel, color);
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::SetPixelColor(indexPixel, color);
     }
 
@@ -106,13 +153,13 @@ public:
 
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
     {
-        color = ConvertColor(color);
+        color = Shader.Apply(0, color);
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::ClearTo(color);
     };
 
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color, uint16_t first, uint16_t last)
     {
-        color = ConvertColor(color);
+        color = Shader.Apply(0, color);
         NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::ClearTo(color, first, last);
     }
 
@@ -125,15 +172,12 @@ public:
             for (uint16_t indexPixel = 0; indexPixel < NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::PixelCount(); indexPixel++)
             {
                 typename T_COLOR_FEATURE::ColorObject color = NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::GetPixelColor(indexPixel);
-                color = ConvertColor(color);
+                color = Shader.Apply(indexPixel, color);
                 NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::SetPixelColor(indexPixel, color);
             }
             this->Dirty();
         }
     }
-
-protected:
-    uint8_t _luminance;
 };
 
 
