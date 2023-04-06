@@ -1,5 +1,5 @@
 // NeoPixelGamma
-// This example will display a timed series of color gradiants with gamma correction
+// This example will display a timed series of color gradients with gamma correction
 // and then without.
 // If the last pixel is on, then the colors being shown are color corrected.
 // It will show Red grandiant, Green grandiant, Blue grandiant, a White grandiant, and

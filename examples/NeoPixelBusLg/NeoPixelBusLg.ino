@@ -85,14 +85,14 @@ void loop()
     // draw something
     //
     uint16_t half = strip.PixelCount() / 2;
-    DrawGradiant(green, black, 0, half - 1);
-    DrawGradiant(black, red, half, strip.PixelCount() - 1);
+    DrawGradient(green, black, 0, half - 1);
+    DrawGradient(black, red, half, strip.PixelCount() - 1);
 
     // show the results
     strip.Show();
 }
 
-void DrawGradiant(RgbColor startColor, 
+void DrawGradient(RgbColor startColor, 
         RgbColor finishColor, 
         uint16_t startIndex, 
         uint16_t finishIndex)
