@@ -15,9 +15,9 @@
 const uint16_t PixelCount = 16; // make sure to set this to the number of pixels in your strip
 const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 // for esp8266 omit the pin
-//NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
+//NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount);
 
 // uncomment only one of these to compare memory use or speed
 //

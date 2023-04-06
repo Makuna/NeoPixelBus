@@ -17,7 +17,7 @@ const uint16_t PixelCount = 16; // make sure to set this to the number of pixels
 const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 
 // for esp8266 the pin is ignored unless it is the bitbang method
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 
 NeoGamma<NeoGammaDynamicTableMethod> colorGamma;
 
