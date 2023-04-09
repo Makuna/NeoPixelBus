@@ -39,47 +39,8 @@ const uint16_t PixelIndex_OutOfBounds = 0xffff;
 #include "internal/NeoColorFeatures.h"
 #include "internal/NeoTopologies.h"
 #include "internal/NeoBuffers.h"
-
 #include "internal/NeoBusChannel.h"
-
-#include "internal/DotStarGenericMethod.h"
-#include "internal/Lpd8806GenericMethod.h"
-#include "internal/Lpd6803GenericMethod.h"
-#include "internal/Ws2801GenericMethod.h"
-#include "internal/P9813GenericMethod.h"
-#include "internal/Tlc5947GenericMethod.h"
-#include "internal/Sm16716GenericMethod.h"
-
-#if defined(ARDUINO_ARCH_ESP8266)
-
-#include "internal/NeoEsp8266DmaMethod.h"
-#include "internal/NeoEsp8266I2sDmx512Method.h"
-#include "internal/NeoEsp8266UartMethod.h"
-#include "internal/NeoEspBitBangMethod.h"
-
-#elif defined(ARDUINO_ARCH_ESP32)
-
-#include "internal/NeoEsp32I2sMethod.h"
-#include "internal/NeoEsp32RmtMethod.h"
-#include "internal/NeoEspBitBangMethod.h"
-#include "internal/DotStarEsp32DmaSpiMethod.h"
-#include "internal/NeoEsp32I2sXMethod.h"
-
-#elif defined(ARDUINO_ARCH_NRF52840) // must be before __arm__
-
-#include "internal/NeoNrf52xMethod.h"
-
-#elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
-
-#include "internal/NeoArmMethod.h"
-
-#elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
-
-#include "internal/NeoAvrMethod.h"
-
-#else
-#error "Platform Currently Not Supported, please add an Issue at Github/Makuna/NeoPixelBus"
-#endif
+#include "internal/NeoMethods.h"
 
 
 template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBus
