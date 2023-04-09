@@ -67,6 +67,28 @@ public:
         digitalWrite(_pinData, LOW);
     }
 
+    void transmitBit(uint8_t bit)
+    {
+        // set data bit on pin
+        // digitalWrite(_pinData, bit); // HIGH : LOW
+        if (bit)
+        {
+            *_portData |= _pinMaskData;
+        }
+        else
+        {
+            *_portData &= ~_pinMaskData;
+        }
+
+        // set clock high as data is ready
+        // digitalWrite(_pinClock, HIGH);
+        *_portClock |= _pinMaskClock;
+
+        // set clock low as data pin is changed
+        // digitalWrite(_pinClock, LOW);
+        *_portClock &= ~_pinMaskClock;
+    }
+
     void transmitByte(uint8_t data)
     {
         for (int bit = 7; bit >= 0; bit--)

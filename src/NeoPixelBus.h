@@ -48,6 +48,7 @@ const uint16_t PixelIndex_OutOfBounds = 0xffff;
 #include "internal/Ws2801GenericMethod.h"
 #include "internal/P9813GenericMethod.h"
 #include "internal/Tlc5947GenericMethod.h"
+#include "internal/Sm16716GenericMethod.h"
 
 #if defined(ARDUINO_ARCH_ESP8266)
 

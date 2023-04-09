@@ -62,6 +62,18 @@ public:
         digitalWrite(_pinData, LOW);
     }
 
+    void transmitBit(uint8_t bit)
+    {
+        // set data bit on pin
+        digitalWrite(_pinData, bit);
+
+        // set clock high as data is ready
+        digitalWrite(_pinClock, HIGH);
+
+        // set clock low as data pin is changed
+        digitalWrite(_pinClock, LOW);
+    }
+
     void transmitByte(uint8_t data)
     {
         for (int bit = 7; bit >= 0; bit--)
