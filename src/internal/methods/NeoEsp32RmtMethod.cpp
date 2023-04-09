@@ -28,8 +28,8 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #include <Arduino.h>
-#include "NeoSettings.h"
-#include "NeoBusChannel.h"
+#include "../NeoSettings.h"
+#include "../NeoBusChannel.h"
 #include "NeoEsp32RmtMethod.h"
 
 #ifdef ARDUINO_ARCH_ESP32
