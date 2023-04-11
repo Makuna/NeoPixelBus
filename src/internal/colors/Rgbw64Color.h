@@ -78,7 +78,15 @@ struct Rgbw64Color : RgbColorBase
     // ------------------------------------------------------------------------
     // Construct a Rgbw64Color using RgbwColor
     // ------------------------------------------------------------------------
-    Rgbw64Color(const RgbwColor& color);
+    Rgbw64Color(const RgbwColor& color)
+    {
+        // x16 = map(x8, 0, 255, 0, 65535); // refactors to just * 257 
+        R = (uint16_t)color.R * 257; // 257 = MAXUINT16/MAXUINT8 = 65535/255
+        G = (uint16_t)color.G * 257;
+        B = (uint16_t)color.B * 257;
+        W = (uint16_t)color.W * 257;
+    };
+
 
     // ------------------------------------------------------------------------
     // Construct a Rgbw64Color using HtmlColor
