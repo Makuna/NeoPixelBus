@@ -33,6 +33,7 @@ License along with NeoPixel.  If not, see
 #include "HslColor.h"
 #include "HsbColor.h"
 #include "HtmlColor.h"
+
 #include "RgbwColor.h"
 
 RgbColor::RgbColor(const RgbwColor& color) :
