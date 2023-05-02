@@ -469,7 +469,7 @@ public:
         }
     }
 
-    bool IsWriteDone()
+    bool IsWriteDone() const
     {
         return i2sWriteDone(T_BUS::I2sBusNumber);
     }
