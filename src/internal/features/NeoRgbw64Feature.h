@@ -32,23 +32,29 @@ class NeoRgbw64Feature : public Neo8ByteElementsNoSettings
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
-        uint16_t* p = reinterpret_cast<uint16_t*>(getPixelAddress(pPixels, indexPixel));
+        uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        *p++ = color.R;
-        *p++ = color.G;
-        *p++ = color.B;
-        *p = color.W;
+        // due to endianness the byte order must be copied to output
+        *p++ = color.R >> 8;
+        *p++ = color.R & 0x0f;
+        *p++ = color.G >> 8;
+        *p++ = color.G & 0x0f;
+        *p++ = color.B >> 8;
+        *p++ = color.B & 0x0f;
+        *p++ = color.W >> 8;
+        *p = color.W & 0x0f;
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(pPixels, indexPixel));
+        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        color.R = *p++;
-        color.G = *p++;
-        color.B = *p++;
-        color.W = *p;
+        // due to endianness the byte order must be copied to output
+        color.R = (static_cast<uint16_t>(*p++) << 8) | *p++;
+        color.G = (static_cast<uint16_t>(*p++) << 8) | *p++;
+        color.B = (static_cast<uint16_t>(*p++) << 8) | *p++;
+        color.W = (static_cast<uint16_t>(*p++) << 8) | *p;
 
         return color;
     }
@@ -58,6 +64,8 @@ public:
         ColorObject color;
         const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel));
 
+        // PROGMEM unit of storage expected to be the same size as color element
+        //    so no endianness issues to worry about
         color.R = pgm_read_word(p++);
         color.G = pgm_read_word(p++);
         color.B = pgm_read_word(p++);
