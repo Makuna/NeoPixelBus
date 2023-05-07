@@ -36,13 +36,13 @@ public:
 
         // due to endianness the byte order must be copied to output
         *p++ = color.R >> 8;
-        *p++ = color.R & 0x0f;
+        *p++ = color.R & 0xff;
         *p++ = color.G >> 8;
-        *p++ = color.G & 0x0f;
+        *p++ = color.G & 0xff;
         *p++ = color.B >> 8;
-        *p++ = color.B & 0x0f;
+        *p++ = color.B & 0xff;
         *p++ = color.W >> 8;
-        *p = color.W & 0x0f;
+        *p = color.W & 0xff;
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
