@@ -39,6 +39,7 @@ License along with NeoPixel.  If not, see
 #include "colors/HtmlColor.h"
 
 #include "colors/RgbwColor.h"
+#include "colors/RgbwwColor.h"
 #include "colors/Rgbw64Color.h"
 
 #include "colors/SegmentDigit.h"
