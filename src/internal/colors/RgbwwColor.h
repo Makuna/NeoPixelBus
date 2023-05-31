@@ -36,7 +36,7 @@ struct HsbColor;
 // ------------------------------------------------------------------------
 struct RgbwwColor : RgbColorBase
 {
-    typedef NeoRgbwCurrentSettings SettingsObject;
+    typedef NeoRgbwwCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
     // Construct a RgbwwColor using R, G, B, W values (0-255)
@@ -53,7 +53,7 @@ struct RgbwwColor : RgbColorBase
     // ------------------------------------------------------------------------
     RgbwwColor(uint8_t brightness) :
         R(0), G(0), B(0), WW(brightness), CW(brightness)
-    {
+    {   
     };
 
     // ------------------------------------------------------------------------
@@ -169,7 +169,7 @@ struct RgbwwColor : RgbColorBase
             return B;
         case 3:
             return WW;
-        case 4:
+        default:
             return CW;
         }
     }
@@ -263,8 +263,8 @@ struct RgbwwColor : RgbColorBase
         total += R * settings.RedTenthMilliAmpere / Max;
         total += G * settings.GreenTenthMilliAmpere / Max;
         total += B * settings.BlueTenthMilliAmpere / Max;
-        total += WW * settings.WhiteTenthMilliAmpere / Max;
-        total += CW * settings.WhiteTenthMilliAmpere / Max;
+        total += WW * settings.ColdTenthMilliAmpere / Max;
+        total += CW * settings.WarmTenthMilliAmpere / Max;
 
         return total;
     }
@@ -281,7 +281,7 @@ struct RgbwwColor : RgbColorBase
     uint8_t CW;
 
     const static uint8_t Max = 255;
-    const static size_t Count = 4; // four elements in []
+    const static size_t Count = 5; // four elements in []
 
 private:
     inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)

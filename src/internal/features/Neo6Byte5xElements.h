@@ -1,7 +1,7 @@
 /*-------------------------------------------------------------------------
 Neo6Byte5xElements provides feature base classes to describe color elements
 for NeoPixelBus Color Feature template classes.  While it takes 6 bytes, it
-only uses five and ignores the last one.
+only uses four and ignores the last two
 
 Written by Michael C. Miller.
 
@@ -43,14 +43,14 @@ public:
     }
 
     static void replicatePixel(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
-    {
-        uint16_t* pDest = reinterpret_cast<uint16_t*>(pPixelDest);
-        const uint16_t* pSrc = reinterpret_cast<const uint16_t*>(pPixelSrc);
-        const uint16_t* pEnd = pDest + (count * PixelSize / sizeof(*pDest));
-
-        while (pDest < pEnd)
+    {       
+        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        while (pPixelDest < pEnd)
         {
-            *pDest++ = *pSrc;
+            for (uint8_t iElement = 0; iElement < PixelSize; iElement++)
+            {
+                *pPixelDest++ = pPixelSrc[iElement];
+            }
         }
     }
 
