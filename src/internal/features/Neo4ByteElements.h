@@ -26,81 +26,11 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class Neo4ByteElementsBase
+class Neo4ByteElements : public NeoByteElements
 {
 public:
     static const size_t PixelSize = 4;
-
-    static uint8_t* getPixelAddress(uint8_t* pPixels, uint16_t indexPixel)
-    {
-        return pPixels + indexPixel * PixelSize;
-    }
-    static const uint8_t* getPixelAddress(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        return pPixels + indexPixel * PixelSize;
-    }
-
-    static void replicatePixel(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
-    {
-        uint32_t* pDest = reinterpret_cast<uint32_t*>(pPixelDest);
-        const uint32_t* pSrc = reinterpret_cast<const uint32_t*>(pPixelSrc);
-        const uint32_t* pEnd = pDest + count; // * PixelSize / sizeof(*pDest);
-
-        while (pDest < pEnd)
-        {
-            *pDest++ = *pSrc;
-        }
-    }
-
-    static void movePixelsInc(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
-    {
-        uint32_t* pDest = reinterpret_cast<uint32_t*>(pPixelDest);
-        const uint32_t* pSrc = reinterpret_cast<const uint32_t*>(pPixelSrc);
-        const uint32_t* pEnd = pDest + count; // * PixelSize / sizeof(*pDest);
-
-        while (pDest < pEnd)
-        {
-            *pDest++ = *pSrc++;
-        }
-    }
-
-    static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
-    {
-        uint32_t* pDest = reinterpret_cast<uint32_t*>(pPixelDest);
-        const uint32_t* pSrc = reinterpret_cast<const uint32_t*>(pPixelSrc);
-        const uint32_t* pEnd = pDest + count; // * PixelSize / sizeof(*pDest);
-
-        while (pDest < pEnd)
-        {
-            *pDest++ = pgm_read_dword(pSrc++);
-        }
-    }
-
-    static void movePixelsDec(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
-    {
-        uint32_t* pDest = reinterpret_cast<uint32_t*>(pPixelDest);
-        const uint32_t* pSrc = reinterpret_cast<const uint32_t*>(pPixelSrc);
-        uint32_t* pDestBack = pDest + count; // * PixelSize / sizeof(*pDest);
-        const uint32_t* pSrcBack = pSrc + count; // * PixelSize / sizeof(*pSrc);
-
-        while (pDestBack > pDest)
-        {
-            *--pDestBack = *--pSrcBack;
-        }
-    }
-
-};
-
-class Neo4ByteElements : public Neo4ByteElementsBase
-{
-public:
     typedef RgbwColor ColorObject;
-};
-
-class Neo4ByteRgbElements : public Neo4ByteElementsBase
-{
-public:
-    typedef RgbColor ColorObject;
 };
 
 class Neo4ByteElementsNoSettings : public Neo4ByteElements

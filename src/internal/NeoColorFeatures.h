@@ -28,6 +28,7 @@ License along with NeoPixel.  If not, see
 
 // NeoPixel Features
 //
+#include "features/NeoByteElements.h"
 #include "features/Neo2ByteElements.h"
 #include "features/Neo3ByteElements.h"
 #include "features/Neo4ByteElements.h"
@@ -55,6 +56,7 @@ typedef NeoGrb48Feature NeoGrbWs2816Feature;
 
 // DotStart Features
 // 
+
 #include "features/DotStar3Elements.h"
 #include "features/DotStar4Elements.h"
 #include "features/DotStarBgrFeature.h"

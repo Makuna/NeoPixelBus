@@ -28,69 +28,10 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 
-class Neo6Byte4xxElements
+class Neo6Byte4xxElements : public NeoByteElements
 {
 public:
     static const size_t PixelSize = 6;
-
-    static uint8_t* getPixelAddress(uint8_t* pPixels, uint16_t indexPixel)
-    {
-        return pPixels + indexPixel * PixelSize;
-    }
-    static const uint8_t* getPixelAddress(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        return pPixels + indexPixel * PixelSize;
-    }
-
-    static void replicatePixel(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
-    {
-        uint16_t* pDest = reinterpret_cast<uint16_t*>(pPixelDest);
-        const uint16_t* pSrc = reinterpret_cast<const uint16_t*>(pPixelSrc);
-        const uint16_t* pEnd = pDest + (count * PixelSize / sizeof(*pDest));
-
-        while (pDest < pEnd)
-        {
-            *pDest++ = *pSrc;
-        }
-    }
-
-    static void movePixelsInc(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
-    {
-        uint16_t* pDest = reinterpret_cast<uint16_t*>(pPixelDest);
-        const uint16_t* pSrc = reinterpret_cast<const uint16_t*>(pPixelSrc);
-        const uint16_t* pEnd = pDest + (count * PixelSize / sizeof(*pDest));
-
-        while (pDest < pEnd)
-        {
-            *pDest++ = *pSrc++;
-        }
-    }
-
-    static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
-    {
-        uint16_t* pDest = reinterpret_cast<uint16_t*>(pPixelDest);
-        const uint16_t* pSrc = reinterpret_cast<const uint16_t*>(pPixelSrc);
-        const uint16_t* pEnd = pDest + (count * PixelSize / sizeof(*pDest));
-
-        while (pDest < pEnd)
-        {
-            *pDest++ = pgm_read_word(pSrc++);
-        }
-    }
-
-    static void movePixelsDec(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
-    {
-        uint16_t* pDest = reinterpret_cast<uint16_t*>(pPixelDest);
-        const uint16_t* pSrc = reinterpret_cast<const uint16_t*>(pPixelSrc);
-        uint16_t* pDestBack = pDest + (count * PixelSize / sizeof(*pDest));
-        const uint16_t* pSrcBack = pSrc + (count * PixelSize / sizeof(*pSrc));
-
-        while (pDestBack > pDest)
-        {
-            *--pDestBack = *--pSrcBack;
-        }
-    }
-
     typedef RgbwColor ColorObject;
 };
 
