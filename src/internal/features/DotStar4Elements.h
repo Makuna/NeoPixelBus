@@ -26,16 +26,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-
-class DotStar4Elements : public NeoByteElements
-{
-public:
-    static const size_t PixelSize = 4;
-    typedef RgbwColor ColorObject;
-};
-
-
-class DotStar4ElementsNoSettings : public DotStar4Elements
+class DotStar4ElementsNoSettings : public NeoByteElements<4, RgbwColor>
 {
 public:
     typedef NeoNoSettings SettingsObject;

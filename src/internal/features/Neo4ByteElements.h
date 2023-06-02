@@ -25,15 +25,8 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 #pragma once
-
-class Neo4ByteElements : public NeoByteElements
-{
-public:
-    static const size_t PixelSize = 4;
-    typedef RgbwColor ColorObject;
-};
-
-class Neo4ByteElementsNoSettings : public Neo4ByteElements
+ 
+class Neo4ByteElementsNoSettings : public NeoByteElements<4, RgbwColor>
 {
 public:
     typedef NeoNoSettings SettingsObject;

@@ -199,7 +199,7 @@ protected:
 
 };
 
-template<typename T_SETTINGS> class NeoRgbwSm168x4Elements : public Neo4ByteElements
+template<typename T_SETTINGS> class NeoRgbwSm168x4Elements : public NeoByteElements<4, RgbwColor>
 {
 public:
     typedef T_SETTINGS SettingsObject;
@@ -260,7 +260,7 @@ public:
     }
 };
 
-template<typename T_SETTINGS> class NeoRgbSm168x3Elements : public Neo3ByteElements
+template<typename T_SETTINGS> class NeoRgbSm168x3Elements : public NeoByteElements<3, RgbColor>
 {
 public:
     typedef T_SETTINGS SettingsObject;

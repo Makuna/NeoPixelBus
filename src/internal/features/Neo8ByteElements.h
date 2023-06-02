@@ -26,15 +26,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-
-class Neo8ByteElements : public NeoByteElements
-{
-public:
-    static const size_t PixelSize = 8;
-    typedef Rgbw64Color ColorObject;
-};
-
-class Neo8ByteElementsNoSettings : public Neo8ByteElements
+class Neo8ByteElementsNoSettings : public NeoByteElements<8, Rgbw64Color>
 {
 public:
     typedef NeoNoSettings SettingsObject;

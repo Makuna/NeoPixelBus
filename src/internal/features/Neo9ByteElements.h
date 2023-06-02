@@ -25,15 +25,8 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 #pragma once
-
-class Neo9ByteElements : public NeoByteElements
-{
-public:
-    static const size_t PixelSize = 9; // three 3 element
-    typedef SevenSegDigit ColorObject;
-};
-
-class Neo9ByteElementsNoSettings : public Neo9ByteElements
+ 
+class Neo9ByteElementsNoSettings : public NeoByteElements<9, SevenSegDigit>
 {
 public:
     typedef NeoNoSettings SettingsObject;
