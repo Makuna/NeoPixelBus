@@ -26,7 +26,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class Neo8ByteElementsNoSettings : public NeoByteElements<8, Rgbw64Color>
+class Neo8ByteElementsNoSettings : public NeoWordElements<8, Rgbw64Color>
 {
 public:
     typedef NeoNoSettings SettingsObject;

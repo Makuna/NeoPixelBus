@@ -27,8 +27,14 @@ License along with NeoPixel.  If not, see
  
 #pragma once
 
+// NeoElementsBase contains common methods used by features to map and
+// copy pixel memory data in native stream format
+// 
+// V_PIXEL_SIZE - the size in bytes of a pixel in the data stream
+// T_COLOR_OBJECT - the primary color object used to represent a pixel
+//
 template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT>
-class NeoByteElements
+class NeoElementsBase
 {
 public:
     static const size_t PixelSize = V_PIXEL_SIZE;
@@ -66,17 +72,6 @@ public:
         }
     }
 
-    static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
-    {
-        uint8_t* pEnd = pPixelDest + (count * PixelSize);
-        const uint8_t* pSrc = (const uint8_t*)pPixelSrc;
-    
-        while (pPixelDest < pEnd)
-        {
-            *pPixelDest++ = pgm_read_byte(pSrc++);
-        }
-    }
-
     static void movePixelsDec(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
     {
         uint8_t* pDestBack = pPixelDest + (count * PixelSize);
@@ -85,6 +80,45 @@ public:
         while (pDestBack > pPixelDest)
         {
             *--pDestBack = *--pSrcBack;
+        }
+    }
+};
+
+// NeoByteElements is used for 8bit color element types and less
+// 
+template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT>
+class NeoByteElements : public NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT>
+{
+public:
+ 
+    static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
+    {
+        uint8_t* pEnd = pPixelDest + (count * NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT>::PixelSize);
+        const uint8_t* pSrc = (const uint8_t*)pPixelSrc;
+    
+        while (pPixelDest < pEnd)
+        {
+            *pPixelDest++ = pgm_read_byte(pSrc++);
+        }
+    }
+};
+
+// NeoWordElements is used for 16bit color element types
+//
+template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT>
+class NeoWordElements : public NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT>
+{
+public:
+
+    static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
+    {
+        uint16_t* pDest = reinterpret_cast<uint16_t*>(pPixelDest);
+        uint16_t* pEnd = pDest + (count * NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT>::PixelSize / sizeof(uint16_t));
+        const uint16_t* pSrc = reinterpret_cast<const uint16_t*>(pPixelSrc);
+
+        while (pDest < pEnd)
+        {
+            *pDest++ = pgm_read_word(pSrc++);
         }
     }
 };
