@@ -26,15 +26,14 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-// NeoPixel Features
-//
+// Core Element base classes
+// 
+#include "features/NeoElementsNoSettings.h"
 #include "features/NeoByteElements.h"
 #include "features/Neo2ByteElements.h"
-#include "features/Neo3ByteElements.h"
-#include "features/Neo4ByteElements.h"
-#include "features/Neo6ByteElements.h"
-#include "features/Neo6Byte4xxElements.h"
-#include "features/Neo8ByteElements.h"
+
+// NeoPixel Features
+//
 #include "features/NeoBgrFeature.h"
 #include "features/NeoBrgFeature.h"
 #include "features/NeoGrb48Feature.h"
@@ -56,9 +55,6 @@ typedef NeoGrb48Feature NeoGrbWs2816Feature;
 
 // DotStart Features
 // 
-
-#include "features/DotStar3Elements.h"
-#include "features/DotStar4Elements.h"
 #include "features/DotStarBgrFeature.h"
 #include "features/DotStarBrgFeature.h"
 #include "features/DotStarGbrFeature.h"
@@ -81,7 +77,6 @@ typedef NeoGrb48Feature NeoGrbWs2816Feature;
 
 // 7 Segment Features
 //
-#include "features/Neo9ByteElements.h"
 #include "features/NeoAbcdefgpsSegmentFeature.h"
 #include "features/NeoBacedfpgsSegmentFeature.h"
 

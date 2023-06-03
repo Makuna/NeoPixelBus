@@ -26,7 +26,9 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class DotStarGbrFeature : public DotStar3ElementsNoSettings
+class DotStarGbrFeature : 
+    public NeoByteElements<4, RgbColor>,
+    public NeoElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)

@@ -26,26 +26,10 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
  
-class Neo2ByteElementsNoSettings : public NeoByteElements<2, RgbColor>
+class Neo2ByteElementsNoSettings : 
+    public NeoByteElements<2, RgbColor>,
+    public NeoElementsNoSettings
 {
-public:
-    typedef NeoNoSettings SettingsObject;
-    static const size_t SettingsSize = 0;
-
-    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
-    {
-    }
-
-    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
-    {
-        return pData;
-    }
-
-    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
-    {
-        return pData;
-    }
-
 protected:
     static void encodePixel(uint8_t c1, uint8_t c2, uint8_t c3, uint16_t* color555)
     {

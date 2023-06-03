@@ -52,13 +52,23 @@ public:
     static void replicatePixel(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
     {
         uint8_t* pEnd = pPixelDest + (count * PixelSize);
+//        uint8_t pEndSrc = pPixelSrc + PixelSize;
 
         while (pPixelDest < pEnd)
         {
+/* compare size and speed against these two inner loops implementations
+*/
             for (uint8_t iElement = 0; iElement < PixelSize; iElement++)
             {
                 *pPixelDest++ = pPixelSrc[iElement];
             }
+/* compare size and speed against these two inner loops implementations
+            const uint8_t* pSrc = pPixelSrc;
+            while (pSrc < pEndSrc)
+            {
+                *pPixelDest++ = *pSrc++;
+            }
+*/
         }
     }
 
@@ -122,3 +132,5 @@ public:
         }
     }
 };
+
+

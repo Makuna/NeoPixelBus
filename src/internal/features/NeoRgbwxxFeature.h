@@ -26,7 +26,9 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class NeoRgbwxxFeature : public Neo6Byte4xxElementsNoSettings
+class NeoRgbwxxFeature :
+    public NeoByteElements<6, RgbwColor>,
+    public NeoElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)

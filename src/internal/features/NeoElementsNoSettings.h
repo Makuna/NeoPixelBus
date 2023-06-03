@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-Neo4ByteElements provides feature base classes to describe color elements
-for NeoPixelBus Color Feature template classes
+NeoElementsNoSettings provides feature base classes to describe a 
+    no settings feature
 
 Written by Michael C. Miller.
 
@@ -25,8 +25,8 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 #pragma once
- 
-class Neo4ByteElementsNoSettings : public NeoByteElements<4, RgbwColor>
+
+class NeoElementsNoSettings
 {
 public:
     typedef NeoNoSettings SettingsObject;
