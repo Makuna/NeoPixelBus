@@ -32,7 +32,7 @@ License along with NeoPixel.  If not, see
 // 
 // V_PIXEL_SIZE - the size in bytes of a pixel in the data stream
 // T_COLOR_OBJECT - the primary color object used to represent a pixel
-//
+// T_COPY - (future) the base type to use when copying/moving (uint8_t/uint16_t/uint32_t)
 template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT>
 class NeoElementsBase
 {
@@ -52,23 +52,15 @@ public:
     static void replicatePixel(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
     {
         uint8_t* pEnd = pPixelDest + (count * PixelSize);
-//        uint8_t pEndSrc = pPixelSrc + PixelSize;
+        const uint8_t* pEndSrc = pPixelSrc + PixelSize;
 
         while (pPixelDest < pEnd)
         {
-/* compare size and speed against these two inner loops implementations
-*/
-            for (uint8_t iElement = 0; iElement < PixelSize; iElement++)
-            {
-                *pPixelDest++ = pPixelSrc[iElement];
-            }
-/* compare size and speed against these two inner loops implementations
             const uint8_t* pSrc = pPixelSrc;
             while (pSrc < pEndSrc)
             {
                 *pPixelDest++ = *pSrc++;
             }
-*/
         }
     }
 
