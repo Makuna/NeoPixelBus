@@ -47,7 +47,6 @@ NeoRgbSm16803pbFeature	KEYWORD1
 NeoRgbSm16823eFeature	KEYWORD1
 NeoRgbwSm16804ebFeature	KEYWORD1
 NeoRgbwSm16824eFeature	KEYWORD1
-NeoGrbcwxFeature	KEYWORD1
 DotStarBgrFeature	KEYWORD1
 DotStarLbgrFeature	KEYWORD1
 Lpd6803GrbFeature	KEYWORD1
