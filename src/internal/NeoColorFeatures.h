@@ -30,7 +30,7 @@ License along with NeoPixel.  If not, see
 // 
 #include "features/NeoElementsNoSettings.h"
 #include "features/NeoByteElements.h"
-#include "features/Neo2ByteElements.h"
+#include "features/Neo2Byte555Elements.h"
 
 // NeoPixel Features
 //

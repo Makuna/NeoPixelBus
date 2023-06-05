@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-Neo2ByteElements provides feature base classes to describe color elements
-for NeoPixelBus Color Feature template classes
+Neo2Byte555Elements provides feature base classes to describe color elements
+with 555 encoding for NeoPixelBus Color Feature template classes
 
 Written by Michael C. Miller.
 
@@ -26,9 +26,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
  
-class Neo2ByteElementsNoSettings : 
-    public NeoByteElements<2, RgbColor, uint16_t>,
-    public NeoElementsNoSettings
+class Neo2Byte555Elements 
 {
 protected:
     static void encodePixel(uint8_t c1, uint8_t c2, uint8_t c3, uint16_t* color555)

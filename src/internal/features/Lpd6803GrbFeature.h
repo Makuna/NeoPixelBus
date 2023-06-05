@@ -27,7 +27,10 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 
-class  Lpd6803GrbFeature : public Neo2ByteElementsNoSettings
+class  Lpd6803GrbFeature :
+    public NeoByteElements<2, RgbColor, uint16_t>,
+    public NeoElementsNoSettings,
+    public Neo2Byte555Elements
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
