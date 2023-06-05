@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoTm1914ColorFeatures provides feature classes to describe color order and
+NeoTm1914Features provides feature classes to describe color order and
 color depth for NeoPixelBus template class specific to the TM1914 chip
 
 Written by Michael C. Miller.

@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoSm168xxColorFeatures provides feature classes to describe color order and
+NeoSm168xxFeatures provides feature classes to describe color order and
 color depth for NeoPixelBus template class specific to the SM168xx chips/leds
 
 Written by Michael C. Miller.
@@ -318,9 +318,9 @@ public:
     }
 };
 
-typedef NeoRgbSm168x3Elements<NeoSm16803pbSettings> NeoRgbSm16803pbColorFeature;
-typedef NeoRgbSm168x3Elements<NeoSm16823eSettings> NeoRgbSm16823eColorFeature;
-typedef NeoRgbwSm168x4Elements<NeoSm16804ebSettings> NeoRgbwSm16804ebColorFeature;
-typedef NeoRgbwSm168x4Elements<NeoSm16824eSettings> NeoRgbwSm16824eColorFeature;
+typedef NeoRgbSm168x3Elements<NeoSm16803pbSettings> NeoRgbSm16803pbFeature;
+typedef NeoRgbSm168x3Elements<NeoSm16823eSettings> NeoRgbSm16823eFeature;
+typedef NeoRgbwSm168x4Elements<NeoSm16804ebSettings> NeoRgbwSm16804ebFeature;
+typedef NeoRgbwSm168x4Elements<NeoSm16824eSettings> NeoRgbwSm16824eFeature;
 
 

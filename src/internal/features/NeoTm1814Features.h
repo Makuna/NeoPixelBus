@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoTm1814ColorFeatures provides feature classes to describe color order and
+NeoTm1814Features provides feature classes to describe color order and
 color depth for NeoPixelBus template class specific to the TM1814 chip
 
 Written by Michael C. Miller.
