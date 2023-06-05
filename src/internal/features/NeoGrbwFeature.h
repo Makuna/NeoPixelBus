@@ -27,7 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 class NeoGrbwFeature : 
-    public NeoByteElements<4, RgbwColor>,
+    public NeoByteElements<4, RgbwColor, uint32_t>,
     public NeoElementsNoSettings
 {
 public:

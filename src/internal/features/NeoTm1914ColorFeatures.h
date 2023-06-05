@@ -44,7 +44,7 @@ public:
     NeoTm1914_Mode Mode;
 };
 
-class Neo3ByteElementsTm1914Settings : public NeoByteElements<3, RgbColor>
+class Neo3ByteElementsTm1914Settings : public NeoByteElements<3, RgbColor, uint8_t>
 {
 public:
     typedef NeoTm1914Settings SettingsObject;

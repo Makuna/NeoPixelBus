@@ -32,8 +32,8 @@ License along with NeoPixel.  If not, see
 // 
 // V_PIXEL_SIZE - the size in bytes of a pixel in the data stream
 // T_COLOR_OBJECT - the primary color object used to represent a pixel
-// T_COPY - (future) the base type to use when copying/moving (uint8_t/uint16_t/uint32_t)
-template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT>
+// T_COPY - (uint8_t/uint16_t/uint32_t) the base type to use when copying/moving 
+template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT, typename T_COPY>
 class NeoElementsBase
 {
 public:
@@ -51,35 +51,40 @@ public:
 
     static void replicatePixel(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
     {
-        uint8_t* pEnd = pPixelDest + (count * PixelSize);
-        const uint8_t* pEndSrc = pPixelSrc + PixelSize;
+        T_COPY* pDest = reinterpret_cast<T_COPY*>(pPixelDest);
+        T_COPY* pEnd = pDest + (count * PixelSize / sizeof(T_COPY));
+        const T_COPY* pEndSrc = reinterpret_cast<const T_COPY*>(pPixelSrc) + PixelSize / sizeof(T_COPY);
 
-        while (pPixelDest < pEnd)
+        while (pDest < pEnd)
         {
-            const uint8_t* pSrc = pPixelSrc;
+            const T_COPY* pSrc = reinterpret_cast<const T_COPY*>(pPixelSrc);
             while (pSrc < pEndSrc)
             {
-                *pPixelDest++ = *pSrc++;
+                *pDest++ = *pSrc++;
             }
         }
     }
 
     static void movePixelsInc(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
     {
-        uint8_t* pEnd = pPixelDest + (count * PixelSize);
+        const T_COPY* pSrc = reinterpret_cast<const T_COPY*>(pPixelSrc);
+        T_COPY* pDest = reinterpret_cast<T_COPY*>(pPixelDest);
+        T_COPY* pEnd = pDest + (count * PixelSize / sizeof(T_COPY));
 
-        while (pPixelDest < pEnd)
+        while (pDest < pEnd)
         {
-            *pPixelDest++ = *pPixelSrc++;
+            *pDest++ = *pSrc++;
         }
     }
 
     static void movePixelsDec(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
     {
-        uint8_t* pDestBack = pPixelDest + (count * PixelSize);
-        const uint8_t* pSrcBack = pPixelSrc + (count * PixelSize);
-
-        while (pDestBack > pPixelDest)
+        const T_COPY* pSrc = reinterpret_cast<const T_COPY*>(pPixelSrc);
+        const T_COPY* pSrcBack = pSrc + (count * PixelSize / sizeof(T_COPY));
+        T_COPY* pDest = reinterpret_cast<T_COPY*>(pPixelDest);
+        T_COPY* pDestBack = pDest + (count * PixelSize / sizeof(T_COPY));
+        
+        while (pDestBack > pDest)
         {
             *--pDestBack = *--pSrcBack;
         }
@@ -88,14 +93,17 @@ public:
 
 // NeoByteElements is used for 8bit color element types and less
 // 
-template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT>
-class NeoByteElements : public NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT>
+// V_PIXEL_SIZE - the size in bytes of a pixel in the data stream
+// T_COLOR_OBJECT - the primary color object used to represent a pixel
+// T_COPY - (uint8_t/uint16_t/uint32_t) the base type to use when copying/moving 
+template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT, typename T_COPY>
+class NeoByteElements : public NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT, T_COPY>
 {
 public:
  
     static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
     {
-        uint8_t* pEnd = pPixelDest + (count * NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT>::PixelSize);
+        uint8_t* pEnd = pPixelDest + (count * NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT, T_COPY>::PixelSize);
         const uint8_t* pSrc = (const uint8_t*)pPixelSrc;
     
         while (pPixelDest < pEnd)
@@ -107,15 +115,18 @@ public:
 
 // NeoWordElements is used for 16bit color element types
 //
-template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT>
-class NeoWordElements : public NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT>
+// V_PIXEL_SIZE - the size in bytes of a pixel in the data stream
+// T_COLOR_OBJECT - the primary color object used to represent a pixel
+// T_COPY - (uint16_t/uint32_t) the base type to use when copying/moving 
+template<size_t V_PIXEL_SIZE, typename T_COLOR_OBJECT, typename T_COPY>
+class NeoWordElements : public NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT, T_COPY>
 {
 public:
 
     static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
     {
         uint16_t* pDest = reinterpret_cast<uint16_t*>(pPixelDest);
-        uint16_t* pEnd = pDest + (count * NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT>::PixelSize / sizeof(uint16_t));
+        uint16_t* pEnd = pDest + (count * NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT, T_COPY>::PixelSize / sizeof(uint16_t));
         const uint16_t* pSrc = reinterpret_cast<const uint16_t*>(pPixelSrc);
 
         while (pDest < pEnd)

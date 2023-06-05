@@ -27,7 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 class NeoRgb48Feature : 
-    public NeoWordElements<6, Rgb48Color>,
+    public NeoWordElements<6, Rgb48Color, uint16_t>,
     public NeoElementsNoSettings
 {
 public:

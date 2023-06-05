@@ -27,7 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
  
 class Neo2ByteElementsNoSettings : 
-    public NeoByteElements<2, RgbColor>,
+    public NeoByteElements<2, RgbColor, uint16_t>,
     public NeoElementsNoSettings
 {
 protected:

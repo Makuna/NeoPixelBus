@@ -51,7 +51,7 @@ public:
     }
 };
 
-class Neo4ByteElementsTm1814Settings : public NeoByteElements<4, RgbwColor>
+class Neo4ByteElementsTm1814Settings : public NeoByteElements<4, RgbwColor, uint32_t>
 {
 private:
     const static uint16_t EncodeDivisor = 5;

@@ -27,7 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 class  Lpd8806BrgFeature : 
-    public NeoByteElements<3, RgbColor>,
+    public NeoByteElements<3, RgbColor, uint8_t>,
     public NeoElementsNoSettings
 {
 public:

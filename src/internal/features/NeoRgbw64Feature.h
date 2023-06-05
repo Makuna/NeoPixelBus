@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 
 class NeoRgbw64Feature : 
-    public NeoWordElements<8, Rgbw64Color>,
+    public NeoWordElements<8, Rgbw64Color, uint32_t>,
     public NeoElementsNoSettings
 {
 public:

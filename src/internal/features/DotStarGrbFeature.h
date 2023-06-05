@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 
 class DotStarGrbFeature : 
-    public NeoByteElements<4, RgbColor>,
+    public NeoByteElements<4, RgbColor, uint32_t>,
     public NeoElementsNoSettings
 {
 public:

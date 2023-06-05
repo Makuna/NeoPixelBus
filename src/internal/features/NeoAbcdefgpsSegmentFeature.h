@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 // Abcdefgps byte order
 class NeoAbcdefgpsSegmentFeature : 
-    public NeoByteElements<9, SevenSegDigit>,
+    public NeoByteElements<9, SevenSegDigit, uint8_t>,
     public NeoElementsNoSettings
 {
 public:

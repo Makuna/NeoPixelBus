@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 // BACEDF.G+ byte order
 class NeoBacedfpgsSegmentFeature :
-    public NeoByteElements<9, SevenSegDigit>,
+    public NeoByteElements<9, SevenSegDigit, uint8_t>,
     public NeoElementsNoSettings
 {
 public:

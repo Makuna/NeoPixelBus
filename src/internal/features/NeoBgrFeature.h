@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 
 class NeoBgrFeature :
-    public NeoByteElements<3, RgbColor>,
+    public NeoByteElements<3, RgbColor, uint8_t>,
     public NeoElementsNoSettings
 {
 public:
