@@ -46,9 +46,9 @@ License along with NeoPixel.  If not, see
 #include "features/NeoRgbwFeature.h"
 #include "features/NeoRgbwxxFeature.h"
 #include "features/NeoGrbcwxFeature.h"
-#include "features/NeoSm168xxColorFeatures.h"
-#include "features/NeoTm1814ColorFeatures.h"
-#include "features/NeoTm1914ColorFeatures.h"
+#include "features/NeoSm168xxFeatures.h"
+#include "features/NeoTm1814Features.h"
+#include "features/NeoTm1914Features.h"
 
 typedef NeoRgb48Feature NeoRgbUcs8903Feature;
 typedef NeoRgbw64Feature NeoRgbwUcs8904Feature;
