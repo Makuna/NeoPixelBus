@@ -29,7 +29,7 @@ License along with NeoPixel.  If not, see
 template<typename T_COLOR_FEATURE> class NeoBufferMethod
 {
 public:
-    NeoBufferMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels = NULL) :
+    NeoBufferMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels = nullptr) :
         _width(width),
         _height(height)
     {
@@ -44,6 +44,7 @@ public:
     ~NeoBufferMethod()
     {
         free(_pixels);
+        _pixels = nullptr;
     }
 
     operator NeoBufferContext<T_COLOR_FEATURE>()
@@ -143,7 +144,7 @@ public:
     typedef T_COLOR_FEATURE ColorFeature;
 
 private:
-    const uint16_t _width;
+    const uint16_t _width; 
     const uint16_t _height;
     uint8_t* _pixels;
 };

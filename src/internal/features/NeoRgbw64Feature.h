@@ -53,10 +53,14 @@ public:
         const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         // due to endianness the byte order must be copied to output
-        color.R = (static_cast<uint16_t>(*p++) << 8) | *p++;
-        color.G = (static_cast<uint16_t>(*p++) << 8) | *p++;
-        color.B = (static_cast<uint16_t>(*p++) << 8) | *p++;
-        color.W = (static_cast<uint16_t>(*p++) << 8) | *p;
+        color.R = (static_cast<uint16_t>(*p++) << 8);
+        color.R |= *p++;
+        color.G = (static_cast<uint16_t>(*p++) << 8);
+        color.G |= *p++;
+        color.B = (static_cast<uint16_t>(*p++) << 8);
+        color.B |= *p++;
+        color.W = (static_cast<uint16_t>(*p++) << 8);
+        color.W |= *p;
 
         return color;
     }
