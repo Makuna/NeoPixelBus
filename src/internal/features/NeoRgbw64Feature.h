@@ -27,7 +27,9 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 
-class NeoRgbw64Feature : public Neo8ByteElementsNoSettings
+class NeoRgbw64Feature : 
+    public NeoWordElements<8, Rgbw64Color, uint32_t>,
+    public NeoElementsNoSettings
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
@@ -51,10 +53,14 @@ public:
         const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
         // due to endianness the byte order must be copied to output
-        color.R = (static_cast<uint16_t>(*p++) << 8) | *p++;
-        color.G = (static_cast<uint16_t>(*p++) << 8) | *p++;
-        color.B = (static_cast<uint16_t>(*p++) << 8) | *p++;
-        color.W = (static_cast<uint16_t>(*p++) << 8) | *p;
+        color.R = (static_cast<uint16_t>(*p++) << 8);
+        color.R |= *p++;
+        color.G = (static_cast<uint16_t>(*p++) << 8);
+        color.G |= *p++;
+        color.B = (static_cast<uint16_t>(*p++) << 8);
+        color.B |= *p++;
+        color.W = (static_cast<uint16_t>(*p++) << 8);
+        color.W |= *p;
 
         return color;
     }

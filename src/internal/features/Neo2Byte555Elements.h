@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-DotStar3Elements provides feature base classes to describe color elements
-for NeoPixelBus Color Feature template classes when used with DotStars
+Neo2Byte555Elements provides feature base classes to describe color elements
+with 555 encoding for NeoPixelBus Color Feature template classes
 
 Written by Michael C. Miller.
 
@@ -25,24 +25,22 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 #pragma once
-
-class DotStar3ElementsNoSettings : public Neo4ByteRgbElements
+ 
+class Neo2Byte555Elements 
 {
-public:
-    typedef NeoNoSettings SettingsObject;
-    static const size_t SettingsSize = 0;
-
-    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+protected:
+    static void encodePixel(uint8_t c1, uint8_t c2, uint8_t c3, uint16_t* color555)
     {
+        *color555 = (0x8000 |
+            ((c1 & 0xf8) << 7) |
+            ((c2 & 0xf8) << 2) |
+            ((c3 & 0xf8) >> 3));
     }
 
-    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    static void decodePixel(uint16_t color555, uint8_t* c1, uint8_t* c2, uint8_t* c3)
     {
-        return pData;
-    }
-
-    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
-    {
-        return pData;
+        *c1 = (color555 >> 7) & 0xf8;
+        *c2 = (color555 >> 2) & 0xf8;
+        *c3 = (color555 << 3) & 0xf8;
     }
 };
