@@ -126,6 +126,10 @@ public:
     {
     }
 
+    ~NeoPixelBusLg()
+    {
+    }
+
     void SetLuminance(uint8_t luminance)
     {
         // does NOT affect current pixel data as there is no safe way
