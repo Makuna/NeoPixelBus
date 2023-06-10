@@ -28,6 +28,7 @@ License along with NeoPixel.  If not, see
 
 #include "colors/NeoHueBlend.h"
 
+#include "colors/RgbColorIndexes.h"
 #include "colors/RgbColorBase.h"
 
 #include "colors/RgbColor.h"

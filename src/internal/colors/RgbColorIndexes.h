@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoRbgFeature provides feature classes to describe color order and
-color depth for NeoPixelBus template class
+RgbColorIndexes provides constants for color element vector access on 
+   RGB(w) Color Objects
 
 Written by Michael C. Miller.
 
@@ -24,10 +24,12 @@ You should have received a copy of the GNU Lesser General Public
 License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
+
 #pragma once
 
-class NeoRbgFeature :
-    public Neo3ByteFeature<ColorIndexR, ColorIndexB, ColorIndexG>,
-    public NeoElementsNoSettings
-{
-};
+const uint8_t ColorIndexR = 0;
+const uint8_t ColorIndexG = 1;
+const uint8_t ColorIndexB = 2;
+const uint8_t ColorIndexW = 3;
+const uint8_t ColorIndexWW = 3; // warmer white
+const uint8_t ColorIndexCW = 4; // cooler white

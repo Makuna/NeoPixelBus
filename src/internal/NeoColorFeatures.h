@@ -31,12 +31,14 @@ License along with NeoPixel.  If not, see
 #include "features/NeoElementsNoSettings.h"
 #include "features/NeoByteElements.h"
 #include "features/Neo2Byte555Elements.h"
+#include "features/Neo3ByteFeature.h"
 
 // NeoPixel Features
 //
 #include "features/NeoBgrFeature.h"
 #include "features/NeoBrgFeature.h"
 #include "features/NeoGrb48Feature.h"
+#include "features/NeoGbrFeature.h"
 #include "features/NeoGrbFeature.h"
 #include "features/NeoGrbwFeature.h"
 #include "features/NeoRbgFeature.h"
