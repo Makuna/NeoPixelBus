@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoGrbwFeature provides feature classes to describe color order and
+NeoRgbwFeature provides feature classes to describe color order and
 color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
@@ -26,8 +26,38 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class NeoGrbwFeature : 
+class NeoRgbwFeature :
+    public Neo4ByteFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoRbgwFeature :
+    public Neo4ByteFeature<ColorIndexR, ColorIndexB, ColorIndexG, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGbrwFeature :
+    public Neo4ByteFeature<ColorIndexG, ColorIndexB, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGrbwFeature :
     public Neo4ByteFeature<ColorIndexG, ColorIndexR, ColorIndexB, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBgrwFeature :
+    public Neo4ByteFeature<ColorIndexB, ColorIndexG, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBrgwFeature :
+    public Neo4ByteFeature<ColorIndexB, ColorIndexR, ColorIndexG, ColorIndexW>,
     public NeoElementsNoSettings
 {
 };
