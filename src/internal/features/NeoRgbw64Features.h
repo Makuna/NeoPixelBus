@@ -32,3 +32,35 @@ class NeoRgbw64Feature :
     public NeoElementsNoSettings
 {
 };
+
+class NeoRbgw64Feature :
+    public Neo4WordFeature<ColorIndexR, ColorIndexB, ColorIndexG, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGbrw64Feature :
+    public Neo4WordFeature<ColorIndexG, ColorIndexB, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGrbw64Feature :
+    public Neo4WordFeature<ColorIndexG, ColorIndexR, ColorIndexB, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBgrw64Feature :
+    public Neo4WordFeature<ColorIndexB, ColorIndexG, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBrgw64Feature :
+    public Neo4WordFeature<ColorIndexB, ColorIndexR, ColorIndexG, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+
