@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-DotStarBrgFeature provides feature classes to describe color order and
+DotStarRbgFeature provides feature classes to describe color order and
 color depth for NeoPixelBus template class when used with DotStars
 
 Written by Michael C. Miller.
@@ -26,9 +26,40 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+class DotStarRgbFeature :
+    public DotStarX4Feature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
+
+class DotStarRbgFeature :
+    public DotStarX4Feature<ColorIndexR, ColorIndexB, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
+
+
+class DotStarGbrFeature :
+    public DotStarX4Feature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
+
+class DotStarGrbFeature :
+    public DotStarX4Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
+
+
 class DotStarBrgFeature :
     public DotStarX4Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
     public NeoElementsNoSettings
 {
 };
 
+class DotStarBgrFeature :
+    public DotStarX4Feature<ColorIndexB, ColorIndexG, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
