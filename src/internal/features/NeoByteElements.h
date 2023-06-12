@@ -104,7 +104,7 @@ public:
     static void movePixelsInc_P(uint8_t* pPixelDest, PGM_VOID_P pPixelSrc, uint16_t count)
     {
         uint8_t* pEnd = pPixelDest + (count * NeoElementsBase<V_PIXEL_SIZE, T_COLOR_OBJECT, T_COPY>::PixelSize);
-        const uint8_t* pSrc = (const uint8_t*)pPixelSrc;
+        const uint8_t* pSrc = reinterpret_cast<const uint8_t*>(pPixelSrc);
     
         while (pPixelDest < pEnd)
         {
