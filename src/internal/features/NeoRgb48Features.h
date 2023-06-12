@@ -31,3 +31,33 @@ class NeoRgb48Feature :
     public NeoElementsNoSettings
 {
 };
+
+class NeoRbg48Feature :
+    public Neo3WordFeature<ColorIndexR, ColorIndexB, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGrb48Feature :
+    public Neo3WordFeature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGbr48Feature :
+    public Neo3WordFeature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBgr48Feature :
+    public Neo3WordFeature<ColorIndexB, ColorIndexG, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBrg48Feature :
+    public Neo3WordFeature<ColorIndexB, ColorIndexR, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
