@@ -27,42 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 class  Lpd8806BrgFeature : 
-    public NeoByteElements<3, RgbColor, uint8_t>,
+    public Neo3Byte777Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
     public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = (color.B >> 1) | 0x80;
-        *p++ = (color.R >> 1) | 0x80;
-        *p = (color.G >> 1) | 0x80;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.B = (*p++) << 1;
-        color.R = (*p++) << 1;
-        color.G = (*p) << 1;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        color.B = (pgm_read_byte(p++)) << 1;
-        color.R = (pgm_read_byte(p++)) << 1;
-        color.G = (pgm_read_byte(p)) << 1;
-
-        return color;
-    }
-
 };
-

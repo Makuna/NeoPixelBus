@@ -50,11 +50,29 @@ public:
         GreenGain(greenGain & 0x0f),
         BlueGain(blueGain & 0x0f) {}
 
+    // ------------------------------------------------------------------------
+    // operator [] - readonly
+    // access elements in order by index rather than member name
+    // ------------------------------------------------------------------------
+    uint8_t operator[](size_t idx) const
+    {
+        switch (idx)
+        {
+        case 0:
+            return RedGain;
+        case 1:
+            return GreenGain;
+        default:
+            return BlueGain;
+        }
+    }
+
     const uint8_t RedGain : 4;
     const uint8_t GreenGain : 4;
     const uint8_t BlueGain : 4;
 };
 
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class NeoSm16803pbSettings : public NeoSm168x3SettingsBase
 {
 public:
@@ -71,8 +89,8 @@ public:
     void Encode(uint8_t* encoded) const
     {
         // 0RGB 4 bits each
-        encoded[0] = RedGain;
-        encoded[1] = GreenGain << 4 | BlueGain;
+        *encoded++ = operator[](V_IC_1);
+        *encoded = operator[](V_IC_2) << 4 | operator[](V_IC_3);
     }
 
 protected:
@@ -81,6 +99,7 @@ protected:
             110, 133, 145, 156, 168, 179, 190};
 };
 
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class NeoSm16823eSettings : public NeoSm168x3SettingsBase
 {
 public:
@@ -98,8 +117,8 @@ public:
     void Encode(uint8_t* encoded) const
     {
         // RGB0 4 bits each
-        encoded[0] = RedGain << 4 | GreenGain;
-        encoded[1] = BlueGain << 4;
+        *encoded++ = operator[](V_IC_1) << 4 | operator[](V_IC_2);
+        *encoded = operator[](V_IC_3) << 4;
     }
 
 protected:
@@ -131,12 +150,32 @@ public:
         BlueGain(blueGain & 0x0f),
         WhiteGain(whiteGain & 0x0f) {}
 
+    // ------------------------------------------------------------------------
+    // operator [] - readonly
+    // access elements in order by index rather than member name
+    // ------------------------------------------------------------------------
+    uint8_t operator[](size_t idx) const
+    {
+        switch (idx)
+        {
+        case 0:
+            return RedGain;
+        case 1:
+            return GreenGain;
+        case 2:
+            return BlueGain;
+        default:
+            return WhiteGain;
+        }
+    }
+
     const uint8_t RedGain : 4;
     const uint8_t GreenGain : 4;
     const uint8_t BlueGain : 4;
     const uint8_t WhiteGain : 4;
 };
 
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3, uint8_t V_IC_4>
 class NeoSm16804ebSettings : public NeoSm168x4SettingsBase
 {
 public:
@@ -155,8 +194,8 @@ public:
     void Encode(uint8_t* encoded) const
     {
         // RGBW 4 bits each
-        encoded[0] = RedGain << 4 | GreenGain;
-        encoded[1] = BlueGain << 4 | WhiteGain;
+        *encoded++ = operator[](V_IC_1) << 4 | operator[](V_IC_2);
+        *encoded = operator[](V_IC_3) << 4 | operator[](V_IC_4);
     }
 
 protected:
@@ -165,6 +204,7 @@ protected:
             110, 133, 145, 156, 168, 179, 190 };
 };
 
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3, uint8_t V_IC_4>
 class NeoSm16824eSettings : public NeoSm168x4SettingsBase
 {
 public:
@@ -184,8 +224,8 @@ public:
     void Encode(uint8_t* encoded) const
     {
         // RGBW 4 bits each
-        encoded[0] = RedGain << 4 | GreenGain;
-        encoded[1] = BlueGain << 4 | WhiteGain;
+        *encoded++ = operator[](V_IC_1) << 4 | operator[](V_IC_2);
+        *encoded = operator[](V_IC_3) << 4 | operator[](V_IC_4);
     }
 
 protected:
@@ -199,7 +239,10 @@ protected:
 
 };
 
-template<typename T_SETTINGS> class NeoRgbwSm168x4Elements : public NeoByteElements<4, RgbwColor, uint32_t>
+// CAUTION:  Make sure ColorIndex order for Neo4ByteFeature matches T_SETTINGS
+template<typename T_SETTINGS> 
+class NeoRgbwSm168x4Elements : 
+    public Neo4ByteFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>
 {
 public:
     typedef T_SETTINGS SettingsObject;
@@ -222,45 +265,11 @@ public:
     {
         return pData;
     }
-
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = color.R;
-        *p++ = color.G;
-        *p++ = color.B;
-        *p = color.W;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.R = *p++;
-        color.G = *p++;
-        color.B = *p++;
-        color.W = *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        color.R = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p++);
-        color.W = pgm_read_byte(p);
-
-        return color;
-    }
 };
 
-template<typename T_SETTINGS> class NeoRgbSm168x3Elements : public NeoByteElements<3, RgbColor, uint8_t>
+// CAUTION:  Make sure ColorIndex order for Neo3ByteFeature matches T_SETTINGS
+template<typename T_SETTINGS> class NeoRgbSm168x3Elements : 
+    public Neo3ByteFeature<ColorIndexR, ColorIndexG, ColorIndexB>
 {
 public:
     typedef T_SETTINGS SettingsObject;
@@ -283,44 +292,11 @@ public:
     {
         return pData;
     }
-
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = color.R;
-        *p++ = color.G;
-        *p = color.B;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.R = *p++;
-        color.G = *p++;
-        color.B = *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        color.R = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p);
-
-        return color;
-    }
 };
 
-typedef NeoRgbSm168x3Elements<NeoSm16803pbSettings> NeoRgbSm16803pbFeature;
-typedef NeoRgbSm168x3Elements<NeoSm16823eSettings> NeoRgbSm16823eFeature;
-typedef NeoRgbwSm168x4Elements<NeoSm16804ebSettings> NeoRgbwSm16804ebFeature;
-typedef NeoRgbwSm168x4Elements<NeoSm16824eSettings> NeoRgbwSm16824eFeature;
+typedef NeoRgbSm168x3Elements<NeoSm16803pbSettings<ColorIndexR, ColorIndexG, ColorIndexB>> NeoRgbSm16803pbFeature;
+typedef NeoRgbSm168x3Elements<NeoSm16823eSettings<ColorIndexR, ColorIndexG, ColorIndexB>> NeoRgbSm16823eFeature;
+typedef NeoRgbwSm168x4Elements<NeoSm16804ebSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>> NeoRgbwSm16804ebFeature;
+typedef NeoRgbwSm168x4Elements<NeoSm16824eSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>> NeoRgbwSm16824eFeature;
 
 

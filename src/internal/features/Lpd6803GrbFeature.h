@@ -28,48 +28,7 @@ License along with NeoPixel.  If not, see
 
 
 class  Lpd6803GrbFeature :
-    public NeoByteElements<2, RgbColor, uint16_t>,
-    public NeoElementsNoSettings,
-    public Neo2Byte555Elements
+    public Neo2Byte555Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-        uint16_t color555;
-
-        encodePixel(color.G, color.R, color.B, &color555);
-        *p++ = color555 >> 8;
-        *p = color555 & 0xff;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        uint16_t color555;
-
-        color555 = ((*p++) << 8);
-        color555 |= (*p);
-
-        decodePixel(color555, &color.G, &color.R, &color.B);
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        uint16_t color555;
-
-        color555 = (pgm_read_byte(p++) << 8);
-        color555 |= pgm_read_byte(p);
-
-        decodePixel(color555, &color.G, &color.R, &color.B);
-
-        return color;
-    }
 };

@@ -44,7 +44,7 @@ public:
     NeoTm1914_Mode Mode;
 };
 
-class Neo3ByteElementsTm1914Settings : public NeoByteElements<3, RgbColor, uint8_t>
+class Neo3ByteElementsTm1914Settings 
 {
 public:
     typedef NeoTm1914Settings SettingsObject;
@@ -99,79 +99,15 @@ public:
 };
 
 
-class NeoRgbTm1914Feature : public Neo3ByteElementsTm1914Settings
+class NeoRgbTm1914Feature : 
+    public Neo3ByteFeature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public Neo3ByteElementsTm1914Settings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = color.R;
-        *p++ = color.G;
-        *p = color.B;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.R = *p++;
-        color.G = *p++;
-        color.B = *p;
-
-        return color;
-    }
-    
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        color.R = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p);
-
-        return color;
-    }
-    
 };
 
 
-class NeoGrbTm1914Feature : public Neo3ByteElementsTm1914Settings
+class NeoGrbTm1914Feature : 
+    public Neo3ByteFeature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public Neo3ByteElementsTm1914Settings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = color.G;
-        *p++ = color.R;
-        *p = color.B;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.G = *p++;
-        color.R = *p++;
-        color.B = *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        color.G = pgm_read_byte(p++);
-        color.R = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p);
-
-        return color;
-    }
-
 };

@@ -26,45 +26,9 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class DotStarBrgFeature : 
-    public NeoByteElements<4, RgbColor, uint32_t>,
+class DotStarBrgFeature :
+    public DotStarX4Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
     public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = 0xff; // upper three bits are always 111 and brightness at max
-        *p++ = color.B;
-        *p++ = color.R;
-        *p = color.G;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        p++; // ignore the first byte
-        color.B = *p++;
-        color.R = *p++;
-        color.G = *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        pgm_read_byte(p++); // ignore the first byte
-        color.B = pgm_read_byte(p++);
-        color.R = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p);
-
-        return color;
-    }
-
 };
+

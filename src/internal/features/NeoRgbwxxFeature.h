@@ -27,48 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 class NeoRgbwxxFeature :
-    public NeoByteElements<6, RgbwColor, uint16_t>,
+    public Neo6xxByteFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>,
     public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = color.R;
-        *p++ = color.G;
-        *p++ = color.B;
-        *p++ = color.W;
-        // zero the xx, this maybe unnecessary though, but its thorough
-        *p++ = 0;
-        *p = 0;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.R = *p++;
-        color.G = *p++;
-        color.B = *p++;
-        color.W = *p;
-        // ignore the xx
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
-
-        color.R = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p++);
-        color.W = pgm_read_byte(p);
-        // ignore the xx
-
-        return color;
-    }
 };

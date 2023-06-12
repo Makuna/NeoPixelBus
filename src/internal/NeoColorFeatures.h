@@ -30,8 +30,18 @@ License along with NeoPixel.  If not, see
 // 
 #include "features/NeoElementsNoSettings.h"
 #include "features/NeoByteElements.h"
-#include "features/Neo2Byte555Elements.h"
+
+// Core Feature base classes
+#include "features/Neo2Byte555Feature.h"
 #include "features/Neo3ByteFeature.h"
+#include "features/Neo3Byte777Feature.h"
+#include "features/Neo4ByteFeature.h"
+#include "features/DotStarX4ByteFeature.h"
+#include "features/DotStarL4ByteFeature.h"
+#include "features/Neo6xByteFeature.h"
+#include "features/Neo6xxByteFeature.h"
+#include "features/Neo3WordFeature.h"
+#include "features/Neo4WordFeature.h"
 
 // NeoPixel Features
 //

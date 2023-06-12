@@ -51,7 +51,8 @@ public:
     }
 };
 
-class Neo4ByteElementsTm1814Settings : public NeoByteElements<4, RgbwColor, uint32_t>
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3, uint8_t V_IC_4>
+class NeoElementsTm1814Settings 
 {
 private:
     const static uint16_t EncodeDivisor = 5;
@@ -66,10 +67,10 @@ public:
         uint8_t* pSet = pData;
 
         // C1
-        *pSet++ = (SettingsObject::LimitCurrent(settings.WhiteTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
-        *pSet++ = (SettingsObject::LimitCurrent(settings.RedTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
-        *pSet++ = (SettingsObject::LimitCurrent(settings.GreenTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
-        *pSet++ = (SettingsObject::LimitCurrent(settings.BlueTenthMilliAmpere) - SettingsObject::MinCurrent) / EncodeDivisor;
+        *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_1]) - SettingsObject::MinCurrent) / EncodeDivisor;
+        *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_2]) - SettingsObject::MinCurrent) / EncodeDivisor;
+        *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_3]) - SettingsObject::MinCurrent) / EncodeDivisor;
+        *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_4]) - SettingsObject::MinCurrent) / EncodeDivisor;
         
         uint8_t* pC1 = pData;
 
@@ -94,44 +95,9 @@ public:
 };
 
 
-class NeoWrgbTm1814Feature : public Neo4ByteElementsTm1814Settings
-{
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = color.W;
-        *p++ = color.R;
-        *p++ = color.G;
-        *p = color.B;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.W = *p++;
-        color.R = *p++;
-        color.G = *p++;
-        color.B = *p;
-
-        return color;
-    }
-    
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        color.W = pgm_read_byte(p++);
-        color.R = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p);
-
-        return color;
-    }
-    
+class NeoWrgbTm1814Feature : 
+    public Neo4ByteFeature<ColorIndexW, ColorIndexR, ColorIndexG, ColorIndexB>,
+    public NeoElementsTm1814Settings<ColorIndexW, ColorIndexR, ColorIndexG, ColorIndexB>
+{   
 };
 

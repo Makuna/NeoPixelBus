@@ -27,50 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 class NeoGrb48Feature : 
-    public NeoWordElements<6, Rgb48Color, uint16_t>,
+    public Neo3WordFeature<ColorIndexG, ColorIndexR, ColorIndexB>,
     public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        // due to endianness the byte order must be copied to output
-        *p++ = color.G >> 8;
-        *p++ = color.G & 0xff;
-        *p++ = color.R >> 8;
-        *p++ = color.R & 0xff;
-        *p++ = color.B >> 8;
-        *p = color.B & 0xff;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        // due to endianness the byte order must be copied to output
-        color.G = (static_cast<uint16_t>(*p++) << 8);
-        color.G |= *p++;
-        color.R = (static_cast<uint16_t>(*p++) << 8);
-        color.R |= *p++;
-        color.B = (static_cast<uint16_t>(*p++) << 8);
-        color.B |= *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel));
-
-        // PROGMEM unit of storage expected to be the same size as color element
-        //    so no endianness issues to worry about
-        color.G = pgm_read_word(p++);
-        color.R = pgm_read_word(p++);
-        color.B = pgm_read_word(p);
-
-        return color;
-    }
 };
