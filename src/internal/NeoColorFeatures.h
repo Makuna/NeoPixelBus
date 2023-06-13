@@ -63,13 +63,7 @@ typedef NeoGrb48Feature NeoGrbWs2816Feature;
 // DotStart Features
 // 
 #include "features/DotStarRgbFeatures.h"
-
-#include "features/DotStarLbgrFeature.h"
-#include "features/DotStarLbrgFeature.h"
-#include "features/DotStarLgbrFeature.h"
-#include "features/DotStarLgrbFeature.h"
-#include "features/DotStarLrbgFeature.h"
-#include "features/DotStarLrgbFeature.h"
+#include "features/DotStarLrgbFeatures.h"
 
 #include "features/Lpd8806BrgFeature.h"
 #include "features/Lpd8806GrbFeature.h"

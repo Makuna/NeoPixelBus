@@ -31,3 +31,35 @@ class DotStarLrgbFeature :
     public NeoElementsNoSettings
 {
 };
+
+class DotStarLrbgFeature :
+    public DotStarL4Feature<ColorIndexR, ColorIndexB, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
+
+
+class DotStarLgrbFeature :
+    public DotStarL4Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
+
+class DotStarLgbrFeature :
+    public DotStarL4Feature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
+
+
+class DotStarLbrgFeature :
+    public DotStarL4Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
+
+class DotStarLbgrFeature :
+    public DotStarL4Feature<ColorIndexB, ColorIndexG, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
