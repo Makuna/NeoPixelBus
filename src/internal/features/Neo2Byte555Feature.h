@@ -30,6 +30,7 @@ template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class Neo2Byte555Feature :
     public NeoByteElements<2, RgbColor, uint16_t>
 {
+public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
