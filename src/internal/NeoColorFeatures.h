@@ -50,8 +50,8 @@ License along with NeoPixel.  If not, see
 #include "features/NeoRgb48Features.h"
 #include "features/NeoRgbw64Features.h"
 
-#include "features/NeoRgbwxxFeature.h"
-#include "features/NeoGrbcwxFeature.h"
+#include "features/NeoRgbwxxFeatures.h"
+#include "features/NeoRgbcwxFeatures.h"
 #include "features/NeoSm168xxFeatures.h"
 #include "features/NeoTm1814Features.h"
 #include "features/NeoTm1914Features.h"
@@ -66,7 +66,6 @@ typedef NeoGrb48Feature NeoGrbWs2816Feature;
 #include "features/DotStarLrgbFeatures.h"
 #include "features/Lpd6803RgbFeatures.h"
 #include "features/Lpd8806RgbFeatures.h"
-
 
 #include "features/P9813BgrFeature.h"
 

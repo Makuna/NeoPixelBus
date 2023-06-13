@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoRgbwxxFeature provides feature classes to describe color order and
+NeoRgbwxxFeatures provides feature classes to describe color order and
 color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
