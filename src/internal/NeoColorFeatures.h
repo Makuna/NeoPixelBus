@@ -64,13 +64,11 @@ typedef NeoGrb48Feature NeoGrbWs2816Feature;
 // 
 #include "features/DotStarRgbFeatures.h"
 #include "features/DotStarLrgbFeatures.h"
+#include "features/Lpd6803RgbFeatures.h"
 
 #include "features/Lpd8806BrgFeature.h"
 #include "features/Lpd8806GrbFeature.h"
-#include "features/Lpd6803BrgFeature.h"
-#include "features/Lpd6803GrbFeature.h"
-#include "features/Lpd6803GbrFeature.h"
-#include "features/Lpd6803RgbFeature.h"
+
 #include "features/P9813BgrFeature.h"
 
 // 7 Segment Features

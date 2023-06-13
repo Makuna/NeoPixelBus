@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-Lpd6803GbrFeature provides feature class to describe color order and
+Lpd6803RgbFeature provides feature class to describe color order and
 color depth for NeoPixelBus template class when used with DotStar like chips
 
 Written by Michael C. Miller.
@@ -26,9 +26,27 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+class  Lpd6803RgbFeature :
+    public Neo2Byte555Feature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
+
+
+class  Lpd6803GrbFeature :
+    public Neo2Byte555Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
 
 class  Lpd6803GbrFeature :
     public Neo2Byte555Feature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
+
+class  Lpd6803BrgFeature :
+    public Neo2Byte555Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
     public NeoElementsNoSettings
 {
 };
