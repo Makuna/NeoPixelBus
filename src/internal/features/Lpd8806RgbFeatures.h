@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-Lpd8806BrgFeature provides feature classes to describe color order and
+Lpd8806RgbFeatures provides feature classes to describe color order and
 color depth for NeoPixelBus template class when used with DotStar like chips
 
 Written by Michael C. Miller.
@@ -26,7 +26,13 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class  Lpd8806BrgFeature : 
+class  Lpd8806GrbFeature : 
+    public Neo3Byte777Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
+
+class  Lpd8806BrgFeature :
     public Neo3Byte777Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
     public NeoElementsNoSettings
 {
