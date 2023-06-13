@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-Lpd8806BrgFeature provides feature classes to describe color order and
+Lpd8806RgbFeatures provides feature classes to describe color order and
 color depth for NeoPixelBus template class when used with DotStar like chips
 
 Written by Michael C. Miller.
@@ -26,43 +26,14 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class  Lpd8806BrgFeature : 
-    public NeoByteElements<3, RgbColor, uint8_t>,
+class  Lpd8806GrbFeature : 
+    public Neo3Byte777Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
     public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = (color.B >> 1) | 0x80;
-        *p++ = (color.R >> 1) | 0x80;
-        *p = (color.G >> 1) | 0x80;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.B = (*p++) << 1;
-        color.R = (*p++) << 1;
-        color.G = (*p) << 1;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        color.B = (pgm_read_byte(p++)) << 1;
-        color.R = (pgm_read_byte(p++)) << 1;
-        color.G = (pgm_read_byte(p)) << 1;
-
-        return color;
-    }
-
 };
 
+class  Lpd8806BrgFeature :
+    public Neo3Byte777Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};

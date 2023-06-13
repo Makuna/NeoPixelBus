@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoBrgFeature provides feature classes to describe color order and
-color depth for NeoPixelBus template class
+DotStarRbgFeature provides feature classes to describe color order and
+color depth for NeoPixelBus template class when used with DotStars
 
 Written by Michael C. Miller.
 
@@ -26,41 +26,40 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class NeoBrgFeature :
-    public NeoByteElements<3, RgbColor, uint8_t>,
+class DotStarRgbFeature :
+    public DotStarX4Feature<ColorIndexR, ColorIndexG, ColorIndexB>,
     public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+};
 
-        *p++ = color.B;
-        *p++ = color.R;
-        *p = color.G;
-    }
+class DotStarRbgFeature :
+    public DotStarX4Feature<ColorIndexR, ColorIndexB, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
 
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        color.B = *p++;
-        color.R = *p++;
-        color.G = *p;
+class DotStarGbrFeature :
+    public DotStarX4Feature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
 
-        return color;
-    }
+class DotStarGrbFeature :
+    public DotStarX4Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
 
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
 
-        color.B = pgm_read_byte(p++);
-        color.R = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p);
+class DotStarBrgFeature :
+    public DotStarX4Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
 
-        return color;
-    }
+class DotStarBgrFeature :
+    public DotStarX4Feature<ColorIndexB, ColorIndexG, ColorIndexR>,
+    public NeoElementsNoSettings
+{
 };

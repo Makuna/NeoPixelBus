@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoRgbwxxFeature provides feature classes to describe color order and
-color depth for NeoPixelBus template class
+Neo3Byte777Feature provides feature base class to describe color order for
+  3 byte features that only support 7 bits per element
 
 Written by Michael C. Miller.
 
@@ -26,22 +26,18 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class NeoRgbwxxFeature :
-    public NeoByteElements<6, RgbwColor, uint16_t>,
-    public NeoElementsNoSettings
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
+class Neo3Byte777Feature :
+    public NeoByteElements<3, RgbColor, uint8_t>
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        *p++ = color.R;
-        *p++ = color.G;
-        *p++ = color.B;
-        *p++ = color.W;
-        // zero the xx, this maybe unnecessary though, but its thorough
-        *p++ = 0;
-        *p = 0;
+        *p++ = (color[V_IC_1] >> 1) | 0x80;
+        *p++ = (color[V_IC_2] >> 1) | 0x80;
+        *p = (color[V_IC_3] >> 1) | 0x80;
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
@@ -49,25 +45,22 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        color.R = *p++;
-        color.G = *p++;
-        color.B = *p++;
-        color.W = *p;
-        // ignore the xx
+        color[V_IC_1] = (*p++) << 1;
+        color[V_IC_2] = (*p++) << 1;
+        color[V_IC_3] = (*p) << 1;
 
         return color;
     }
+
 
     static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
     {
         ColorObject color;
         const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
 
-        color.R = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p++);
-        color.W = pgm_read_byte(p);
-        // ignore the xx
+        color[V_IC_1] = (pgm_read_byte(p++)) << 1;
+        color[V_IC_2] = (pgm_read_byte(p++)) << 1;
+        color[V_IC_3] = (pgm_read_byte(p)) << 1;
 
         return color;
     }

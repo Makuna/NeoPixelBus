@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoGrbcwxFeature provides feature classes to describe color order and
-color depth for NeoPixelBus template class
+DotStarX4Feature provides feature base class to describe color order for
+  3 color but 4 byte features when used with DotStars
 
 Written by Michael C. Miller.
 
@@ -26,21 +26,19 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class NeoGrbcwxFeature : 
-    public NeoByteElements<6, RgbwwColor, uint16_t>,
-    public NeoElementsNoSettings
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
+class DotStarX4Feature :
+    public NeoByteElements<4, RgbColor, uint32_t>
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        *p++ = color.G;
-        *p++ = color.R;
-        *p++ = color.B;
-        *p++ = color.CW;
-        *p++ = color.WW;
-        *p = 0x00; // X
+        *p++ = 0xff; // upper three bits are always 111 and brightness at max
+        *p++ = color[V_IC_1];
+        *p++ = color[V_IC_2];
+        *p = color[V_IC_3];
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
@@ -48,11 +46,10 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        color.G = *p++;
-        color.R = *p++;
-        color.B = *p++;
-        color.CW = *p++;
-        color.WW = *p;
+        p++; // ignore the first byte
+        color[V_IC_1] = *p++;
+        color[V_IC_2] = *p++;
+        color[V_IC_3] = *p;
 
         return color;
     }
@@ -60,14 +57,14 @@ public:
     static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
+        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
 
-        color.G = pgm_read_byte(p++);
-        color.R = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p++);
-        color.CW = pgm_read_byte(p++);
-        color.WW = pgm_read_byte(p);
+        pgm_read_byte(p++); // ignore the first byte
+        color[V_IC_1] = pgm_read_byte(p++);
+        color[V_IC_2] = pgm_read_byte(p++);
+        color[V_IC_3] = pgm_read_byte(p);
 
         return color;
     }
+
 };

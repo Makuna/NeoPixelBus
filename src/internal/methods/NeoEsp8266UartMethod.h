@@ -367,7 +367,7 @@ public:
         : T_BASE(pixelCount, elementSize, settingsSize)
     {
     }
-    NeoEsp8266UartMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    NeoEsp8266UartMethodBase([[maybe_unused]] uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)
         : T_BASE(pixelCount, elementSize, settingsSize)
     {
     }

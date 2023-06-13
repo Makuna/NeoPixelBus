@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoGrbFeature provides feature classes to describe color order and
+NeoRgbw64Feature provides feature classes to describe color order and
 color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
@@ -26,41 +26,41 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class NeoGrbFeature :
-    public NeoByteElements<3, RgbColor, uint8_t>,
+
+class NeoRgbw64Feature : 
+    public Neo4WordFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>,
     public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = color.G;
-        *p++ = color.R;
-        *p = color.B;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.G = *p++;
-        color.R = *p++;
-        color.B = *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
-
-        color.G = pgm_read_byte(p++);
-        color.R = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p);
-
-        return color;
-    }
 };
+
+class NeoRbgw64Feature :
+    public Neo4WordFeature<ColorIndexR, ColorIndexB, ColorIndexG, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGbrw64Feature :
+    public Neo4WordFeature<ColorIndexG, ColorIndexB, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGrbw64Feature :
+    public Neo4WordFeature<ColorIndexG, ColorIndexR, ColorIndexB, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBgrw64Feature :
+    public Neo4WordFeature<ColorIndexB, ColorIndexG, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBrgw64Feature :
+    public Neo4WordFeature<ColorIndexB, ColorIndexR, ColorIndexG, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+

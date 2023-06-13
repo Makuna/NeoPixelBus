@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoRbgFeature provides feature classes to describe color order and
+NeoRgbwxxFeatures provides feature classes to describe color order and
 color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
@@ -26,43 +26,8 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-
-class NeoRbgFeature :
-    public NeoByteElements<3, RgbColor, uint8_t>,
+class NeoRgbwxxFeature :
+    public Neo6xxByteFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>,
     public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        *p++ = color.R;
-        *p++ = color.B;
-        *p = color.G;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.R = *p++;
-        color.B = *p++;
-        color.G = *p;
-
-        return color;
-    }
-
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
-
-        color.R = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p);
-
-        return color;
-    }
 };

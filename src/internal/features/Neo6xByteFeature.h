@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-NeoRgbw64Feature provides feature classes to describe color order and
-color depth for NeoPixelBus template class
+Neo6xByteFeature provides feature base class to describe color order for
+  6 byte features that only use the first 5 bytes
 
 Written by Michael C. Miller.
 
@@ -26,25 +26,22 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-
-class NeoRgbw64Feature : 
-    public NeoWordElements<8, Rgbw64Color, uint32_t>,
-    public NeoElementsNoSettings
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3, uint8_t V_IC_4, uint8_t V_IC_5>
+class Neo6xByteFeature :
+    public NeoByteElements<6, RgbwwColor, uint16_t>
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        // due to endianness the byte order must be copied to output
-        *p++ = color.R >> 8;
-        *p++ = color.R & 0xff;
-        *p++ = color.G >> 8;
-        *p++ = color.G & 0xff;
-        *p++ = color.B >> 8;
-        *p++ = color.B & 0xff;
-        *p++ = color.W >> 8;
-        *p = color.W & 0xff;
+        *p++ = color[V_IC_1];
+        *p++ = color[V_IC_2];
+        *p++ = color[V_IC_3];
+        *p++ = color[V_IC_4];
+        *p++ = color[V_IC_5];
+        
+        *p = 0x00; // X
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
@@ -52,15 +49,12 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        // due to endianness the byte order must be copied to output
-        color.R = (static_cast<uint16_t>(*p++) << 8);
-        color.R |= *p++;
-        color.G = (static_cast<uint16_t>(*p++) << 8);
-        color.G |= *p++;
-        color.B = (static_cast<uint16_t>(*p++) << 8);
-        color.B |= *p++;
-        color.W = (static_cast<uint16_t>(*p++) << 8);
-        color.W |= *p;
+        color[V_IC_1] = *p++;
+        color[V_IC_2] = *p++;
+        color[V_IC_3] = *p++;
+        color[V_IC_4] = *p++;
+        color[V_IC_5] = *p;
+        // ignore the x
 
         return color;
     }
@@ -68,14 +62,14 @@ public:
     static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel));
+        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
 
-        // PROGMEM unit of storage expected to be the same size as color element
-        //    so no endianness issues to worry about
-        color.R = pgm_read_word(p++);
-        color.G = pgm_read_word(p++);
-        color.B = pgm_read_word(p++);
-        color.W = pgm_read_word(p);
+        color[V_IC_1] = pgm_read_byte(p++);
+        color[V_IC_2] = pgm_read_byte(p++);
+        color[V_IC_3] = pgm_read_byte(p++);
+        color[V_IC_4] = pgm_read_byte(p++);
+        color[V_IC_5] = pgm_read_byte(p);
+        // ignore the x
 
         return color;
     }

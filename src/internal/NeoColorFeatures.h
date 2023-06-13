@@ -30,22 +30,28 @@ License along with NeoPixel.  If not, see
 // 
 #include "features/NeoElementsNoSettings.h"
 #include "features/NeoByteElements.h"
-#include "features/Neo2Byte555Elements.h"
+
+// Core Feature base classes
+#include "features/Neo2Byte555Feature.h"
+#include "features/Neo3ByteFeature.h"
+#include "features/Neo3Byte777Feature.h"
+#include "features/Neo4ByteFeature.h"
+#include "features/DotStarX4ByteFeature.h"
+#include "features/DotStarL4ByteFeature.h"
+#include "features/Neo6xByteFeature.h"
+#include "features/Neo6xxByteFeature.h"
+#include "features/Neo3WordFeature.h"
+#include "features/Neo4WordFeature.h"
 
 // NeoPixel Features
 //
-#include "features/NeoBgrFeature.h"
-#include "features/NeoBrgFeature.h"
-#include "features/NeoGrb48Feature.h"
-#include "features/NeoGrbFeature.h"
-#include "features/NeoGrbwFeature.h"
-#include "features/NeoRbgFeature.h"
-#include "features/NeoRgb48Feature.h"
-#include "features/NeoRgbFeature.h"
-#include "features/NeoRgbw64Feature.h"
-#include "features/NeoRgbwFeature.h"
-#include "features/NeoRgbwxxFeature.h"
-#include "features/NeoGrbcwxFeature.h"
+#include "features/NeoRgbFeatures.h"
+#include "features/NeoRgbwFeatures.h"
+#include "features/NeoRgb48Features.h"
+#include "features/NeoRgbw64Features.h"
+
+#include "features/NeoRgbwxxFeatures.h"
+#include "features/NeoRgbcwxFeatures.h"
 #include "features/NeoSm168xxFeatures.h"
 #include "features/NeoTm1814Features.h"
 #include "features/NeoTm1914Features.h"
@@ -56,24 +62,11 @@ typedef NeoGrb48Feature NeoGrbWs2816Feature;
 
 // DotStart Features
 // 
-#include "features/DotStarBgrFeature.h"
-#include "features/DotStarBrgFeature.h"
-#include "features/DotStarGbrFeature.h"
-#include "features/DotStarGrbFeature.h"
-#include "features/DotStarLbgrFeature.h"
-#include "features/DotStarLbrgFeature.h"
-#include "features/DotStarLgbrFeature.h"
-#include "features/DotStarLgrbFeature.h"
-#include "features/DotStarLrbgFeature.h"
-#include "features/DotStarLrgbFeature.h"
-#include "features/DotStarRbgFeature.h"
-#include "features/DotStarRgbFeature.h"
-#include "features/Lpd8806BrgFeature.h"
-#include "features/Lpd8806GrbFeature.h"
-#include "features/Lpd6803BrgFeature.h"
-#include "features/Lpd6803GrbFeature.h"
-#include "features/Lpd6803GbrFeature.h"
-#include "features/Lpd6803RgbFeature.h"
+#include "features/DotStarRgbFeatures.h"
+#include "features/DotStarLrgbFeatures.h"
+#include "features/Lpd6803RgbFeatures.h"
+#include "features/Lpd8806RgbFeatures.h"
+
 #include "features/P9813BgrFeature.h"
 
 // 7 Segment Features

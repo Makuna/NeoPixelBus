@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-NeoRgbwFeature provides feature classes to describe color order and
+NeoRgb48Feature provides feature classes to describe color order and
 color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
@@ -26,44 +26,38 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class NeoRgbwFeature :
-    public NeoByteElements<4, RgbwColor, uint32_t>,
+class NeoRgb48Feature : 
+    public Neo3WordFeature<ColorIndexR, ColorIndexG, ColorIndexB>,
     public NeoElementsNoSettings
 {
-public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
-    {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+};
 
-        *p++ = color.R;
-        *p++ = color.G;
-        *p++ = color.B;
-        *p = color.W;
-    }
+class NeoRbg48Feature :
+    public Neo3WordFeature<ColorIndexR, ColorIndexB, ColorIndexG>,
+    public NeoElementsNoSettings
+{
+};
 
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
+class NeoGrb48Feature :
+    public Neo3WordFeature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
 
-        color.R = *p++;
-        color.G = *p++;
-        color.B = *p++;
-        color.W = *p;
+class NeoGbr48Feature :
+    public Neo3WordFeature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
 
-        return color;
-    }
+class NeoBgr48Feature :
+    public Neo3WordFeature<ColorIndexB, ColorIndexG, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
 
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
-
-        color.R = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p++);
-        color.W = pgm_read_byte(p);
-
-        return color;
-    }
+class NeoBrg48Feature :
+    public Neo3WordFeature<ColorIndexB, ColorIndexR, ColorIndexG>,
+    public NeoElementsNoSettings
+{
 };

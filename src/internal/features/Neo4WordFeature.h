@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-DotStarLrbgFeature provides feature classes to describe color order and
-color depth for NeoPixelBus template class when used with DotStars
+Neo4WordFeature provides feature base class to describe color order for
+  4 Word features 
 
 Written by Michael C. Miller.
 
@@ -26,19 +26,24 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-class DotStarLrbgFeature : 
-    public NeoByteElements<4, RgbwColor, uint32_t>,
-    public NeoElementsNoSettings
+template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3, uint8_t V_IC_4>
+class Neo4WordFeature :
+    public NeoWordElements<8, Rgbw64Color, uint32_t>
 {
 public:
     static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
     {
         uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        *p++ = 0xE0 | (color.W < 31 ? color.W : 31); // upper three bits are always 111
-        *p++ = color.R;
-        *p++ = color.B;
-        *p = color.G;
+        // due to endianness the byte order must be copied to output
+        *p++ = color[V_IC_1] >> 8;
+        *p++ = color[V_IC_1] & 0xff;
+        *p++ = color[V_IC_2] >> 8;
+        *p++ = color[V_IC_2] & 0xff;
+        *p++ = color[V_IC_3] >> 8;
+        *p++ = color[V_IC_3] & 0xff;
+        *p++ = color[V_IC_4] >> 8;
+        *p = color[V_IC_4] & 0xff;
     }
 
     static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
@@ -46,10 +51,15 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress(pPixels, indexPixel);
 
-        color.W = (*p++) & 0x1F; // mask out upper three bits
-        color.R = *p++;
-        color.B = *p++;
-        color.G = *p;
+        // due to endianness the byte order must be copied to output
+        color[V_IC_1] = (static_cast<uint16_t>(*p++) << 8);
+        color[V_IC_1] |= *p++;
+        color[V_IC_2] = (static_cast<uint16_t>(*p++) << 8);
+        color[V_IC_2] |= *p++;
+        color[V_IC_3] = (static_cast<uint16_t>(*p++) << 8);
+        color[V_IC_3] |= *p++;
+        color[V_IC_4] = (static_cast<uint16_t>(*p++) << 8);
+        color[V_IC_4] |= *p;
 
         return color;
     }
@@ -57,14 +67,16 @@ public:
     static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
     {
         ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
+        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel));
 
-        color.W = pgm_read_byte(p++) & 0x1F; // mask out upper three bits
-        color.R = pgm_read_byte(p++);
-        color.B = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p);
+        // PROGMEM unit of storage expected to be the same size as color element
+        //    so no endianness issues to worry about
+        color[V_IC_1] = pgm_read_word(p++);
+        color[V_IC_2] = pgm_read_word(p++);
+        color[V_IC_3] = pgm_read_word(p++);
+        color[V_IC_4] = pgm_read_word(p);
 
         return color;
     }
 
-};
+ };

@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
-Neo2Byte555Elements provides feature base classes to describe color elements
-with 555 encoding for NeoPixelBus Color Feature template classes
+NeoRgbwFeature provides feature classes to describe color order and
+color depth for NeoPixelBus template class
 
 Written by Michael C. Miller.
 
@@ -25,22 +25,39 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 #pragma once
- 
-class Neo2Byte555Elements 
-{
-protected:
-    static void encodePixel(uint8_t c1, uint8_t c2, uint8_t c3, uint16_t* color555)
-    {
-        *color555 = (0x8000 |
-            ((c1 & 0xf8) << 7) |
-            ((c2 & 0xf8) << 2) |
-            ((c3 & 0xf8) >> 3));
-    }
 
-    static void decodePixel(uint16_t color555, uint8_t* c1, uint8_t* c2, uint8_t* c3)
-    {
-        *c1 = (color555 >> 7) & 0xf8;
-        *c2 = (color555 >> 2) & 0xf8;
-        *c3 = (color555 << 3) & 0xf8;
-    }
+class NeoRgbwFeature :
+    public Neo4ByteFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoRbgwFeature :
+    public Neo4ByteFeature<ColorIndexR, ColorIndexB, ColorIndexG, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGbrwFeature :
+    public Neo4ByteFeature<ColorIndexG, ColorIndexB, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoGrbwFeature :
+    public Neo4ByteFeature<ColorIndexG, ColorIndexR, ColorIndexB, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBgrwFeature :
+    public Neo4ByteFeature<ColorIndexB, ColorIndexG, ColorIndexR, ColorIndexW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoBrgwFeature :
+    public Neo4ByteFeature<ColorIndexB, ColorIndexR, ColorIndexG, ColorIndexW>,
+    public NeoElementsNoSettings
+{
 };
