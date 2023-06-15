@@ -682,7 +682,7 @@ void send_data_16mhz_600(uint8_t* data, size_t sizeData, volatile uint8_t* port,
         "dec  %[bit]"             "\n\t" // 1    bit--         (T = 21)
         "breq nextbyte40"         "\n\t" // 1-2  if(bit == 0)
         "rol  %[byte]"            "\n\t" // 1    b <<= 1       (T = 23)
-        "rjmp .+0"                "\n\t" // 2    nop nop       (T = 25)
+        "nop"                     "\n\t" // 1    nop           (T = 24)
         "rjmp head40"             "\n\t" // 2    -> head40 (next bit out)
         "nextbyte40:"              "\n\t" //                    (T = 23)
         "ldi  %[bit]  , 8"        "\n\t" // 1    bit = 8       (T = 24)
