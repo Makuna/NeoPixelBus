@@ -39,6 +39,7 @@ extern "C"
     void send_data_12mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
     void send_data_16mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
     void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
+    void send_data_16mhz_600(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask);
     void send_data_32mhz(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask, const uint8_t cycleTiming);
 }
 
@@ -74,16 +75,48 @@ public:
     
 };
 
+class NeoAvrSpeed600KbpsBase
+{
+public:
+    static void send_data(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
+    {
+#if (F_CPU >= 7400000UL) && (F_CPU <= 9500000UL)  // 8Mhz CPU
+#ifdef PORTD // PORTD isn't present on ATtiny85, etc.
+        if (port == &PORTD)
+            send_data_8mhz_800_PortD(data, sizeData, pinMask);
+        else if (port == &PORTB)
+#endif // PORTD
+            send_data_8mhz_800_PortB(data, sizeData, pinMask);
+
+#elif (F_CPU >= 11100000UL) && (F_CPU <= 14300000UL)  // 12Mhz CPU
+#ifdef PORTD // PORTD 
+        if (port == &PORTD)
+            send_data_12mhz_800_PortD(data, sizeData, pinMask);
+        else if (port == &PORTB)
+#endif // PORTD
+            send_data_12mhz_800_PortB(data, sizeData, pinMask);
+
+#elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000UL)  // 16Mhz CPU
+        send_data_16mhz_600(data, sizeData, port, pinMask);
+#elif (F_CPU >= 31000000UL) && (F_CPU <= 35000000UL)  // 32Mhz CPU
+        send_data_32mhz(data, sizeData, port, pinMask, 3);
+#else
+#error "CPU SPEED NOT SUPPORTED"
+#endif
+    }
+
+};
+
 class NeoAvrSpeedWs2812x :  public NeoAvrSpeed800KbpsBase
 {
 public:
     static const uint32_t ResetTimeUs = 300;
 };
 
-class NeoAvrSpeedSk6812 : public NeoAvrSpeed800KbpsBase
+class NeoAvrSpeedSk6812 : public NeoAvrSpeed600KbpsBase
 {
 public:
-    static const uint32_t ResetTimeUs = 80;
+    static const uint32_t ResetTimeUs = 300;
 };
 
 class NeoAvrSpeedTm1814 : public NeoAvrSpeed800KbpsBase

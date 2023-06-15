@@ -641,6 +641,65 @@ void send_data_16mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port,
         [lo]     "r" (lo));
 }
 
+// 0 400us (320-480)
+// 1 1100us (960-1200)
+// w 1600us
+void send_data_16mhz_600(uint8_t* data, size_t sizeData, volatile uint8_t* port, uint8_t pinMask)
+{
+    volatile size_t i = sizeData; // Loop counter
+    volatile uint8_t* ptr = data; // Pointer to next byte
+    volatile uint8_t b = *ptr++;    // Current byte value
+    volatile uint8_t hi;            // PORT w/output bit set high
+    volatile uint8_t lo;            // PORT w/output bit set low
+
+    // The 400 KHz clock on 16 MHz MCU is the most 'relaxed' version.
+
+    // 25 inst. clocks per bit: HHHHHHxxxxxxxxxxxLLLLLLLL
+    // ST instructions:         ^     ^          ^         (T=0,6,17)
+
+
+    volatile uint8_t next, bit;
+
+    hi = *port | pinMask;
+    lo = *port & ~pinMask;
+    next = lo;
+    bit = 8;
+
+    asm volatile(
+        "head40:"                  "\n\t" // Clk  Pseudocode    (T =  0)
+        "st   %a[port], %[hi]"    "\n\t" // 2    PORT = hi     (T =  2)
+        "sbrc %[byte] , 7"        "\n\t" // 1-2  if(b & 128)
+        "mov  %[next] , %[hi]"   "\n\t" // 0-1   next = hi    (T =  4)
+        "rjmp .+0"                "\n\t" // 2    nop nop       (T =  6)
+        "st   %a[port], %[next]"  "\n\t" // 2    PORT = next   (T = 8)
+        "rjmp .+0"                "\n\t" // 2    nop nop       (T = 10)
+        "rjmp .+0"                "\n\t" // 2    nop nop       (T = 12)
+        "rjmp .+0"                "\n\t" // 2    nop nop       (T = 14)
+        "rjmp .+0"                "\n\t" // 2    nop nop       (T = 16)
+        "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 18)
+        "nop"                     "\n\t" // 1    nop           (T = 19)
+        "mov  %[next] , %[lo]"    "\n\t" // 1    next = lo     (T = 20)
+        "dec  %[bit]"             "\n\t" // 1    bit--         (T = 21)
+        "breq nextbyte40"         "\n\t" // 1-2  if(bit == 0)
+        "rol  %[byte]"            "\n\t" // 1    b <<= 1       (T = 23)
+        "rjmp .+0"                "\n\t" // 2    nop nop       (T = 25)
+        "rjmp head40"             "\n\t" // 2    -> head40 (next bit out)
+        "nextbyte40:"              "\n\t" //                    (T = 23)
+        "ldi  %[bit]  , 8"        "\n\t" // 1    bit = 8       (T = 24)
+        "ld   %[byte] , %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 26)
+        "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 28)
+        "sbiw %[count], 1"        "\n\t" // 2    i--           (T = 30)
+        "brne head40"             "\n"   // 1-2  if(i != 0) -> (next byte)
+        : [port] "+e" (port),
+        [byte]  "+r" (b),
+        [bit]   "+r" (bit),
+        [next]  "+r" (next),
+        [count] "+w" (i)
+        : [ptr] "e" (ptr),
+        [hi]     "r" (hi),
+        [lo]     "r" (lo));
+}
+
 #elif (F_CPU >= 31000000UL) && (F_CPU <= 35000000UL)  // 32Mhz CPU
 
 void send_data_32mhz(uint8_t* data,
