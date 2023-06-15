@@ -113,11 +113,18 @@ public:
     static const uint32_t ResetTimeUs = 300;
 };
 
-class NeoAvrSpeedSk6812 : public NeoAvrSpeed600KbpsBase
+class NeoAvrSpeedSk6812 : public NeoAvrSpeed800KbpsBase
 {
 public:
-    static const uint32_t ResetTimeUs = 300;
+    static const uint32_t ResetTimeUs = 80;
 };
+
+class NeoAvrSpeedApa106 : public NeoAvrSpeed600KbpsBase
+{
+public:
+    static const uint32_t ResetTimeUs = 100;
+};
+
 
 class NeoAvrSpeedTm1814 : public NeoAvrSpeed800KbpsBase
 {
@@ -259,6 +266,7 @@ private:
 
 typedef NeoAvrMethodBase<NeoAvrSpeedWs2812x> NeoAvrWs2812xMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeedSk6812> NeoAvrSk6812Method;
+typedef NeoAvrMethodBase<NeoAvrSpeedApa106> NeoAvrApa106Method;
 typedef NeoAvrMethodBase<NeoAvrSpeedTm1814> NeoAvrTm1814InvertedMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeedTm1829> NeoAvrTm1829InvertedMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeed800Kbps> NeoAvr800KbpsMethod;
@@ -273,7 +281,7 @@ typedef NeoAvrWs2812xMethod NeoWs2811Method;
 typedef NeoAvrWs2812xMethod NeoWs2816Method;
 typedef NeoAvrSk6812Method NeoSk6812Method;
 typedef NeoAvrSk6812Method NeoLc8812Method;
-typedef NeoAvr400KbpsMethod NeoApa106Method;
+typedef NeoAvrApa106Method NeoApa106Method;
 typedef NeoAvrWs2812xMethod Neo800KbpsMethod;
 typedef NeoAvr400KbpsMethod Neo400KbpsMethod;
 
