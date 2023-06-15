@@ -40,7 +40,7 @@ public:
     typedef typename T_TWOWIRE::SettingsObject SettingsObject;
 
     Mbi6033MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _countChips(NeoUtil::RoundUp(pixelCount * elementSize / _countBytesPerChip, _countBytesPerChip)),
+        _countChips(NeoUtil::RoundUp(pixelCount * elementSize, _countBytesPerChip) / _countBytesPerChip),
         _sizeData(_countChips * _countBytesPerChip + settingsSize),
         _pinClock(pinClock),
         _wire(pinClock, pinData)
@@ -102,11 +102,19 @@ public:
         
         // prefix protocol, >21us clock low, clock high, >21us clock low
         // expecting at least 21us since last call to show
-        digitalWrite(_pinClock, HIGH);
-        digitalWrite(_pinClock, LOW);
-        delayMicroseconds(21);
+        // but using hardware SPI won't allow messing with clock
+        // directly like this...
+        //digitalWrite(_pinClock, HIGH);
+        //delayMicroseconds(1);
+        //digitalWrite(_pinClock, LOW);
+        //delayMicroseconds(21);
 
         _wire.beginTransaction();
+
+        // reset by toggle of clock
+        delayMicroseconds(21);
+        _wire.transmitBit(0); // Our Two Wire BitBang supports this
+        delayMicroseconds(21);
 
         // header frame
         _wire.transmitBytes(headerFrame, sizeof(headerFrame));
@@ -153,6 +161,7 @@ private:
 
 typedef Mbi6033MethodBase<TwoWireBitBangImple> Mbi6033Method;
 
+/* Due to rest method needing to control clock, we can't use hardware SPI
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
 #include "TwoWireSpiImple.h"
 typedef Mbi6033MethodBase<TwoWireSpiImple<SpiSpeed40Mhz>> Mbi6033Spi40MhzMethod;
@@ -192,3 +201,4 @@ typedef Mbi6033MethodBase<TwoWireHspiImple<SpiSpeedHz>> Mbi6033Esp32HspiHzMethod
 
 typedef Mbi6033Esp32Hspi10MhzMethod Mbi6033Esp32HspiMethod;
 #endif
+*/
