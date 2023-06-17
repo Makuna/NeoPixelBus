@@ -40,8 +40,8 @@ public:
     typedef typename T_TWOWIRE::SettingsObject SettingsObject;
 
     Mbi6033MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _countChips(NeoUtil::RoundUp(pixelCount * elementSize, _countBytesPerChip) / _countBytesPerChip),
-        _sizeData(_countChips * _countBytesPerChip + settingsSize),
+        _countChips(NeoUtil::RoundUp(pixelCount * elementSize, c_countBytesPerChip) / c_countBytesPerChip),
+        _sizeData(_countChips * c_countBytesPerChip + settingsSize),
         _pinClock(pinClock),
         _wire(pinClock, pinData)
     {
@@ -63,7 +63,7 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        return true; // dot stars don't have a required delay
+        return true; // clock driven chips don't have a required delay
     }
 
 #if defined(ARDUINO_ARCH_ESP32)
@@ -81,17 +81,14 @@ public:
 
     void Update(bool)
     {
-        // 8: bits command (0xf3) = non current header mode
-        // 14: bits sync (0x0000)
-        // 14: bits length (count chips - 1)
+        // non current header format:
+        // 8 bits: command (0xf3) = non current header mode
+        // 14 bits: sync (0x0000) 
+        // 14 bits: length (count chips - 1)
         // 8 bits: configuration (0x02) 
         //    bits (6-4) refresh rate divider bits (0 for fastest)
         //    bit (1) on or off
         // 4 bits: header code name X1 (0x0)
-        // THEN
-        // 24 bytes per chip of data
-        //    12 16 bit values
-        //    4 groups of 3 (4xRGB)
         const uint16_t chipLength = _countChips - 1;
         const uint8_t headerFrame[6] = { 0xf3, 
                 0x00, 
@@ -104,22 +101,23 @@ public:
         // expecting at least 21us since last call to show
         // but using hardware SPI won't allow messing with clock
         // directly like this...
+        //delayMicroseconds(c_usResetTime);
         //digitalWrite(_pinClock, HIGH);
-        //delayMicroseconds(1);
         //digitalWrite(_pinClock, LOW);
-        //delayMicroseconds(21);
+        //delayMicroseconds(c_usResetTime);
 
         _wire.beginTransaction();
 
         // reset by toggle of clock
-        delayMicroseconds(21);
+        delayMicroseconds(c_usResetTime);
         _wire.transmitBit(0); // Our Two Wire BitBang supports this
-        delayMicroseconds(21);
+        delayMicroseconds(c_usResetTime);
 
         // header frame
         _wire.transmitBytes(headerFrame, sizeof(headerFrame));
         
-        // data
+        // data:
+        // 24 bytes per chip of data (12 16 bit values)
         _wire.transmitBytes(_data, _sizeData);
 
         _wire.endTransaction();
@@ -147,13 +145,15 @@ public:
     }
 
 private:
-    static const uint16_t _countBytesPerChip = 24;
-    const uint16_t _countChips;
-    const size_t   _sizeData;   // Size of '_data' buffer below
     // while spec states 4 RGB * 16 bit values, 
-    // its really 12 channels * 16 bit values
-    
+    // its really 12 channels * 16 bit values, as they could
+    // be wired how ever the circuit is built, like 3 RGBW
+    static const uint16_t c_countBytesPerChip = 24; // twelve 16 bit values
+    static const uint16_t c_usResetTime = 21; 
 
+    const uint16_t _countChips; // not pixels, driver chips
+    const size_t   _sizeData;   // Size of '_data' buffer below
+    
     uint8_t _pinClock;
     T_TWOWIRE _wire;
     uint8_t* _data;       // Holds LED color values
@@ -161,7 +161,10 @@ private:
 
 typedef Mbi6033MethodBase<TwoWireBitBangImple> Mbi6033Method;
 
-/* Due to rest method needing to control clock, we can't use hardware SPI
+/* Due to reset model by these chips needing to control clock, we can't use hardware SPI
+* as neither the normal SPI exposes a single bit send nor does it allow direct clock pulses
+* using digitalWrite.  If a generalized solution could be found, then this could be enabled
+* 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
 #include "TwoWireSpiImple.h"
 typedef Mbi6033MethodBase<TwoWireSpiImple<SpiSpeed40Mhz>> Mbi6033Spi40MhzMethod;
