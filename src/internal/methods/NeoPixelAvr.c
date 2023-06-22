@@ -663,10 +663,10 @@ void send_data_16mhz_600(uint8_t* data,
     volatile uint8_t hi;            // PORT w/output bit set high
     volatile uint8_t lo;            // PORT w/output bit set low
 
-    // The 400 KHz clock on 16 MHz MCU is the most 'relaxed' version.
-
-    // 25 inst. clocks per bit: HHHHHHxxxxxxxxxxxLLLLLLLL
-    // ST instructions:         ^     ^          ^         (T=0,6,17)
+    // The 633 KHz clock on 16 MHz MCU.
+    //
+    // 25 inst. clocks per bit: HHHHHHHHxxxxxxxxxxLLLLLLLL
+    // ST instructions:         ^       ^         ^         (T=0,8,18)
 
 
     volatile uint8_t next;
@@ -681,26 +681,25 @@ void send_data_16mhz_600(uint8_t* data,
         "head40:"                  "\n\t" // Clk  Pseudocode    (T =  0)
             "st   %a[port], %[hi]"    "\n\t" // 2    PORT = hi     (T =  2)
             "sbrc %[byte] , 7"        "\n\t" // 1-2  if(b & 0b10000000)
-            "mov  %[next] , %[hi]"   "\n\t" // 0-1   next = hi    (T =  4)
+                "mov  %[next] , %[hi]"   "\n\t" // 0-1   next = hi    (T =  4)
             "rjmp .+0"                "\n\t" // 2    nop nop       (T =  6)
             "st   %a[port], %[next]"  "\n\t" // 2    PORT = next   (T = 8)
-            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 10)
-            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 12)
-            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 14)
-            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 16)
-            "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 18)
-            "nop"                     "\n\t" // 1    nop           (T = 19)
-            "mov  %[next] , %[lo]"    "\n\t" // 1    next = lo     (T = 20)
-            "dec  %[bit]"             "\n\t" // 1    bit--         (T = 21)
+            "mov  %[next] , %[lo]"    "\n\t" // 1    next = lo     (T = 9)
+            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 11)
+            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 13)
+            "rjmp .+0"                "\n\t" // 2    nop nop       (T = 15)
+            "dec  %[bit]"             "\n\t" // 1    bit--         (T = 16)
             "breq nextbyte40"         "\n\t" // 1-2  if(bit == 0)
-            "rol  %[byte]"            "\n\t" // 1    b <<= 1       (T = 23)
-            "nop"                     "\n\t" // 1    nop           (T = 24)
-            "rjmp head40"             "\n\t" // 2    -> head40 (next bit out)
-        "nextbyte40:"              "\n\t" //                    (T = 23)
-            "ldi  %[bit]  , 8"        "\n\t" // 1    bit = 8       (T = 24)
-            "ld   %[byte] , %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 26)
-            "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 28)
-            "sbiw %[count], 1"        "\n\t" // 2    i--           (T = 30)
+                "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 18)
+                "rol  %[byte]"            "\n\t" // 1    b <<= 1       (T = 21)
+                "nop"                     "\n\t" // 1    nop           (T = 22)
+                "rjmp .+0"                "\n\t" // 2    nop nop       (T = 24)
+                "rjmp head40"             "\n\t" // 2    -> head40 (next bit out)
+        "nextbyte40:"              "\n\t" //                    (T = 18)
+            "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 20)
+            "ldi  %[bit]  , 8"        "\n\t" // 1    bit = 8       (T = 21)
+            "ld   %[byte] , %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 23)
+            "sbiw %[count], 1"        "\n\t" // 2    i--           (T = 25)
             "brne head40"             "\n"   // 1-2  if(i != 0) -> (next byte)
         : [port] "+e" (port),
         [byte]  "+r" (b),

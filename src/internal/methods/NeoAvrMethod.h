@@ -257,7 +257,7 @@ public:
     {
     }
 
-private:
+protected:
     const size_t  _sizeData;     // size of _data below       
     const uint8_t _pin;         // output pin number
 
@@ -268,46 +268,17 @@ private:
     uint8_t  _pinMask;      // Output PORT bitmask
 };
 
-template<typename T_SPEED> class NeoAvrIpsMethodBase
+template<typename T_SPEED> class NeoAvrIpsMethodBase : public NeoAvrMethodBase<T_SPEED>
 {
 public:
-    typedef NeoNoSettings SettingsObject;
-
     NeoAvrIpsMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _elementSize(elementSize),
-        _sizeData(pixelCount* elementSize + settingsSize),
-        _pin(pin),
-        _port(NULL),
-        _pinMask(0)
+        NeoAvrMethodBase<T_SPEED>(pin, pixelCount, elementSize, settingsSize),
+        _elementSize(elementSize)
     {
-        pinMode(pin, OUTPUT);
-
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
-
-        _port = portOutputRegister(digitalPinToPort(pin));
-        _pinMask = digitalPinToBitMask(pin);
     }
 
     ~NeoAvrIpsMethodBase()
     {
-        pinMode(_pin, INPUT);
-
-        free(_data);
-    }
-
-    bool IsReadyToUpdate() const
-    {
-        uint32_t delta = micros() - _endTime;
-
-        return (delta >= T_SPEED::ResetTimeUs);
-    }
-
-    void Initialize()
-    {
-        digitalWrite(_pin, LOW);
-
-        _endTime = micros();
     }
 
     void Update(bool)
@@ -318,7 +289,7 @@ public:
         // subsequent round of data until the latch time has elapsed.  This
         // allows the mainline code to start generating the next frame of data
         // rather than stalling for the latch.
-        while (!IsReadyToUpdate())
+        while (!NeoAvrMethodBase<T_SPEED>::IsReadyToUpdate())
         {
 #if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA)
             yield(); // allows for system yield if needed
@@ -327,12 +298,15 @@ public:
 
         noInterrupts(); // Need 100% focus on instruction timing
 
-        uint8_t* dataPixel = _data;
-        const uint8_t* dataEnd = dataPixel + _sizeData;
+        uint8_t* dataPixel = NeoAvrMethodBase<T_SPEED>::_data;
+        const uint8_t* dataEnd = dataPixel + NeoAvrMethodBase<T_SPEED>::_sizeData;
 
         while (dataPixel < dataEnd)
         {
-            T_SPEED::send_data(dataPixel, _elementSize, _port, _pinMask);
+            T_SPEED::send_data(dataPixel, 
+                _elementSize, 
+                NeoAvrMethodBase<T_SPEED>::_port, 
+                NeoAvrMethodBase<T_SPEED>::_pinMask);
             dataPixel += _elementSize;
             delayMicroseconds(8); // 12.4, with loop overhead of about 5us for loop
         }
@@ -340,39 +314,11 @@ public:
         interrupts();
 
         // save EOD time for latch on next call
-        _endTime = micros();
-    }
-
-    bool AlwaysUpdate()
-    {
-        // this method requires update to be called only if changes to buffer
-        return false;
-    }
-
-    uint8_t* getData() const
-    {
-        return _data;
-    };
-
-    size_t getDataSize() const
-    {
-        return _sizeData;
-    };
-
-    void applySettings([[maybe_unused]] const SettingsObject& settings)
-    {
+        NeoAvrMethodBase<T_SPEED>::_endTime = micros();
     }
 
 private:
     const size_t _elementSize; // size of a single pixel
-    const size_t  _sizeData;     // size of _data below       
-    const uint8_t _pin;         // output pin number
-
-    uint32_t _endTime;       // Latch timing reference
-    uint8_t* _data;        // Holds data stream which include LED color values and other settings as needed
-
-    volatile uint8_t* _port;         // Output PORT register
-    uint8_t  _pinMask;      // Output PORT bitmask
 };
 
 typedef NeoAvrMethodBase<NeoAvrSpeedWs2812x> NeoAvrWs2812xMethod;
