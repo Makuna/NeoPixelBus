@@ -129,6 +129,7 @@ class NeoAvrSpeed600KbpsIps : public NeoAvrSpeed600KbpsBase
 {
 public:
     static const uint32_t ResetTimeUs = 300;
+    static const uint16_t InterpixelTimeUs = 8; // 12.4, with loop overhead of about 5us for loop
 };
 
 class NeoAvrSpeedTm1814 : public NeoAvrSpeed800KbpsBase
@@ -308,7 +309,7 @@ public:
                 NeoAvrMethodBase<T_SPEED>::_port, 
                 NeoAvrMethodBase<T_SPEED>::_pinMask);
             dataPixel += _elementSize;
-            delayMicroseconds(8); // 12.4, with loop overhead of about 5us for loop
+            delayMicroseconds(T_SPEED::InterpixelTimeUs);
         }
 
         interrupts();
