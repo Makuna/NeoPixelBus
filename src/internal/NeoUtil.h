@@ -46,6 +46,16 @@ License along with NeoPixel.  If not, see
 #define countof(array) (sizeof(array)/sizeof(array[0]))
 #endif
 
+// some platforms do not define this standard pin name for some reason and use alternatives
+//
+#ifndef NOT_A_PIN
+
+#ifdef PIN_NOT_A_PIN
+#define NOT_A_PIN PIN_NOT_A_PIN
+#endif
+
+#endif
+
 class NeoUtil
 {
 private:
