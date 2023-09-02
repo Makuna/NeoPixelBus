@@ -566,7 +566,7 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        return (ESP_OK == rmt_wait_tx_done(_channel.RmtChannelNumber, 0));
+        return (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_wait_tx_done(_channel.RmtChannelNumber, 0)));
     }
 
     void Initialize()
