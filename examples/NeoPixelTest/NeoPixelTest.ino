@@ -13,13 +13,13 @@
 
 #include <NeoPixelBus.h>
 
-const uint16_t PixelCount = 4; // this example assumes 4 pixels, making it smaller will cause a failure
+const uint16_t PixelCount = 12; // this example assumes 4 pixels, making it smaller will cause a failure
 const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignored for Esp8266
 
 #define colorSaturation 128
 
 // three element pixels, in different order and speeds
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
+NeoPixelBus<NeoGrbwFeature, Neo800KbpsMethod> strip(PixelCount, PixelPin);
 //NeoPixelBus<NeoRgbFeature, Neo400KbpsMethod> strip(PixelCount, PixelPin);
 
 // For Esp8266, the Pin is omitted and it uses GPIO3 due to DMA hardware use.  
@@ -83,7 +83,7 @@ void setup()
 
 void loop()
 {
-    delay(5000);
+    delay(50);
 
     Serial.println("Colors R, G, B, W...");
 
@@ -100,7 +100,7 @@ void loop()
     strip.Show();
 
 
-    delay(5000);
+    delay(50);
 
     Serial.println("Off ...");
 
@@ -111,7 +111,7 @@ void loop()
     strip.SetPixelColor(3, black);
     strip.Show();
 
-    delay(5000);
+    delay(50);
 
     Serial.println("HSL Colors R, G, B, W...");
 
@@ -124,7 +124,7 @@ void loop()
     strip.Show();
 
 
-    delay(5000);
+    delay(50);
 
     Serial.println("Off again...");
 
@@ -136,4 +136,3 @@ void loop()
     strip.Show();
 
 }
-
