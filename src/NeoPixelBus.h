@@ -32,31 +32,10 @@ License along with NeoPixel.  If not, see
 const uint8_t NEO_DIRTY = 0x80; // a change was made to pixel data that requires a show
 const uint16_t PixelIndex_OutOfBounds = 0xffff;
 
-// ADDED BY MICHAEL
-#include "internal/lib8tion/lib8tion.h"
-#include "internal/lib8tion/math8.h"
-
 #include "internal/NeoUtil.h"
 #include "internal/animations/NeoEase.h"
 #include "internal/NeoSettings.h"
-
-#include "internal/RgbColor.h"
-#include "internal/Rgb16Color.h"
-#include "internal/Rgb48Color.h"
-
-#include "internal/HslColor.h"
-#include "internal/HsbColor.h"
-#include "internal/HtmlColor.h"
-
-#include "internal/RgbwColor.h"
-#include "internal/Rgbw64Color.h"
-
-// ADDED BY MICHAEL
-#include "internal/RgbcctColor.h"
-#include "internal/RgbcctColor_Controller.h"
-
-#include "internal/SegmentDigit.h"
-
+#include "internal/NeoColors.h"
 #include "internal/NeoColorFeatures.h"
 #include "internal/NeoTopologies.h"
 #include "internal/NeoBuffers.h"

@@ -79,13 +79,12 @@ HslColor::HslColor(const RgbColor& color)
     _RgbToHsl(r, g, b, this);
 }
 
-// REMOVED BY MICHAEL
-// HslColor::HslColor(const Rgb48Color& color)
-// {
-//     // convert colors to float between (0.0 - 1.0)
-//     float r = color.R / 65535.0f;
-//     float g = color.G / 65535.0f;
-//     float b = color.B / 65535.0f;
+HslColor::HslColor(const Rgb48Color& color)
+{
+    // convert colors to float between (0.0 - 1.0)
+    float r = color.R / 65535.0f;
+    float g = color.G / 65535.0f;
+    float b = color.B / 65535.0f;
 
-//     _RgbToHsl(r, g, b, this);
-// }
+    _RgbToHsl(r, g, b, this);
+}

@@ -119,8 +119,8 @@ void NeoPixelAnimator::StopAll()
     _activeAnimations = 0;
 }
 
-// ADDED BY MICHAEL
-void NeoPixelAnimator::UpdateAnimations(uint8_t segment_index)
+
+void NeoPixelAnimator::UpdateAnimations()
 {
     if (_isRunning)
     {

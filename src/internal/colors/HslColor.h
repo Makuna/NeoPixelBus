@@ -50,7 +50,7 @@ struct HslColor
     // ------------------------------------------------------------------------
     // Construct a HslColor using Rgb48Color
     // ------------------------------------------------------------------------
-    // HslColor(const Rgb48Color& color); // REMOVED BY MICHAEL
+    HslColor(const Rgb48Color& color);
 
     // ------------------------------------------------------------------------
     // Construct a HslColor that will have its values set in latter operations

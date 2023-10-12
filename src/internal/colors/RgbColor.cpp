@@ -24,11 +24,10 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
-
-// ADDED BY MICHAEL
+#include <Arduino.h>
+#include "../NeoSettings.h"
+#include "RgbColorBase.h"
 #include "RgbColor.h"
-#include "RgbwColor.h"
-#include "RgbcctColor.h"
 #include "Rgb16Color.h"
 #include "Rgb48Color.h"
 #include "HslColor.h"
@@ -87,15 +86,6 @@ RgbColor::RgbColor(const HsbColor& color)
     G = static_cast<uint8_t>(g * Max);
     B = static_cast<uint8_t>(b * Max);
 }
-
-// ADDED BY MICHAEL
-RgbColor::RgbColor(const RgbcctColor& color)
-{
-    R = color.R;
-    G = color.G;
-    B = color.B;
-}
-
 
 uint8_t RgbColor::CalculateBrightness() const
 {

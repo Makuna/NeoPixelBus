@@ -97,22 +97,42 @@ public:
     const uint16_t WhiteTenthMilliAmpere; // in 1/10th ma
 };
 
-// ADDED BY MICHAEL
-class NeoRgbcctCurrentSettings
+class NeoRgbwwCurrentSettings
 {
 public:
-    NeoRgbcctCurrentSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t warm_white, uint16_t cold_white) :
+    NeoRgbwwCurrentSettings(uint16_t red, uint16_t green, uint16_t blue, uint16_t warmWhite, uint16_t coolWhite) :
         RedTenthMilliAmpere(red),
         GreenTenthMilliAmpere(green),
         BlueTenthMilliAmpere(blue),
-        WarmWhiteCurrent(warm_white),
-        ColdWhiteCurrent(cold_white)
+        WarmWhiteTenthMilliAmpere(warmWhite),
+        CoolWhiteTenthMilliAmpere(coolWhite)
     {
     }
 
-    uint16_t RedTenthMilliAmpere;   // in 1/10th ma
-    uint16_t GreenTenthMilliAmpere; // in 1/10th ma
-    uint16_t BlueTenthMilliAmpere;  // in 1/10th ma
-    uint16_t WarmWhiteCurrent; // in 1/10th ma
-    uint16_t ColdWhiteCurrent; // in 1/10th ma
+    // ------------------------------------------------------------------------
+    // operator [] - readonly
+    // access elements in order by index rather than member name
+    // ------------------------------------------------------------------------
+    uint16_t operator[](size_t idx) const
+    {
+        switch (idx)
+        {
+        case 0:
+            return RedTenthMilliAmpere;
+        case 1:
+            return GreenTenthMilliAmpere;
+        case 2:
+            return BlueTenthMilliAmpere;
+        case 3:
+            return WarmWhiteTenthMilliAmpere;
+        default:
+            return CoolWhiteTenthMilliAmpere;
+        }
+    }
+
+    const uint16_t RedTenthMilliAmpere;   // in 1/10th ma
+    const uint16_t GreenTenthMilliAmpere; // in 1/10th ma
+    const uint16_t BlueTenthMilliAmpere;  // in 1/10th ma
+    const uint16_t WarmWhiteTenthMilliAmpere; // in 1/10th ma
+    const uint16_t CoolWhiteTenthMilliAmpere; // in 1/10th ma
 };
