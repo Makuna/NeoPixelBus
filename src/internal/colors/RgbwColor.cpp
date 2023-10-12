@@ -32,6 +32,7 @@ License along with NeoPixel.  If not, see
 #include "HslColor.h"
 #include "HsbColor.h"
 #include "RgbwColor.h"
+#include "RgbcctColor.h"
 #include "HtmlColor.h"
 
 RgbwColor::RgbwColor(const HtmlColor& color)
@@ -57,6 +58,15 @@ RgbwColor::RgbwColor(const HsbColor& color)
     RgbColor rgbColor(color);
     *this = rgbColor;
 }
+
+RgbwColor::RgbwColor(const RgbcctColor& color)
+{
+    R = color.R;
+    G = color.G;
+    B = color.B;
+    W = color.WW;
+}
+
 
 uint8_t RgbwColor::CalculateBrightness() const
 {

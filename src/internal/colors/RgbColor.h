@@ -26,6 +26,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 struct RgbwColor;
+struct RgbcctColor; // needed??
 
 // ------------------------------------------------------------------------
 // RgbColor represents a color object that is represented by Red, Green, Blue
@@ -78,6 +79,11 @@ struct RgbColor : RgbColorBase
     // Construct a RgbColor using HsbColor
     // ------------------------------------------------------------------------
     RgbColor(const HsbColor& color);
+
+    // ------------------------------------------------------------------------
+    // Construct a RgbColor using RgbcctColor
+    // ------------------------------------------------------------------------
+    RgbColor(const RgbcctColor& color);
 
 
     // ------------------------------------------------------------------------

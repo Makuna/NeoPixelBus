@@ -35,6 +35,7 @@ License along with NeoPixel.  If not, see
 #include "HtmlColor.h"
 
 #include "RgbwColor.h"
+#include "RgbcctColor.h"
 
 RgbColor::RgbColor(const RgbwColor& color) :
     R(color.R),
@@ -85,6 +86,14 @@ RgbColor::RgbColor(const HsbColor& color)
     R = static_cast<uint8_t>(r * Max);
     G = static_cast<uint8_t>(g * Max);
     B = static_cast<uint8_t>(b * Max);
+}
+
+// ADDED BY MICHAEL
+RgbColor::RgbColor(const RgbcctColor& color)
+{
+    R = color.R;
+    G = color.G;
+    B = color.B;
 }
 
 uint8_t RgbColor::CalculateBrightness() const
