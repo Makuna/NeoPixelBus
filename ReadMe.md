@@ -1,5 +1,9 @@
 # NeoPixelBus
 
+Fork created to test my edited colour (RgbcctColour) integration and to keep sync with latest improvements from NeoPixelBus. 
+I will add a folder with several examples that should test my code edits (mostly to test compile) and will be built with arduino IDE for simplicity and should be flashed onto esp32 for sequence test. 
+
+
 [![Donate](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=6AA97KE54UJR4)
 
 Arduino NeoPixel library
