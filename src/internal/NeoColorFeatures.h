@@ -42,6 +42,7 @@ License along with NeoPixel.  If not, see
 #include "features/Neo6xxByteFeature.h"
 #include "features/Neo3WordFeature.h"
 #include "features/Neo4WordFeature.h"
+#include "features/Neo5WordFeature.h"
 
 // NeoPixel Features
 //

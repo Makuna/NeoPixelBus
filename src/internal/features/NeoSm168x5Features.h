@@ -90,27 +90,31 @@ public:
             blueGain,
             whiteGain,
             otherGain,
-            calcCurrent(redGain),
-            calcCurrent(greenGain),
-            calcCurrent(blueGain),
-            calcCurrent(whiteGain),
-            calcCurrent(otherGain))
+            CurrentLookup[redGain],
+            CurrentLookup[greenGain],
+            CurrentLookup[blueGain],
+            CurrentLookup[whiteGain],
+            CurrentLookup[otherGain])
     {
     }
 
     void Encode(uint8_t* encoded) const
     {
         // RGBWY 5 bits each
-        *encoded++ = operator[](V_IC_1) << 4 | operator[](V_IC_2);
-        *encoded = operator[](V_IC_3) << 4;
-        V_IC_4
-            V_IC_5
-
-            b00 -  not standby
-            b11111 - reserved
+        *encoded++ = operator[](V_IC_1) << 3 | operator[](V_IC_2) >> 2; // 0b11111222
+        *encoded++ = operator[](V_IC_2) << 6 | operator[](V_IC_3) << 1 | operator[](V_IC_4) >> 4; // 0b22333334
+        *encoded++ = operator[](V_IC_4) << 4 | operator[](V_IC_5) >> 1; // 0b44445555
+        *encoded = operator[](V_IC_5) << 7 | 0b00011111; // 0b50011111 00 (action, not standby) 11111 (reserved)
     }
 
 protected:
+    static constexpr uint16_t CurrentLookup[32] = {
+        102, 203, 304, 405, 506, 607, 708, 809,
+        910, 1011, 1112, 1213, 1307, 1406, 1505, 1602, 
+        1700, 1790, 1885, 1980, 2078, 2168, 2264, 2358, 
+        2450, 2544, 2636, 2728, 2820, 2910, 3000, 3100}; // in tenth mA
+
+    /* not to spec, switched to table
     constexpr uint16_t MinCmA =  1020; // 100th of a mA
     constexpr uint16_t MaxCmA = 31000;
     constexpr uint16_t DeltaCmA = MaxCmA - MinCmA;
@@ -121,6 +125,7 @@ protected:
         uint16_t CmA = MinCmA + (gain * IncCmA);
         return CmA / 10; // return tenths of mA
     }
+    */
 };
 
 // CAUTION:  Make sure ColorIndex order for Neo5ByteFeature matches T_SETTINGS
@@ -151,6 +156,6 @@ public:
     }
 };
 
-typedef NeoRgbwSm168x5Elements<NeoSm16825eSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW, ColorIndexY>> NeoRgbwSm16825eFeature;
+typedef NeoRgbwySm168x5Elements<NeoSm16825eSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW, ColorIndexY>> NeoRgbwySm16825eFeature;
 
 
