@@ -105,6 +105,9 @@ public:
         *encoded = operator[](V_IC_3) << 4;
         V_IC_4
             V_IC_5
+
+            b00 -  not standby
+            b11111 - reserved
     }
 
 protected:
