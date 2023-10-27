@@ -33,3 +33,4 @@ const uint8_t ColorIndexB = 2;
 const uint8_t ColorIndexW = 3;
 const uint8_t ColorIndexWW = 3; // warmer white
 const uint8_t ColorIndexCW = 4; // cooler white
+const uint8_t ColorIndexY = 4;
