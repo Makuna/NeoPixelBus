@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-RgbwwColor provides a color object that can be directly consumed by NeoPixelBus
+Rgbww80Color provides a color object that can be directly consumed by NeoPixelBus
 
 Written by Michael C. Miller.
 
@@ -24,6 +24,7 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+
 #include <Arduino.h>
 #include "../NeoSettings.h"
 #include "RgbColorBase.h"
@@ -34,62 +35,37 @@ License along with NeoPixel.  If not, see
 #include "HsbColor.h"
 #include "HtmlColor.h"
 
-#include "RgbwwColor.h"
+#include "Rgbww80Color.h"
 
-RgbwwColor::RgbwwColor(const HtmlColor& color)
+uint16_t Rgbww80Color::CalculateBrightness() const
 {
-    uint32_t temp = color.Color;
-    B = (temp & 0xff);
-    temp = temp >> 8;
-    G = (temp & 0xff);
-    temp = temp >> 8;
-    R = (temp & 0xff);
-    temp = temp >> 8;
-    WW = (temp & 0xff);
-    CW = WW;
-};
-
-RgbwwColor::RgbwwColor(const HslColor& color)
-{
-    RgbColor rgbColor(color);
-    *this = rgbColor;
-}
-
-RgbwwColor::RgbwwColor(const HsbColor& color)
-{
-    RgbColor rgbColor(color);
-    *this = rgbColor;
-}
-
-uint8_t RgbwwColor::CalculateBrightness() const
-{
-    uint8_t colorB = static_cast<uint8_t>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
-    uint8_t whiteB = static_cast<uint8_t>((static_cast<uint16_t>(WW) + static_cast<uint16_t>(CW)) / 2);
+    uint16_t colorB = static_cast<uint16_t>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
+    uint16_t whiteB = static_cast<uint16_t>((static_cast<uint32_t>(WW) + static_cast<uint32_t>(CW)) / 2);
 
     return (whiteB > colorB) ? whiteB : colorB;
 }
 
-RgbwwColor RgbwwColor::Dim(uint8_t ratio) const
+Rgbww80Color Rgbww80Color::Dim(uint16_t ratio) const
 {
     // specifically avoids float math
-    return RgbwwColor(_elementDim(R, ratio), 
+    return Rgbww80Color(_elementDim(R, ratio), 
         _elementDim(G, ratio), 
         _elementDim(B, ratio), 
         _elementDim(WW, ratio), 
         _elementDim(CW, ratio));
 }
 
-RgbwwColor RgbwwColor::Brighten(uint8_t ratio) const
+Rgbww80Color Rgbww80Color::Brighten(uint16_t ratio) const
 {
     // specifically avoids float math
-    return RgbwwColor(_elementBrighten(R, ratio), 
+    return Rgbww80Color(_elementBrighten(R, ratio), 
         _elementBrighten(G, ratio), 
         _elementBrighten(B, ratio), 
         _elementBrighten(WW, ratio), 
         _elementBrighten(CW, ratio));
 }
 
-void RgbwwColor::Darken(uint8_t delta)
+void Rgbww80Color::Darken(uint16_t delta)
 {
     if (R > delta)
     {
@@ -137,7 +113,7 @@ void RgbwwColor::Darken(uint8_t delta)
     }
 }
 
-void RgbwwColor::Lighten(uint8_t delta)
+void Rgbww80Color::Lighten(uint16_t delta)
 {
     if (IsColorLess())
     {
@@ -190,28 +166,28 @@ void RgbwwColor::Lighten(uint8_t delta)
     }
 }
 
-RgbwwColor RgbwwColor::LinearBlend(const RgbwwColor& left, const RgbwwColor& right, float progress)
+Rgbww80Color Rgbww80Color::LinearBlend(const Rgbww80Color& left, const Rgbww80Color& right, float progress)
 {
-    return RgbwwColor( left.R + ((static_cast<int16_t>(right.R) - left.R) * progress),
-        left.G + ((static_cast<int16_t>(right.G) - left.G) * progress),
-        left.B + ((static_cast<int16_t>(right.B) - left.B) * progress),
-        left.WW + ((static_cast<int16_t>(right.WW) - left.WW) * progress),
-        left.CW + ((static_cast<int16_t>(right.CW) - left.CW) * progress));
+    return Rgbww80Color( left.R + ((static_cast<int32_t>(right.R) - left.R) * progress),
+        left.G + ((static_cast<int32_t>(right.G) - left.G) * progress),
+        left.B + ((static_cast<int32_t>(right.B) - left.B) * progress),
+        left.WW + ((static_cast<int32_t>(right.WW) - left.WW) * progress),
+        left.CW + ((static_cast<int32_t>(right.CW) - left.CW) * progress));
 }
 
-RgbwwColor RgbwwColor::LinearBlend(const RgbwwColor& left, const RgbwwColor& right, uint8_t progress)
+Rgbww80Color Rgbww80Color::LinearBlend(const Rgbww80Color& left, const Rgbww80Color& right, uint8_t progress)
 {
-    return RgbwwColor(left.R + (((static_cast<int32_t>(right.R) - left.R) * static_cast<int32_t>(progress) + 1) >> 8),
-        left.G + (((static_cast<int32_t>(right.G) - left.G) * static_cast<int32_t>(progress) + 1) >> 8),
-        left.B + (((static_cast<int32_t>(right.B) - left.B) * static_cast<int32_t>(progress) + 1) >> 8),
-        left.WW + (((static_cast<int32_t>(right.WW) - left.WW) * static_cast<int32_t>(progress) + 1) >> 8),
-        left.CW + (((static_cast<int32_t>(right.CW) - left.CW) * static_cast<int32_t>(progress) + 1) >> 8));
+    return Rgbww80Color(left.R + (((static_cast<int64_t>(right.R) - left.R) * static_cast<int64_t>(progress) + 1) >> 8),
+        left.G + (((static_cast<int64_t>(right.G) - left.G) * static_cast<int64_t>(progress) + 1) >> 8),
+        left.B + (((static_cast<int64_t>(right.B) - left.B) * static_cast<int64_t>(progress) + 1) >> 8),
+        left.WW + (((static_cast<int64_t>(right.WW) - left.WW) * static_cast<int64_t>(progress) + 1) >> 8),
+        left.CW + (((static_cast<int64_t>(right.CW) - left.CW) * static_cast<int64_t>(progress) + 1) >> 8));
 }
 
-RgbwwColor RgbwwColor::BilinearBlend(const RgbwwColor& c00, 
-    const RgbwwColor& c01, 
-    const RgbwwColor& c10, 
-    const RgbwwColor& c11, 
+Rgbww80Color Rgbww80Color::BilinearBlend(const Rgbww80Color& c00, 
+    const Rgbww80Color& c01, 
+    const Rgbww80Color& c10, 
+    const Rgbww80Color& c11, 
     float x, 
     float y)
 {
@@ -220,7 +196,7 @@ RgbwwColor RgbwwColor::BilinearBlend(const RgbwwColor& c00,
     float v01 = (1.0f - x) * y;
     float v11 = x * y;
 
-    return RgbwwColor(
+    return Rgbww80Color(
         c00.R * v00 + c10.R * v10 + c01.R * v01 + c11.R * v11,
         c00.G * v00 + c10.G * v10 + c01.G * v01 + c11.G * v11,
         c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11,

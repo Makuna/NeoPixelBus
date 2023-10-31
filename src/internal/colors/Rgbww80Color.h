@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-RgbwwColor provides a color object that can be directly consumed by NeoPixelBus
+Rgbww80Color provides a color object that can be directly consumed by NeoPixelBus
 
 Written by Michael C. Miller.
 
@@ -30,39 +30,47 @@ struct HslColor;
 struct HsbColor;
 
 // ------------------------------------------------------------------------
-// RgbwwColor represents a color object that is represented by Red, Green, Blue
+// Rgbww80Color represents a color object that is represented by Red, Green, Blue
 // component values and two extra White components.  
 // While the white components are labeled as WW (warm) and CW (cool), they can be
 // considered as the "warmer" and "cooler" whites of your LEDs; so that if yours
 // have Nuetral and Cool, you could consider the WW as your nuetral. 
 // It contains helpful color routines to manipulate the color.
 // ------------------------------------------------------------------------
-struct RgbwwColor : RgbColorBase
+struct Rgbww80Color : RgbColorBase
 {
     typedef NeoRgbwwCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwwColor using R, G, B, WW, CW values (0-255)
+    // Construct a Rgbww80Color using R, G, B, WW, CW values (0-65535)
     // ------------------------------------------------------------------------
-    RgbwwColor(uint8_t r, uint8_t g, uint8_t b, uint8_t warmW = 0, uint8_t coolW = 0) :
+    Rgbww80Color(uint16_t r, uint16_t g, uint16_t b, uint16_t warmW = 0, uint16_t coolW = 0) :
         R(r), G(g), B(b), WW(warmW), CW(coolW)
     {
     };
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwwColor using a single brightness value (0-255)
+    // Construct a Rgbww80Color using a single brightness value (0-65535)
     // This works well for creating gray tone colors
-    // (0) = black, (255) = white, (128) = gray
+    // (0) = black, (65535) = white, (128) = gray
     // ------------------------------------------------------------------------
-    RgbwwColor(uint8_t brightness) :
+    Rgbww80Color(uint16_t brightness) :
         R(0), G(0), B(0), WW(brightness), CW(brightness)
     {
     };
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwwColor using RgbColor
+    // Construct a Rgbww80Color using RgbColor
     // ------------------------------------------------------------------------
-    RgbwwColor(const RgbColor& color) :
+    Rgbww80Color(const RgbColor& color) :
+    {
+        *this = Rgb48Color(color);
+    };
+
+    // ------------------------------------------------------------------------
+    // Construct a Rgbw80Color using Rgb48Color
+    // ------------------------------------------------------------------------
+    Rgbww80Color(const Rgb48Color& color) :
         R(color.R),
         G(color.G),
         B(color.B),
@@ -72,9 +80,17 @@ struct RgbwwColor : RgbColorBase
     };
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwwColor using RgbwColor
+    // Construct a Rgbww80Color using RgbwColor
     // ------------------------------------------------------------------------
-    RgbwwColor(const RgbwColor& color) :
+    Rgbww80Color(const RgbwColor& color) :
+    {
+        *this = Rgbw64Color(color);
+    };
+
+    // ------------------------------------------------------------------------
+    // Construct a Rgbw64Color using Rgb48Color
+    // ------------------------------------------------------------------------
+    Rgbww80Color(const Rgbw64Color& color) :
         R(color.R),
         G(color.G),
         B(color.B),
@@ -84,37 +100,46 @@ struct RgbwwColor : RgbColorBase
     };
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwwColor using HtmlColor
+    // Construct a Rgbww80Color using HtmlColor
     // ------------------------------------------------------------------------
-    RgbwwColor(const HtmlColor& color);
+    Rgbww80Color(const HtmlColor& color)
+    {
+        *this = RgbwColor(color);
+    }
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwwColor using HslColor
+    // Construct a Rgbww80Color using HslColor
     // ------------------------------------------------------------------------
-    RgbwwColor(const HslColor& color);
+    Rgbww80Color(const HslColor& color)
+    {
+        *this = Rgb48Color(color);
+    }
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwwColor using HsbColor
+    // Construct a Rgbww80Color using HsbColor
     // ------------------------------------------------------------------------
-    RgbwwColor(const HsbColor& color);
+    Rgbww80Color(const HsbColor& color)
+    {
+        *this = Rgb48Color(color);
+    }
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwwColor that will have its values set in latter operations
+    // Construct a Rgbww80Color that will have its values set in latter operations
     // CAUTION:  The R,G,B, WW, CW members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
-    RgbwwColor()
+    Rgbww80Color()
     {
     };
 
     // ------------------------------------------------------------------------
     // Comparison operators
     // ------------------------------------------------------------------------
-    bool operator==(const RgbwwColor& other) const
+    bool operator==(const Rgbww80Color& other) const
     {
         return (R == other.R && G == other.G && B == other.B && WW == other.WW && CW == other.CW);
     };
 
-    bool operator!=(const RgbwwColor& other) const
+    bool operator!=(const Rgbww80Color& other) const
     {
         return !(*this == other);
     };
@@ -127,9 +152,9 @@ struct RgbwwColor : RgbColorBase
     //   negative - this is less than other
     //   positive - this is greater than other
     // ------------------------------------------------------------------------
-    int16_t CompareTo(const RgbwwColor& other, uint8_t epsilon = 1)
+    int32_t CompareTo(const Rgbww80Color& other, uint16_t epsilon = 256)
     {
-        return _Compare<RgbwwColor, int16_t>(*this, other, epsilon);
+        return _Compare<Rgbww80Color, int32_t>(*this, other, epsilon);
     }
 
     // ------------------------------------------------------------------------
@@ -140,9 +165,9 @@ struct RgbwwColor : RgbColorBase
     //   negative - left is less than right
     //   positive - left is greater than right
     // ------------------------------------------------------------------------
-    static int16_t Compare(const RgbwwColor& left, const RgbwwColor& right, uint8_t epsilon = 1)
+    static int32_t Compare(const Rgbww80Color& left, const Rgbww80Color& right, uint16_t epsilon = 256)
     {
-        return _Compare<RgbwwColor, int16_t>(left, right, epsilon);
+        return _Compare<Rgbww80Color, int32_t>(left, right, epsilon);
     }
 
     // ------------------------------------------------------------------------
@@ -150,7 +175,7 @@ struct RgbwwColor : RgbColorBase
     // access elements in order by index rather than R,G,B,WW,CW
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint8_t operator[](size_t idx) const
+    uint16_t operator[](size_t idx) const
     {
         switch (idx)
         {
@@ -172,7 +197,7 @@ struct RgbwwColor : RgbColorBase
     // access elements in order by index rather than R,G,B,WW,CW
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint8_t& operator[](size_t idx)
+    uint16_t& operator[](size_t idx)
     {
         switch (idx)
         {
@@ -210,7 +235,15 @@ struct RgbwwColor : RgbColorBase
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
-    uint8_t CalculateBrightness() const;
+    uint16_t CalculateBrightness() const;
+
+    // ------------------------------------------------------------------------
+    // Dim will return a new color that is blended to black with the given ratio
+    // ratio - (0-65535) where 65535 will return the original color and 0 will return black
+    // 
+    // NOTE: This is a simple linear blend
+    // ------------------------------------------------------------------------
+    Rgbww80Color Dim(uint16_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Dim will return a new color that is blended to black with the given ratio
@@ -218,7 +251,19 @@ struct RgbwwColor : RgbColorBase
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    RgbwwColor Dim(uint8_t ratio) const;
+    Rgbww80Color Dim(uint8_t ratio) const
+    {
+        uint16_t expanded = ratio << 8;
+        return Dim(expanded);
+    }
+
+    // ------------------------------------------------------------------------
+    // Brighten will return a new color that is blended to white with the given ratio
+    // ratio - (0-65535) where 65535 will return the original color and 0 will return white
+    // 
+    // NOTE: This is a simple linear blend
+    // ------------------------------------------------------------------------
+    Rgbww80Color Brighten(uint16_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Brighten will return a new color that is blended to white with the given ratio
@@ -226,21 +271,25 @@ struct RgbwwColor : RgbColorBase
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    RgbwwColor Brighten(uint8_t ratio) const;
+    Rgbww80Color Brighten(uint8_t ratio) const
+    {
+        uint16_t expanded = ratio << 8;
+        return Brighten(expanded);
+    }
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
     // NOTE: This is a simple linear change
-    // delta - (0-255) the amount to dim the color
+    // delta - (0-65535) the amount to dim the color
     // ------------------------------------------------------------------------
-    void Darken(uint8_t delta);
+    void Darken(uint16_t delta);
 
     // ------------------------------------------------------------------------
     // Lighten will adjust the color by the given delta toward white
     // NOTE: This is a simple linear change
-    // delta - (0-255) the amount to lighten the color
+    // delta - (0-65535) the amount to lighten the color
     // ------------------------------------------------------------------------
-    void Lighten(uint8_t delta);
+    void Lighten(uint16_t delta);
 
     // ------------------------------------------------------------------------
     // LinearBlend between two colors by the amount defined by progress variable
@@ -249,11 +298,11 @@ struct RgbwwColor : RgbColorBase
     // progress - (0.0 - 1.0) value where 0 will return left and 1.0 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static RgbwwColor LinearBlend(const RgbwwColor& left, const RgbwwColor& right, float progress);
+    static Rgbww80Color LinearBlend(const Rgbww80Color& left, const Rgbww80Color& right, float progress);
     // progress - (0 - 255) value where 0 will return left and 255 will return right
     //     and a value between will blend the color weighted linearly between them
     // ------------------------------------------------------------------------
-    static RgbwwColor LinearBlend(const RgbwwColor& left, const RgbwwColor& right, uint8_t progress);
+    static Rgbww80Color LinearBlend(const Rgbww80Color& left, const Rgbww80Color& right, uint8_t progress);
 
     // ------------------------------------------------------------------------
     // BilinearBlend between four colors by the amount defined by 2d variable
@@ -264,10 +313,10 @@ struct RgbwwColor : RgbColorBase
     // x - unit value (0.0 - 1.0) that defines the blend progress in horizontal space
     // y - unit value (0.0 - 1.0) that defines the blend progress in vertical space
     // ------------------------------------------------------------------------
-    static RgbwwColor BilinearBlend(const RgbwwColor& c00, 
-        const RgbwwColor& c01, 
-        const RgbwwColor& c10, 
-        const RgbwwColor& c11, 
+    static Rgbww80Color BilinearBlend(const Rgbww80Color& c00, 
+        const Rgbww80Color& c01, 
+        const Rgbww80Color& c10, 
+        const Rgbww80Color& c11, 
         float x, 
         float y);
 
@@ -285,31 +334,31 @@ struct RgbwwColor : RgbColorBase
     }
 
     // ------------------------------------------------------------------------
-    // Red, Green, Blue, Warm White, Cool White color members (0-255) where 
+    // Red, Green, Blue, Warm White, Cool White color members (0-65535) where 
     // (0,0,0,0,0) is black and 
-    // (255,255,255, 0, 0) is a white 
-    // (0,0,0,255,0) is warm white and
-    // (0,0,0,0,255) is cool white and
-    // Note (255,255,255,255,255) is extreme bright white
+    // (65535,65535,65535, 0, 0) is a white 
+    // (0,0,0,65535,0) is warm white and
+    // (0,0,0,0,65535) is cool white and
+    // Note (65535,65535,65535,65535,65535) is extreme bright white
     // ------------------------------------------------------------------------
-    uint8_t R;
-    uint8_t G;
-    uint8_t B;
-    uint8_t WW;
-    uint8_t CW;
+    uint16_t R;
+    uint16_t G;
+    uint16_t B;
+    uint16_t WW;
+    uint16_t CW;
 
-    const static uint8_t Max = 255;
+    const static uint16_t Max = 65535;
     const static size_t Count = 5; // five elements in []
 
 private:
-    inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)
+    inline static uint16_t _elementDim(uint16_t value, uint16_t ratio)
     {
-        return (static_cast<uint16_t>(value) * (static_cast<uint16_t>(ratio) + 1)) >> 8;
+        return (static_cast<uint32_t>(value) * (static_cast<uint32_t>(ratio) + 1)) >> 16;
     }
 
-    inline static uint8_t _elementBrighten(uint8_t value, uint8_t ratio)
+    inline static uint16_t _elementBrighten(uint16_t value, uint16_t ratio)
     {
-        uint16_t element = ((static_cast<uint16_t>(value) + 1) << 8) / (static_cast<uint16_t>(ratio) + 1);
+        uint32_t element = ((static_cast<uint32_t>(value) + 1) << 16) / (static_cast<uint32_t>(ratio) + 1);
 
         if (element > Max)
         {
