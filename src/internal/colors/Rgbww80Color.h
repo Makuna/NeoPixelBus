@@ -62,7 +62,7 @@ struct Rgbww80Color : RgbColorBase
     // ------------------------------------------------------------------------
     // Construct a Rgbww80Color using RgbColor
     // ------------------------------------------------------------------------
-    Rgbww80Color(const RgbColor& color) :
+    Rgbww80Color(const RgbColor& color) 
     {
         *this = Rgb48Color(color);
     };
@@ -82,22 +82,12 @@ struct Rgbww80Color : RgbColorBase
     // ------------------------------------------------------------------------
     // Construct a Rgbww80Color using RgbwColor
     // ------------------------------------------------------------------------
-    Rgbww80Color(const RgbwColor& color) :
-    {
-        *this = Rgbw64Color(color);
-    };
+    Rgbww80Color(const RgbwColor& color);
 
     // ------------------------------------------------------------------------
     // Construct a Rgbw64Color using Rgb48Color
     // ------------------------------------------------------------------------
-    Rgbww80Color(const Rgbw64Color& color) :
-        R(color.R),
-        G(color.G),
-        B(color.B),
-        WW(color.W),
-        CW(color.W)
-    {
-    };
+    Rgbww80Color(const Rgbw64Color& color);
 
     // ------------------------------------------------------------------------
     // Construct a Rgbww80Color using HtmlColor

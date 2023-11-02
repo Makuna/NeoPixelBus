@@ -43,7 +43,7 @@ public:
             uint16_t blueCurrent,
             uint16_t whiteCurrent,
             uint16_t otherCurrent) :
-        NeoRgbCurrentSettings(redCurrent, greenCurrent, blueCurrent, whiteCurrent, otherCurrent),
+        NeoRgbwwCurrentSettings(redCurrent, greenCurrent, blueCurrent, whiteCurrent, otherCurrent),
         RedGain(redGain & 0x1f),
         GreenGain(greenGain & 0x1f),
         BlueGain(blueGain & 0x1f), 
@@ -84,8 +84,8 @@ template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3, uint8_t V_IC_4, uint8_
 class NeoSm16825eSettings : public NeoSm168x5SettingsBase
 {
 public:
-    NeoSm16823eSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain, uint8_t otherGain ) :
-        NeoSm168x3SettingsBase(redGain,
+    NeoSm16825eSettings(uint8_t redGain, uint8_t greenGain, uint8_t blueGain, uint8_t whiteGain, uint8_t otherGain ) :
+        NeoSm168x5SettingsBase(redGain,
             greenGain,
             blueGain,
             whiteGain,
@@ -130,8 +130,8 @@ protected:
 
 // CAUTION:  Make sure ColorIndex order for Neo5ByteFeature matches T_SETTINGS
 template<typename T_SETTINGS> 
-class NeoRgbwySm168x5Elements : 
-    public Neo5WordFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW, ColorIndexY>
+class NeoRgbwcSm168x5Elements : 
+    public Neo5WordFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexWW, ColorIndexCW>
 {
 public:
     typedef T_SETTINGS SettingsObject;
@@ -156,6 +156,6 @@ public:
     }
 };
 
-typedef NeoRgbwySm168x5Elements<NeoSm16825eSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW, ColorIndexY>> NeoRgbwySm16825eFeature;
+typedef NeoRgbwcSm168x5Elements<NeoSm16825eSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexWW, ColorIndexCW>> NeoRgbwcSm16825eFeature;
 
 

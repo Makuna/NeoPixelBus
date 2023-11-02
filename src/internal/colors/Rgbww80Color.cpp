@@ -31,11 +31,26 @@ License along with NeoPixel.  If not, see
 #include "RgbColor.h"
 #include "RgbwColor.h"
 #include "Rgb48Color.h"
+#include "Rgbw64Color.h"
 #include "HslColor.h"
 #include "HsbColor.h"
 #include "HtmlColor.h"
 
 #include "Rgbww80Color.h"
+
+Rgbww80Color::Rgbww80Color(const RgbwColor& color)
+{
+    *this = Rgbw64Color(color);
+};
+
+Rgbww80Color::Rgbww80Color(const Rgbw64Color& color) :
+    R(color.R),
+    G(color.G),
+    B(color.B),
+    WW(color.W),
+    CW(color.W)
+{
+};
 
 uint16_t Rgbww80Color::CalculateBrightness() const
 {
