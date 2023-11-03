@@ -157,5 +157,5 @@ public:
 };
 
 typedef NeoRgbwcSm168x5Elements<NeoSm16825eSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexWW, ColorIndexCW>> NeoRgbwcSm16825eFeature;
-
+typedef NeoRgbwcSm168x5Elements<NeoSm16825eSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexCW, ColorIndexWW>> NeoRgbcwSm16825eFeature;
 
