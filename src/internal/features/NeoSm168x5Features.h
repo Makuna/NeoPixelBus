@@ -129,12 +129,12 @@ protected:
 };
 
 // CAUTION:  Make sure ColorIndex order for Neo5ByteFeature matches T_SETTINGS
-template<typename T_SETTINGS> 
+template<uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3, uint8_t V_IC_4, uint8_t V_IC_5>
 class NeoRgbwcSm168x5Elements : 
-    public Neo5WordFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexWW, ColorIndexCW>
+    public Neo5WordFeature<V_IC_1, V_IC_2, V_IC_3, V_IC_4, V_IC_5>
 {
 public:
-    typedef T_SETTINGS SettingsObject;
+    typedef NeoSm16825eSettings<V_IC_1, V_IC_2, V_IC_3, V_IC_4, V_IC_5> SettingsObject;
     static const size_t SettingsSize = 4;
 
     static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
@@ -156,6 +156,6 @@ public:
     }
 };
 
-typedef NeoRgbwcSm168x5Elements<NeoSm16825eSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexWW, ColorIndexCW>> NeoRgbwcSm16825eFeature;
-typedef NeoRgbwcSm168x5Elements<NeoSm16825eSettings<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexCW, ColorIndexWW>> NeoRgbcwSm16825eFeature;
+typedef NeoRgbwcSm168x5Elements<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexWW, ColorIndexCW> NeoRgbwcSm16825eFeature;
+typedef NeoRgbwcSm168x5Elements<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexCW, ColorIndexWW> NeoRgbcwSm16825eFeature;
 
