@@ -75,6 +75,15 @@ public:
             T_METHOD::Correct(original.WW),
             T_METHOD::Correct(original.CW));
     }
+
+    static Rgbww80Color Correct(const Rgbww80Color& original)
+    {
+        return Rgbww80Color(T_METHOD::Correct(original.R),
+            T_METHOD::Correct(original.G),
+            T_METHOD::Correct(original.B),
+            T_METHOD::Correct(original.WW),
+            T_METHOD::Correct(original.CW));
+    }
 };
 
 
