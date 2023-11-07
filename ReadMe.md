@@ -4,11 +4,8 @@
 
 Arduino NeoPixel library
 
-A library to control one wire protocol RGB and RGBW leds like APA106, SK6812, WS2811, WS2812 and WS2813 that are commonly refered to as NeoPixels and two wire protocol RGB like Lpd8806, APA102 and SK9822 commonly refered to as DotStars.
+A library to control one wire protocol RGB, RGBW, and RGBWW leds like APA106, SK6812, WS2811, WS2812 and WS2813 that are commonly refered to as NeoPixels and two wire protocol RGB like Lpd8806, APA102 and SK9822 commonly refered to as DotStars.
 Supports most Arduino platforms.  
-
-Please read this best practices link before connecting your NeoPixels, it will save you a lot of time and effort.  
-[Adafruit NeoPixel Best Practices](https://learn.adafruit.com/adafruit-neopixel-uberguide/best-practices)
 
 For quick questions and support:  
 * [Try the new Github Discussions](https://github.com/Makuna/NeoPixelBus/discussions)  
@@ -17,9 +14,6 @@ For quick questions and support:
 [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Makuna/NeoPixelBus?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)  
 
 For bugs, make sure there isn't an active issue and then create one.
-
-## Why this library and not FastLED or some other library?
-See [Why this Library in the Wiki](https://github.com/Makuna/NeoPixelBus/wiki/Library-Comparisons). 
 
 ## Documentation
 [See Wiki](https://github.com/Makuna/NeoPixelBus/wiki)
