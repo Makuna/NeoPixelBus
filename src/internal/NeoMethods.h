@@ -39,7 +39,7 @@ License along with NeoPixel.  If not, see
 
 //Adafruit Pixie via UART, not platform specific
 //
-#include "methods/PixieSerialMethod.h"
+#include "methods/PixieStreamMethod.h"
 
 // Platform specific and One Wire (data) methods
 //

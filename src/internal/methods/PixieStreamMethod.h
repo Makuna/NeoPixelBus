@@ -35,44 +35,50 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 
-class PixieSerialMethod
+class PixieStreamMethod
 {
 public:
     typedef NeoNoSettings SettingsObject;
 
-    PixieSerialMethod(uint16_t pixelCount, size_t elementSize, size_t settingsSize, Stream *s) :
+    PixieStreamMethod(uint16_t pixelCount, size_t elementSize, size_t settingsSize, Stream* pixieStream) :
         _sizeData(pixelCount * elementSize + settingsSize),
-        _endTime(0),
-        _stream(s)
+        _usEndTime(0),
+        _stream(pixieStream)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin()
     }
 
-    ~PixieSerialMethod()
+    ~PixieStreamMethod()
     {
         free(_data);
     }
 
     bool IsReadyToUpdate() const
     {
-        return (micros() - _endTime) > 1000L; // ensure 1ms delay between calls
+        return (micros() - _usEndTime) > 1000L; // ensure 1ms delay between calls
     }
 
     void Initialize()
     {
-        //nothing to initialize, UART is managed outside this library
+        // nothing to initialize, UART is managed outside this library
     }
 
     void Update(bool)
     {
+        while (!IsReadyToUpdate())
+        {
+        }
         _stream->write(_data, _sizeData);
-        _endTime = micros(); // Save time to ensure 1ms delay
+        _usEndTime = micros(); // Save time to ensure 1ms delay
     }
 
     bool AlwaysUpdate()
     {
-        //Pixie expects to receive data every <2 seconds
+        // Pixie expects to receive data every <2 seconds, Adafruit recommends <1.  
+        // Ensuring data is sent every <2 seconds needs to happen outside of the library
+        // Returning true will allow data to be re-sent even if no changes to buffer.
+
         return true;
     }
 
@@ -94,6 +100,6 @@ private:
     const size_t   _sizeData;   // Size of '_data' buffer below
 
     uint8_t* _data;       // Holds LED color values
-    Stream *_stream;
-    uint32_t _endTime;
+    Stream* _stream;
+    uint32_t _usEndTime;  // microseconds EndTime
 };

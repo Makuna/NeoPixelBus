@@ -84,10 +84,10 @@ public:
     {
     }
 
-    NeoPixelBus(uint16_t countPixels, Stream *s) :
+    NeoPixelBus(uint16_t countPixels, Stream* pixieStream) :
         _countPixels(countPixels),
         _state(0),
-        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, s)
+        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, pixieStream)
     {
     }
 
