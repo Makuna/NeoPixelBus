@@ -37,6 +37,10 @@ License along with NeoPixel.  If not, see
 #include "methods/Sm16716GenericMethod.h"
 #include "methods/Mbi6033GenericMethod.h"
 
+//Adafruit Pixie via UART, not platform specific
+//
+#include "methods/PixieStreamMethod.h"
+
 // Platform specific and One Wire (data) methods
 //
 #if defined(ARDUINO_ARCH_ESP8266)
