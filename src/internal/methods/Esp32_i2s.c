@@ -234,6 +234,7 @@ esp_err_t i2sSetClock(uint8_t bus_num,
     clkm_conf.clk_sel = 2; // APPL = 1 APB = 2
     clkm_conf.clk_en = 1; // examples of i2s show this being set if sel is set to 2
 #else
+    clkm_conf.clk_en = 1;
     clkm_conf.clka_en = 0;
 #endif
 
@@ -476,7 +477,7 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->fifo_conf) fifo_conf;
 
         fifo_conf.val = 0;
-        fifo_conf.rx_fifo_mod_force_en = 1;
+        fifo_conf.rx_fifo_mod_force_en = 0;
         fifo_conf.tx_fifo_mod_force_en = 1;
         fifo_conf.tx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
         fifo_conf.rx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
@@ -490,6 +491,10 @@ void i2sInit(uint8_t bus_num,
     { 
         typeof(i2s->conf1) conf1;
         conf1.val = 0;
+
+        conf1.tx_pcm_conf = 1;
+        conf1.rx_pcm_bypass = 1;
+
         conf1.tx_stop_en = 0;
         conf1.tx_pcm_bypass = 1;
         i2s->conf1.val = conf1.val;
@@ -553,8 +558,8 @@ void i2sInit(uint8_t bus_num,
     {
         typeof(i2s->lc_conf) lc_conf;
         lc_conf.val = 0;
-        lc_conf.out_data_burst_en = 1;
-        lc_conf.indscr_burst_en = 1;
+        lc_conf.out_data_burst_en = 1;  // ?
+        lc_conf.indscr_burst_en = 1;    // ?
         i2s->lc_conf.val = lc_conf.val;
     }
 /* */
@@ -662,6 +667,207 @@ bool i2sWrite(uint8_t bus_num)
     itemLoopBreaker->qe.stqe_next = itemLoopNext;
 
     I2S[bus_num].is_sending_data = I2s_Is_Sending;
+
+    return true;
+}
+
+void DumpI2sPrimary(const char* label, uint32_t val)
+{
+    printf("%s %08x\n", label, val);
+}
+
+void DumpI2sSecondary(const char* label, uint32_t val)
+{
+    printf("    %s %u\n", label, val);
+}
+
+void DumpI2s_sample_rate_conf(const char* label, i2s_dev_t* bus)
+{
+    typeof(bus->sample_rate_conf) val;
+
+    val.val = bus->sample_rate_conf.val;
+
+    DumpI2sPrimary(label, val.val);
+
+    DumpI2sSecondary("tx_back_div_num : ", val.tx_bck_div_num);
+    DumpI2sSecondary("rx_back_div_num : ", val.rx_bck_div_num);
+    DumpI2sSecondary("tx_bits_mod : ", val.tx_bits_mod);
+    DumpI2sSecondary("rx_bits_mod : ", val.rx_bits_mod);
+}
+
+void DumpI2s_conf1(const char* label, i2s_dev_t* bus)
+{
+    typeof(bus->conf1) val;
+    val.val = bus->conf1.val;
+
+    DumpI2sPrimary(label, val.val);
+
+    DumpI2sSecondary("tx_pcm_conf : ", val.tx_pcm_conf);
+    DumpI2sSecondary("tx_pcm_bypass : ", val.tx_pcm_bypass);
+    DumpI2sSecondary("rx_pcm_conf : ", val.rx_pcm_conf);
+    DumpI2sSecondary("rx_pcm_bypass : ", val.rx_pcm_bypass);
+    DumpI2sSecondary("tx_stop_en : ", val.tx_stop_en);
+    DumpI2sSecondary("tx_zeros_rm_en : ", val.tx_zeros_rm_en);
+}
+
+void DumpI2s_clkm_conf(const char* label, i2s_dev_t* bus)
+{
+    typeof(bus->clkm_conf) val;
+    val.val = bus->clkm_conf.val;
+
+    DumpI2sPrimary(label, val.val);
+
+    DumpI2sSecondary("clkm_div_num : ", val.clkm_div_num);
+    DumpI2sSecondary("clkm_div_b : ", val.clkm_div_b);
+    DumpI2sSecondary("clkm_div_a : ", val.clkm_div_a);
+    DumpI2sSecondary("clk_en : ", val.clk_en);
+    DumpI2sSecondary("clka_en : ", val.clka_en);
+}
+
+void DumpI2s_lc_conf(const char* label, i2s_dev_t* bus)
+{
+    typeof(bus->lc_conf) val;
+    val.val = bus->lc_conf.val;
+
+    DumpI2sPrimary(label, val.val);
+
+    DumpI2sSecondary("out_auto_wrback : ", val.out_auto_wrback);
+    DumpI2sSecondary("out_no_restart_clr : ", val.out_no_restart_clr);
+    DumpI2sSecondary("out_eof_mode : ", val.out_eof_mode);
+    DumpI2sSecondary("outdscr_burst_en : ", val.outdscr_burst_en);
+    DumpI2sSecondary("indscr_burst_en : ", val.indscr_burst_en);
+    DumpI2sSecondary("out_data_burst_en : ", val.out_data_burst_en);
+    DumpI2sSecondary("check_owner : ", val.check_owner);
+    DumpI2sSecondary("mem_trans_en : ", val.mem_trans_en);
+}
+
+void DumpI2s_conf(const char* label, i2s_dev_t* bus)
+{
+    typeof(bus->conf) val;
+    val.val = bus->conf.val;
+
+    DumpI2sPrimary(label, val.val);
+
+    DumpI2sSecondary("tx_slave_mod : ", val.tx_slave_mod);
+    DumpI2sSecondary("rx_slave_mod : ", val.rx_slave_mod);
+    DumpI2sSecondary("tx_right_first : ", val.tx_right_first);
+    DumpI2sSecondary("rx_right_first : ", val.rx_right_first);
+    DumpI2sSecondary("tx_msb_shift : ", val.tx_msb_shift);
+    DumpI2sSecondary("rx_msb_shift : ", val.rx_msb_shift);
+    DumpI2sSecondary("tx_short_sync : ", val.tx_short_sync);
+    DumpI2sSecondary("rx_short_sync : ", val.rx_short_sync);
+    DumpI2sSecondary("tx_mono : ", val.tx_mono);
+    DumpI2sSecondary("rx_mono : ", val.rx_mono);
+    DumpI2sSecondary("tx_msb_right : ", val.tx_msb_right);
+    DumpI2sSecondary("rx_msb_right : ", val.rx_msb_right);
+    DumpI2sSecondary("sig_loopback : ", val.sig_loopback);
+}
+
+void DumpI2s_fifo_conf(const char* label, i2s_dev_t* bus)
+{
+    typeof(bus->fifo_conf) val;
+    val.val = bus->fifo_conf.val;
+
+    DumpI2sPrimary(label, val.val);
+
+    DumpI2sSecondary("rx_data_num : ", val.rx_data_num);
+    DumpI2sSecondary("tx_data_num : ", val.tx_data_num);
+    DumpI2sSecondary("dscr_en : ", val.dscr_en);
+    DumpI2sSecondary("tx_fifo_mod : ", val.tx_fifo_mod);
+    DumpI2sSecondary("rx_fifo_mod : ", val.rx_fifo_mod);
+    DumpI2sSecondary("tx_fifo_mod_force_en : ", val.tx_fifo_mod_force_en);
+    DumpI2sSecondary("rx_fifo_mod_force_en : ", val.rx_fifo_mod_force_en);
+}
+
+bool i2sDump(uint8_t bus_num)
+{
+    if (bus_num >= I2S_NUM_MAX)
+    {
+        return false;
+    }
+    i2s_dev_t* i2s = I2S[bus_num].bus;
+
+    DumpI2sPrimary("fifo_wr: ", i2s->fifo_wr);
+    DumpI2sPrimary("fifo_rd: ", i2s->fifo_rd);
+    DumpI2s_conf("conf: ", i2s);
+    DumpI2sPrimary("int_raw: ", i2s->int_raw.val);
+    DumpI2sPrimary("int_st: ", i2s->int_st.val);
+    DumpI2sPrimary("int_ena: ", i2s->int_ena.val);
+    DumpI2sPrimary("int_clr: ", i2s->int_clr.val);
+    DumpI2sPrimary("timing: ", i2s->timing.val);
+    DumpI2s_fifo_conf("fifo_conf: ", i2s);
+    DumpI2sPrimary("rx_eof_num: ", i2s->rx_eof_num);
+    DumpI2sPrimary("conf_single_data: ", i2s->conf_single_data);
+    DumpI2sPrimary("conf_chan: ", i2s->conf_chan.val);
+    DumpI2sPrimary("out_link: ", i2s->out_link.val);
+    DumpI2sPrimary("in_link: ", i2s->in_link.val);
+    DumpI2sPrimary("out_eof_des_addr: ", i2s->out_eof_des_addr);
+    DumpI2sPrimary("in_eof_des_addr: ", i2s->in_eof_des_addr);
+    DumpI2sPrimary("out_eof_bfr_des_addr: ", i2s->out_eof_bfr_des_addr);
+    DumpI2sPrimary("ahb_test: ", i2s->ahb_test.val);
+
+    DumpI2sPrimary("in_link_dscr: ", i2s->in_link_dscr);
+    DumpI2sPrimary("in_link_dscr_bf0: ", i2s->in_link_dscr_bf0);
+    DumpI2sPrimary("in_link_dscr_bf1: ", i2s->in_link_dscr_bf1);
+    DumpI2sPrimary("out_link_dscr: ", i2s->out_link_dscr);
+    DumpI2sPrimary("out_link_dscr_bf0: ", i2s->out_link_dscr_bf0);
+    DumpI2sPrimary("out_link_dscr_bf1: ", i2s->out_link_dscr_bf1);
+
+    DumpI2s_lc_conf("lc_conf: ", i2s);
+
+    DumpI2sPrimary("out_fifo_push: ", i2s->out_fifo_push.val);
+    DumpI2sPrimary("in_fifo_pop: ", i2s->in_fifo_pop.val);
+
+    DumpI2sPrimary("lc_state0: ", i2s->lc_state0);
+    DumpI2sPrimary("lc_state1: ", i2s->lc_state1);
+    DumpI2sPrimary("lc_hung_conf: ", i2s->lc_hung_conf.val);
+
+    DumpI2sPrimary("reserved_78: ", i2s->reserved_78);
+    DumpI2sPrimary("reserved_7c: ", i2s->reserved_7c);
+
+    DumpI2sPrimary("cvsd_conf0: ", i2s->cvsd_conf0.val);
+    DumpI2sPrimary("cvsd_conf1: ", i2s->cvsd_conf1.val);
+    DumpI2sPrimary("cvsd_conf2: ", i2s->cvsd_conf2.val);
+
+    DumpI2sPrimary("plc_conf0: ", i2s->plc_conf0.val);
+    DumpI2sPrimary("plc_conf1: ", i2s->plc_conf1.val);
+    DumpI2sPrimary("plc_conf2: ", i2s->plc_conf2.val);
+
+    DumpI2sPrimary("esco_conf0: ", i2s->esco_conf0.val);
+    DumpI2sPrimary("sco_conf0: ", i2s->sco_conf0.val);
+
+    DumpI2s_conf1("conf1: ", i2s);
+
+    DumpI2sPrimary("pd_conf: ", i2s->pd_conf.val);
+    DumpI2sPrimary("conf2: ", i2s->conf2.val);
+
+
+    DumpI2s_clkm_conf("clkm_conf: ", i2s);
+    DumpI2s_sample_rate_conf("sample_rate_conf: ", i2s);
+
+    DumpI2sPrimary("pdm_conf: ", i2s->pdm_conf.val);
+    DumpI2sPrimary("pdm_freq_conf: ", i2s->pdm_freq_conf.val);
+
+    DumpI2sPrimary("state: ", i2s->state.val);
+
+    /*
+    uint32_t reserved_c0;
+    uint32_t reserved_c4;
+    uint32_t reserved_c8;
+    uint32_t reserved_cc;
+    uint32_t reserved_d0;
+    uint32_t reserved_d4;
+    uint32_t reserved_d8;
+    uint32_t reserved_dc;
+    uint32_t reserved_e0;
+    uint32_t reserved_e4;
+    uint32_t reserved_e8;
+    uint32_t reserved_ec;
+    uint32_t reserved_f0;
+    uint32_t reserved_f4;
+    uint32_t reserved_f8;
+    */
+    DumpI2sPrimary("date: ", i2s->date);
 
     return true;
 }

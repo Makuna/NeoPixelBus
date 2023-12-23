@@ -40,10 +40,13 @@ class PixieStreamMethod
 public:
     typedef NeoNoSettings SettingsObject;
 
-    PixieStreamMethod(uint16_t pixelCount, size_t elementSize, size_t settingsSize, Stream* pixieStream) :
+    PixieStreamMethod(uint16_t pixelCount, 
+            size_t elementSize, 
+            size_t settingsSize, 
+            Stream* pixieStream) :
         _sizeData(pixelCount * elementSize + settingsSize),
-        _usEndTime(0),
-        _stream(pixieStream)
+        _stream(pixieStream),
+        _usEndTime(0)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin()
