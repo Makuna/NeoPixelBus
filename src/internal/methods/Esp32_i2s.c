@@ -558,8 +558,8 @@ void i2sInit(uint8_t bus_num,
     {
         typeof(i2s->lc_conf) lc_conf;
         lc_conf.val = 0;
-        lc_conf.out_data_burst_en = 1;  // ?
-        lc_conf.indscr_burst_en = 1;    // ?
+        lc_conf.out_data_burst_en = 0;  // ?
+        lc_conf.indscr_burst_en = 0;    // ?
         i2s->lc_conf.val = lc_conf.val;
     }
 /* */
