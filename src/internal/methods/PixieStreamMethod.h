@@ -51,6 +51,7 @@ public:
 
     ~PixieStreamMethod()
     {
+        _stream->flush();
         free(_data);
     }
 
