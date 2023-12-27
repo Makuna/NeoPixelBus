@@ -50,6 +50,11 @@ bool i2sWrite(uint8_t bus_num);
 bool i2sWriteDone(uint8_t bus_num);
 
 bool i2sDump(uint8_t bus_num);
+bool i2sGetClks(uint8_t bus_num, uint8_t* clkm_div_num, uint8_t* clkm_div_b, uint8_t* clkm_div_a );
+void i2sUnitDecimalToFractionClks(uint8_t* resultN,
+    uint8_t* resultD,
+    double unitDecimal,
+    double accuracy);
 
 #ifdef __cplusplus
 }

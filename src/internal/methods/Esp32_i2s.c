@@ -205,11 +205,11 @@ bool i2sDeinitDmaItems(uint8_t bus_num)
 // normal 4, 10, 63, 12, 16
 
 esp_err_t i2sSetClock(uint8_t bus_num, 
-        uint8_t div_num, // 4     13
-        uint8_t div_b,   // 10    20
-        uint8_t div_a,   // 63    63
-        uint8_t bck,     // 12    60 or 7
-        uint8_t bits)    // 16    8
+        uint8_t div_num, 
+        uint8_t div_b,   
+        uint8_t div_a,   
+        uint8_t bck,     
+        uint8_t bits)    
 {
     if (bus_num >= I2S_NUM_MAX || div_a > 63 || div_b > 63 || bck > 63) 
     {
@@ -577,14 +577,123 @@ void i2sDeinit(uint8_t bus_num)
     i2sDeinitDmaItems(bus_num);
 }
 
-esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, bool parallel_mode, size_t bytes_per_sample)
+void i2sUnitDecimalToFractionClks(uint8_t* resultN,
+    uint8_t* resultD,
+    double unitDecimal,
+    double accuracy)
+{
+    if (unitDecimal <= accuracy)
+    {
+        // no fractional 
+        *resultN = 0;
+        *resultD = 1;
+        return;
+    }
+    else if (unitDecimal <= (1.0 / 63.0))
+    {
+        // lowest fractional 
+        *resultN = 0;
+        *resultD = 2;
+        return;
+    }
+    else if (unitDecimal >= (62.0 / 63.0))
+    {
+        // highest fractional
+        *resultN = 2;
+        *resultD = 2;
+        return;
+    }
+
+    // The lower fraction is 0 / 1
+    uint16_t lowerN = 0;
+    uint16_t lowerD = 1;
+    double lowerDelta = unitDecimal;
+
+    // The upper fraction is 1 / 1
+    uint16_t upperN = 1;
+    uint16_t upperD = 1;
+    double upperDelta = 1.0 - unitDecimal;
+
+    uint16_t closestN = 0;
+    uint16_t closestD = 1;
+    double closestDelta = lowerDelta;
+
+    for (;;)
+    {
+        // The middle fraction is 
+        // (lowerN + upperN) / (lowerD + upperD)
+        uint16_t middleN = lowerN + upperN;
+        uint16_t middleD = lowerD + upperD;
+        double middleUnit = (double)middleN / middleD;
+
+        if (middleD > 63)
+        {
+            // exceeded our clock bits so break out
+            // and use closest we found so far
+            break;
+        }
+
+        if (middleD * (unitDecimal + accuracy) < middleN)
+        {
+            // middle is our new upper
+            upperN = middleN;
+            upperD = middleD;
+            upperDelta = middleUnit - unitDecimal;
+        }
+        else if (middleN < (unitDecimal - accuracy) * middleD)
+        {
+            // middle is our new lower
+            lowerN = middleN;
+            lowerD = middleD;
+            lowerDelta = unitDecimal - middleUnit;
+        }
+        else
+        {
+            // middle is our best fraction
+            *resultN = middleN;
+            *resultD = middleD;
+            return;
+        }
+
+        // track the closest fraction so far
+        //
+        if (upperDelta < lowerDelta)
+        {
+            if (upperDelta < closestDelta)
+            {
+                closestN = upperN;
+                closestD = upperD;
+                closestDelta = upperDelta;
+            }
+        }
+        else
+        {
+            if (lowerDelta < closestDelta)
+            {
+                closestN = lowerN;
+                closestD = lowerD;
+                closestDelta = lowerDelta;
+            }
+        }
+    }
+
+    // no perfect match, use the closest we found
+    //
+    *resultN = closestN;
+    *resultD = closestD;
+}
+
+esp_err_t i2sSetSampleRate(uint8_t bus_num, 
+        uint32_t rate, 
+        bool parallel_mode, 
+        size_t bytes_per_sample)
 {
     if (bus_num >= I2S_NUM_MAX) 
     {
         return ESP_FAIL;
     }
 
-    uint8_t bck = 12;
+    uint8_t bck = 8;
 
     // parallel mode needs a higher sample rate
     //
@@ -593,16 +702,13 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, bool parallel_mode, s
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
         rate *= bytes_per_sample;
         bck *= bytes_per_sample;
-
-        //rate /= bytes_per_sample;
-        //bck /= bytes_per_sample; 
 #else
         rate *= bytes_per_sample;
 #endif
     }
 
-    //               160,000,000L / (100,000 * 384)
-    double clkmdiv = (double)I2S_BASE_CLK / ((rate * 384) + 1);
+    double clkmdiv = (double)I2S_BASE_CLK / (rate * 256.0);
+    // clkmdiv must be a mulitple of 3!
     if (clkmdiv > 256.0) 
     {
         log_e("rate is too low");
@@ -621,9 +727,18 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t rate, bool parallel_mode, s
     // calc integer and franctional for more precise timing
     // 
     uint8_t clkmInteger = clkmdiv;
-    uint8_t clkmFraction = (clkmdiv - clkmInteger) * 63.0;
+    double clkmFraction = (clkmdiv - clkmInteger);
+    uint8_t divB = 0;
+    uint8_t divA = 0;
 
-    i2sSetClock(bus_num, clkmInteger, clkmFraction, 63, bck, bytes_per_sample * 8);
+    i2sUnitDecimalToFractionClks(&divB, &divA, clkmFraction, 0.000001);
+
+    i2sSetClock(bus_num, 
+        clkmInteger, 
+        divB,
+        divA,
+        bck, 
+        bytes_per_sample * 8);
 
     return ESP_OK;
 }
@@ -671,6 +786,7 @@ bool i2sWrite(uint8_t bus_num)
     return true;
 }
 
+#ifdef NEOPIXELBUS_I2S_DEBUG
 void DumpI2sPrimary(const char* label, uint32_t val)
 {
     printf("%s %08x\n", label, val);
@@ -689,8 +805,8 @@ void DumpI2s_sample_rate_conf(const char* label, i2s_dev_t* bus)
 
     DumpI2sPrimary(label, val.val);
 
-    DumpI2sSecondary("tx_back_div_num : ", val.tx_bck_div_num);
-    DumpI2sSecondary("rx_back_div_num : ", val.rx_bck_div_num);
+    DumpI2sSecondary("tx_bck_div_num : ", val.tx_bck_div_num);
+    DumpI2sSecondary("rx_bck_div_num : ", val.rx_bck_div_num);
     DumpI2sSecondary("tx_bits_mod : ", val.tx_bits_mod);
     DumpI2sSecondary("rx_bits_mod : ", val.rx_bits_mod);
 }
@@ -871,6 +987,33 @@ bool i2sDump(uint8_t bus_num)
 
     return true;
 }
+
+bool i2sGetClks(uint8_t bus_num, 
+        uint8_t* clkm_div_num, 
+        uint8_t* clkm_div_b, 
+        uint8_t* clkm_div_a)
+{
+    if (bus_num >= I2S_NUM_MAX)
+    {
+        return false;
+    }
+    if (!clkm_div_num || !clkm_div_b || !clkm_div_a)
+    {
+        return false;
+    }
+
+    i2s_dev_t* i2s = I2S[bus_num].bus;
+
+    typeof(i2s->clkm_conf) val;
+    val.val = i2s->clkm_conf.val;
+
+    *clkm_div_num = val.clkm_div_num;
+    *clkm_div_b = val.clkm_div_b;
+    *clkm_div_a = val.clkm_div_a;
+
+    return true;
+}
+#endif
 
 #endif // !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
 #endif // defined(ARDUINO_ARCH_ESP32) 
