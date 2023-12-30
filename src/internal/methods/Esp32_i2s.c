@@ -202,8 +202,6 @@ bool i2sDeinitDmaItems(uint8_t bus_num)
     return true;
 }
 
-// normal 4, 10, 63, 12, 16
-
 esp_err_t i2sSetClock(uint8_t bus_num, 
         uint8_t div_num, 
         uint8_t div_b,   
@@ -487,7 +485,6 @@ void i2sInit(uint8_t bus_num,
         i2s->fifo_conf.val = fifo_conf.val;
     }
 
-    // $REVIEW old code didn't set this
     { 
         typeof(i2s->conf1) conf1;
         conf1.val = 0;
@@ -539,7 +536,8 @@ void i2sInit(uint8_t bus_num,
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
 //    (I2S_NUM_MAX == 2)
-    if (bus_num == 1) {
+    if (bus_num == 1) 
+    {
         i2sIntSource = ETS_I2S1_INTR_SOURCE;
     }
     else
@@ -699,16 +697,14 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
     //
     if (parallel_mode)
     {
+        rate *= bytes_per_sample;
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
-        rate *= bytes_per_sample;
         bck *= bytes_per_sample;
-#else
-        rate *= bytes_per_sample;
 #endif
     }
 
     double clkmdiv = (double)I2S_BASE_CLK / (rate * 256.0);
-    // clkmdiv must be a mulitple of 3!
+
     if (clkmdiv > 256.0) 
     {
         log_e("rate is too low");
@@ -749,7 +745,6 @@ void IRAM_ATTR i2sDmaISR(void* arg)
 
     if (i2s->bus->int_st.out_eof) 
     {
- //       lldesc_t* item = (lldesc_t*)(i2s->bus->out_eof_des_addr);
         if (i2s->is_sending_data != I2s_Is_Idle)
         {
             // the second item (last of the two front silent items) is 
