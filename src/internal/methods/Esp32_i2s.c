@@ -70,10 +70,13 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, bool parallel_
 #endif
 
 #define I2S_DMA_BLOCK_COUNT_DEFAULT      0
-// 20 bytes gives us enough time if we use single stage idle
-// But it can't be longer due to non-parrallel mode and 50us reset time
-// there just isn't enough silence at the end to fill more than 20 bytes
-#define I2S_DMA_SILENCE_SIZE     20 // 4 byte increments
+// 50us reset will calculate out as a 16 byte silence/reset buffer
+// The latest DMA buffer model this library uses will allow the 
+// silence blocks to as small as they can be (4 bytes) 
+// this also allows the primary data to send less of that silence since
+// the silence state control blocks (2 front, 1 back) will consume 12 bytes
+// of that reset time already
+#define I2S_DMA_SILENCE_SIZE     4 // must be in 4 byte increments
 #define I2S_DMA_SILENCE_BLOCK_COUNT_FRONT  2 // two front
 #define I2S_DMA_SILENCE_BLOCK_COUNT_BACK  1 // one back, required for non parallel
 
@@ -148,9 +151,15 @@ bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize)
     lldesc_t* item = itemFirst;
 //    lldesc_t* itemsEnd = itemFirst + I2S[bus_num].dma_count;
     lldesc_t* itemNext = item + 1;
-    size_t dataLeft = dataSize;
+    // The primary data to map will excludes the time to process through the
+    // 3 silence control blocks.
+    // That data at the end is already silent reset time and no need to send it twice as
+    // part of the data and the control blocks
+    // makes the reset more accurate
+    size_t dataLeft = dataSize - (I2S_DMA_SILENCE_SIZE * 
+            (I2S_DMA_SILENCE_BLOCK_COUNT_FRONT + I2S_DMA_SILENCE_BLOCK_COUNT_BACK));
     uint8_t* pos = data;
-    // at the end of the data is the encoded silence reset
+    // at the end of the data is the encoded silence reset, use it
     uint8_t* posSilence = data + dataSize - I2S_DMA_SILENCE_SIZE;
 
     // front two are silent items used for looping to micmic single fire
