@@ -611,6 +611,8 @@ void i2sUnitDecimalToFractionClks(uint8_t* resultN,
         return;
     }
 
+//    printf("\nSearching for %f\n", unitDecimal);
+
     // The lower fraction is 0 / 1
     uint16_t lowerN = 0;
     uint16_t lowerD = 1;
@@ -659,20 +661,25 @@ void i2sUnitDecimalToFractionClks(uint8_t* resultN,
             // middle is our best fraction
             *resultN = middleN;
             *resultD = middleD;
+
+//            printf(" Match %d/%d = %f (%f)\n", middleN, middleD, middleUnit, unitDecimal - middleUnit);
             return;
         }
 
-        // track the closest fraction so far
+        // track the closest fraction so far (ONLY THE UPPER, so allow only slower Kbps)
         //
-        if (upperDelta < lowerDelta)
+        //if (upperDelta < lowerDelta)
         {
             if (upperDelta < closestDelta)
             {
                 closestN = upperN;
                 closestD = upperD;
                 closestDelta = upperDelta;
+
+//                printf(" Upper %d/%d = %f (%f)\n", closestN, closestD, middleUnit, closestDelta);
             }
         }
+        /*
         else
         {
             if (lowerDelta < closestDelta)
@@ -680,10 +687,14 @@ void i2sUnitDecimalToFractionClks(uint8_t* resultN,
                 closestN = lowerN;
                 closestD = lowerD;
                 closestDelta = lowerDelta;
+
+                printf(" Lower %d/%d = %f (%f)\n", closestN, closestD, middleUnit, closestDelta);
             }
         }
+        */
     }
 
+//    printf(" Closest %d/%d = %f (%f)\n\n", closestN, closestD, (double)closestN / closestD, closestDelta);
     // no perfect match, use the closest we found
     //
     *resultN = closestN;

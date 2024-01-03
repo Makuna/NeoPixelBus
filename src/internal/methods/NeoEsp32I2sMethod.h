@@ -261,12 +261,6 @@ private:
         // no need to initialize all of it, but since it contains
         // "reset" bits that don't latter get overwritten we just clear it all
         memset(_i2sBuffer, 0x00, _i2sBufferSize);
-
-        Serial.print("DP (");
-        Serial.print((uint32_t)_i2sBuffer);
-        Serial.print(", ");
-        Serial.print((uint32_t)(_i2sBuffer + _i2sBufferSize));
-        Serial.println(")");
     }
 
     void FillBuffers()
