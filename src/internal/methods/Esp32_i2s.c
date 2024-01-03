@@ -128,13 +128,14 @@ inline void dmaItemInit(lldesc_t* item, uint8_t* posData, size_t sizeData, lldes
     item->qe.stqe_next = itemNext;
 }
 
-bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize)
+bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize, bool parallel_mode, size_t bytes_per_sample)
 {
     if (bus_num >= I2S_NUM_MAX) 
     {
         return false;
     }
 
+    size_t silenceSize = parallel_mode ? I2S_DMA_SILENCE_SIZE * 8 * bytes_per_sample : I2S_DMA_SILENCE_SIZE;
     size_t dmaCount = I2S[bus_num].dma_count;
 
     if (I2S[bus_num].dma_items == NULL) 
@@ -156,16 +157,16 @@ bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize)
     // That data at the end is already silent reset time and no need to send it twice as
     // part of the data and the control blocks
     // makes the reset more accurate
-    size_t dataLeft = dataSize - (I2S_DMA_SILENCE_SIZE * 
+    size_t dataLeft = dataSize - (silenceSize * 
             (I2S_DMA_SILENCE_BLOCK_COUNT_FRONT + I2S_DMA_SILENCE_BLOCK_COUNT_BACK));
     uint8_t* pos = data;
     // at the end of the data is the encoded silence reset, use it
-    uint8_t* posSilence = data + dataSize - I2S_DMA_SILENCE_SIZE;
+    uint8_t* posSilence = data + dataSize - silenceSize;
 
     // front two are silent items used for looping to micmic single fire
     //  default to looping
-    dmaItemInit(item, posSilence, I2S_DMA_SILENCE_SIZE, itemNext);
-    dmaItemInit(itemNext, posSilence, I2S_DMA_SILENCE_SIZE, item);
+    dmaItemInit(item, posSilence, silenceSize, itemNext);
+    dmaItemInit(itemNext, posSilence, silenceSize, item);
     item = itemNext;
     itemNext++;
 
@@ -193,7 +194,7 @@ bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize)
 
     // last block, the back silent item, loops to front
     item = itemNext;
-    dmaItemInit(item, posSilence, I2S_DMA_SILENCE_SIZE, itemFirst);
+    dmaItemInit(item, posSilence, silenceSize, itemFirst);
 
     return true;
 }
@@ -413,7 +414,7 @@ void i2sInit(uint8_t bus_num,
             I2S_DMA_SILENCE_BLOCK_COUNT_FRONT +
             I2S_DMA_SILENCE_BLOCK_COUNT_BACK;
 
-    if (!i2sInitDmaItems(bus_num, data, dataSize)) 
+    if (!i2sInitDmaItems(bus_num, data, dataSize, parallel_mode, bytes_per_sample))
     {
         return;
     }
