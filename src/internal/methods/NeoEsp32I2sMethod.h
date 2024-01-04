@@ -96,7 +96,7 @@ public:
 class NeoEsp32I2sSpeedApa106
 {
 public:
-    const static uint32_t I2sSampleRate = 76000;
+    const static uint32_t I2sSampleRate = 72960;  //  588,235 hz / 8 = 73,529 sample rate
     const static uint16_t ByteSendTimeUs = 14;
     const static uint16_t ResetTimeUs = 50;
 };
@@ -147,19 +147,19 @@ template<typename T_SPEED, typename T_BUS, typename T_INVERT> class NeoEsp32I2sM
 public:
     typedef NeoNoSettings SettingsObject;
 
-    NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
-        _sizeData(pixelCount * elementSize + settingsSize),
+    NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t pixelSize, size_t settingsSize)  :
+        _sizeData(pixelCount * pixelSize + settingsSize),
         _pin(pin)
     {
-        construct(pixelCount, elementSize, settingsSize);
+        construct(pixelCount, pixelSize, settingsSize);
     }
 
-    NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(pixelCount * elementSize + settingsSize),
+    NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t pixelSize, size_t settingsSize, NeoBusChannel channel) :
+        _sizeData(pixelCount * pixelSize + settingsSize),
         _pin(pin),
         _bus(channel)
     {
-        construct(pixelCount, elementSize, settingsSize);
+        construct(pixelCount, pixelSize, settingsSize);
     }
 
     ~NeoEsp32I2sMethodBase()
@@ -242,29 +242,20 @@ private:
     size_t _i2sBufferSize; // total size of _i2sBuffer
     uint8_t* _i2sBuffer;  // holds the DMA buffer that is referenced by _i2sBufDesc
 
-    void construct(uint16_t pixelCount, size_t elementSize, size_t settingsSize) 
+    void construct(uint16_t pixelCount, size_t pixelSize, size_t settingsSize) 
     {
-        // DMA is too fast to support a single pixel and maintain consistency
-        if (pixelCount < 2)
-        {
-            pixelCount = 2;
-        }
-
-        uint16_t dmaSettingsSize = c_dmaBytesPerPixelBytes * settingsSize;
-        uint16_t dmaPixelSize = c_dmaBytesPerPixelBytes * elementSize;
-        uint16_t resetSize = c_dmaBytesPerPixelBytes * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs;
-
-        _i2sBufferSize = pixelCount * dmaPixelSize + dmaSettingsSize + resetSize;
-
-        // must have a 4 byte aligned buffer for i2s
-        uint32_t alignment = _i2sBufferSize % 4;
-        if (alignment)
-        {
-            _i2sBufferSize += 4 - alignment;
-        }
-
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin()
+
+        // must have a 4 byte aligned buffer for i2s
+        // since the reset/silence at the end is used for looping
+        // it also needs to 4 byte aligned
+        size_t dmaSettingsSize = c_dmaBytesPerPixelBytes * settingsSize;
+        size_t dmaPixelSize = c_dmaBytesPerPixelBytes * pixelSize;
+        size_t resetSize = NeoUtil::RoundUp(c_dmaBytesPerPixelBytes * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs, 4);
+
+        _i2sBufferSize = NeoUtil::RoundUp(pixelCount * dmaPixelSize + dmaSettingsSize, 4) +
+                resetSize;
 
         _i2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(_i2sBufferSize, MALLOC_CAP_DMA));
         // no need to initialize all of it, but since it contains
