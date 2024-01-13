@@ -43,9 +43,20 @@ struct RgbwwwColor : RgbColorBase
     // ------------------------------------------------------------------------
     // Construct a RgbwwwColor using R, G, B, WW, CW, NW values (0-255)
     // ------------------------------------------------------------------------
-    RgbwwwColor(uint8_t r, uint8_t g, uint8_t b, uint8_t warmW = 0, uint8_t coolW = 0, uint8_t nuetralW = 0) :
+    RgbwwwColor(uint8_t r, uint8_t g, uint8_t b, uint8_t warmW, uint8_t coolW, uint8_t nuetralW) :
         R(r), G(g), B(b), WW(warmW), CW(coolW), NW(nuetralW)
     {
+    };
+
+    // ------------------------------------------------------------------------
+    // Construct a RgbwwwColor using R, G, B, (0-255) and a single W (0-765)
+    // White is set incrementally across the three whites, 
+    // where 1 = (0,0,1), 2 = (0,1,1), 3 = (1,1,1), 4 = (1,1,2)
+    // ------------------------------------------------------------------------
+    RgbwwwColor(uint8_t r, uint8_t g, uint8_t b, uint16_t w) :
+        R(r), G(g), B(b)
+    {
+        ApplyAsIncrementalWhite(w);
     };
 
     // ------------------------------------------------------------------------
@@ -291,6 +302,30 @@ struct RgbwwwColor : RgbColorBase
     }
 
     // ------------------------------------------------------------------------
+    // White is set incrementally across the three whites, 
+    // white (0-765) 
+    // where 1 = (0,0,1), 2 = (0,1,1), 3 = (1,1,1), 4 = (1,1,2)
+    // ------------------------------------------------------------------------
+    void ApplyAsIncrementalWhite(uint16_t white)
+    {
+        uint8_t value = white / 3;
+        uint8_t remainder = white % 3;
+
+        WW = value;
+        CW = value;
+        NW = value;
+
+        if (remainder)
+        {
+            NW++;
+            if (remainder == 2)
+            {
+                CW++;
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------
     // Red, Green, Blue, Warm White, Cool White color members (0-255) where 
     // (0,0,0,0,0,0) is black and 
     // (255,255,255, 0, 0,0) is a white 
@@ -328,5 +363,6 @@ private:
         }
         return element;
     }
+
 };
 
