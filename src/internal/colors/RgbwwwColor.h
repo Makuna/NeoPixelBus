@@ -32,7 +32,6 @@ struct HsbColor;
 // ------------------------------------------------------------------------
 // RgbwwwColor represents a color object that is represented by Red, Green, Blue
 // component values and three extra White components.  
-// While the white components are labeled as W1, W2, and W3.
 // It contains helpful color routines to manipulate the color.
 // ------------------------------------------------------------------------
 struct RgbwwwColor : RgbColorBase
@@ -326,11 +325,11 @@ struct RgbwwwColor : RgbColorBase
 
     // ------------------------------------------------------------------------
     // Red, Green, Blue, Warm White, Cool White color members (0-255) where 
-    // (0,0,0,0,0,0) is black and 
-    // (255,255,255, 0, 0,0) is a white 
-    // (0,0,0,255,0,0) is warm white and
-    // (0,0,0,0,255,0) is cool white and
-    // Note (255,255,255,255,255,255) is extreme bright white
+    // (0,0,0, 0,0,0) is black and 
+    // (255,255,255, 0,0,0) is a white 
+    // (0,0,0, 255,0,0) is white1 and
+    // (0,0,0, 0,255,0) is white2 and
+    // Note (255,255,255, 255,255,255) is extreme bright white
     // ------------------------------------------------------------------------
     uint8_t R;
     uint8_t G;
@@ -341,6 +340,7 @@ struct RgbwwwColor : RgbColorBase
 
     const static uint8_t Max = 255;
     const static size_t Count = 6; // six elements in []
+    const static uint16_t MaxIncrementalWhite = 765;
 
 private:
     inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)
