@@ -38,6 +38,7 @@ License along with NeoPixel.  If not, see
 #include "features/Neo4ByteFeature.h"
 #include "features/DotStarX4ByteFeature.h"
 #include "features/DotStarL4ByteFeature.h"
+#include "features/Neo6ByteFeature.h"
 #include "features/Neo6xByteFeature.h"
 #include "features/Neo6xxByteFeature.h"
 #include "features/Neo3WordFeature.h"
@@ -53,6 +54,7 @@ License along with NeoPixel.  If not, see
 
 #include "features/NeoRgbwxxFeatures.h"
 #include "features/NeoRgbcwxFeatures.h"
+#include "features/NeoRgbwwwFeatures.h"
 #include "features/NeoSm168x3Features.h"
 #include "features/NeoSm168x4Features.h"
 #include "features/NeoSm168x5Features.h"
