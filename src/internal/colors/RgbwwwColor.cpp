@@ -45,9 +45,9 @@ RgbwwwColor::RgbwwwColor(const HtmlColor& color)
     temp = temp >> 8;
     R = (temp & 0xff);
     temp = temp >> 8;
-    WW = (temp & 0xff);
-    CW = WW;
-    NW = WW;
+    W1 = (temp & 0xff);
+    W2 = W1;
+    W3 = W1;
 };
 
 RgbwwwColor::RgbwwwColor(const HslColor& color)
@@ -65,7 +65,7 @@ RgbwwwColor::RgbwwwColor(const HsbColor& color)
 uint8_t RgbwwwColor::CalculateBrightness() const
 {
     uint8_t colorB = static_cast<uint8_t>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
-    uint8_t whiteB = static_cast<uint8_t>((static_cast<uint16_t>(WW) + static_cast<uint16_t>(CW) + static_cast<uint16_t>(NW)) / 3);
+    uint8_t whiteB = static_cast<uint8_t>((static_cast<uint16_t>(W1) + static_cast<uint16_t>(W2) + static_cast<uint16_t>(W3)) / 3);
 
     return (whiteB > colorB) ? whiteB : colorB;
 }
@@ -76,9 +76,9 @@ RgbwwwColor RgbwwwColor::Dim(uint8_t ratio) const
     return RgbwwwColor(_elementDim(R, ratio), 
         _elementDim(G, ratio), 
         _elementDim(B, ratio), 
-        _elementDim(WW, ratio), 
-        _elementDim(CW, ratio),
-        _elementDim(NW, ratio));
+        _elementDim(W1, ratio), 
+        _elementDim(W2, ratio),
+        _elementDim(W3, ratio));
 }
 
 RgbwwwColor RgbwwwColor::Brighten(uint8_t ratio) const
@@ -87,9 +87,9 @@ RgbwwwColor RgbwwwColor::Brighten(uint8_t ratio) const
     return RgbwwwColor(_elementBrighten(R, ratio), 
         _elementBrighten(G, ratio), 
         _elementBrighten(B, ratio), 
-        _elementBrighten(WW, ratio), 
-        _elementBrighten(CW, ratio),
-        _elementBrighten(NW, ratio));
+        _elementBrighten(W1, ratio), 
+        _elementBrighten(W2, ratio),
+        _elementBrighten(W3, ratio));
 }
 
 void RgbwwwColor::Darken(uint8_t delta)
@@ -121,31 +121,31 @@ void RgbwwwColor::Darken(uint8_t delta)
         B = 0;
     }
 
-    if (WW > delta)
+    if (W1 > delta)
     {
-        WW -= delta;
+        W1 -= delta;
     }
     else
     {
-        WW = 0;
+        W1 = 0;
     }
 
-    if (CW > delta)
+    if (W2 > delta)
     {
-        CW -= delta;
+        W2 -= delta;
     }
     else
     {
-        CW = 0;
+        W2 = 0;
     }
 
-    if (NW > delta)
+    if (W3 > delta)
     {
-        NW -= delta;
+        W3 -= delta;
     }
     else
     {
-        NW = 0;
+        W3 = 0;
     }
 }
 
@@ -153,31 +153,31 @@ void RgbwwwColor::Lighten(uint8_t delta)
 {
     if (IsColorLess())
     {
-        if (WW < Max - delta)
+        if (W1 < Max - delta)
         {
-            WW += delta;
+            W1 += delta;
         }
         else
         {
-            WW = Max;
+            W1 = Max;
         }
 
-        if (CW < Max - delta)
+        if (W2 < Max - delta)
         {
-            CW += delta;
+            W2 += delta;
         }
         else
         {
-            CW = Max;
+            W2 = Max;
         }
 
-        if (NW < Max - delta)
+        if (W3 < Max - delta)
         {
-            NW += delta;
+            W3 += delta;
         }
         else
         {
-            NW = Max;
+            W3 = Max;
         }
     }
     else
@@ -216,9 +216,9 @@ RgbwwwColor RgbwwwColor::LinearBlend(const RgbwwwColor& left, const RgbwwwColor&
     return RgbwwwColor( left.R + ((static_cast<int16_t>(right.R) - left.R) * progress),
         left.G + ((static_cast<int16_t>(right.G) - left.G) * progress),
         left.B + ((static_cast<int16_t>(right.B) - left.B) * progress),
-        left.WW + ((static_cast<int16_t>(right.WW) - left.WW) * progress),
-        left.CW + ((static_cast<int16_t>(right.CW) - left.CW) * progress),
-        left.NW + ((static_cast<int16_t>(right.NW) - left.NW) * progress));
+        left.W1 + ((static_cast<int16_t>(right.W1) - left.W1) * progress),
+        left.W2 + ((static_cast<int16_t>(right.W2) - left.W2) * progress),
+        left.W3 + ((static_cast<int16_t>(right.W3) - left.W3) * progress));
 }
 
 RgbwwwColor RgbwwwColor::LinearBlend(const RgbwwwColor& left, const RgbwwwColor& right, uint8_t progress)
@@ -226,9 +226,9 @@ RgbwwwColor RgbwwwColor::LinearBlend(const RgbwwwColor& left, const RgbwwwColor&
     return RgbwwwColor(left.R + (((static_cast<int32_t>(right.R) - left.R) * static_cast<int32_t>(progress) + 1) >> 8),
         left.G + (((static_cast<int32_t>(right.G) - left.G) * static_cast<int32_t>(progress) + 1) >> 8),
         left.B + (((static_cast<int32_t>(right.B) - left.B) * static_cast<int32_t>(progress) + 1) >> 8),
-        left.WW + (((static_cast<int32_t>(right.WW) - left.WW) * static_cast<int32_t>(progress) + 1) >> 8),
-        left.CW + (((static_cast<int32_t>(right.CW) - left.CW) * static_cast<int32_t>(progress) + 1) >> 8),
-        left.NW + (((static_cast<int32_t>(right.NW) - left.NW) * static_cast<int32_t>(progress) + 1) >> 8));
+        left.W1 + (((static_cast<int32_t>(right.W1) - left.W1) * static_cast<int32_t>(progress) + 1) >> 8),
+        left.W2 + (((static_cast<int32_t>(right.W2) - left.W2) * static_cast<int32_t>(progress) + 1) >> 8),
+        left.W3 + (((static_cast<int32_t>(right.W3) - left.W3) * static_cast<int32_t>(progress) + 1) >> 8));
 }
 
 RgbwwwColor RgbwwwColor::BilinearBlend(const RgbwwwColor& c00, 
@@ -247,7 +247,7 @@ RgbwwwColor RgbwwwColor::BilinearBlend(const RgbwwwColor& c00,
         c00.R * v00 + c10.R * v10 + c01.R * v01 + c11.R * v11,
         c00.G * v00 + c10.G * v10 + c01.G * v01 + c11.G * v11,
         c00.B * v00 + c10.B * v10 + c01.B * v01 + c11.B * v11,
-        c00.WW * v00 + c10.WW * v10 + c01.WW * v01 + c11.WW * v11,
-        c00.CW * v00 + c10.CW * v10 + c01.CW * v01 + c11.CW * v11,
-        c00.NW * v00 + c10.NW * v10 + c01.NW * v01 + c11.NW * v11);
+        c00.W1 * v00 + c10.W1 * v10 + c01.W1 * v01 + c11.W1 * v11,
+        c00.W2 * v00 + c10.W2 * v10 + c01.W2 * v01 + c11.W2 * v11,
+        c00.W3 * v00 + c10.W3 * v10 + c01.W3 * v01 + c11.W3 * v11);
 }

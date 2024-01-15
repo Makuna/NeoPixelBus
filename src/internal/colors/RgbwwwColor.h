@@ -32,8 +32,7 @@ struct HsbColor;
 // ------------------------------------------------------------------------
 // RgbwwwColor represents a color object that is represented by Red, Green, Blue
 // component values and three extra White components.  
-// While the white components are labeled as WW (warm), CW (cool), and NW (nuetral) they can be
-// considered as the "warmer" and "cooler" whites of your LEDs.
+// While the white components are labeled as W1, W2, and W3.
 // It contains helpful color routines to manipulate the color.
 // ------------------------------------------------------------------------
 struct RgbwwwColor : RgbColorBase
@@ -41,10 +40,10 @@ struct RgbwwwColor : RgbColorBase
     typedef NeoRgbwwwCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
-    // Construct a RgbwwwColor using R, G, B, WW, CW, NW values (0-255)
+    // Construct a RgbwwwColor using R, G, B, W1, W2, W3 values (0-255)
     // ------------------------------------------------------------------------
-    RgbwwwColor(uint8_t r, uint8_t g, uint8_t b, uint8_t warmW, uint8_t coolW, uint8_t nuetralW) :
-        R(r), G(g), B(b), WW(warmW), CW(coolW), NW(nuetralW)
+    RgbwwwColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w1, uint8_t w2, uint8_t w3) :
+        R(r), G(g), B(b), W1(w1), W2(w2), W3(w3)
     {
     };
 
@@ -65,7 +64,7 @@ struct RgbwwwColor : RgbColorBase
     // (0) = black, (255) = white, (128) = gray
     // ------------------------------------------------------------------------
     RgbwwwColor(uint8_t brightness) :
-        R(0), G(0), B(0), WW(brightness), CW(brightness), NW(brightness)
+        R(0), G(0), B(0), W1(brightness), W2(brightness), W3(brightness)
     {
     };
 
@@ -76,9 +75,9 @@ struct RgbwwwColor : RgbColorBase
         R(color.R),
         G(color.G),
         B(color.B),
-        WW(0),
-        CW(0),
-        NW(0)
+        W1(0),
+        W2(0),
+        W3(0)
     {
     };
 
@@ -89,9 +88,9 @@ struct RgbwwwColor : RgbColorBase
         R(color.R),
         G(color.G),
         B(color.B),
-        WW(color.W),
-        CW(color.W),
-        NW(color.W)
+        W1(color.W),
+        W2(color.W),
+        W3(color.W)
     {
     };
 
@@ -112,7 +111,7 @@ struct RgbwwwColor : RgbColorBase
 
     // ------------------------------------------------------------------------
     // Construct a RgbwwwColor that will have its values set in latter operations
-    // CAUTION:  The R,G,B, WW, CW, NW members are not initialized and may not be consistent
+    // CAUTION:  The R,G,B, W1, W2, W3 members are not initialized and may not be consistent
     // ------------------------------------------------------------------------
     RgbwwwColor()
     {
@@ -123,7 +122,7 @@ struct RgbwwwColor : RgbColorBase
     // ------------------------------------------------------------------------
     bool operator==(const RgbwwwColor& other) const
     {
-        return (R == other.R && G == other.G && B == other.B && WW == other.WW && CW == other.CW && NW == other.NW);
+        return (R == other.R && G == other.G && B == other.B && W1 == other.W1 && W2 == other.W2 && W3 == other.W3);
     };
 
     bool operator!=(const RgbwwwColor& other) const
@@ -159,7 +158,7 @@ struct RgbwwwColor : RgbColorBase
 
     // ------------------------------------------------------------------------
     // operator [] - readonly
-    // access elements in order by index rather than R,G,B,WW,CW,NW
+    // access elements in order by index rather than R,G,B,W1,W2,W3
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
     uint8_t operator[](size_t idx) const
@@ -173,17 +172,17 @@ struct RgbwwwColor : RgbColorBase
         case 2:
             return B;
         case 3:
-            return WW;
+            return W1;
         case 4:
-            return CW;
+            return W2;
         default:
-            return NW;
+            return W3;
         }
     }
 
     // ------------------------------------------------------------------------
     // operator [] - read write
-    // access elements in order by index rather than R,G,B,WW,CW
+    // access elements in order by index rather than R,G,B,W1,W2
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
     uint8_t& operator[](size_t idx)
@@ -197,11 +196,11 @@ struct RgbwwwColor : RgbColorBase
         case 2:
             return B;
         case 3:
-            return WW;
+            return W1;
         case 4:
-            return CW;
+            return W2;
         default:
-            return NW;
+            return W3;
         }
     }
 
@@ -294,9 +293,9 @@ struct RgbwwwColor : RgbColorBase
         total += R * settings.RedTenthMilliAmpere / Max;
         total += G * settings.GreenTenthMilliAmpere / Max;
         total += B * settings.BlueTenthMilliAmpere / Max;
-        total += WW * settings.WarmWhiteTenthMilliAmpere / Max;
-        total += CW * settings.CoolWhiteTenthMilliAmpere / Max;
-        total += NW * settings.NuetralWhiteTenthMilliAmpere / Max;
+        total += W1 * settings.W1TenthMilliAmpere / Max;
+        total += W2 * settings.W2TenthMilliAmpere / Max;
+        total += W3 * settings.W3TenthMilliAmpere / Max;
 
         return total;
     }
@@ -311,16 +310,16 @@ struct RgbwwwColor : RgbColorBase
         uint8_t value = white / 3;
         uint8_t remainder = white % 3;
 
-        WW = value;
-        CW = value;
-        NW = value;
+        W1 = value;
+        W2 = value;
+        W3 = value;
 
         if (remainder)
         {
-            NW++;
+            W3++;
             if (remainder == 2)
             {
-                CW++;
+                W2++;
             }
         }
     }
@@ -336,9 +335,9 @@ struct RgbwwwColor : RgbColorBase
     uint8_t R;
     uint8_t G;
     uint8_t B;
-    uint8_t WW;
-    uint8_t CW;
-    uint8_t NW;
+    uint8_t W1;
+    uint8_t W2;
+    uint8_t W3;
 
     const static uint8_t Max = 255;
     const static size_t Count = 6; // six elements in []
