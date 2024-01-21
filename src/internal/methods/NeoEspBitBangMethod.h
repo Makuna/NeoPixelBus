@@ -47,7 +47,8 @@ extern void neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     uint32_t period,
     size_t sizePixel,
     uint32_t tSpacing, 
-    bool invert);
+    bool invert,
+    uint32_t tReset);
 
 
 class NeoEspNotInverted
@@ -180,7 +181,8 @@ public:
             T_SPEED::Period,
             sizePixel,
             T_SPEED::TInterPixel,
-            T_INVERTED::IdleLevel);
+            T_INVERTED::IdleLevel,
+            (F_CPU / 1000000) * T_SPEED::ResetTimeUs);
     }
 };
 

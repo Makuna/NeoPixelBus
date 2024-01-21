@@ -49,8 +49,10 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     uint32_t period,
     size_t sizePixel,
     uint32_t tSpacing,
-    bool invert)
+    bool invert,
+    uint32_t tReset)
 {
+    const uint8_t* p_start = pixels;
     uint32_t setValue = _BV(pin);
     uint32_t clearValue = _BV(pin);
     uint8_t mask = 0x80;
@@ -58,6 +60,7 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     uint8_t element = 0;
     uint32_t cyclesStart = 0; // trigger emediately
     uint32_t cyclesNext = 0;
+    uint8_t retries = 0;
 
 #if defined(ARDUINO_ARCH_ESP32)
 #if defined(CONFIG_IDF_TARGET_ESP32C3)
@@ -146,15 +149,31 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
             subpix = *pixels++;
 
             // if pixel spacing is needed
-            if (tSpacing)
+            element++;
+            if (element == sizePixel)
             {
-                element++;
-                if (element == sizePixel)
-                {
-                    element = 0;
+                element = 0;
 
-                    // wait for pixel spacing
+                // Hack: permit interrupts to fire
+                // If we get held up more than the latch period, restart.
+                // We do this at the end of an element to ensure that each element always gets *some* valid 
+#if !defined(ARDUINO_ARCH_ESP32)
+                interrupts();
+#endif                
+                // wait for pixel spacing
+                if (tSpacing)
+                {
                     while ((getCycleCount() - cyclesNext) < tSpacing);
+                }
+#if !defined(ARDUINO_ARCH_ESP32)
+                noInterrupts();
+#endif
+                if ((getCycleCount() - cyclesNext) > tReset) {
+                    if (++retries > 8) break;   // give up
+                    pixels = p_start;
+                    subpix = *pixels++;
+                    mask = 0x80;
+                    element = 0;
                 }
             }
         }
@@ -167,6 +186,7 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     interrupts();
 #endif
 
+    if (retries > 0) Serial.printf("NPB retries: %d\n",retries);
 }
 
 
