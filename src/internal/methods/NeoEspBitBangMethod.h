@@ -234,26 +234,10 @@ public:
             yield(); // allows for system yield if needed
         }
 
-        // Need 100% focus on instruction timing
-#if defined(ARDUINO_ARCH_ESP32)
-        // delay(1); // required ?
-        portMUX_TYPE updateMux = portMUX_INITIALIZER_UNLOCKED;
-
-        portENTER_CRITICAL(&updateMux);
-#else
-        noInterrupts();
-#endif
-
         T_ENCODER::WritePixels(_pin,
             _data,
             _sizeData,
             _sizePixel);
-        
-#if defined(ARDUINO_ARCH_ESP32)
-        portEXIT_CRITICAL(&updateMux);
-#else
-        interrupts();
-#endif
 
         // save EOD time for latch on next call
         _endTime = micros();

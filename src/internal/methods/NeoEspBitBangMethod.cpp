@@ -89,6 +89,15 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
         std::swap(setValue, clearValue);
     }
 
+    // Need 100% focus on instruction timing
+#if defined(ARDUINO_ARCH_ESP32)
+    // delay(1); // required ?
+    portMUX_TYPE updateMux = portMUX_INITIALIZER_UNLOCKED;
+    portENTER_CRITICAL(&updateMux);
+#else
+    noInterrupts();
+#endif
+
     for (;;)
     {
         // do the checks here while we are waiting on time to pass
@@ -150,6 +159,14 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
             }
         }
     }
+
+        
+#if defined(ARDUINO_ARCH_ESP32)
+    portEXIT_CRITICAL(&updateMux);
+#else
+    interrupts();
+#endif
+
 }
 
 
