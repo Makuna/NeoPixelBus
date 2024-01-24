@@ -39,16 +39,15 @@ License along with NeoPixel.  If not, see
 #define CYCLES_LOOPTEST   (4) // adjustment due to loop exit test instruction cycles
 #endif
 
-extern void neoEspBitBangWriteSpacingPixels(const uint8_t* pixels, 
+extern bool neoEspBitBangWriteSpacingPixels(const uint8_t* pixels, 
     const uint8_t* end, 
     uint8_t pin, 
     uint32_t t0h, 
     uint32_t t1h, 
     uint32_t period,
     size_t sizePixel,
-    uint32_t tSpacing, 
-    bool invert,
-    uint32_t tReset);
+    uint32_t tLatch, 
+    bool invert);
 
 
 class NeoEspNotInverted
@@ -71,7 +70,7 @@ public:
     const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 
     static const uint32_t ResetTimeUs = 300;
-    const static uint32_t TInterPixel = 0;
+    const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us, be generous
 };
 
 class NeoEspBitBangSpeedWs2812x 
@@ -82,7 +81,13 @@ public:
     const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 
     static const uint32_t ResetTimeUs = 300;
-    const static uint32_t TInterPixel = 0;
+    const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us, be generous
+};
+
+class NeoEspBitBangSpeedWs2812xNoIntr : public NeoEspBitBangSpeedWs2812x
+{
+public:
+    const static uint32_t TLatch = 0;
 };
 
 class NeoEspBitBangSpeedSk6812
@@ -93,7 +98,7 @@ public:
     const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 
     static const uint32_t ResetTimeUs = 80;
-    const static uint32_t TInterPixel = 0;
+    const static uint32_t TLatch = (F_CPU / 13333 - CYCLES_LOOPTEST); // 75us, be generous
 };
 
 // Tm1814 normal is inverted signal
@@ -105,7 +110,7 @@ public:
     const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 
     static const uint32_t ResetTimeUs = 200;
-    const static uint32_t TInterPixel = 0;
+    const static uint32_t TLatch = (F_CPU / 10000 - CYCLES_LOOPTEST); // 100us, be generous
 };
 
 // Tm1829 normal is inverted signal
@@ -117,7 +122,7 @@ public:
     const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 
     static const uint32_t ResetTimeUs = 200;
-    const static uint32_t TInterPixel = 0;
+    const static uint32_t TLatch = (F_CPU / 10000 - CYCLES_LOOPTEST); // 100us, be generous
 };
 
 class NeoEspBitBangSpeed800Kbps
@@ -128,7 +133,7 @@ public:
     const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 
     static const uint32_t ResetTimeUs = 50; 
-    const static uint32_t TInterPixel = 0;
+    const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us, be generous
 };
 
 class NeoEspBitBangSpeed400Kbps
@@ -139,7 +144,7 @@ public:
     const static uint32_t Period = (F_CPU / 400000 - CYCLES_LOOPTEST);
 
     static const uint32_t ResetTimeUs = 50;
-    const static uint32_t TInterPixel = 0;
+    const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us, be generous
 };
 
 class NeoEspBitBangSpeedApa106
@@ -150,7 +155,7 @@ public:
     const static uint32_t Period = (F_CPU / 606061 - CYCLES_LOOPTEST); // 1.65us
 
     static const uint32_t ResetTimeUs = 50;
-    const static uint32_t TInterPixel = 0;
+    const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us, be generous
 };
 
 class NeoEspBitBangSpeedIntertek
@@ -161,28 +166,28 @@ public:
     const static uint32_t Period = (F_CPU / 800000 - CYCLES_LOOPTEST); // 1.25us per bit
 
     const static uint32_t ResetTimeUs = 12470;
-    const static uint32_t TInterPixel = (F_CPU / 50000); // 20us
+    // const static uint32_t TInterPixel = (F_CPU / 50000); // 20us
+    const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us??? couldn't find datasheet
 };
 
 
 template<typename T_SPEED, typename T_INVERTED> class NeoEspBitBangEncode : public T_SPEED, public T_INVERTED
 {
 public:
-    static void WritePixels(uint8_t pin,
+    static bool WritePixels(uint8_t pin,
         const uint8_t* data,
         size_t sizeData,
         size_t sizePixel)
     {
-        neoEspBitBangWriteSpacingPixels(data,
+        return neoEspBitBangWriteSpacingPixels(data,
             data + sizeData,
             pin,
             T_SPEED::T0H,
             T_SPEED::T1H,
             T_SPEED::Period,
             sizePixel,
-            T_SPEED::TInterPixel,
-            T_INVERTED::IdleLevel,
-            (F_CPU / 1000000) * T_SPEED::ResetTimeUs);
+            T_SPEED::TLatch,
+            T_INVERTED::IdleLevel);
     }
 };
 
@@ -225,24 +230,28 @@ public:
 
     void Update(bool)
     {
-        // Data latch = 50+ microsecond pause in the output stream.  Rather than
-        // put a delay at the end of the function, the ending time is noted and
-        // the function will simply hold off (if needed) on issuing the
-        // subsequent round of data until the latch time has elapsed.  This
-        // allows the mainline code to start generating the next frame of data
-        // rather than stalling for the latch.
-        while (!IsReadyToUpdate())
+        bool done = false;
+        for (unsigned retries = 0; !done && retries < 4; ++retries)
         {
-            yield(); // allows for system yield if needed
+            // Data latch = 50+ microsecond pause in the output stream.  Rather than
+            // put a delay at the end of the function, the ending time is noted and
+            // the function will simply hold off (if needed) on issuing the
+            // subsequent round of data until the latch time has elapsed.  This
+            // allows the mainline code to start generating the next frame of data
+            // rather than stalling for the latch.
+            while (!IsReadyToUpdate())
+            {
+                yield(); // allows for system yield if needed
+            }
+
+            done = T_ENCODER::WritePixels(_pin,
+                _data,
+                _sizeData,
+                _sizePixel);
+
+            // save EOD time for latch on next call
+            _endTime = micros();
         }
-
-        T_ENCODER::WritePixels(_pin,
-            _data,
-            _sizeData,
-            _sizePixel);
-
-        // save EOD time for latch on next call
-        _endTime = micros();
     }
 
     bool AlwaysUpdate()

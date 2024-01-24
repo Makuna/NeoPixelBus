@@ -41,18 +41,62 @@ static inline uint32_t getCycleCount(void)
     return ccount;
 }
 
-void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
+// Interrupt lock class, used for RAII interrupt disabling
+class InterruptLock {
+#if defined(ARDUINO_ARCH_ESP32)
+    portMUX_TYPE updateMux;
+#endif
+
+    inline void lock()
+    {
+#if defined(ARDUINO_ARCH_ESP32)
+        portENTER_CRITICAL(&updateMux);
+#else
+        noInterrupts();
+#endif
+    }
+
+    inline void unlock()
+    {        
+#if defined(ARDUINO_ARCH_ESP32)
+        portEXIT_CRITICAL(&updateMux);
+#else
+        interrupts();
+#endif
+    }
+
+public:
+
+    inline void poll()
+    {
+        unlock();
+        lock();
+    }
+    
+    inline InterruptLock()
+#if defined(ARDUINO_ARCH_ESP32)
+        : updateMux(portMUX_INITIALIZER_UNLOCKED)
+#endif    
+    { 
+        lock();
+    }
+
+    inline ~InterruptLock()
+    {
+        unlock();
+    }
+};
+
+bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     const uint8_t* end,
     uint8_t pin,
     uint32_t t0h,
     uint32_t t1h,
     uint32_t period,
     size_t sizePixel,
-    uint32_t tSpacing,
-    bool invert,
-    uint32_t tReset)
+    uint32_t tLatch,
+    bool invert)
 {
-    const uint8_t* p_start = pixels;
     uint32_t setValue = _BV(pin);
     uint32_t clearValue = _BV(pin);
     uint8_t mask = 0x80;
@@ -60,7 +104,6 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     uint8_t element = 0;
     uint32_t cyclesStart = 0; // trigger emediately
     uint32_t cyclesNext = 0;
-    uint8_t retries = 0;
 
 #if defined(ARDUINO_ARCH_ESP32)
 #if defined(CONFIG_IDF_TARGET_ESP32C3)
@@ -93,13 +136,7 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     }
 
     // Need 100% focus on instruction timing
-#if defined(ARDUINO_ARCH_ESP32)
-    // delay(1); // required ?
-    portMUX_TYPE updateMux = portMUX_INITIALIZER_UNLOCKED;
-    portENTER_CRITICAL(&updateMux);
-#else
-    noInterrupts();
-#endif
+    InterruptLock isrGuard;
 
     for (;;)
     {
@@ -148,45 +185,28 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
             mask = 0x80;
             subpix = *pixels++;
 
-            // if pixel spacing is needed
-            element++;
-            if (element == sizePixel)
+            // Hack: permit interrupts to fire
+            // If we get held up more than the latch period, stop.
+            // We do this at the end of an element to ensure that each
+            // element always gets valid data, even if we don't update
+            // every element.
+            if (tLatch)
             {
-                element = 0;
-
-                // Hack: permit interrupts to fire
-                // If we get held up more than the latch period, restart.
-                // We do this at the end of an element to ensure that each element always gets *some* valid 
-#if !defined(ARDUINO_ARCH_ESP32)
-                interrupts();
-#endif                
-                // wait for pixel spacing
-                if (tSpacing)
+                ++element;
+                if (element == sizePixel)
                 {
-                    while ((getCycleCount() - cyclesNext) < tSpacing);
-                }
-#if !defined(ARDUINO_ARCH_ESP32)
-                noInterrupts();
-#endif
-                if ((getCycleCount() - cyclesNext) > tReset) {
-                    if (++retries > 8) break;   // give up
-                    pixels = p_start;
-                    subpix = *pixels++;
-                    mask = 0x80;
+                    isrGuard.poll();
+                    if ((getCycleCount() - cyclesNext) > tLatch)
+                    {
+                        return false;    // failed
+                    }
                     element = 0;
                 }
             }
         }
     }
 
-        
-#if defined(ARDUINO_ARCH_ESP32)
-    portEXIT_CRITICAL(&updateMux);
-#else
-    interrupts();
-#endif
-
-    if (retries > 0) Serial.printf("NPB retries: %d\n",retries);
+    return true;   // update complete
 }
 
 
