@@ -84,12 +84,6 @@ public:
     const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us, be generous
 };
 
-class NeoEspBitBangSpeedWs2812xNoIntr : public NeoEspBitBangSpeedWs2812x
-{
-public:
-    const static uint32_t TLatch = 0;
-};
-
 class NeoEspBitBangSpeedSk6812
 {
 public:
@@ -170,28 +164,20 @@ public:
     const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us??? couldn't find datasheet
 };
 
-
-template<typename T_SPEED, typename T_INVERTED> class NeoEspBitBangEncode : public T_SPEED, public T_INVERTED
-{
+template <typename T_SPEED, bool V_INTER_PIXEL_ISR> class NeoEspTLatch
+{ 
 public:
-    static bool WritePixels(uint8_t pin,
-        const uint8_t* data,
-        size_t sizeData,
-        size_t sizePixel)
-    {
-        return neoEspBitBangWriteSpacingPixels(data,
-            data + sizeData,
-            pin,
-            T_SPEED::T0H,
-            T_SPEED::T1H,
-            T_SPEED::Period,
-            sizePixel,
-            T_SPEED::TLatch,
-            T_INVERTED::IdleLevel);
-    }
+    const static uint32_t TLatch = T_SPEED::TLatch;
 };
 
-template<typename T_ENCODER> class NeoEspBitBangMethodBase
+// Partial specialization for no interrupt case resolution
+template <typename T_SPEED> class NeoEspTLatch<T_SPEED, false>
+{
+public:    
+    const static uint32_t TLatch = 0;
+};
+
+template<typename T_SPEED, typename T_INVERTED, bool V_INTER_PIXEL_ISR> class NeoEspBitBangMethodBase
 {
 public:
     typedef NeoNoSettings SettingsObject;
@@ -218,12 +204,12 @@ public:
     {
         uint32_t delta = micros() - _endTime;
 
-        return (delta >= T_ENCODER::ResetTimeUs);
+        return (delta >= T_SPEED::ResetTimeUs);
     }
 
     void Initialize()
     {
-        digitalWrite(_pin, T_ENCODER::IdleLevel);
+        digitalWrite(_pin, T_INVERTED::IdleLevel);
 
         _endTime = micros();
     }
@@ -244,10 +230,15 @@ public:
                 yield(); // allows for system yield if needed
             }
 
-            done = T_ENCODER::WritePixels(_pin,
-                _data,
-                _sizeData,
-                _sizePixel);
+            done = neoEspBitBangWriteSpacingPixels(_data,
+                _data + _sizeData,
+                _pin,
+                T_SPEED::T0H,
+                T_SPEED::T1H,
+                T_SPEED::Period,
+                _sizePixel,
+                NeoEspTLatch<T_SPEED, V_INTER_PIXEL_ISR>::TLatch,
+                T_INVERTED::IdleLevel);
 
             // save EOD time for latch on next call
             _endTime = micros();
