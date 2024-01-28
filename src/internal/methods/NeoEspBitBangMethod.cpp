@@ -41,14 +41,60 @@ static inline uint32_t getCycleCount(void)
     return ccount;
 }
 
-void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
+// Interrupt lock class, used for RAII interrupt disabling
+class InterruptLock {
+#if defined(ARDUINO_ARCH_ESP32)
+    portMUX_TYPE updateMux;
+#endif
+
+    inline void lock()
+    {
+#if defined(ARDUINO_ARCH_ESP32)
+        portENTER_CRITICAL(&updateMux);
+#else
+        noInterrupts();
+#endif
+    }
+
+    inline void unlock()
+    {        
+#if defined(ARDUINO_ARCH_ESP32)
+        portEXIT_CRITICAL(&updateMux);
+#else
+        interrupts();
+#endif
+    }
+
+public:
+
+    inline void poll()
+    {
+        unlock();
+        lock();
+    }
+    
+    inline InterruptLock()
+#if defined(ARDUINO_ARCH_ESP32)
+        : updateMux(portMUX_INITIALIZER_UNLOCKED)
+#endif    
+    { 
+        lock();
+    }
+
+    inline ~InterruptLock()
+    {
+        unlock();
+    }
+};
+
+bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     const uint8_t* end,
     uint8_t pin,
     uint32_t t0h,
     uint32_t t1h,
     uint32_t period,
     size_t sizePixel,
-    uint32_t tSpacing,
+    uint32_t tLatch,
     bool invert)
 {
     uint32_t setValue = _BV(pin);
@@ -88,6 +134,9 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
         std::swap(setRegister, clearRegister);
         std::swap(setValue, clearValue);
     }
+
+    // Need 100% focus on instruction timing
+    InterruptLock isrGuard;
 
     for (;;)
     {
@@ -136,20 +185,28 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
             mask = 0x80;
             subpix = *pixels++;
 
-            // if pixel spacing is needed
-            if (tSpacing)
+            // Hack: permit interrupts to fire
+            // If we get held up more than the latch period, stop.
+            // We do this at the end of an element to ensure that each
+            // element always gets valid data, even if we don't update
+            // every element.
+            if (tLatch)
             {
-                element++;
+                ++element;
                 if (element == sizePixel)
                 {
+                    isrGuard.poll();
+                    if ((getCycleCount() - cyclesNext) > tLatch)
+                    {
+                        return false;    // failed
+                    }
                     element = 0;
-
-                    // wait for pixel spacing
-                    while ((getCycleCount() - cyclesNext) < tSpacing);
                 }
             }
         }
     }
+
+    return true;   // update complete
 }
 
 
