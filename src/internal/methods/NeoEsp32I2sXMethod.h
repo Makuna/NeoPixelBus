@@ -208,7 +208,8 @@ protected:
 // T_FLAG - type used to store bit flags, UINT8_t for 8 channels, UINT16_t for 16
 // T_MUXSIZE - true size of mux channel = NeoEspI2sMuxBusSize8Bit or NeoEspI2sMuxBusSize16Bit
 //
-template<typename T_FLAG, typename T_MUXSIZE> class NeoEspI2sMuxMap : public T_MUXSIZE
+template<typename T_FLAG, typename T_MUXSIZE> 
+class NeoEspI2sMuxMap : public T_MUXSIZE
 {
 public:
     const static uint8_t InvalidMuxId = -1;
@@ -315,7 +316,8 @@ public:
 // 
 // T_MUXMAP - NeoEspI2sMuxMap - tracking class for mux state
 //
-template<typename T_MUXMAP> class NeoEspI2sDblBuffContext 
+template<typename T_MUXMAP> 
+class NeoEspI2sDblBuffContext 
 {
 public:
     const static size_t DmaBitsPerPixelBit = 4;
@@ -423,7 +425,8 @@ public:
 //      updating and new data
 // T_BUS - the bus id, NeoEsp32I2sBusZero, NeoEsp32I2sBusOne
 //
-template<typename T_BUSCONTEXT, typename T_BUS> class NeoEsp32I2sMuxBus
+template<typename T_BUSCONTEXT, typename T_BUS> 
+class NeoEsp32I2sMuxBus
 {
 public:    
     NeoEsp32I2sMuxBus() :
@@ -513,7 +516,8 @@ template<typename T_BUSCONTEXT, typename T_BUS> T_BUSCONTEXT NeoEsp32I2sMuxBus<T
 // T_BUS - NeoEsp32I2sMuxBus, the bus to use
 // T_INVERT - NeoEsp32I2sNotInverted or NeoEsp32I2sInverted, will invert output signal
 //
-template<typename T_SPEED, typename T_BUS, typename T_INVERT> class NeoEsp32I2sXMethodBase
+template<typename T_SPEED, typename T_BUS, typename T_INVERT> 
+class NeoEsp32I2sXMethodBase
 {
 public:
     typedef NeoNoSettings SettingsObject;
