@@ -53,6 +53,7 @@ License along with NeoPixel.  If not, see
 #include "features/NeoRgbwwFeatures.h"
 #include "features/NeoRgb48Features.h"
 #include "features/NeoRgbw64Features.h"
+#include "features/NeoRgbww80Features.h"
 
 #include "features/NeoRgbwxxFeatures.h"
 #include "features/NeoRgbcwxFeatures.h"
