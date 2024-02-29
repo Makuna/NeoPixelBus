@@ -82,7 +82,7 @@ void FadeInFadeOutRinseRepeat(float luminance)
         RgbColor target = HslColor(random(360) / 360.0f, 1.0f, luminance);
         uint16_t time = random(800, 2000);
 
-        animationState[0].StartingColor = strip.GetPixelColor(0);
+        animationState[0].StartingColor = strip.GetPixelColor<RgbColor>(0);
         animationState[0].EndingColor = target;
 
         animations.StartAnimation(0, time, BlendAnimUpdate);
@@ -92,7 +92,7 @@ void FadeInFadeOutRinseRepeat(float luminance)
         // fade to black
         uint16_t time = random(600, 700);
 
-        animationState[0].StartingColor = strip.GetPixelColor(0);
+        animationState[0].StartingColor = strip.GetPixelColor<RgbColor>(0);
         animationState[0].EndingColor = RgbColor(0);
 
         animations.StartAnimation(0, time, BlendAnimUpdate);

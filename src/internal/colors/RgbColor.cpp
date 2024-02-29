@@ -35,11 +35,51 @@ License along with NeoPixel.  If not, see
 #include "HtmlColor.h"
 
 #include "RgbwColor.h"
+#include "RgbwwColor.h"
+#include "RgbwwwColor.h"
+#include "Rgb48Color.h"
+#include "Rgbw64Color.h"
+#include "Rgbww80Color.h"
 
 RgbColor::RgbColor(const RgbwColor& color) :
     R(color.R),
     G(color.G),
     B(color.B)
+{
+};
+
+RgbColor::RgbColor(const RgbwwColor& color) :
+    R(color.R),
+    G(color.G),
+    B(color.B)
+{
+};
+
+RgbColor::RgbColor(const RgbwwwColor& color) :
+    R(color.R),
+    G(color.G),
+    B(color.B)
+{
+};
+
+RgbColor::RgbColor(const Rgb48Color& color) :
+    R(color.R >> 8),
+    G(color.G >> 8),
+    B(color.B >> 8)
+{
+};
+
+RgbColor::RgbColor(const Rgbw64Color& color) :
+    R(color.R >> 8),
+    G(color.G >> 8),
+    B(color.B >> 8)
+{
+};
+
+RgbColor::RgbColor(const Rgbww80Color& color) :
+    R(color.R >> 8),
+    G(color.G >> 8),
+    B(color.B >> 8)
 {
 };
 
