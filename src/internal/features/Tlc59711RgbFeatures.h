@@ -26,7 +26,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-// Four byte settings header per 25 bytes color data
+// Four byte settings header per 24 bytes color data
 //    12 channel, 16 bit, grouped RGB
 // Write Command
 // |      OUTTMG - 1 rising edge, 0 falling edge
@@ -36,9 +36,9 @@ License along with NeoPixel.  If not, see
 // |      | | | | BLANK - 0 enabled, 1 blank
 // |      | | | | | BC (3x7) RGB Brightness control
 // |      | | | | | |   red   green    blue
-// |      | | | | | |     |       |       | color data (25 bytes) ->
+// |      | | | | | |     |       |       | color data (24 bytes) ->
 // 100101 1 0 1 1 0 1111111 1111111 1111111 xxxxxxxx xxxxxxxx
-// 765432 1 0 7 6 5 4321076 5432107 6543210
+// 765432 1 0 7 6 5 4321076 5432107 6543210 <- bit order within byte
 
 enum Tlc69711_Control
 {
@@ -81,6 +81,21 @@ public:
     {
     }
 
+    const uint8_t RedGroupBrightness;
+    const uint8_t GreenGroupBrightness;
+    const uint8_t BlueGroupBrightness;
+    const uint8_t Control;
+};
+
+class Tlc59711ElementsSettings
+{
+public:
+    typedef Tlc69711Settings SettingsObject;
+
+    static constexpr size_t SettingsPerChipSize = 4;
+
+    static constexpr size_t SettingsSize = 2 * SettingsPerChipSize; 
+
     void Encode(uint8_t* encoded, bool emiAlternate = false) const
     {
         uint8_t control = Control;
@@ -89,10 +104,12 @@ public:
         {
             if (control & Tlc69711_Control_EmiRisingEdge)
             {
+                // clear the flag
                 control &= ~Tlc69711_Control_EmiRisingEdge;
             }
             else
             {
+                // set the flag
                 control |= Tlc69711_Control_EmiRisingEdge;
             }
         }
@@ -103,10 +120,57 @@ public:
         *encoded = GreenGroupBrightness << 7 | BlueGroupBrightness;
     }
 
-    constexpr uint8_t SizeEncodedSettings = 4;
+    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    {
+        // how the hell do we store the setting that doesn't go into the data stream'
+        // Thought A:
+        //   Add a new method to Methods, getSettingsData() that for most will just
+        //   return the front of the data stream, but for this it will return the pointer
+        //   to a member variable that is a SettingsObject, where this just copies it
+        
+        // Thought B:
+        //   add a new method to Methods, setPixelSettings that all current methods 
+        //   just have an empty set
+        //   but the Tlc59711Method will store in a member variable
+        //   BUT methods don't know anything about the feature settings 
 
-    const uint8_t RedGroupBrightness;
-    const uint8_t GreenGroupBrightness;
-    const uint8_t BlueGroupBrightness;
-    const uint8_t Control;
+        // Thought C: (Winner winner, chicken dinner)
+        //   Leave all current work alone
+        //   Set SettingsSize to 2 times SettingsPerChipSize
+        //   Consider it at the front of the data buffer
+        //   call encode twice, into pData and then pData + SettingsPerChipSize
+        //   have our Tlc59711Method know about the two and send the 
+        //   already interleaving settings and data
+
+        // settings are at the front of the data stream
+        uint8_t* pSet = pData;
+
+        // encode two, for alternating use for EMI reduction 
+        Encode(pSet, false);
+        Encode(pSet + SettingsPerChipSize, true);
+    }
+
+    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    {
+        // settings are at the front of the data stream
+        return pData + SettingsSize;
+    }
+
+    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    {
+        // settings are at the front of the data stream
+        return pData + SettingsSize;
+    }
+};
+
+class Tlc59711RgbFeature :
+    public Neo3WordFeature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public Tlc59711ElementsSettings
+{
+};
+
+class Tlc59711RgbwFeature :
+    public Neo4WordFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>,
+    public Tlc59711ElementsSettings
+{
 };
