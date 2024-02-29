@@ -139,7 +139,7 @@ void SetupAnimationSet()
         uint16_t time = random(100, 400);
 
         // each animation starts with the color that was present
-        RgbColor originalColor = strip.GetPixelColor<RgbColor>(pixel);
+        RgbColor originalColor = strip.GetPixelColor(pixel);
         // and ends with a random color
         RgbColor targetColor = RgbColor(random(peak), random(peak), random(peak));
         // with the random ease function
