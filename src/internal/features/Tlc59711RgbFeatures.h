@@ -51,16 +51,16 @@ enum Tlc69711_Control
     Tlc69711_Control_Blank = 0x20,
 
     Tlc69711_Control_Mask1 = 0x03,  // mask of this enum for first byte of encoded settings
-    Tlc69711_Control_Mask2 = 0x0e   // mask of this enum for second byte of encoded settings
+    Tlc69711_Control_Mask2 = 0x0e,   // mask of this enum for second byte of encoded settings
 
-    Tlc69711_Control_Default = Tlc69711_Control_EmiRisingEdge | Tlc69711_Control_DisplayTimerReset | Tlc69711_Control_AutoDisplayRepeat;
+    Tlc69711_Control_Default = Tlc69711_Control_EmiRisingEdge | Tlc69711_Control_DisplayTimerReset | Tlc69711_Control_AutoDisplayRepeat
 };
 
 class Tlc69711Settings
 {
 public:
     Tlc69711Settings(
-            uint8_t groupsBrightness = 127,
+            uint8_t groupsBrightness = MaxBrightness,
             uint8_t control = Tlc69711_Control_Default) :
         RedGroupBrightness(groupsBrightness & 0x7f),
         GreenGroupBrightness(groupsBrightness & 0x7f),
@@ -80,6 +80,7 @@ public:
         Control(control)
     {
     }
+    static constexpr uint8_t MaxBrightness = 127;
 
     const uint8_t RedGroupBrightness;
     const uint8_t GreenGroupBrightness;
@@ -96,9 +97,9 @@ public:
 
     static constexpr size_t SettingsSize = 2 * SettingsPerChipSize; 
 
-    void Encode(uint8_t* encoded, bool emiAlternate = false) const
+    static void Encode(uint8_t* encoded, const SettingsObject& settings, bool emiAlternate = false)
     {
-        uint8_t control = Control;
+        uint8_t control = settings.Control;
 
         if (emiAlternate)
         {
@@ -115,9 +116,9 @@ public:
         }
 
         *encoded++ = 0b10010100 | (control & Tlc69711_Control_Mask1);
-        *encoded++ = (control & Tlc69711_Control_Mask2) | RedGroupBrightness >> 2;
-        *encoded++ = RedGroupBrightness << 5 | GreenGroupBrightness >> 1;
-        *encoded = GreenGroupBrightness << 7 | BlueGroupBrightness;
+        *encoded++ = (control & Tlc69711_Control_Mask2) | settings.RedGroupBrightness >> 2;
+        *encoded++ = settings.RedGroupBrightness << 5 | settings.GreenGroupBrightness >> 1;
+        *encoded = settings.GreenGroupBrightness << 7 | settings.BlueGroupBrightness;
     }
 
     static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
@@ -146,8 +147,8 @@ public:
         uint8_t* pSet = pData;
 
         // encode two, for alternating use for EMI reduction 
-        Encode(pSet, false);
-        Encode(pSet + SettingsPerChipSize, true);
+        Encode(pSet, settings, false);
+        Encode(pSet + SettingsPerChipSize, settings, true);
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)

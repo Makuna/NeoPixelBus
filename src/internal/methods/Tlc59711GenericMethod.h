@@ -44,7 +44,7 @@ public:
             uint16_t pixelCount, 
             size_t elementSize, 
             size_t settingsSize) :
-        _sizeData((NeoUtil::RoundUp(pixelCount * elementSize, c_dataPerChipSize) + settingsSize),
+        _sizeData(NeoUtil::RoundUp(pixelCount * elementSize, c_dataPerChipSize) + settingsSize),
         _sizeSettings(settingsSize),
         _wire(pinClock, pinData)
     {
@@ -108,7 +108,7 @@ public:
         // expects chips in reverse order
         uint8_t* pData = _data + _sizeData - c_dataPerChipSize;
         uint8_t* pDataEnd = _data + _sizeSettings;
-        uint8_t* pSettings = pSettingsA;
+        const uint8_t* pSettings = pSettingsA;
 
         _wire.beginTransaction();
 
