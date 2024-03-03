@@ -51,9 +51,11 @@ enum Tlc69711_Control
     Tlc69711_Control_Blank = 0x20,
 
     Tlc69711_Control_Mask1 = 0x03,  // mask of this enum for first byte of encoded settings
-    Tlc69711_Control_Mask2 = 0x0e,   // mask of this enum for second byte of encoded settings
+    Tlc69711_Control_Mask2 = 0xe0,   // mask of this enum for second byte of encoded settings
 
-    Tlc69711_Control_Default = Tlc69711_Control_EmiRisingEdge | Tlc69711_Control_DisplayTimerReset | Tlc69711_Control_AutoDisplayRepeat
+    Tlc69711_Control_Default = Tlc69711_Control_EmiRisingEdge | 
+            Tlc69711_Control_DisplayTimerReset | 
+            Tlc69711_Control_AutoDisplayRepeat
 };
 
 class Tlc69711Settings
