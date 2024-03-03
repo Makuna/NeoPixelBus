@@ -203,6 +203,11 @@ public:
         }
     };
 
+    template <typename T_COLOROBJECT> T_COLOROBJECT GetPixelColor(uint16_t indexPixel) const
+    {
+        return T_COLOROBJECT(GetPixelColor(indexPixel));
+    }
+
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
     {
         uint8_t temp[T_COLOR_FEATURE::PixelSize]; 

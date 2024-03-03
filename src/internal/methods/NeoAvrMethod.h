@@ -223,7 +223,7 @@ public:
         // rather than stalling for the latch.
         while (!IsReadyToUpdate())
         {
-#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA)
+#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA) && !defined(ARDUINO_AVR_DIGISPARK)
             yield(); // allows for system yield if needed
 #endif
         }
@@ -292,7 +292,7 @@ public:
         // rather than stalling for the latch.
         while (!NeoAvrMethodBase<T_SPEED>::IsReadyToUpdate())
         {
-#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA)
+#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA) && !defined(ARDUINO_AVR_DIGISPARK)
             yield(); // allows for system yield if needed
 #endif
         }

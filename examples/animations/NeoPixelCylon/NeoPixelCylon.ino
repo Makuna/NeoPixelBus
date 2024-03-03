@@ -40,7 +40,7 @@ void FadeAll(uint8_t darkenBy)
     RgbColor color;
     for (uint16_t indexPixel = 0; indexPixel < strip.PixelCount(); indexPixel++)
     {
-        color = strip.GetPixelColor(indexPixel);
+        color = strip.GetPixelColor<RgbColor>(indexPixel);
         color.Darken(darkenBy);
         strip.SetPixelColor(indexPixel, color);
     }
