@@ -453,7 +453,7 @@ public:
         }
 
         // disconnect muxed pin
-        gpio_matrix_out(pin, 0x100, false, false);
+        gpio_matrix_out(pin, SIG_GPIO_OUT_IDX, false, false);
         pinMode(pin, INPUT);
 
         _muxId = s_context.MuxMap.InvalidMuxId;

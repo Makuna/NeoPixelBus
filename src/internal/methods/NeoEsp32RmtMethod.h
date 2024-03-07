@@ -556,7 +556,7 @@ public:
 
         ESP_ERROR_CHECK(rmt_driver_uninstall(_channel.RmtChannelNumber));
 
-        gpio_matrix_out(_pin, 0x100, false, false);
+        gpio_matrix_out(_pin, SIG_GPIO_OUT_IDX, false, false);
         pinMode(_pin, INPUT);
 
         free(_dataEditing);
