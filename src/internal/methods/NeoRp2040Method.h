@@ -28,21 +28,31 @@ License along with NeoPixel.  If not, see
 
 #ifdef ARDUINO_ARCH_RP2040
 
+#include "hardware/dma.h"
+#include "hardware/irq.h"
+#include "hardware/pio.h"
+#include "hardware/clocks.h"
 
+// PIO Instances
+// --------------------------------------------------------
 class NeoRp2040PioInstance0
 {
 public:
-    NeoRp2040PioInstance0() {};
+    NeoRp2040PioInstance0() :
+        Instance(pio0)
+    {};
 
-    const static PIO Instance = pio0;
+    const PIO Instance;
 };
 
 class NeoRp2040PioInstance1
 {
 public:
-    NeoRp2040PioInstance1() {};
+    NeoRp2040PioInstance1() :
+        Instance(pio1)
+    {};
 
-    const static PIO Instance = pio1;
+    const PIO Instance;
 };
 
 // dynamic channel support
@@ -58,6 +68,8 @@ public:
     const PIO Instance;
 };
 
+// Programs (cadence)
+// --------------------------------------------------------
 // use https://wokwi.com/tools/pioasm
 //
 /*
@@ -86,26 +98,8 @@ do_zero:
 .wrap
 */
 //
-class NeoRp2040CandenceMono3Step
+class NeoRp2040PioCadenceMono3Step
 {
-public:
-    static const struct pio_program program =
-    {
-        .instructions = program_instructions,
-        .length = 4,
-        .origin = -1,
-    };
-
-    static inline pio_sm_config program_get_default_config(uint offset)
-    {
-        pio_sm_config c = pio_get_default_sm_config();
-        sm_config_set_wrap(&c, offset + wrap_target, offset + wrap);
-        sm_config_set_sideset(&c, 1, false, false);
-        return c;
-    }
-
-    static constexpr uint8_t bit_cycles = TH0 + TH1 + TL1;
-
 protected:
     static constexpr uint8_t wrap_target = 0;
     static constexpr uint8_t wrap = 3;
@@ -114,15 +108,20 @@ protected:
     static constexpr uint8_t TH1 = 1;
     static constexpr uint8_t TL1 = 1;
 
-    static const uint16_t program_instructions[] = 
+    static const uint16_t program_instructions[];
+
+public:
+    static const struct pio_program program;
+
+    static inline pio_sm_config get_default_config(uint offset)
     {
-                //     .wrap_target
-        0x6021, //  0: out    x, 1            side 0     
-        0x1023, //  1: jmp    !x, 3           side 1     
-        0x1000, //  2: jmp    0               side 1     
-        0xa042, //  3: nop                    side 0     
-                //     .wrap
-    };
+        pio_sm_config c = pio_get_default_sm_config();
+        sm_config_set_wrap(&c, offset + wrap_target, offset + wrap);
+        sm_config_set_sideset(&c, 1, false, false);
+        return c;
+    }
+
+    static constexpr uint8_t bit_cycles = TH0 + TH1 + TL1;
 };
 
 // use https://wokwi.com/tools/pioasm
@@ -153,15 +152,20 @@ do_zero:
 .wrap
 */
 //
-class NeoRp2040PioCandenceMono4Step
+class NeoRp2040PioCadenceMono4Step
 {
+protected:
+    static constexpr uint8_t wrap_target = 0;
+    static constexpr uint8_t wrap = 3;
+
+    static constexpr uint8_t TH0 = 1;
+    static constexpr uint8_t TH1 = 2;
+    static constexpr uint8_t TL1 = 1;
+
+    static const uint16_t program_instructions[];
+
 public:
-    static const struct pio_program program =
-    {
-        .instructions = program_instructions,
-        .length = 4,
-        .origin = -1,
-    };
+    static const struct pio_program program;
 
     static inline pio_sm_config get_default_config(uint offset)
     {
@@ -172,38 +176,25 @@ public:
     }
 
     static constexpr uint8_t bit_cycles = TH0 + TH1 + TL1;
-
-protected:
-    static constexpr uint8_t wrap_target = 0;
-    static constexpr uint8_t wrap = 3;
-
-    static constexpr uint8_t TH0 = 1;
-    static constexpr uint8_t TH1 = 2;
-    static constexpr uint8_t TL1 = 1;
-
-    static const uint16_t program_instructions[] =
-    {
-        //     .wrap_target
-        0x6021, //  0: out    x, 1            side 0     
-        0x1023, //  1: jmp    !x, 3           side 1     
-        0x1100, //  2: jmp    0               side 1 [1] 
-        0xa142, //  3: nop                    side 0 [1] 
-        //     .wrap
-    };
 };
 
-template<typename T_CANDENCE> class NeoRp2040PioMonoProgram
+
+
+// Program Wrapper
+// --------------------------------------------------------
+template<typename T_CADENCE> 
+class NeoRp2040PioMonoProgram
 {
 public:
-    static inline uint add(PIO& pio_instance)
+    static inline uint add(PIO pio_instance)
     {
-        return pio_add_program(pio_instance, &T_CANDENCE::program);
+        return pio_add_program(pio_instance, &T_CADENCE::program);
     }
 
     static inline void init(PIO pio_instance, uint sm, uint offset, uint pin, float bitrate)
     {
-        float div = clock_get_hz(clk_sys) / (bitrate * T_CANDENCE::bit_cycles);
-        pio_sm_config c = T_CANDENCE::get_default_config(offset);
+        float div = clock_get_hz(clk_sys) / (bitrate * T_CADENCE::bit_cycles);
+        pio_sm_config c = T_CADENCE::get_default_config(offset);
 
         sm_config_set_sideset_pins(&c, pin);
         sm_config_set_out_shift(&c, false, true, 32); // ? is this needed
@@ -222,202 +213,117 @@ public:
         // Set the state machine running
         pio_sm_set_enabled(pio_instance, sm, true);
     }
-}
-
-/*
-
-class NeoRp2040PioSpeedWs2811 : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono4Step>
-{
-public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(300, 950);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(900, 350);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(300000); // 300us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
 };
 
-class NeoRp2040PioSpeedWs2812x : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono3Step>
+// Speeds
+// --------------------------------------------------------
+class NeoRp2040PioSpeedWs2811 : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono4Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(400, 850);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(800, 450);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(300000); // 300us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+    static constexpr float BitRateHz =  800000.0f; // 300+950
+    static constexpr uint32_t ResetTimeUs = 300;
 };
 
-class NeoRp2040PioSpeedSk6812 : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono3Step>
+class NeoRp2040PioSpeedWs2812x : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono3Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(400, 850);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(800, 450);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(80000); // 80us
+    static constexpr float BitRateHz =  900000.0f; // 400+850
+    static constexpr uint32_t ResetTimeUs = 300;
+};
 
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+class NeoRp2040PioSpeedSk6812 : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono3Step>
+{
+public:
+    static constexpr float BitRateHz =  800000.0f; // 400+850
+    static constexpr uint32_t ResetTimeUs = 80;
 };
 
 // normal is inverted signal
-class NeoRp2040PioSpeedTm1814 : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono3Step>
+class NeoRp2040PioSpeedTm1814 : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono3Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(360, 890);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(720, 530);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(200000); // 200us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+    static constexpr float BitRateHz =  800000.00f; // 360+890
+    static constexpr uint32_t ResetTimeUs = 200;
 };
 
 // normal is inverted signal
-class NeoRp2040PioSpeedTm1829 : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono4Step>
+class NeoRp2040PioSpeedTm1829 : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono4Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(300, 900);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(800, 400);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(200000); // 200us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+    static constexpr float BitRateHz =  833333.33f; // 300+900
+    static constexpr uint32_t ResetTimeUs = 200;
 };
 
 // normal is inverted signal
-class NeoRp2040PioSpeedTm1914 : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono3Step>
+class NeoRp2040PioSpeedTm1914 : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono3Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(360, 890);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(720, 530);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(200000); // 200us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+    static constexpr float BitRateHz =  800000.0f; // 360+890
+    static constexpr uint32_t ResetTimeUs = 200;
 };
 
-class NeoRp2040PioSpeed800Kbps : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono4Step>
+class NeoRp2040PioSpeed800Kbps : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono4Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(400, 850);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(800, 450);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(50000); // 50us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+    static constexpr float BitRateHz =  800000.0f; // 400+850
+    static constexpr uint32_t ResetTimeUs = 50;
 };
 
-class NeoRp2040PioSpeed400Kbps : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono3Step>
+class NeoRp2040PioSpeed400Kbps : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono3Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(800, 1700);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(1600, 900);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(50000); // 50us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+    static constexpr float BitRateHz =  400000.0f; // 800+1700
+    static constexpr uint32_t ResetTimeUs = 50;
 };
 
-class NeoRp2040PioSpeedApa106 : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono4Step>
+class NeoRp2040PioSpeedApa106 : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono4Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(350, 1350);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(1350, 350);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(50000); // 50us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+    static constexpr float BitRateHz =  588235.29f; // 350+1350
+    static constexpr uint32_t ResetTimeUs = 50;
 };
 
-class NeoRp2040PioSpeedTx1812 : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono3Step>
+class NeoRp2040PioSpeedTx1812 : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono3Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(300, 600);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(600, 300);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(80000); // 80us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+    static constexpr float BitRateHz =  1111111.11f; // 300+600
+    static constexpr uint32_t ResetTimeUs = 80;
 };
 
-class NeoRp2040PioSpeedGs1903 : public NeoRp2040PioMonoProgram<NeoRp2040PioCandenceMono4Step>
+class NeoRp2040PioSpeedGs1903 : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono4Step>
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(300, 900);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(900, 300);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(40000); // 40us
-
-    static void IRAM_ATTR Translate(const void* src,
-        rmt_item32_t* dest,
-        size_t src_size,
-        size_t wanted_num,
-        size_t* translated_size,
-        size_t* item_num);
+    static constexpr float BitRateHz =  833333.33f; // 300+900
+    static constexpr uint32_t ResetTimeUs = 40;
 };
 
-
-*/
-
-template<typename T_SPEED, typename T_PIO_INSTANCE, bool V_INVERT = false, uint V_IRQNUM = DMA_IRQ_0> class NeoRp2040MethodBase
+// Method
+// --------------------------------------------------------
+template<typename T_SPEED, 
+        typename T_PIO_INSTANCE, 
+        bool V_INVERT = false, 
+        uint V_IRQNUM = DMA_IRQ_0> 
+class NeoRp2040PioMethodBase
 {
 public:
     typedef NeoNoSettings SettingsObject;
 
-    NeoRp2040MethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
-        _sizeData(pixelCount * elementSize + settingsSize),
+    NeoRp2040PioMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
+        _sizeData(NeoUtil::RoundUp(pixelCount * elementSize + settingsSize, 4)),
         _pin(pin)
     {
         construct();
     }
 
-    NeoRp2040MethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(pixelCount* elementSize + settingsSize),
+    NeoRp2040PioMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
+        _sizeData(NeoUtil::RoundUp(pixelCount* elementSize + settingsSize, 4)),
         _pin(pin),
         _pio(channel)
     {
         construct();
     }
 
-    ~NeoRp2040MethodBase()
+    ~NeoRp2040PioMethodBase()
     {
         // wait until the last send finishes before destructing everything
         dma_channel_wait_for_finish_blocking(_dmaChannel);
@@ -454,17 +360,17 @@ public:
         // memory. This SDK function will find a location (offset) in the
         // instruction memory where there is enough space for our program. We need
         // to remember this location!
-        uint offset = T_PIO_PROGRAM::add(_pio.Instance);
+        uint offset = T_SPEED::add(_pio.Instance);
         
         // Find a free state machine on our chosen PIO (erroring if there are
         // none). Configure it to run our program, and start it, using the
         // helper function we included in our .pio file.
         _sm = pio_claim_unused_sm(_pio.Instance, true);
-        T_PIO_PROGRAM::init(_pio.Instance, _sm, offset, _pin, T_SPEED::Hz);
+        T_SPEED::init(_pio.Instance, _sm, offset, _pin, T_SPEED::BitRateHz);
         
         if (V_INVERT)
         {
-            gpio_set_oeover(pin, GPIO_OVERRIDE_INVERT);
+            gpio_set_oeover(_pin, GPIO_OVERRIDE_INVERT);
         }
 
         // Set up DMA transfer
@@ -475,17 +381,17 @@ public:
         s_dmaIrqObjectTable[_dmaChannel] = this;
 
         dma_channel_transfer_size dmaTransferSize = DMA_SIZE_32;
-        dma_config = dma_channel_get_default_config(_dmaChannel);
-        channel_config_set_transfer_data_size(&dma_config, dmaTransferSize);
-        channel_config_set_read_increment(&dma_config, true);
-        channel_config_set_write_increment(&dma_config, false);
+        dma_channel_config dmaConfig = dma_channel_get_default_config(_dmaChannel);
+        channel_config_set_transfer_data_size(&dmaConfig, dmaTransferSize);
+        channel_config_set_read_increment(&dmaConfig, true);
+        channel_config_set_write_increment(&dmaConfig, false);
 
         // Set DMA trigger
-        channel_config_set_dreq(&dma_config, pio_get_dreq(_pio.Instance, _sm, true));
+        channel_config_set_dreq(&dmaConfig, pio_get_dreq(_pio.Instance, _sm, true));
         uint transfer_count = _sizeData / ((dmaTransferSize == DMA_SIZE_8) ? 1 : dmaTransferSize * 2);
 
         dma_channel_configure(_dmaChannel, 
-            &dma_config,
+            &dmaConfig,
             &(_pio.Instance->txf[_sm]),      // dest
             _dataSending, // src
             transfer_count,
@@ -515,7 +421,7 @@ public:
         // wait for last send
         while (!IsReadyToUpdate())
         {
-            yeild();
+            yield();
         }
 
         // start next send
@@ -557,7 +463,7 @@ public:
     }
 
 private:
-    constexpr int c_DmaChannelsCount = 16;
+    static constexpr int c_DmaChannelsCount = 16;
 
     const size_t  _sizeData;      // Size of '_data*' buffers 
     const uint8_t _pin;            // output pin number
@@ -573,7 +479,7 @@ private:
     int _sm;
     int _dmaChannel;
 
-    static typeof(this) s_dmaIrqObjectTable[c_DmaChannelsCount] = { nullptr };
+    static NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQNUM>* s_dmaIrqObjectTable[c_DmaChannelsCount];
 
     void construct()
     {
@@ -594,7 +500,7 @@ private:
     {
         for (int dmaChannel = 0; dmaChannel < c_DmaChannelsCount; dmaChannel++)
         {
-            if (s_dmaIrqObjectTable[dmaChannel])
+            if (s_dmaIrqObjectTable[dmaChannel] != nullptr)
             {
                 if (dma_irqn_get_channel_status(V_IRQNUM, dmaChannel))
                 {
@@ -605,6 +511,9 @@ private:
         }
     }
 };
+
+template<typename T_SPEED, typename T_PIO_INSTANCE, bool V_INVERT, uint V_IRQNUM>
+NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQNUM>* NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQNUM>::s_dmaIrqObjectTable[] = { nullptr };
 
 // normal
 typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstanceN> Rp2040NWs2811Method;
@@ -647,44 +556,44 @@ typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance1> 
 typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance1> Rp2040Pio1400KbpsMethod;
 
 // inverted
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedWs2811, NeoRp2040PioInstanceN, true> Rp2040NWs2811InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedWs2812x, NeoRp2040PioInstanceN, true> Rp2040NWs2812xInvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedWs2812x, NeoRp2040PioInstanceN, true> Rp2040NWs2816InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedSk6812, NeoRp2040PioInstanceN, true> Rp2040NSk6812InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTm1814, NeoRp2040PioInstanceN> Rp2040NTm1814InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTm1829, NeoRp2040PioInstanceN> Rp2040NTm1829InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTm1914, NeoRp2040PioInstanceN> Rp2040NTm1914InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedApa106, NeoRp2040PioInstanceN, true> Rp2040NApa106InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTx1812, NeoRp2040PioInstanceN, true> Rp2040NTx1812InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedGs1903, NeoRp2040PioInstanceN, true> Rp2040NGs1903InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeed800Kbps, NeoRp2040PioInstanceN, true> Rp2040N800KbpsInvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeed400Kbps, NeoRp2040PioInstanceN, true> Rp2040N400KbpsInvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstanceN, true> Rp2040NWs2811InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstanceN, true> Rp2040NWs2812xInvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstanceN, true> Rp2040NWs2816InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedSk6812, NeoRp2040PioInstanceN, true> Rp2040NSk6812InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTm1814, NeoRp2040PioInstanceN> Rp2040NTm1814InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTm1829, NeoRp2040PioInstanceN> Rp2040NTm1829InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTm1914, NeoRp2040PioInstanceN> Rp2040NTm1914InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedApa106, NeoRp2040PioInstanceN, true> Rp2040NApa106InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstanceN, true> Rp2040NTx1812InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstanceN, true> Rp2040NGs1903InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstanceN, true> Rp2040N800KbpsInvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstanceN, true> Rp2040N400KbpsInvertedMethod;
 
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedWs2811, NeoRp2040PioInstance0, true> Rp2040Pio0Ws2811InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedWs2812x, NeoRp2040PioInstance0, true> Rp2040Pio0Ws2812xInvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedWs2812x, NeoRp2040PioInstance0, true> Rp2040Pio0Ws2816InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedSk6812, NeoRp2040PioInstance0, true> Rp2040Pio0Sk6812InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTm1814, NeoRp2040PioInstance0> Rp2040Pio0Tm1814InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTm1829, NeoRp2040PioInstance0> Rp2040Pio0Tm1829InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTm1914, NeoRp2040PioInstance0> Rp2040Pio0Tm1914InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedApa106, NeoRp2040PioInstance0, true> Rp2040Pio0Apa106InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTx1812, NeoRp2040PioInstance0, true> Rp2040Pio0Tx1812InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedGs1903, NeoRp2040PioInstance0, true> Rp2040Pio0Gs1903InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeed800Kbps, NeoRp2040PioInstance0, true> Rp2040Pio0800KbpsInvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeed400Kbps, NeoRp2040PioInstance0, true> Rp2040Pio0400KbpsInvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstance0, true> Rp2040Pio0Ws2811InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance0, true> Rp2040Pio0Ws2812xInvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance0, true> Rp2040Pio0Ws2816InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedSk6812, NeoRp2040PioInstance0, true> Rp2040Pio0Sk6812InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTm1814, NeoRp2040PioInstance0> Rp2040Pio0Tm1814InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTm1829, NeoRp2040PioInstance0> Rp2040Pio0Tm1829InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTm1914, NeoRp2040PioInstance0> Rp2040Pio0Tm1914InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedApa106, NeoRp2040PioInstance0, true> Rp2040Pio0Apa106InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstance0, true> Rp2040Pio0Tx1812InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance0, true> Rp2040Pio0Gs1903InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance0, true> Rp2040Pio0800KbpsInvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance0, true> Rp2040Pio0400KbpsInvertedMethod;
 
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedWs2811, NeoRp2040PioInstance1, true> Rp2040Pio1Ws2811InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedWs2812x, NeoRp2040PioInstance1, true> Rp2040Pio1Ws2812xInvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedWs2812x, NeoRp2040PioInstance1, true> Rp2040Pio1Ws2816InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedSk6812, NeoRp2040PioInstance1, true> Rp2040Pio1Sk6812InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTm1814, NeoRp2040PioInstance1> Rp2040Pio1Tm1814InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTm1829, NeoRp2040PioInstance1> Rp2040Pio1Tm1829InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTm1914, NeoRp2040PioInstance1> Rp2040Pio1Tm1914InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedApa106, NeoRp2040PioInstance1, true> Rp2040Pio1Apa106InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedTx1812, NeoRp2040PioInstance1, true> Rp2040Pio1Tx1812InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeedGs1903, NeoRp2040PioInstance1, true> Rp2040Pio1Gs1903InvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeed800Kbps, NeoRp2040PioInstance1, true> Rp2040Pio1800KbpsInvertedMethod;
-typedef NeoRp2040PioMethodBase<NeoRp2040PioInvertedSpeed400Kbps, NeoRp2040PioInstance1, true> Rp2040Pio1400KbpsInvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstance1, true> Rp2040Pio1Ws2811InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance1, true> Rp2040Pio1Ws2812xInvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance1, true> Rp2040Pio1Ws2816InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedSk6812, NeoRp2040PioInstance1, true> Rp2040Pio1Sk6812InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTm1814, NeoRp2040PioInstance1> Rp2040Pio1Tm1814InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTm1829, NeoRp2040PioInstance1> Rp2040Pio1Tm1829InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTm1914, NeoRp2040PioInstance1> Rp2040Pio1Tm1914InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedApa106, NeoRp2040PioInstance1, true> Rp2040Pio1Apa106InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstance1, true> Rp2040Pio1Tx1812InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance1, true> Rp2040Pio1Gs1903InvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance1, true> Rp2040Pio1800KbpsInvertedMethod;
+typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance1, true> Rp2040Pio1400KbpsInvertedMethod;
 
 // IRQ 1 method is the default method 
 typedef Rp2040Pio1Ws2812xMethod NeoWs2813Method;

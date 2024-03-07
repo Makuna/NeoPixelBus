@@ -62,6 +62,10 @@ License along with NeoPixel.  If not, see
 
 #include "methods/NeoNrf52xMethod.h"
 
+#elif defined(ARDUINO_ARCH_RP2040) // must be before __arm__
+
+#include "methods/NeoRp2040Method.h"
+
 #elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
 
 #include "methods/NeoArmMethod.h"
