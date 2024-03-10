@@ -39,9 +39,9 @@ License along with NeoPixel.  If not, see
 class NeoRp2040DmaState
 {
 private:
-    uint32_t _endTime;  // Latch/Reset timing reference
-    uint32_t _dataFinished;
-    mutex_t _mutex; 
+    volatile uint32_t _endTime;  // Latch/Reset timing reference
+    volatile uint32_t _dataFinished;
+    mutex_t _mutex;
 
 public:
     NeoRp2040DmaState() :
@@ -60,10 +60,10 @@ public:
 
     void Trigger() 
     {
-        mutex_enter_blocking(&_mutex);
+//        mutex_enter_blocking(&_mutex);
         _endTime = micros();
         _dataFinished = 1;
-        mutex_exit(&_mutex);
+//        mutex_exit(&_mutex);
     }
 
     bool IsReady(uint32_t resetTimeUs)  const
