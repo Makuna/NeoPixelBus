@@ -32,6 +32,73 @@ License along with NeoPixel.  If not, see
 #include "hardware/irq.h"
 #include "hardware/pio.h"
 #include "hardware/clocks.h"
+#include "pico/mutex.h"
+
+// DMA Finished State Tracking
+// --------------------------------------------------------
+class NeoRp2040DmaState
+{
+private:
+    uint32_t _endTime;  // Latch/Reset timing reference
+    uint32_t _dataFinished;
+    mutex_t _mutex; 
+
+public:
+    NeoRp2040DmaState() :
+        _endTime(0),
+        _dataFinished(1)
+    {
+        mutex_init(&_mutex);
+    }
+
+    void Reset() 
+    {
+        mutex_enter_blocking(&_mutex);
+        _dataFinished = 0;
+        mutex_exit(&_mutex);
+    }
+
+    void Trigger() 
+    {
+        mutex_enter_blocking(&_mutex);
+        _endTime = micros();
+        _dataFinished = 1;
+        mutex_exit(&_mutex);
+    }
+
+    bool IsReady(uint32_t resetTimeUs)  const
+    {
+        bool isReady = false;
+        mutex_enter_blocking(const_cast<mutex_t*>(& _mutex));
+
+        switch (_dataFinished)
+        {
+        case 0:
+            break;
+        case 1:
+            {
+//                digitalWrite(7, HIGH);
+                uint32_t delta = micros() - _endTime;
+
+                if (delta >= resetTimeUs)
+                {
+//                    digitalWrite(7, LOW);
+
+                    *const_cast<uint32_t*>(&_dataFinished) += 1;
+                    isReady = true;
+                }
+            }
+            break;
+        default:
+            isReady = true;
+            break;
+        }
+ 
+        mutex_exit(const_cast<mutex_t*>(&_mutex));
+
+        return isReady;
+    }
+};
 
 // PIO Instances
 // --------------------------------------------------------
@@ -68,10 +135,14 @@ public:
     const PIO Instance;
 };
 
-// Programs (cadence)
+// PIO Programs (cadence)
 // --------------------------------------------------------
 // use https://wokwi.com/tools/pioasm
-//
+// copy relevant parts into NeoRp2040PioCadenceMono3Step and NeoRp2040PioCadenceMono4Step
+// 
+// 3 step program
+// the pulse width is divided by 3, using 33% for each stage
+// where 0 = 33% and 1 = 66%
 /*
 .program rgbic_mono
 .side_set 1
@@ -108,9 +179,13 @@ protected:
     static constexpr uint8_t TH1 = 1;
     static constexpr uint8_t TL1 = 1;
 
+    // changed from constepr with initializtion due to 
+    // that is only supported in c17+
     static const uint16_t program_instructions[];
 
 public:
+    // changed from constepr with initializtion due to 
+    // that is only supported in c17+
     static const struct pio_program program;
 
     static inline pio_sm_config get_default_config(uint offset)
@@ -124,7 +199,9 @@ public:
     static constexpr uint8_t bit_cycles = TH0 + TH1 + TL1;
 };
 
-// use https://wokwi.com/tools/pioasm
+// 4 step program
+// the pulse width is divided by 4, using 25% for each stage
+// where 0 = 25% and 1 = 75%
 //
 /*
 .program rgbic_mono
@@ -162,9 +239,13 @@ protected:
     static constexpr uint8_t TH1 = 2;
     static constexpr uint8_t TL1 = 1;
 
+    // changed from constepr with initializtion due to 
+    // that is only supported in c17+
     static const uint16_t program_instructions[];
 
 public:
+    // changed from constepr with initializtion due to 
+    // that is only supported in c17+
     static const struct pio_program program;
 
     static inline pio_sm_config get_default_config(uint offset)
@@ -179,7 +260,6 @@ public:
 };
 
 
-
 // Program Wrapper
 // --------------------------------------------------------
 template<typename T_CADENCE> 
@@ -191,13 +271,14 @@ public:
         return pio_add_program(pio_instance, &T_CADENCE::program);
     }
 
-    static inline void init(PIO pio_instance, uint sm, uint offset, uint pin, float bitrate)
+    static inline void init(PIO pio_instance, uint sm, uint offset, uint pin, float bitrate, uint shiftBits)
     {
         float div = clock_get_hz(clk_sys) / (bitrate * T_CADENCE::bit_cycles);
         pio_sm_config c = T_CADENCE::get_default_config(offset);
 
         sm_config_set_sideset_pins(&c, pin);
-        sm_config_set_out_shift(&c, false, true, 32); // ? is this needed
+        
+        sm_config_set_out_shift(&c, false, true, shiftBits); // was 32 ? is this needed
         sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
         sm_config_set_clkdiv(&c, div);
 
@@ -227,7 +308,7 @@ public:
 class NeoRp2040PioSpeedWs2812x : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono3Step>
 {
 public:
-    static constexpr float BitRateHz =  900000.0f; // 400+850
+    static constexpr float BitRateHz =  800000.0f; // 400+850
     static constexpr uint32_t ResetTimeUs = 300;
 };
 
@@ -302,21 +383,21 @@ public:
 template<typename T_SPEED, 
         typename T_PIO_INSTANCE, 
         bool V_INVERT = false, 
-        uint V_IRQNUM = DMA_IRQ_0> 
+        uint V_IRQ_INDEX = 1> 
 class NeoRp2040PioMethodBase
 {
 public:
     typedef NeoNoSettings SettingsObject;
 
     NeoRp2040PioMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
-        _sizeData(NeoUtil::RoundUp(pixelCount * elementSize + settingsSize, 4)),
+        _sizeData(NeoUtil::RoundUp(pixelCount * elementSize + settingsSize, c_DataByteAlignment)),
         _pin(pin)
     {
         construct();
     }
 
     NeoRp2040PioMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(NeoUtil::RoundUp(pixelCount* elementSize + settingsSize, 4)),
+        _sizeData(NeoUtil::RoundUp(pixelCount* elementSize + settingsSize, c_DataByteAlignment)),
         _pin(pin),
         _pio(channel)
     {
@@ -327,11 +408,20 @@ public:
     {
         // wait until the last send finishes before destructing everything
         dma_channel_wait_for_finish_blocking(_dmaChannel);
+
+        // disable the state machine
         pio_sm_set_enabled(_pio.Instance, _sm, false);
+
+        // Disable and remove interrupts
+        // dma_channel_cleanup(_dmaChannel); // NOT PRESENT?!
+        dma_irqn_set_channel_enabled(V_IRQ_INDEX, _dmaChannel, false);
+
+        irq_remove_handler(V_IRQ_INDEX ? DMA_IRQ_1 : DMA_IRQ_0, dmaFinishIrq);
 
         // unregister static dma callback object
         s_dmaIrqObjectTable[_dmaChannel] = nullptr;
 
+        // unclaim dma channel and then state machine
         dma_channel_unclaim(_dmaChannel);
         pio_sm_unclaim(_pio.Instance, _sm);
 
@@ -344,18 +434,45 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        if (!dma_channel_is_busy(_dmaChannel))
-        {
-            uint32_t delta = micros() - _endTime;
-
-            return (delta >= T_SPEED::ResetTimeUs);
-        }
-
-        return false;
+        uint16_t fifoCacheLatency = 1000000.0f / T_SPEED::BitRateHz * 8 * 9; // 8 bits * (8 DMA words in merged FIFO)
+        return _dmaState.IsReady(T_SPEED::ResetTimeUs + fifoCacheLatency);
     }
 
     void Initialize()
     {
+        // What happens if dmaTransferSize is DMA_SIZE_32?  
+        dma_channel_transfer_size dmaTransferSize = DMA_SIZE_8;
+        uint transfer_count = _sizeData;
+        uint shiftBits = 8;
+        /*
+        if (_sizeData % 4 == 0)
+        {
+            dmaTransferSize = DMA_SIZE_32;
+            transfer_count /= 4;
+            shiftBits = 32;
+        }
+        else if (_sizeData % 2 == 0)
+        {
+            dmaTransferSize = DMA_SIZE_16;
+            transfer_count /= 2;
+            shiftBits = 16;
+        }
+        */
+        uint16_t fifoCacheLatency = 1000000.0f / T_SPEED::BitRateHz * shiftBits * 9; // shift bits * (8 DMA words in merged FIFO)
+
+Serial.print(", _sizeData = ");
+Serial.print(_sizeData);
+Serial.print(", dmaTransferSize = ");
+Serial.print(dmaTransferSize);
+Serial.print(", transfer_count = ");
+Serial.print(transfer_count);
+Serial.print(", shiftBits = ");
+Serial.print(shiftBits);
+Serial.print(", fifoCacheLatency = ");
+Serial.print(fifoCacheLatency);
+
+Serial.println();
+
         // Our assembled program needs to be loaded into this PIO's instruction
         // memory. This SDK function will find a location (offset) in the
         // instruction memory where there is enough space for our program. We need
@@ -363,10 +480,14 @@ public:
         uint offset = T_SPEED::add(_pio.Instance);
         
         // Find a free state machine on our chosen PIO (erroring if there are
-        // none). Configure it to run our program, and start it, using the
+        // none?). Configure it to run our program, and start it, using the
         // helper function we included in our .pio file.
-        _sm = pio_claim_unused_sm(_pio.Instance, true);
-        T_SPEED::init(_pio.Instance, _sm, offset, _pin, T_SPEED::BitRateHz);
+        _sm = pio_claim_unused_sm(_pio.Instance, true); // panic if none available
+
+Serial.print("*_sm = ");
+Serial.print(_sm);
+
+        T_SPEED::init(_pio.Instance, _sm, offset, _pin, T_SPEED::BitRateHz, shiftBits);
         
         if (V_INVERT)
         {
@@ -376,58 +497,64 @@ public:
         // Set up DMA transfer
         _dmaChannel = dma_claim_unused_channel(true); // panic if none available
 
+Serial.print(", *_dmaChannel = ");
+Serial.print(_dmaChannel);
 
-        // register for IRQ shared static callback
-        s_dmaIrqObjectTable[_dmaChannel] = this;
+        // register for IRQ shared static endTime update
+        s_dmaIrqObjectTable[_dmaChannel] = &_dmaState;
 
-        dma_channel_transfer_size dmaTransferSize = DMA_SIZE_32;
+Serial.print(", s_dmaIrqObjectTable = ");
+Serial.print((uint32_t)(s_dmaIrqObjectTable)); // address of s_dmaIrqObjectTable
+
+Serial.println();
+
         dma_channel_config dmaConfig = dma_channel_get_default_config(_dmaChannel);
         channel_config_set_transfer_data_size(&dmaConfig, dmaTransferSize);
         channel_config_set_read_increment(&dmaConfig, true);
         channel_config_set_write_increment(&dmaConfig, false);
 
         // Set DMA trigger
+//        channel_config_set_irq_quiet(&dmaConfig, true);
         channel_config_set_dreq(&dmaConfig, pio_get_dreq(_pio.Instance, _sm, true));
-        uint transfer_count = _sizeData / ((dmaTransferSize == DMA_SIZE_8) ? 1 : dmaTransferSize * 2);
 
         dma_channel_configure(_dmaChannel, 
             &dmaConfig,
-            &(_pio.Instance->txf[_sm]),      // dest
-            _dataSending, // src
+            &(_pio.Instance->txf[_sm]),  // dest
+            _dataSending,                // src
             transfer_count,
             false);
 
         // Set up end-of-DMA interrupt
-        irq_add_shared_handler(V_IRQNUM,
+        irq_add_shared_handler(V_IRQ_INDEX ? DMA_IRQ_1 : DMA_IRQ_0,
             dmaFinishIrq,
             PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
 
-        if (V_IRQNUM == DMA_IRQ_0)
-        {
-            dma_channel_set_irq0_enabled(_dmaChannel, true);
-        }
-        else
-        {
-            dma_channel_set_irq1_enabled(_dmaChannel, true);
-        }
-
-        irq_set_enabled(V_IRQNUM, true);
-
-        _endTime = micros();
+        dma_irqn_set_channel_enabled(V_IRQ_INDEX, _dmaChannel, true);
+ 
+        irq_set_enabled(V_IRQ_INDEX ? DMA_IRQ_1 : DMA_IRQ_0, true);
     }
 
     void Update(bool maintainBufferConsistency)
     {
         // wait for last send
+        uint32_t watchdog_tick = 0;
         while (!IsReadyToUpdate())
         {
-            yield();
+            watchdog_tick++;
+            if (watchdog_tick == 1000)
+            {
+                Serial.println("What are we waiting for!");
+            }
+            //delay(1);
+            //yield();  
         }
+  
+        _dmaState.Reset();
 
         // start next send
         // 
         dma_channel_set_read_addr(_dmaChannel, _dataEditing, false);
-        pio_sm_clear_fifos(_pio.Instance, _sm);
+        pio_sm_clear_fifos(_pio.Instance, _sm); // not really needed
         dma_channel_start(_dmaChannel); // Start new transfer
 
         if (maintainBufferConsistency)
@@ -463,13 +590,13 @@ public:
     }
 
 private:
-    static constexpr int c_DmaChannelsCount = 16;
+    static constexpr uint8_t c_DataByteAlignment = 1; // DMA_SIZE_8 or  4 for DMA_SIZE_32
 
-    const size_t  _sizeData;      // Size of '_data*' buffers 
-    const uint8_t _pin;            // output pin number
-    const T_PIO_INSTANCE _pio; // holds instance for multi channel support
+    const size_t  _sizeData;     // Size of '_data*' buffers 
+    const uint8_t _pin;          // output pin number
+    const T_PIO_INSTANCE _pio;   // holds instance for multi channel support
 
-    uint32_t _endTime;       // Latch timing reference
+    NeoRp2040DmaState _dmaState;   // Latch timing reference
 
     // Holds data stream which include LED color values and other settings as needed
     uint8_t*  _dataEditing;   // exposed for get and set
@@ -479,7 +606,13 @@ private:
     int _sm;
     int _dmaChannel;
 
-    static NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQNUM>* s_dmaIrqObjectTable[c_DmaChannelsCount];
+    // instead of a table of max channels to walk
+    // this could be a table of size max state machines,
+    // which is true limiting factor to instances
+    // and the table entries would then have to include not only
+    // the object pointer but also the dmaChannel it was also assigned
+    // volatile static NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQNUM>* s_dmaIrqObjectTable[NUM_DMA_CHANNELS];
+    static NeoRp2040DmaState* s_dmaIrqObjectTable[NUM_DMA_CHANNELS];
 
     void construct()
     {
@@ -490,30 +623,73 @@ private:
         // no need to initialize it, it gets overwritten on every send
     }
 
-    void dmaCallback()
-    {
-        // save EOD time for latch on next call
-        _endTime = micros();
-    }
-
     static void dmaFinishIrq()
     {
-        for (int dmaChannel = 0; dmaChannel < c_DmaChannelsCount; dmaChannel++)
+        // alternat thought of using a table of max state machine instances (4 per PIO)
+        // it would then contain an .object and a .dmaChannel
+        // so 4 * (sizeof(object*) + sizeof(int)) = 4 * (4 + 2) = 24 byes
+        // versus
+        // 12 * (sizeof(object*) = 12 * 4 = 48 bytes
+        // along with reduce interation of the array for every interrupt
+        /*
+        for (uint stateMachine = 0; stateMachine < NUM_PIO_STATE_MACHINES; stateMachine++)
         {
-            if (s_dmaIrqObjectTable[dmaChannel] != nullptr)
+            if (s_dmaIrqObjectTable[stateMachine].object != nullptr)
             {
+                uint dmaChannel = s_dmaIrqObjectTable[stateMachine].dmaChannel;
                 if (dma_irqn_get_channel_status(V_IRQNUM, dmaChannel))
                 {
                     dma_irqn_acknowledge_channel(V_IRQNUM, dmaChannel);
-                    s_dmaIrqObjectTable[dmaChannel]->dmaCallback();
+                    s_dmaIrqObjectTable[stateMachine].object->dmaCallback();
                 }
             }
         }
+*/
+// FURTHER alternat thought of using a table of max state machine instances (4 per PIO)
+// it would then contain an .pEndTime and a .dmaChannel.  Without a object pointer the
+// alternate Bus definitions (feature/method template) could share a single static table
+// 
+// so 4 * (sizeof(EndTime*) + sizeof(int)) = 4 * (4 + 2) = 24 byes
+// versus
+// 12 * (sizeof(EndTime*) = 12 * 4 = 48 bytes
+// along with reduce interation of the array for every interrupt AND
+// reduce code due to object method call
+/*
+for (uint stateMachine = 0; stateMachine < NUM_PIO_STATE_MACHINES; stateMachine++)
+{
+    uint32_t* pEndTime = s_dmaIrqObjectTable[stateMachine].pEndTime;
+    if (pEndTime != nullptr)
+    {
+        uint dmaChannel = s_dmaIrqObjectTable[stateMachine].dmaChannel;
+        if (dma_irqn_get_channel_status(V_IRQNUM, dmaChannel))
+        {
+            dma_irqn_acknowledge_channel(V_IRQNUM, dmaChannel);
+            *pEndTime = micros();
+        }
+    }
+}
+*/
+        
+        // dmaChannels are unique across both PIOs, while stateMachines are per
+        // PIO, so this current model below works even if both PIOs are used
+        for (uint dmaChannel = 0; dmaChannel < NUM_DMA_CHANNELS; dmaChannel++)
+        {
+            if (s_dmaIrqObjectTable[dmaChannel] != nullptr)
+            {
+                if (dma_irqn_get_channel_status(V_IRQ_INDEX, dmaChannel))
+                {
+                    dma_irqn_acknowledge_channel(V_IRQ_INDEX, dmaChannel);
+                    s_dmaIrqObjectTable[dmaChannel]->Trigger();
+                }
+            }
+        }
+        
     }
 };
 
-template<typename T_SPEED, typename T_PIO_INSTANCE, bool V_INVERT, uint V_IRQNUM>
-NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQNUM>* NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQNUM>::s_dmaIrqObjectTable[] = { nullptr };
+template<typename T_SPEED, typename T_PIO_INSTANCE, bool V_INVERT, uint V_IRQ_INDEX>
+//volatile NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQNUM>* NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQNUM>::s_dmaIrqObjectTable[] = { nullptr };
+NeoRp2040DmaState* NeoRp2040PioMethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQ_INDEX>::s_dmaIrqObjectTable[] = { nullptr };
 
 // normal
 typedef NeoRp2040PioMethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstanceN> Rp2040NWs2811Method;

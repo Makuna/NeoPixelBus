@@ -32,6 +32,14 @@ License along with NeoPixel.  If not, see
 
 #ifdef ARDUINO_ARCH_RP2040
 
+// See NeoRp2040PioCadenceMono3Step, NeoRp2040PioCadenceMono4Step in header for details
+// on changing the PIO programs
+// 
+// these are only required here in the .cpp due to current compiler version doesn't
+// support doing this in the header file
+// 
+//
+
 const uint16_t NeoRp2040PioCadenceMono3Step::program_instructions[] =
         {
         //     .wrap_target
