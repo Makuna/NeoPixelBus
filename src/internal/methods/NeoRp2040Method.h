@@ -36,46 +36,48 @@ License along with NeoPixel.  If not, see
 
 // DMA Finished State Tracking
 // --------------------------------------------------------
+
+enum Rp2040PioDmaState
+{
+    Rp2040PioDmaState_Sending,
+    Rp2040PioDmaState_DmaCompleted,
+    Rp2040PioDmaState_FifoEmptied
+};
+
 class NeoRp2040DmaState
 {
 private:
     volatile uint32_t _endTime;  // Latch/Reset timing reference
-    volatile uint32_t _dataFinished;
-    mutex_t _mutex;
+    volatile Rp2040PioDmaState _state;
 
 public:
     NeoRp2040DmaState() :
         _endTime(0),
-        _dataFinished(1)
+        _state(Rp2040PioDmaState_FifoEmptied)
     {
-        mutex_init(&_mutex);
     }
 
-    void Reset() 
+    void SetSending() 
     {
-        mutex_enter_blocking(&_mutex);
-        _dataFinished = 0;
-        mutex_exit(&_mutex);
+        _state = Rp2040PioDmaState_Sending;
     }
 
-    void Trigger() 
+    void DmaFinished() 
     {
-//        mutex_enter_blocking(&_mutex);
         _endTime = micros();
-        _dataFinished = 1;
-//        mutex_exit(&_mutex);
+        _state = Rp2040PioDmaState_DmaCompleted;
     }
 
-    bool IsReady(uint32_t resetTimeUs)  const
+    bool IsReadyToSend(uint32_t resetTimeUs)  const
     {
         bool isReady = false;
-        mutex_enter_blocking(const_cast<mutex_t*>(& _mutex));
 
-        switch (_dataFinished)
+        switch (_state)
         {
-        case 0:
+        case Rp2040PioDmaState_Sending:
             break;
-        case 1:
+
+        case Rp2040PioDmaState_DmaCompleted:
             {
 //                digitalWrite(7, HIGH);
                 uint32_t delta = micros() - _endTime;
@@ -84,18 +86,17 @@ public:
                 {
 //                    digitalWrite(7, LOW);
 
-                    *const_cast<uint32_t*>(&_dataFinished) += 1;
+                    *const_cast<Rp2040PioDmaState*>(&_state) = Rp2040PioDmaState_FifoEmptied;
                     isReady = true;
                 }
             }
             break;
+
         default:
             isReady = true;
             break;
         }
  
-        mutex_exit(const_cast<mutex_t*>(&_mutex));
-
         return isReady;
     }
 };
@@ -431,34 +432,31 @@ public:
         free(_dataSending);
     }
 
-
     bool IsReadyToUpdate() const
     {
-        uint16_t fifoCacheLatency = 1000000.0f / T_SPEED::BitRateHz * 8 * 9; // 8 bits * (8 DMA words in merged FIFO)
-        return _dmaState.IsReady(T_SPEED::ResetTimeUs + fifoCacheLatency);
+        uint16_t fifoCacheLatency = 1000000.0f / T_SPEED::BitRateHz * 8 * 8.0f + 6; // 8 bits * (8.5 DMA words in merged FIFO)
+        return _dmaState.IsReadyToSend(T_SPEED::ResetTimeUs + fifoCacheLatency);
     }
 
     void Initialize()
     {
-        // What happens if dmaTransferSize is DMA_SIZE_32?  
-        dma_channel_transfer_size dmaTransferSize = DMA_SIZE_8;
-        uint transfer_count = _sizeData;
+        // Select the largest FIFO fetch size that aligns with our data size
+        //
         uint shiftBits = 8;
         /*
         if (_sizeData % 4 == 0)
         {
-            dmaTransferSize = DMA_SIZE_32;
-            transfer_count /= 4;
             shiftBits = 32;
         }
         else if (_sizeData % 2 == 0)
         {
-            dmaTransferSize = DMA_SIZE_16;
-            transfer_count /= 2;
             shiftBits = 16;
         }
         */
-        uint16_t fifoCacheLatency = 1000000.0f / T_SPEED::BitRateHz * shiftBits * 9; // shift bits * (8 DMA words in merged FIFO)
+        dma_channel_transfer_size dmaTransferSize = static_cast<dma_channel_transfer_size>(shiftBits / 16);
+        uint transfer_count = _sizeData / (shiftBits / 8);;
+
+        uint16_t fifoCacheLatency = 1000000.0f / T_SPEED::BitRateHz * shiftBits * 8.0f + 6; // shift bits * (8.5 DMA words in merged FIFO)
 
 Serial.print(", _sizeData = ");
 Serial.print(_sizeData);
@@ -537,19 +535,12 @@ Serial.println();
     void Update(bool maintainBufferConsistency)
     {
         // wait for last send
-        uint32_t watchdog_tick = 0;
         while (!IsReadyToUpdate())
         {
-            watchdog_tick++;
-            if (watchdog_tick == 1000)
-            {
-                Serial.println("What are we waiting for!");
-            }
-            //delay(1);
-            //yield();  
+            yield();  
         }
   
-        _dmaState.Reset();
+        _dmaState.SetSending();
 
         // start next send
         // 
@@ -679,7 +670,7 @@ for (uint stateMachine = 0; stateMachine < NUM_PIO_STATE_MACHINES; stateMachine+
                 if (dma_irqn_get_channel_status(V_IRQ_INDEX, dmaChannel))
                 {
                     dma_irqn_acknowledge_channel(V_IRQ_INDEX, dmaChannel);
-                    s_dmaIrqObjectTable[dmaChannel]->Trigger();
+                    s_dmaIrqObjectTable[dmaChannel]->DmaFinished();
                 }
             }
         }
