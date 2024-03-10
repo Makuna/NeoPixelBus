@@ -79,13 +79,11 @@ public:
 
         case Rp2040PioDmaState_DmaCompleted:
             {
-//                digitalWrite(7, HIGH);
                 uint32_t delta = micros() - _endTime;
 
                 if (delta >= resetTimeUs)
                 {
-//                    digitalWrite(7, LOW);
-
+                    // const method requires that we const cast to change state
                     *const_cast<Rp2040PioDmaState*>(&_state) = Rp2040PioDmaState_FifoEmptied;
                     isReady = true;
                 }
