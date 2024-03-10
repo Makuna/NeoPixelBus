@@ -434,16 +434,18 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        uint16_t fifoCacheLatency = 1000000.0f / T_SPEED::BitRateHz * 8 * 8.0f + 6; // 8 bits * (8.5 DMA words in merged FIFO)
-        return _dmaState.IsReadyToSend(T_SPEED::ResetTimeUs + fifoCacheLatency);
+        return _dmaState.IsReadyToSend(T_SPEED::ResetTimeUs + _fifoCacheLatency);
     }
 
     void Initialize()
     {
         // Select the largest FIFO fetch size that aligns with our data size
-        //
+        // BUT, since RP2040 is little endian, if the source element size is
+        // 8 bits, then you can't use larger shift bits as it accounts for 
+        // enianess and will mangle the order thinking its source was a 16/32 bits
+        // UNLESS, you use channel_config_set_bswap(), see below
         uint shiftBits = 8;
-        /*
+        
         if (_sizeData % 4 == 0)
         {
             shiftBits = 32;
@@ -452,11 +454,16 @@ public:
         {
             shiftBits = 16;
         }
-        */
+        
         dma_channel_transfer_size dmaTransferSize = static_cast<dma_channel_transfer_size>(shiftBits / 16);
         uint transfer_count = _sizeData / (shiftBits / 8);;
 
-        uint16_t fifoCacheLatency = 1000000.0f / T_SPEED::BitRateHz * shiftBits * 8.0f + 6; // shift bits * (8.5 DMA words in merged FIFO)
+        // merged TX/RX FIFO buffer is 8 words, 
+        //    add another word for IRQ trigger latency (error) as too short is catastrophic
+        // shiftBits is the size of a FIFO word in bits
+        // 1000000.0f / T_SPEED::BitRateHz = us to send one bit
+        float bitLengthUs = 1000000.0f / T_SPEED::BitRateHz;
+        _fifoCacheLatency = bitLengthUs * shiftBits * 9.0f; 
 
 Serial.print(", _sizeData = ");
 Serial.print(_sizeData);
@@ -466,8 +473,8 @@ Serial.print(", transfer_count = ");
 Serial.print(transfer_count);
 Serial.print(", shiftBits = ");
 Serial.print(shiftBits);
-Serial.print(", fifoCacheLatency = ");
-Serial.print(fifoCacheLatency);
+Serial.print(", _fifoCacheLatency = ");
+Serial.print(_fifoCacheLatency);
 
 Serial.println();
 
@@ -510,6 +517,8 @@ Serial.println();
         channel_config_set_transfer_data_size(&dmaConfig, dmaTransferSize);
         channel_config_set_read_increment(&dmaConfig, true);
         channel_config_set_write_increment(&dmaConfig, false);
+        // source is byte data, even with 16/32 transfer size
+        channel_config_set_bswap(&dmaConfig, true); 
 
         // Set DMA trigger
 //        channel_config_set_irq_quiet(&dmaConfig, true);
@@ -588,6 +597,7 @@ private:
     const T_PIO_INSTANCE _pio;   // holds instance for multi channel support
 
     NeoRp2040DmaState _dmaState;   // Latch timing reference
+    uint32_t _fifoCacheLatency; // delta between dma IRQ finished and PIO Fifo empty
 
     // Holds data stream which include LED color values and other settings as needed
     uint8_t*  _dataEditing;   // exposed for get and set
