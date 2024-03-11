@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 #include "../../NeoUtil.h"
 #include "../../NeoBusChannel.h"
 #include "../../NeoSettings.h"
-#include "NeoRp2040Method.h"
+#include "NeoRp2040x4Method.h"
 
 #ifdef ARDUINO_ARCH_RP2040
 
