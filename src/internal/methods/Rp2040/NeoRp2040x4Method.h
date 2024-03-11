@@ -137,20 +137,20 @@ Serial.print(shiftBits);
 Serial.print(", _fifoCacheLatency = ");
 Serial.print(_fifoCacheLatency);
 
-Serial.println();
+
 
         // Our assembled program needs to be loaded into this PIO's instruction
         // memory. This SDK function will find a location (offset) in the
         // instruction memory where there is enough space for our program. We need
         // to remember this location!
         uint offset = T_SPEED::add(_pio.Instance);
-        
+Serial.println(" *");
         // Find a free state machine on our chosen PIO (erroring if there are
         // none?). Configure it to run our program, and start it, using the
         // helper function we included in our .pio file.
         _sm = pio_claim_unused_sm(_pio.Instance, true); // panic if none available
 
-Serial.print("*_sm = ");
+Serial.print("_sm = ");
 Serial.print(_sm);
 
         T_SPEED::init(_pio.Instance, _sm, offset, _pin, T_SPEED::BitRateHz, shiftBits);

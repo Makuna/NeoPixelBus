@@ -162,6 +162,7 @@ class NeoRp2040PioMonoProgram
 public:
     static inline uint add(PIO pio_instance)
     {
+        assert(pio_can_add_program(pio_instance, &T_CADENCE::program));
         return pio_add_program(pio_instance, &T_CADENCE::program);
     }
 
