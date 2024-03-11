@@ -28,6 +28,8 @@ License along with NeoPixel.  If not, see
 
 #ifdef ARDUINO_ARCH_RP2040
 
+//#define NEORP2040_DEBUG 
+
 #include "hardware/dma.h"
 #include "hardware/irq.h"
 #include "hardware/pio.h"
@@ -70,8 +72,14 @@ public:
 
     ~NeoRp2040x4MethodBase()
     {
-        // wait until the last send finishes before destructing everything
-        dma_channel_wait_for_finish_blocking(_dmaChannel);
+        // wait for last send
+        while (!IsReadyToUpdate())
+        {
+            yield();
+        }
+
+        // clear any remaining just to be extra sure
+        pio_sm_clear_fifos(_pio.Instance, _sm); 
 
         // disable the state machine
         pio_sm_set_enabled(_pio.Instance, _sm, false);
@@ -137,6 +145,8 @@ public:
         // too short is catastrophic and too long is fine
         _fifoCacheEmptyDelta = bitLengthUs * fifoWordBits * (_mergedFifoCount + 1);
 
+#if defined(NEORP2040_DEBUG)
+
 Serial.print(", _pio.Instance = ");
 Serial.print((_pio.Instance == pio1));
 Serial.print(", _sizeData = ");
@@ -152,7 +162,7 @@ Serial.print(_mergedFifoCount);
 Serial.print(", _fifoCacheEmptyDelta = ");
 Serial.print(_fifoCacheEmptyDelta);
 
-
+#endif
 
         // Our assembled program needs to be loaded into this PIO's instruction
         // memory. This SDK function will find a location (offset) in the
@@ -160,15 +170,23 @@ Serial.print(_fifoCacheEmptyDelta);
         //
         uint offset = T_SPEED::add(_pio.Instance);
 
+#if defined(NEORP2040_DEBUG)
+
 Serial.println();
 Serial.print("offset = ");
 Serial.print(offset);
 
+#endif
+
         // Find a free state machine on our chosen PIO. 
         _sm = pio_claim_unused_sm(_pio.Instance, true); // panic if none available
 
+#if defined(NEORP2040_DEBUG)
+
 Serial.print(", _sm = ");
 Serial.print(_sm);
+
+#endif
 
         // Configure it to run our program, and start it, using the
         // helper function we included in our .pio file.
@@ -188,9 +206,13 @@ Serial.print(_sm);
         // find a free dma channel
         _dmaChannel = dma_claim_unused_channel(true); // panic if none available
 
+#if defined(NEORP2040_DEBUG)
+
 Serial.print(", *_dmaChannel = ");
 Serial.print(_dmaChannel);
 Serial.println();
+
+#endif
 
         // register for IRQ shared static endTime updates
         _dmaState.Register(_dmaChannel);
@@ -229,7 +251,6 @@ Serial.println();
         // start next send
         // 
         dma_channel_set_read_addr(_dmaChannel, _dataEditing, false);
-//        pio_sm_clear_fifos(_pio.Instance, _sm); // not really needed
         dma_channel_start(_dmaChannel); // Start new transfer
 
         if (maintainBufferConsistency)

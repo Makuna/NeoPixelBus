@@ -107,11 +107,15 @@ public:
             }
         }
 
+#if defined(NEORP2040_DEBUG)
+
         Serial.print("  V_IRQ_INDEX = ");
         Serial.print(V_IRQ_INDEX);
         Serial.print(", s_dmaIrqObjectTable = ");
         Serial.print((uint32_t)(s_dmaIrqObjectTable)); // address of s_dmaIrqObjectTable
         Serial.println();
+
+#endif
 
     }
 
