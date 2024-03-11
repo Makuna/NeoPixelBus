@@ -95,7 +95,9 @@ public:
         {
             s_dmaIrqObjectTable[dmChannel] = this;
 
-            if (s_refCountHandler == 0)
+            int32_t refCount = s_refCountHandler++;
+
+            if (refCount == 0)
             {
                 // Set up end-of-DMA interrupt handler
                 irq_add_shared_handler(V_IRQ_INDEX ? DMA_IRQ_1 : DMA_IRQ_0,
@@ -103,8 +105,6 @@ public:
                     PICO_SHARED_IRQ_HANDLER_DEFAULT_ORDER_PRIORITY);
                 irq_set_enabled(V_IRQ_INDEX ? DMA_IRQ_1 : DMA_IRQ_0, true);
             }
-
-            s_refCountHandler++;
         }
 
         Serial.print("  V_IRQ_INDEX = ");
@@ -119,9 +119,9 @@ public:
     {
         if (s_dmaIrqObjectTable[dmChannel] == this)
         {
-            s_refCountHandler--;
+            int32_t refCount = s_refCountHandler--;
 
-            if (s_refCountHandler == 0)
+            if (refCount == 0)
             {
                 irq_set_enabled(V_IRQ_INDEX ? DMA_IRQ_1 : DMA_IRQ_0, false);
                 irq_remove_handler(V_IRQ_INDEX ? DMA_IRQ_1 : DMA_IRQ_0, dmaFinishIrq);
@@ -159,10 +159,10 @@ private:
 
 template <uint V_IRQ_INDEX>
 NeoRp2040DmaState<V_IRQ_INDEX>* NeoRp2040DmaState<V_IRQ_INDEX>::s_dmaIrqObjectTable[NUM_DMA_CHANNELS] =
-{
-nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
-nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
-};
+    {
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr,
+        nullptr, nullptr, nullptr, nullptr, nullptr, nullptr
+    };
 
 template <uint V_IRQ_INDEX>
 volatile int32_t NeoRp2040DmaState<V_IRQ_INDEX>::s_refCountHandler = 0;

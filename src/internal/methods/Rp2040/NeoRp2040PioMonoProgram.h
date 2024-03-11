@@ -72,12 +72,12 @@ protected:
     static constexpr uint8_t TH1 = 1;
     static constexpr uint8_t TL1 = 1;
 
-    // changed from constepr with initializtion due to 
+    // changed from constexpr with initializtion due to 
     // that is only supported in c17+
     static const uint16_t program_instructions[];
 
 public:
-    // changed from constepr with initializtion due to 
+    // changed from constexpr with initializtion due to 
     // that is only supported in c17+
     static const struct pio_program program;
 
@@ -133,12 +133,12 @@ protected:
     static constexpr uint8_t TH1 = 2;
     static constexpr uint8_t TL1 = 1;
 
-    // changed from constepr with initializtion due to 
+    // changed from constexpr with initializtion due to 
     // that is only supported in c17+
     static const uint16_t program_instructions[];
 
 public:
-    // changed from constepr with initializtion due to 
+    // changed from constexpr with initializtion due to 
     // that is only supported in c17+
     static const struct pio_program program;
 
@@ -156,17 +156,28 @@ public:
 
 // Program Wrapper
 // --------------------------------------------------------
+constexpr uint c_ProgramNotLoaded = static_cast<uint>(-1);
+
 template<typename T_CADENCE>
 class NeoRp2040PioMonoProgram
 {
 public:
     static inline uint add(PIO pio_instance)
     {
-        assert(pio_can_add_program(pio_instance, &T_CADENCE::program));
-        return pio_add_program(pio_instance, &T_CADENCE::program);
+        if (s_loadedOffset == c_ProgramNotLoaded)
+        {
+            assert(pio_can_add_program(pio_instance, &T_CADENCE::program));
+            s_loadedOffset = pio_add_program(pio_instance, &T_CADENCE::program);
+        }
+        return s_loadedOffset;
     }
 
-    static inline void init(PIO pio_instance, uint sm, uint offset, uint pin, float bitrate, uint shiftBits)
+    static inline void init(PIO pio_instance, 
+            uint sm, 
+            uint offset, 
+            uint pin, 
+            float bitrate, 
+            uint shiftBits)
     {
         float div = clock_get_hz(clk_sys) / (bitrate * T_CADENCE::bit_cycles);
         pio_sm_config c = T_CADENCE::get_default_config(offset);
@@ -189,6 +200,12 @@ public:
         // Set the state machine running
         pio_sm_set_enabled(pio_instance, sm, true);
     }
+
+private:
+    static uint s_loadedOffset; // singlet instance of loaded program
 };
+
+template<typename T_CADENCE>
+uint NeoRp2040PioMonoProgram<T_CADENCE>::s_loadedOffset = c_ProgramNotLoaded;
 
 #endif

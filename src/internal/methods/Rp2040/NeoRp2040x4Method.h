@@ -52,16 +52,18 @@ public:
     typedef NeoNoSettings SettingsObject;
 
     NeoRp2040x4MethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
-        _sizeData(NeoUtil::RoundUp(pixelCount * elementSize + settingsSize, c_DataByteAlignment)),
-        _pin(pin)
+        _sizeData(pixelCount * elementSize + settingsSize),
+        _pin(pin),
+        _mergedFifoCount((_pio.Instance->dbg_cfginfo & PIO_DBG_CFGINFO_FIFO_DEPTH_BITS) * 2) // merged TX / RX FIFO buffer in words
     {
         construct();
     }
 
     NeoRp2040x4MethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(NeoUtil::RoundUp(pixelCount* elementSize + settingsSize, c_DataByteAlignment)),
+        _sizeData(pixelCount* elementSize + settingsSize),
         _pin(pin),
-        _pio(channel)
+        _pio(channel),
+        _mergedFifoCount((_pio.Instance->dbg_cfginfo& PIO_DBG_CFGINFO_FIFO_DEPTH_BITS) * 2) // merged TX / RX FIFO buffer in words
     {
         construct();
     }
@@ -93,36 +95,47 @@ public:
 
     bool IsReadyToUpdate() const
     {
-        return _dmaState.IsReadyToSend(T_SPEED::ResetTimeUs + _fifoCacheLatency);
+        return _dmaState.IsReadyToSend(T_SPEED::ResetTimeUs + _fifoCacheEmptyDelta);
     }
 
     void Initialize()
     {
         // Select the largest FIFO fetch size that aligns with our data size
         // BUT, since RP2040 is little endian, if the source element size is
-        // 8 bits, then you can't use larger shift bits as it accounts for 
-        // enianess and will mangle the order thinking its source was a 16/32 bits
-        // UNLESS, you use channel_config_set_bswap(), see below
-        uint shiftBits = 8;
+        // 8 bits, then the larger shift bits accounts for endianess
+        // and will mangle the order thinking its source was a 16/32 bits
+        // must you use channel_config_set_bswap() to address this, see below
+        uint fifoWordBits = 8; // size of a FIFO word in bits
         
         if (_sizeData % 4 == 0)
         {
-            shiftBits = 32;
+            // data is 4 byte aligned in size,
+            // use a 32 bit fifo word for effeciency
+            fifoWordBits = 32;
         }
         else if (_sizeData % 2 == 0)
         {
-            shiftBits = 16;
+            // data is 2 byte aligned in size,
+            // use a 16 bit fifo word for effeciency
+            fifoWordBits = 16;
         }
         
-        dma_channel_transfer_size dmaTransferSize = static_cast<dma_channel_transfer_size>(shiftBits / 16);
-        uint transfer_count = _sizeData / (shiftBits / 8);;
+        // calc the two related values from fifoWordBits
+        dma_channel_transfer_size dmaTransferSize = static_cast<dma_channel_transfer_size>(fifoWordBits / 16);
+        uint dmaTransferCount = _sizeData / (fifoWordBits / 8);;
 
-        // merged TX/RX FIFO buffer is 8 words, 
-        //    add another word for IRQ trigger latency (error) as too short is catastrophic
-        // shiftBits is the size of a FIFO word in bits
+        // IRQ triggers on DMA buffer finished, 
+        // not the FIFO buffer finished sending, 
+        // so we calc this delta so it can be added to the reset time
+        //
+ 
         // 1000000.0f / T_SPEED::BitRateHz = us to send one bit
         float bitLengthUs = 1000000.0f / T_SPEED::BitRateHz;
-        _fifoCacheLatency = bitLengthUs * shiftBits * 9.0f; 
+
+        // _mergedFifoCount is merged TX/RX FIFO buffer in words
+        // Add another word for any IRQ trigger latency (error) as 
+        // too short is catastrophic and too long is fine
+        _fifoCacheEmptyDelta = bitLengthUs * fifoWordBits * (_mergedFifoCount + 1);
 
 Serial.print(", _pio.Instance = ");
 Serial.print((_pio.Instance == pio1));
@@ -130,62 +143,74 @@ Serial.print(", _sizeData = ");
 Serial.print(_sizeData);
 Serial.print(", dmaTransferSize = ");
 Serial.print(dmaTransferSize);
-Serial.print(", transfer_count = ");
-Serial.print(transfer_count);
-Serial.print(", shiftBits = ");
-Serial.print(shiftBits);
-Serial.print(", _fifoCacheLatency = ");
-Serial.print(_fifoCacheLatency);
+Serial.print(", dmaTransferCount = ");
+Serial.print(dmaTransferCount);
+Serial.print(", fifoWordBits = ");
+Serial.print(fifoWordBits);
+Serial.print(", _mergedFifoCount = ");
+Serial.print(_mergedFifoCount);
+Serial.print(", _fifoCacheEmptyDelta = ");
+Serial.print(_fifoCacheEmptyDelta);
 
 
 
         // Our assembled program needs to be loaded into this PIO's instruction
         // memory. This SDK function will find a location (offset) in the
         // instruction memory where there is enough space for our program. We need
-        // to remember this location!
+        //
         uint offset = T_SPEED::add(_pio.Instance);
-Serial.println(" *");
-        // Find a free state machine on our chosen PIO (erroring if there are
-        // none?). Configure it to run our program, and start it, using the
-        // helper function we included in our .pio file.
+
+Serial.println();
+Serial.print("offset = ");
+Serial.print(offset);
+
+        // Find a free state machine on our chosen PIO. 
         _sm = pio_claim_unused_sm(_pio.Instance, true); // panic if none available
 
-Serial.print("_sm = ");
+Serial.print(", _sm = ");
 Serial.print(_sm);
 
-        T_SPEED::init(_pio.Instance, _sm, offset, _pin, T_SPEED::BitRateHz, shiftBits);
+        // Configure it to run our program, and start it, using the
+        // helper function we included in our .pio file.
+        T_SPEED::init(_pio.Instance, 
+            _sm, 
+            offset, 
+            _pin, 
+            T_SPEED::BitRateHz, 
+            fifoWordBits);
         
+        // invert output if needed
         if (V_INVERT)
         {
-            gpio_set_oeover(_pin, GPIO_OVERRIDE_INVERT);
+            gpio_set_outover(_pin, GPIO_OVERRIDE_INVERT);
         }
 
-        // Set up DMA transfer
+        // find a free dma channel
         _dmaChannel = dma_claim_unused_channel(true); // panic if none available
 
 Serial.print(", *_dmaChannel = ");
 Serial.print(_dmaChannel);
 Serial.println();
 
-        // register for IRQ shared static endTime update
+        // register for IRQ shared static endTime updates
         _dmaState.Register(_dmaChannel);
 
+        // Set up DMA transfer
         dma_channel_config dmaConfig = dma_channel_get_default_config(_dmaChannel);
         channel_config_set_transfer_data_size(&dmaConfig, dmaTransferSize);
         channel_config_set_read_increment(&dmaConfig, true);
         channel_config_set_write_increment(&dmaConfig, false);
-        // source is byte data, even with 16/32 transfer size
+        // source is byte data stream, even with 16/32 transfer size
         channel_config_set_bswap(&dmaConfig, true); 
 
         // Set DMA trigger
-//        channel_config_set_irq_quiet(&dmaConfig, true);
         channel_config_set_dreq(&dmaConfig, pio_get_dreq(_pio.Instance, _sm, true));
 
         dma_channel_configure(_dmaChannel, 
             &dmaConfig,
             &(_pio.Instance->txf[_sm]),  // dest
             _dataSending,                // src
-            transfer_count,
+            dmaTransferCount,
             false);
 
         dma_irqn_set_channel_enabled(V_IRQ_INDEX, _dmaChannel, true);
@@ -204,7 +229,7 @@ Serial.println();
         // start next send
         // 
         dma_channel_set_read_addr(_dmaChannel, _dataEditing, false);
-        pio_sm_clear_fifos(_pio.Instance, _sm); // not really needed
+//        pio_sm_clear_fifos(_pio.Instance, _sm); // not really needed
         dma_channel_start(_dmaChannel); // Start new transfer
 
         if (maintainBufferConsistency)
@@ -240,14 +265,13 @@ Serial.println();
     }
 
 private:
-    static constexpr uint8_t c_DataByteAlignment = 1; // DMA_SIZE_8 or  4 for DMA_SIZE_32
-
     const size_t  _sizeData;     // Size of '_data*' buffers 
     const uint8_t _pin;          // output pin number
     const T_PIO_INSTANCE _pio;   // holds instance for multi channel support
+    const uint8_t _mergedFifoCount;
 
     NeoRp2040DmaState<V_IRQ_INDEX> _dmaState;   // Latch timing reference
-    uint32_t _fifoCacheLatency; // delta between dma IRQ finished and PIO Fifo empty
+    uint32_t _fifoCacheEmptyDelta; // delta between dma IRQ finished and PIO Fifo empty
 
     // Holds data stream which include LED color values and other settings as needed
     uint8_t*  _dataEditing;   // exposed for get and set
@@ -347,7 +371,7 @@ typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance1, tr
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance1, true> Rp2040x4Pio1800KbpsInvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance1, true> Rp2040x4Pio1400KbpsInvertedMethod;
 
-// IRQ 1 method is the default method 
+// PIO 1 method is the default method, and still x4 instances 
 typedef Rp2040x4Pio1Ws2812xMethod NeoWs2813Method;
 typedef Rp2040x4Pio1Ws2812xMethod NeoWs2812xMethod;
 typedef Rp2040x4Pio1800KbpsMethod NeoWs2812Method;
