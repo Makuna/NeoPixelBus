@@ -30,7 +30,7 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-#if defined(__arm__) && !defined(ARDUINO_ARCH_NRF52840)
+#if defined(__arm__) && !defined(ARDUINO_ARCH_NRF52840) && !defined(ARDUINO_ARCH_RP2040)
 
 template<typename T_SPEED> class NeoArmMethodBase
 {
