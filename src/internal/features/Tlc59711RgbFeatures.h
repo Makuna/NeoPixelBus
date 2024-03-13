@@ -27,7 +27,9 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 // Four byte settings header per 24 bytes color data
-//    12 channel, 16 bit, grouped RGB
+//    12 channel, 16 bit, grouped in chip and data reversed order 
+//    (BGR3,BGR2,BGR1,BGR0)
+// 
 // Write Command
 // |      OUTTMG - 1 rising edge, 0 falling edge
 // |      | EXTGCK - 0 internal clock, 1 SCKI clock
@@ -35,7 +37,7 @@ License along with NeoPixel.  If not, see
 // |      | | | DSPRPT - 0/1 enabled auto display repeat
 // |      | | | | BLANK - 0 enabled, 1 blank
 // |      | | | | | BC (3x7) RGB Brightness control
-// |      | | | | | |   red   green    blue
+// |      | | | | | |  blue   green    red
 // |      | | | | | |     |       |       | color data (24 bytes) ->
 // 100101 1 0 1 1 0 1111111 1111111 1111111 xxxxxxxx xxxxxxxx
 // 765432 1 0 7 6 5 4321076 5432107 6543210 <- bit order within byte
@@ -47,7 +49,7 @@ enum Tlc69711_Control
     Tlc69711_Control_ExternalClock = 0x01,
 
     Tlc69711_Control_DisplayTimerReset = 0x80,
-    Tlc69711_Control_AutoDisplayRepeat = 0x40,
+    Tlc69711_Control_AutoDisplayRepeat = 0x40, // keep the last request displayed
     Tlc69711_Control_Blank = 0x20,
 
     Tlc69711_Control_Mask1 = 0x03,  // mask of this enum for first byte of encoded settings
@@ -118,9 +120,9 @@ public:
         }
 
         *encoded++ = 0b10010100 | (control & Tlc69711_Control_Mask1);
-        *encoded++ = (control & Tlc69711_Control_Mask2) | settings.RedGroupBrightness >> 2;
-        *encoded++ = settings.RedGroupBrightness << 5 | settings.GreenGroupBrightness >> 1;
-        *encoded = settings.GreenGroupBrightness << 7 | settings.BlueGroupBrightness;
+        *encoded++ = (control & Tlc69711_Control_Mask2) | settings.BlueGroupBrightness >> 2;
+        *encoded++ = settings.BlueGroupBrightness << 5 | settings.GreenGroupBrightness >> 1;
+        *encoded = settings.GreenGroupBrightness << 7 | settings.RedGroupBrightness;
     }
 
     static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
