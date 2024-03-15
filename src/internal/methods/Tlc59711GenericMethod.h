@@ -31,10 +31,12 @@ License along with NeoPixel.  If not, see
 #include "TwoWireBitBangImpleAvr.h"
 #else
 #include "TwoWireBitBangImple.h"
+#include "TwoWireDebugImple.h"
 #endif
 
 
-template<typename T_TWOWIRE> class Tlc59711MethodBase
+template <typename T_TWOWIRE> 
+class Tlc59711MethodBase
 {
 public:
     typedef typename T_TWOWIRE::SettingsObject SettingsObject;
@@ -102,35 +104,31 @@ public:
 #endif
         }
 
-        const size_t sizeSettings = (_sizeSettings / 2); // we have two variants
+        const size_t sizeSetting = (_sizeSettings / 2); // we have two variants
         const uint8_t* pSettingsA = _data;
-        const uint8_t* pSettingsB = _data + sizeSettings;
+        const uint8_t* pSettingsB = _data + sizeSetting;
         // expects chips in reverse order
-        uint8_t* pData = _data + _sizeData;
+        uint8_t* pData = _data + _sizeData - 1;
         uint8_t* pDataEnd = _data + _sizeSettings;
         const uint8_t* pSettings = pSettingsA;
         uint8_t reversedData[c_dataPerChipSize];
 
+//        noInterrupts();
         _wire.beginTransaction();
 
         while (pData > pDataEnd)
         {
             // data is in reverse order when sent
             // copy it in reverse order to temp buffer reversedData
-            // but it is also in 16 bit big endian and using a uint16_T
-            // would cause little ending ordering so we have to do it
-            // by bytes by also by pairs
             uint8_t* pSrcEnd = pData - c_dataPerChipSize;
             uint8_t* pDest = reversedData;
             while (pData > pSrcEnd)
             {
-                pData -= 2; // pre decrement 
-                *pDest++ = *pData++; // copy top of uint16_t big endian, inc to next
-                *pDest++ = *pData--; // copy bottom of uint16_t big endian, dec to original
+                *pDest++ = *pData--; 
             }
 
             // settings
-            _wire.transmitBytes(pSettings, sizeSettings);
+            _wire.transmitBytes(pSettings, sizeSetting);
 
             // send this chips "fixed order" data
             _wire.transmitBytes(reversedData, c_dataPerChipSize);
@@ -145,8 +143,9 @@ public:
                 pSettings = pSettingsA;
             }
         }
-        
+
         _wire.endTransaction();
+//        interrupts();
 
         _endTime = micros();
     }

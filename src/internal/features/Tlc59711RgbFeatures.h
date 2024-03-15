@@ -44,6 +44,8 @@ License along with NeoPixel.  If not, see
 
 enum Tlc69711_Control
 {
+    // based on info above, but applied to
+    // individual bytes
     Tlc69711_Control_EmiFallingEdge = 0x00,
     Tlc69711_Control_EmiRisingEdge = 0x02,
     Tlc69711_Control_ExternalClock = 0x01,
@@ -51,9 +53,6 @@ enum Tlc69711_Control
     Tlc69711_Control_DisplayTimerReset = 0x80,
     Tlc69711_Control_AutoDisplayRepeat = 0x40, // keep the last request displayed
     Tlc69711_Control_Blank = 0x20,
-
-    Tlc69711_Control_Mask1 = 0x03,  // mask of this enum for first byte of encoded settings
-    Tlc69711_Control_Mask2 = 0xe0,   // mask of this enum for second byte of encoded settings
 
     Tlc69711_Control_Default = Tlc69711_Control_EmiRisingEdge | 
             Tlc69711_Control_DisplayTimerReset | 
@@ -98,13 +97,12 @@ public:
     typedef Tlc69711Settings SettingsObject;
 
     static constexpr size_t SettingsPerChipSize = 4;
-
     static constexpr size_t SettingsSize = 2 * SettingsPerChipSize; 
 
     static void Encode(uint8_t* encoded, const SettingsObject& settings, bool emiAlternate = false)
     {
         uint8_t control = settings.Control;
-
+        
         if (emiAlternate)
         {
             if (control & Tlc69711_Control_EmiRisingEdge)
@@ -118,10 +116,10 @@ public:
                 control |= Tlc69711_Control_EmiRisingEdge;
             }
         }
-
+        
         *encoded++ = 0b10010100 | (control & Tlc69711_Control_Mask1);
         *encoded++ = (control & Tlc69711_Control_Mask2) | settings.BlueGroupBrightness >> 2;
-        *encoded++ = settings.BlueGroupBrightness << 5 | settings.GreenGroupBrightness >> 1;
+        *encoded++ = settings.BlueGroupBrightness << 6 | settings.GreenGroupBrightness >> 1;
         *encoded = settings.GreenGroupBrightness << 7 | settings.RedGroupBrightness;
     }
 
@@ -152,7 +150,8 @@ public:
 
         // encode two, for alternating use for EMI reduction 
         Encode(pSet, settings, false);
-        Encode(pSet + SettingsPerChipSize, settings, true);
+        pSet += SettingsPerChipSize;
+        Encode(pSet, settings, true);
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
@@ -166,6 +165,11 @@ public:
         // settings are at the front of the data stream
         return pData + SettingsSize;
     }
+
+private:
+    static constexpr uint8_t Tlc69711_Control_Mask1 = 0x03;  // mask of this enum for first byte of encoded settings
+    static constexpr uint8_t Tlc69711_Control_Mask2 = 0xe0;  // mask of this enum for second byte of encoded settings
+
 };
 
 class Tlc59711RgbFeature :
