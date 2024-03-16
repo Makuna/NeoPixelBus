@@ -107,24 +107,25 @@ public:
         const size_t sizeSetting = (_sizeSettings / 2); // we have two variants
         const uint8_t* pSettingsA = _data;
         const uint8_t* pSettingsB = _data + sizeSetting;
-        // expects chips in reverse order
-        uint8_t* pData = _data + _sizeData - 1;
-        uint8_t* pDataEnd = _data + _sizeSettings;
         const uint8_t* pSettings = pSettingsA;
-        uint8_t reversedData[c_dataPerChipSize];
 
-//        noInterrupts();
+        uint8_t reversedData[c_dataPerChipSize];
+        uint16_t* pSrc = reinterpret_cast<uint16_t*>(_data + _sizeData);
+        uint16_t* pSrcEnd = reinterpret_cast<uint16_t*>(_data + _sizeSettings);
+        
+        //        noInterrupts();
         _wire.beginTransaction();
 
-        while (pData > pDataEnd)
+        while (pSrc > pSrcEnd)
         {
-            // data is in reverse order when sent
+            // data needs to be in reverse order when sent
             // copy it in reverse order to temp buffer reversedData
-            uint8_t* pSrcEnd = pData - c_dataPerChipSize;
-            uint8_t* pDest = reversedData;
-            while (pData > pSrcEnd)
+            // but it is also 16 bit that retains order
+            uint16_t* pDest = reinterpret_cast<uint16_t*>(reversedData);
+            uint16_t* pDestEnd = reinterpret_cast<uint16_t*>(reversedData + c_dataPerChipSize);
+            while (pDest < pDestEnd)
             {
-                *pDest++ = *pData--; 
+                *pDest++ = *(--pSrc);
             }
 
             // settings
