@@ -113,7 +113,6 @@ public:
         uint16_t* pSrc = reinterpret_cast<uint16_t*>(_data + _sizeData);
         uint16_t* pSrcEnd = reinterpret_cast<uint16_t*>(_data + _sizeSettings);
         
-        //        noInterrupts();
         _wire.beginTransaction();
 
         while (pSrc > pSrcEnd)
@@ -146,7 +145,6 @@ public:
         }
 
         _wire.endTransaction();
-//        interrupts();
 
         _endTime = micros();
     }
@@ -196,7 +194,7 @@ typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Tlc59711Spi1MhzMethod;
 typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Tlc59711Spi500KhzMethod;
 typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeedHz>> Tlc59711SpiHzMethod;
 
-typedef Tlc59711Spi10MhzMethod Tlc59711SpiMethod;
+typedef Tlc59711Spi2MhzMethod Tlc59711SpiMethod;
 #endif
 
 #if defined(ARDUINO_ARCH_ESP32)
@@ -210,7 +208,7 @@ typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Tlc59711Esp32Vspi1MhzM
 typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Tlc59711Esp32Vspi500KhzMethod;
 typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeedHz>> Tlc59711Esp32VspiHzMethod;
 
-typedef Tlc59711Spi10MhzMethod Tlc59711Esp32VspiMethod;
+typedef Tlc59711Spi2MhzMethod Tlc59711Esp32VspiMethod;
 
 #include "TwoWireHspiImple.h"
 typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed40Mhz>> Tlc59711Esp32Hspi40MhzMethod;
@@ -222,5 +220,5 @@ typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed1Mhz>> Tlc59711Esp32Hspi1Mhz
 typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed500Khz>> Tlc59711Esp32Hspi500KhzMethod;
 typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeedHz>> Tlc59711Esp32HspiHzMethod;
 
-typedef Tlc59711Esp32Hspi10MhzMethod Tlc59711Esp32HspiMethod;
+typedef Tlc59711Esp32Hspi2MhzMethod Tlc59711Esp32HspiMethod;
 #endif
