@@ -90,11 +90,11 @@ public:
         // data
         _wire.transmitBytes(_data, _sizeData);
 
-       // reset frame
+        // reset frame
         _wire.transmitBytes(resetFrame, sizeof(resetFrame));
         
         // end frame 
-        
+        //
         // one bit for every two pixels with no less than 1 byte
         for (size_t endFrameByte = 0; endFrameByte < _sizeEndFrame; endFrameByte++)
         {

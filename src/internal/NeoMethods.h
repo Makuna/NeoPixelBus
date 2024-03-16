@@ -34,6 +34,7 @@ License along with NeoPixel.  If not, see
 #include "methods/Ws2801GenericMethod.h"
 #include "methods/P9813GenericMethod.h"
 #include "methods/Tlc5947GenericMethod.h"
+#include "methods/Tlc59711GenericMethod.h"
 #include "methods/Sm16716GenericMethod.h"
 #include "methods/Mbi6033GenericMethod.h"
 
