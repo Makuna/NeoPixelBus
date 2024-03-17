@@ -294,6 +294,16 @@ public:
     static const uint32_t ResetTimeUs = 300; // us between data send bursts to reset for next update
 };
 
+// NeoEsp8266UartSpeedWs2805 contains the timing constant used to get NeoPixelBus running for Ws2805
+// Pulse cycle = 1.71  = 1.368 longer than normal, 0.731 slower, NeoEsp8266UartSpeedApa1066
+class NeoEsp8266UartSpeedWs2805
+{
+public:
+    static const uint32_t ByteSendTimeUs = 14; // us it takes to send a single pixel element at 400khz speed
+    static const uint32_t UartBaud = 2339181; // APA106 pulse cycle of 1.71us, 4 serial bytes per NeoByte
+    static const uint32_t ResetTimeUs = 300; // us between data send bursts to reset for next update
+};
+
 class NeoEsp8266UartSpeedSk6812 : public NeoEsp8266UartSpeed800KbpsBase
 {
 public:
@@ -433,6 +443,7 @@ private:
 
 // uart 0 
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart0Ws2812xMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2805, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart0Ws2805Method; 
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart0Sk6812Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1814, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart0Tm1814Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1829, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart0Tm1829Method;
@@ -449,6 +460,7 @@ typedef NeoEsp8266Uart0Sk6812Method NeoEsp8266Uart0Lc8812Method;
 
 // uart 1
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart1Ws2812xMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2805, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart1Ws2805Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart1Sk6812Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1814, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart1Tm1814Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1829, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart1Tm1829Method;
@@ -465,6 +477,7 @@ typedef NeoEsp8266Uart1Sk6812Method NeoEsp8266Uart1Lc8812Method;
 
 // uart 0 async
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart0Ws2812xMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2805, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart0Ws2805Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart0Sk6812Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1814, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart0Tm1814Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1829, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart0Tm1829Method;
@@ -481,6 +494,7 @@ typedef NeoEsp8266AsyncUart0Sk6812Method NeoEsp8266AsyncUart0Lc8812Method;
 
 // uart 1 async
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart1Ws2812xMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2805, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart1Ws2805Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart1Sk6812Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1814, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart1Tm1814Method;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1829, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart1Tm1829Method;
@@ -499,6 +513,7 @@ typedef NeoEsp8266AsyncUart1Sk6812Method NeoEsp8266AsyncUart1Lc8812Method;
 //
 // uart 0 
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart0Ws2812xInvertedMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2805, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart0Ws2805InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart0Sk6812InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1814, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart0Tm1814InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1829, NeoEsp8266Uart<UartFeature0, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart0Tm1829InvertedMethod;
@@ -515,6 +530,7 @@ typedef NeoEsp8266Uart0Sk6812InvertedMethod NeoEsp8266Uart0Lc8812InvertedMethod;
 
 // uart 1
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart1Ws2812xInvertedMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2805, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart1Ws2805InvertedMethod; 
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartInverted> NeoEsp8266Uart1Sk6812InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1814, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart1Tm1814InvertedMethod; 
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1829, NeoEsp8266Uart<UartFeature1, NeoEsp8266UartContext>, NeoEsp8266UartNotInverted> NeoEsp8266Uart1Tm1829InvertedMethod;
@@ -531,6 +547,7 @@ typedef NeoEsp8266Uart1Sk6812InvertedMethod NeoEsp8266Uart1Lc8812InvertedMethod;
 
 // uart 0 async
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart0Ws2812xInvertedMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2805, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart0Ws2805InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart0Sk6812InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1814, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart0Tm1814InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1829, NeoEsp8266AsyncUart<UartFeature0, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart0Tm1829InvertedMethod;
@@ -547,6 +564,7 @@ typedef NeoEsp8266AsyncUart0Sk6812InvertedMethod NeoEsp8266AsyncUart0Lc8812Inver
 
 // uart 1 async
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2812x, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart1Ws2812xInvertedMethod;
+typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedWs2805, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart1Ws2805InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedSk6812, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartInverted> NeoEsp8266AsyncUart1Sk6812InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1814, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart1Tm1814InvertedMethod;
 typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeedTm1829, NeoEsp8266AsyncUart<UartFeature1, NeoEsp8266UartInterruptContext>, NeoEsp8266UartNotInverted> NeoEsp8266AsyncUart1Tm1829InvertedMethod;

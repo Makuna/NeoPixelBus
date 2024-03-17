@@ -131,6 +131,17 @@ void NeoEsp32RmtSpeedWs2812x::Translate(const void* src,
         RmtBit0, RmtBit1, RmtDurationReset);
 }
 
+void NeoEsp32RmtSpeedWs2805::Translate(const void* src,
+    rmt_item32_t* dest,
+    size_t src_size,
+    size_t wanted_num,
+    size_t* translated_size,
+    size_t* item_num)
+{
+    _translate(src, dest, src_size, wanted_num, translated_size, item_num,
+        RmtBit0, RmtBit1, RmtDurationReset);
+}
+
 void NeoEsp32RmtSpeedSk6812::Translate(const void* src,
     rmt_item32_t* dest,
     size_t src_size,
@@ -242,6 +253,17 @@ void NeoEsp32RmtInvertedSpeedWs2811::Translate(const void* src,
 }
 
 void NeoEsp32RmtInvertedSpeedWs2812x::Translate(const void* src,
+    rmt_item32_t* dest,
+    size_t src_size,
+    size_t wanted_num,
+    size_t* translated_size,
+    size_t* item_num)
+{
+    _translate(src, dest, src_size, wanted_num, translated_size, item_num,
+        RmtBit0, RmtBit1, RmtDurationReset);
+}
+
+void NeoEsp32RmtInvertedSpeedWs2805::Translate(const void* src,
     rmt_item32_t* dest,
     size_t src_size,
     size_t wanted_num,
