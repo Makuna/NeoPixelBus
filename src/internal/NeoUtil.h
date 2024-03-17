@@ -52,6 +52,8 @@ License along with NeoPixel.  If not, see
 
 #ifdef PIN_NOT_A_PIN
 #define NOT_A_PIN PIN_NOT_A_PIN
+#else
+#define NOT_A_PIN -1
 #endif
 
 #endif
