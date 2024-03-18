@@ -46,8 +46,7 @@ public:
             uint16_t pixelCount, 
             size_t elementSize, 
             size_t settingsSize) :
-        _sizeData(NeoUtil::RoundUp(pixelCount * elementSize, c_dataPerChipSize) + settingsSize),
-        _sizeSettings(settingsSize),
+        _sizeData(NeoUtil::RoundUp(pixelCount * elementSize, Tlc69711Settings::c_dataPerChipSize) + settingsSize),
         _wire(pinClock, pinData)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
@@ -104,14 +103,12 @@ public:
 #endif
         }
 
-        const size_t sizeSetting = (_sizeSettings / 2); // we have two variants
-        const uint8_t* pSettingsA = _data;
-        const uint8_t* pSettingsB = _data + sizeSetting;
-        const uint8_t* pSettings = pSettingsA;
+        const uint8_t* pSettings = _data; // settings at front
+        uint8_t reversedData[Tlc69711Settings::c_dataPerChipSize];
 
-        uint8_t reversedData[c_dataPerChipSize];
+        // note pSrc is pre-decremented before first use
         uint16_t* pSrc = reinterpret_cast<uint16_t*>(_data + _sizeData);
-        uint16_t* pSrcEnd = reinterpret_cast<uint16_t*>(_data + _sizeSettings);
+        uint16_t* pSrcEnd = reinterpret_cast<uint16_t*>(_data + Tlc69711Settings::c_settingsPerChipSize);
         
         _wire.beginTransaction();
 
@@ -119,29 +116,20 @@ public:
         {
             // data needs to be in reverse order when sent
             // copy it in reverse order to temp buffer reversedData
-            // but it is also 16 bit that retains order
+            // but it is also 16 bit that retains order (don't go changing endian)
             uint16_t* pDest = reinterpret_cast<uint16_t*>(reversedData);
-            uint16_t* pDestEnd = reinterpret_cast<uint16_t*>(reversedData + c_dataPerChipSize);
+            uint16_t* pDestEnd = reinterpret_cast<uint16_t*>(reversedData + Tlc69711Settings::c_dataPerChipSize);
             while (pDest < pDestEnd)
             {
+                // note pre-decrement on pSrc
                 *pDest++ = *(--pSrc);
             }
 
             // settings
-            _wire.transmitBytes(pSettings, sizeSetting);
+            _wire.transmitBytes(pSettings, Tlc69711Settings::c_settingsPerChipSize);
 
             // send this chips "fixed order" data
-            _wire.transmitBytes(reversedData, c_dataPerChipSize);
-
-            // toggle settings varient for next chip
-            if (pSettings == pSettingsA)
-            {
-                pSettings = pSettingsB;
-            }
-            else
-            {
-                pSettings = pSettingsA;
-            }
+            _wire.transmitBytes(reversedData, Tlc69711Settings::c_dataPerChipSize);
         }
 
         _wire.endTransaction();
@@ -171,10 +159,7 @@ public:
     }
 
 private:
-    static constexpr size_t c_dataPerChipSize = 24;
-
     const size_t   _sizeData;   // Size of '_data' buffer below
-    const size_t   _sizeSettings;
 
     T_TWOWIRE _wire;
     uint8_t* _data;       // Holds Settings and LED color values
