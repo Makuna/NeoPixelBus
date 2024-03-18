@@ -333,9 +333,9 @@ public:
     NeoNrf52xPwmN(NeoBusChannel channel) 
     {
         NRF_PWM_Type* PWM[] = {
-    NRF_PWM0,
-    NRF_PWM1,
-    NRF_PWM2
+            NRF_PWM0,
+            NRF_PWM1,
+            NRF_PWM2
 #ifdef NRF_PWM3
             ,NRF_PWM3
 #endif
