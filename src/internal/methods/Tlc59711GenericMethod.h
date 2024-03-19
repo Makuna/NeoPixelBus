@@ -34,6 +34,19 @@ License along with NeoPixel.  If not, see
 #include "TwoWireDebugImple.h"
 #endif
 
+// this custom faster speed works while 3Mhz doesn't
+// by works, meaning no flicker between chips
+// so it used as the default when speed isn't specified in the method
+class SpiSpeed3600Khz
+{
+public:
+    typedef NeoNoSettings SettingsObject;
+    SpiSpeed3600Khz() {};
+
+    static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
+
+    static constexpr uint32_t Clock = 3600000L;
+};
 
 template <typename T_TWOWIRE> 
 class Tlc59711MethodBase
@@ -104,7 +117,6 @@ public:
         }
 
         const uint8_t* pSettings = _data; // settings at front
-        uint8_t reversedData[Tlc69711Settings::c_dataPerChipSize];
 
         // note pSrc is pre-decremented before first use
         uint16_t* pSrc = reinterpret_cast<uint16_t*>(_data + _sizeData);
@@ -114,22 +126,24 @@ public:
 
         while (pSrc > pSrcEnd)
         {
-            // data needs to be in reverse order when sent
-            // copy it in reverse order to temp buffer reversedData
-            // but it is also 16 bit that retains order (don't go changing endian)
-            uint16_t* pDest = reinterpret_cast<uint16_t*>(reversedData);
-            uint16_t* pDestEnd = reinterpret_cast<uint16_t*>(reversedData + Tlc69711Settings::c_dataPerChipSize);
-            while (pDest < pDestEnd)
-            {
-                // note pre-decrement on pSrc
-                *pDest++ = *(--pSrc);
-            }
-
             // settings
             _wire.transmitBytes(pSettings, Tlc69711Settings::c_settingsPerChipSize);
 
-            // send this chips "fixed order" data
-            _wire.transmitBytes(reversedData, Tlc69711Settings::c_dataPerChipSize);
+            // data needs to be in reverse order when sent
+            // but it is also 16 bit that retains order 
+            // (don't go changing endian)
+            uint16_t dest;
+            uint16_t* pSrcChipEnd = pSrc - (Tlc69711Settings::c_dataPerChipSize / 2);
+            
+            while (pSrc > pSrcChipEnd)
+            {
+                // note pre-decrement on pSrc
+                dest = *(--pSrc);
+
+                // send this chips "fixed order" data
+                _wire.transmitByte(dest >> 8);
+                _wire.transmitByte(dest);
+            }
         }
 
         _wire.endTransaction();
@@ -179,7 +193,7 @@ typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Tlc59711Spi1MhzMethod;
 typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Tlc59711Spi500KhzMethod;
 typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeedHz>> Tlc59711SpiHzMethod;
 
-typedef Tlc59711Spi2MhzMethod Tlc59711SpiMethod;
+typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed3600Khz>> Tlc59711SpiMethod;
 #endif
 
 #if defined(ARDUINO_ARCH_ESP32)
@@ -193,7 +207,7 @@ typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed1Mhz>> Tlc59711Esp32Vspi1MhzM
 typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed500Khz>> Tlc59711Esp32Vspi500KhzMethod;
 typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeedHz>> Tlc59711Esp32VspiHzMethod;
 
-typedef Tlc59711Spi2MhzMethod Tlc59711Esp32VspiMethod;
+typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed3600Khz>> Tlc59711Esp32VspiMethod;
 
 #include "TwoWireHspiImple.h"
 typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed40Mhz>> Tlc59711Esp32Hspi40MhzMethod;
@@ -205,5 +219,5 @@ typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed1Mhz>> Tlc59711Esp32Hspi1Mhz
 typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed500Khz>> Tlc59711Esp32Hspi500KhzMethod;
 typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeedHz>> Tlc59711Esp32HspiHzMethod;
 
-typedef Tlc59711Esp32Hspi2MhzMethod Tlc59711Esp32HspiMethod;
+typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed3600Khz>> Tlc59711Esp32HspiMethod;
 #endif
