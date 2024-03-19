@@ -84,6 +84,8 @@ public:
     {
     }
     static constexpr uint8_t MaxBrightness = 127;
+    static constexpr size_t c_dataPerChipSize = 24;
+    static constexpr size_t c_settingsPerChipSize = 4;
 
     const uint8_t RedGroupBrightness;
     const uint8_t GreenGroupBrightness;
@@ -96,26 +98,12 @@ class Tlc59711ElementsSettings
 public:
     typedef Tlc69711Settings SettingsObject;
 
-    static constexpr size_t SettingsPerChipSize = 4;
-    static constexpr size_t SettingsSize = 2 * SettingsPerChipSize; 
 
-    static void Encode(uint8_t* encoded, const SettingsObject& settings, bool emiAlternate = false)
+    static constexpr size_t SettingsSize = Tlc69711Settings::c_settingsPerChipSize;
+
+    static void Encode(uint8_t* encoded, const SettingsObject& settings)
     {
         uint8_t control = settings.Control;
-        
-        if (emiAlternate)
-        {
-            if (control & Tlc69711_Control_EmiRisingEdge)
-            {
-                // clear the flag
-                control &= ~Tlc69711_Control_EmiRisingEdge;
-            }
-            else
-            {
-                // set the flag
-                control |= Tlc69711_Control_EmiRisingEdge;
-            }
-        }
         
         *encoded++ = 0b10010100 | (control & Tlc69711_Control_Mask1);
         *encoded++ = (control & Tlc69711_Control_Mask2) | settings.BlueGroupBrightness >> 2;
@@ -137,7 +125,7 @@ public:
         //   but the Tlc59711Method will store in a member variable
         //   BUT methods don't know anything about the feature settings 
 
-        // Thought C: (Winner winner, chicken dinner)
+        // Thought C: 
         //   Leave all current work alone
         //   Set SettingsSize to 2 times SettingsPerChipSize
         //   Consider it at the front of the data buffer
@@ -145,13 +133,14 @@ public:
         //   have our Tlc59711Method know about the two and send the 
         //   already interleaving settings and data
 
+        // Thought D: (current)
+        //   Leave all current work alone
+        //   Use one settings at the front of data
+        //   have the method know details how to duplicate it if needed for emi
+        //   as it already neeeds to interleaving settings per chip with data
+        
         // settings are at the front of the data stream
-        uint8_t* pSet = pData;
-
-        // encode two, for alternating use for EMI reduction 
-        Encode(pSet, settings, false);
-        pSet += SettingsPerChipSize;
-        Encode(pSet, settings, true);
+        Encode(pData, settings);
     }
 
     static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
