@@ -48,7 +48,7 @@ void loop() {
     strip4.SetPixelColor(0, RgbwColor(0, 0, 128, 255)); // white channel with a little blue
 
     // show them, 
-    // only on the last show, no matter the order, will the data be sent
+    // each strip will start sending on their show call
     strip1.Show();
     strip2.Show();
     strip3.Show();
