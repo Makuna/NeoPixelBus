@@ -68,7 +68,7 @@ class DotStarBgrFeature :
 
 // Word features
 
-class DotStarBgr64Feature :
+class DotStarBgr48Feature :
     public DotStarX4WordFeature<ColorIndexB, ColorIndexG, ColorIndexR>,
     public NeoElementsNoSettings
 {
