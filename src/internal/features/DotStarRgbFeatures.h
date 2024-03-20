@@ -26,40 +26,50 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+// Byte features
+
 class DotStarRgbFeature :
-    public DotStarX4Feature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public DotStarX4ByteFeature<ColorIndexR, ColorIndexG, ColorIndexB>,
     public NeoElementsNoSettings
 {
 };
 
 class DotStarRbgFeature :
-    public DotStarX4Feature<ColorIndexR, ColorIndexB, ColorIndexG>,
+    public DotStarX4ByteFeature<ColorIndexR, ColorIndexB, ColorIndexG>,
     public NeoElementsNoSettings
 {
 };
 
 
 class DotStarGbrFeature :
-    public DotStarX4Feature<ColorIndexG, ColorIndexB, ColorIndexR>,
+    public DotStarX4ByteFeature<ColorIndexG, ColorIndexB, ColorIndexR>,
     public NeoElementsNoSettings
 {
 };
 
 class DotStarGrbFeature :
-    public DotStarX4Feature<ColorIndexG, ColorIndexR, ColorIndexB>,
+    public DotStarX4ByteFeature<ColorIndexG, ColorIndexR, ColorIndexB>,
     public NeoElementsNoSettings
 {
 };
 
 
 class DotStarBrgFeature :
-    public DotStarX4Feature<ColorIndexB, ColorIndexR, ColorIndexG>,
+    public DotStarX4ByteFeature<ColorIndexB, ColorIndexR, ColorIndexG>,
     public NeoElementsNoSettings
 {
 };
 
 class DotStarBgrFeature :
-    public DotStarX4Feature<ColorIndexB, ColorIndexG, ColorIndexR>,
+    public DotStarX4ByteFeature<ColorIndexB, ColorIndexG, ColorIndexR>,
+    public NeoElementsNoSettings
+{
+};
+
+// Word features
+
+class DotStarBgr64Feature :
+    public DotStarX4WordFeature<ColorIndexB, ColorIndexG, ColorIndexR>,
     public NeoElementsNoSettings
 {
 };
