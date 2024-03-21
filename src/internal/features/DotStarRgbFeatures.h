@@ -73,3 +73,5 @@ class DotStarBgr48Feature :
     public NeoElementsNoSettings
 {
 };
+
+typedef DotStarBgr48Feature Hd108BgrFeature;

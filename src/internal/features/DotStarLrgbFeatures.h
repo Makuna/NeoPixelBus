@@ -72,3 +72,5 @@ class DotStarLbgr64Feature :
     public NeoElementsNoSettings
 {
 };
+
+typedef DotStarLbgr64Feature Hd108LbgrFeature;
