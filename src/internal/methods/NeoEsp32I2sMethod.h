@@ -32,6 +32,7 @@ License along with NeoPixel.  If not, see
 
 extern "C"
 {
+#include <rom/gpio.h>
 #include "Esp32_i2s.h"
 }
 
@@ -313,7 +314,7 @@ typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2sBusZero, NeoEs
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedApa106, NeoEsp32I2sBusZero, NeoEsp32I2sInverted> NeoEsp32I2s0Apa106InvertedMethod;
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-// (I2S_NUM_MAX == 2)
+// (SOC_I2S_NUM == 2)
 
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2sBusOne, NeoEsp32I2sNotInverted> NeoEsp32I2s1Ws2812xMethod;
 typedef NeoEsp32I2sMethodBase<NeoEsp32I2sSpeedWs2805, NeoEsp32I2sBusOne, NeoEsp32I2sNotInverted> NeoEsp32I2s1Ws2805Method;

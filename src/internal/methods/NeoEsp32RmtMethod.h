@@ -45,6 +45,7 @@ Esp32-hal-rmt.c
 
 extern "C"
 {
+#include <rom/gpio.h>
 #include <driver/rmt.h>
 }
 
