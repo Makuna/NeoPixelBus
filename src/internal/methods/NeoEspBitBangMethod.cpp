@@ -24,9 +24,13 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) && !defined(ARDUINO_ESP32C6_DEV) && !defined(ARDUINO_ESP32H2_DEV)
 
 #include <Arduino.h>
+
+#if ESP_IDF_VERSION_MAJOR>=5
+#include <soc/gpio_struct.h>
+#endif
 
 static inline uint32_t getCycleCount(void)
 {
