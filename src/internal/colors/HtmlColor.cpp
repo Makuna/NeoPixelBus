@@ -51,12 +51,17 @@ size_t HtmlColor::ToNumericalString(char* buf, size_t bufSize) const
 
         uint32_t color = Color;
         size_t indexLast = min(7U, bufSize - 1);
-        buf[indexLast] = '\0';
-        for (size_t indexDigit = indexLast; indexDigit > 0; --indexDigit) // note pre-decrement
+        for (size_t indexDigit = 6U; indexDigit > 0; --indexDigit) // note pre-decrement
         {
-            buf[indexDigit] = hexdigit(color & 0x0000000f);
+            // note: the amount of digits may not match the buffer size and the most significant bits are on the left.
+            // For 0xaabbcc and a bufSize of 4 we want "#aa\0", not "#cc\0".
+            if (indexDigit <= indexLast)
+            {
+                buf[indexDigit] = hexdigit(color & 0x0000000f);
+            }
             color >>= 4;
         }
+        buf[indexLast] = '\0';
 
         return indexLast + 1;
     }
