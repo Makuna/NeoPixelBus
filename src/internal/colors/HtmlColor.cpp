@@ -41,24 +41,24 @@ static inline char hexdigit(uint8_t v)
  *
  * @param buf the buffer to write the string to
  * @param bufSize the maximum buffer size (8 recommended for # + 123456 + null terminator)
- * @return The amount of chars written to buf.
+ * @return The amount of chars written to buf including the null terminator.
  */
-size_t HtmlColor::ToNumericalString(char *buf, size_t bufSize) const {
-  if (bufSize > 0) {
-    buf[0] = '#';
+size_t HtmlColor::ToNumericalString(char* buf, size_t bufSize) const
+{
+    if (bufSize > 0)
+    {
+        buf[0] = '#';
 
-    uint32_t color = Color;
-    for (uint8_t indexDigit = 6; indexDigit > 0; --indexDigit) {
-      if (bufSize > indexDigit) {
-        buf[indexDigit] = hexdigit(color & 0x0000000f);
-      }
-      color >>= 4;
+        uint32_t color = Color;
+        size_t indexLast = min(7U, bufSize - 1);
+        buf[indexLast] = '\0';
+        for (size_t indexDigit = indexLast; indexDigit > 0; --indexDigit) // note pre-decrement
+        {
+            buf[indexDigit] = hexdigit(color & 0x0000000f);
+            color >>= 4;
+        }
+
+        return indexLast + 1;
     }
-
-    size_t lastIndex = (bufSize < 7 ? bufSize - 1 : 7);
-    buf[lastIndex] = 0;
-
-    return lastIndex+1;
-  }
-  return 0;
+    return 0;
 }
