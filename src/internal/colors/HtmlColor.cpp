@@ -40,31 +40,24 @@ static inline char hexdigit(uint8_t v)
  * Generates a Html encoded hex color string (#aabbcc) with null termination.
  *
  * @param buf the buffer to write the string to
- * @param bufSize the maximum buffer size (8 recommended for # + 123456 + null terminator)
+ * @param bufSize the maximum buffer size (must be at least 8 characters)
  * @return The amount of chars written to buf including the null terminator.
  */
 size_t HtmlColor::ToNumericalString(char* buf, size_t bufSize) const
 {
-    if (bufSize > 0)
+    if (bufSize >= 8)
     {
         buf[0] = '#';
 
         uint32_t color = Color;
-        size_t indexLast = min(7U, bufSize - 1);
-        if (indexLast < 7)
-        {
-            // note: the amount of digits may not match the buffer size and the most significant bits are on the left.
-            // For 0xaabbcc and a bufSize of 4 we want "#aa\0", not "#cc\0".
-            color >>= 4 * (7 - indexLast);
-        }
-        for (size_t indexDigit = indexLast - 1; indexDigit > 0; --indexDigit) // note pre-decrement
+        for (size_t indexDigit = 6; indexDigit > 0; --indexDigit) // note pre-decrement
         {
             buf[indexDigit] = hexdigit(color & 0x0000000f);
             color >>= 4;
         }
-        buf[indexLast] = '\0';
+        buf[7] = '\0';
 
-        return indexLast + 1;
+        return 8;
     }
     return 0;
 }
