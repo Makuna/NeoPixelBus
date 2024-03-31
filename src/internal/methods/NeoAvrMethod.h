@@ -113,10 +113,10 @@ public:
     static const uint32_t ResetTimeUs = 300;
 };
 
-class NeoAvrSpeedWs2805 : public NeoAvrSpeed600KbpsBase
+class NeoAvrSpeedWs2805 : public NeoAvrSpeed800KbpsBase
 {
 public:
-    static const uint32_t ResetTimeUs = 300;
+    static const uint32_t ResetTimeUs = 2800;
 };
 
 class NeoAvrSpeedSk6812 : public NeoAvrSpeed800KbpsBase

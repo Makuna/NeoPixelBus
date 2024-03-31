@@ -87,11 +87,11 @@ public:
 class NeoEspBitBangSpeedWs2805
 {
 public:
-    const static uint32_t T0H = (F_CPU / 2857143 - CYCLES_LOOPTEST); // 0.35us
-    const static uint32_t T1H = (F_CPU / 740741 - CYCLES_LOOPTEST); // 1.35
-    const static uint32_t Period = (F_CPU / 606061 - CYCLES_LOOPTEST); // 1.65us
+    const static uint32_t T0H = (F_CPU / 3333333 - CYCLES_LOOPTEST); // 0.3us
+    const static uint32_t T1H = (F_CPU / 1265823 - CYCLES_LOOPTEST); // 0.795
+    const static uint32_t Period = (F_CPU / 917431 - CYCLES_LOOPTEST); // 1.09us
 
-    static const uint32_t ResetTimeUs = 300;
+    static const uint32_t ResetTimeUs = 2800;
     const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us, be generous
 };
 

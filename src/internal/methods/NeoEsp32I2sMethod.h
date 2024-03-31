@@ -49,9 +49,9 @@ public:
 class NeoEsp32I2sSpeedWs2805
 {
 public:
-    const static uint32_t I2sSampleRate = 72960;  //  588,235 hz / 8 = 73,529 sample rate
-    const static uint16_t ByteSendTimeUs = 14;
-    const static uint16_t ResetTimeUs = 300;
+    const static uint32_t I2sSampleRate = 114678;  //  917431 hz / 8 = 114678
+    const static uint16_t ByteSendTimeUs = 9;
+    const static uint16_t ResetTimeUs = 280;
 };
 
 class NeoEsp32I2sSpeedSk6812

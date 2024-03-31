@@ -145,9 +145,9 @@ public:
 class NeoEsp32RmtSpeedWs2805 : public NeoEsp32RmtSpeedBase
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(350, 1350);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(1350, 350);
-    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(300000); // 300us
+    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(300, 790);
+    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(790, 300);
+    const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(280000); // 300us
 
     static void IRAM_ATTR Translate(const void* src,
         rmt_item32_t* dest,
