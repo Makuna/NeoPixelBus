@@ -142,7 +142,7 @@ public:
     static const uint32_t CyclesT0h = (F_CPU / 3333333);
     static const uint32_t CyclesT1h = (F_CPU / 1265822);
     static const uint32_t Cycles = (F_CPU / 917431);
-    static const uint32_t ResetTimeUs = 280;
+    static const uint32_t ResetTimeUs = 300;  // spec is 280, intentially longer for compatiblity use
 };
 
 class NeoArmMk20dxSpeedPropsSk6812 : public NeoArmMk20dxSpeedProps800KbpsBase
@@ -474,7 +474,7 @@ public:
 class NeoArmSamd21g18aSpeedPropsWs2805 : public NeoArmSamd21g18aSpeedProps800KbpsBase
 {
 public:
-    static const uint32_t ResetTimeUs = 280;
+    static const uint32_t ResetTimeUs = 300; // spec is 280, intentially longer for compatiblity use
 };
 
 template<typename T_SPEEDPROPS> class NeoArmSamd21g18aSpeedBase
@@ -760,7 +760,7 @@ public:
     static const uint32_t CyclesT0h = static_cast<uint32_t>((0.30 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
     static const uint32_t CyclesT1h = static_cast<uint32_t>((0.79 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
     static const uint32_t Cycles = static_cast<uint32_t>((1.09 * ARM_OTHER_SCALE + 0.5) - (5 * ARM_OTHER_INST));
-    static const uint32_t ResetTimeUs = 280;
+    static const uint32_t ResetTimeUs = 300; // spec is 280, intentially longer for compatiblity use
 };
 
 class NeoArmOtherSpeedPropsSk6812 : public NeoArmOtherSpeedProps800KbpsBase

@@ -48,7 +48,7 @@ class NeoRp2040PioSpeedWs2805 : public NeoRp2040PioMonoProgram<NeoRp2040PioCaden
 {
 public:
     static constexpr float BitRateHz = 917431.19f; // 300+790
-    static constexpr uint32_t ResetTimeUs = 280;
+    static constexpr uint32_t ResetTimeUs = 300;  // spec is 280, intentially longer for compatiblity use
 };
 
 class NeoRp2040PioSpeedSk6812 : public NeoRp2040PioMonoProgram<NeoRp2040PioCadenceMono3Step>

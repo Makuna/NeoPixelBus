@@ -301,7 +301,7 @@ class NeoEsp8266UartSpeedWs2805
 public:
     static const uint32_t ByteSendTimeUs = 9; // us it takes to send a single pixel element at 400khz speed
     static const uint32_t UartBaud = 3669724; // pulse cycle of 1.09us, 917431bps * 4 serial bytes per NeoByte
-    static const uint32_t ResetTimeUs = 280; // us between data send bursts to reset for next update
+    static const uint32_t ResetTimeUs = 300; // spec is 280, intentially longer for compatiblity use
 };
 
 class NeoEsp8266UartSpeedSk6812 : public NeoEsp8266UartSpeed800KbpsBase
