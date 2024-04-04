@@ -54,11 +54,15 @@ License along with NeoPixel.  If not, see
 
 #elif defined(ARDUINO_ARCH_ESP32)
 
+#if !defined(ARDUINO_ESP32C6_DEV) && !defined(ARDUINO_ESP32H2_DEV)
 #include "methods/NeoEsp32I2sMethod.h"
 #include "methods/NeoEsp32RmtMethod.h"
-#include "methods/NeoEspBitBangMethod.h"
 #include "methods/DotStarEsp32DmaSpiMethod.h"
 #include "methods/NeoEsp32I2sXMethod.h"
+
+#include "methods/NeoEspBitBangMethod.h"
+#endif
+
 
 #elif defined(ARDUINO_ARCH_NRF52840) // must be before __arm__
 

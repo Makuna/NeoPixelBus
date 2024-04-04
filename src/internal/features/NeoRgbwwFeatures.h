@@ -49,3 +49,15 @@ class NeoRbgwwFeature :
     public NeoElementsNoSettings
 {
 };
+
+class NeoGrbwcFeature :
+    public Neo5ByteFeature<ColorIndexG, ColorIndexR, ColorIndexB, ColorIndexWW, ColorIndexCW>,
+    public NeoElementsNoSettings
+{
+};
+
+class NeoRgbwcFeature :
+    public Neo5ByteFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexWW, ColorIndexCW>,
+    public NeoElementsNoSettings
+{
+};
