@@ -335,12 +335,14 @@ typedef NeoAvrTm1814InvertedMethod NeoAvrTm1914InvertedMethod;
 
 // AVR doesn't have alternatives yet, so there is just the default
 typedef NeoAvrWs2812xMethod NeoWs2805Method;
+typedef NeoWs2805Method NeoWs2814Method;
 typedef NeoAvrWs2812xMethod NeoWs2813Method;
 typedef NeoAvrWs2812xMethod NeoWs2812xMethod;
 typedef NeoAvr800KbpsMethod NeoWs2812Method;
 typedef NeoAvrWs2812xMethod NeoWs2811Method;
 typedef NeoAvrWs2812xMethod NeoWs2816Method;
-typedef NeoAvrWs2805Method NeoWs2805Method;
+typedef NeoAvrWs2812xMethod NeoWs2805Method;
+typedef NeoWs2805Method NeoWs2814Method;
 typedef NeoAvrSk6812Method NeoSk6812Method;
 typedef NeoAvrSk6812Method NeoLc8812Method;
 typedef NeoAvrApa106Method NeoApa106Method;

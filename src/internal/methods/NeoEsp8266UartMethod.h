@@ -299,9 +299,9 @@ public:
 class NeoEsp8266UartSpeedWs2805
 {
 public:
-    static const uint32_t ByteSendTimeUs = 9; // us it takes to send a single pixel element at 400khz speed
+    static const uint32_t ByteSendTimeUs = 9; // us it takes to send a single pixel element at 917kbps speed
     static const uint32_t UartBaud = 3669724; // pulse cycle of 1.09us, 917431bps * 4 serial bytes per NeoByte
-    static const uint32_t ResetTimeUs = 300; // spec is 280, intentially longer for compatiblity use
+    static const uint32_t ResetTimeUs = 300; // spec is 280, intentionally longer for compatiblity use
 };
 
 class NeoEsp8266UartSpeedSk6812 : public NeoEsp8266UartSpeed800KbpsBase
@@ -471,6 +471,7 @@ typedef NeoEsp8266UartMethodBase<NeoEsp8266UartSpeed400Kbps, NeoEsp8266Uart<Uart
 typedef NeoEsp8266Uart1Ws2812xMethod NeoEsp8266Uart1Ws2813Method;
 typedef NeoEsp8266Uart1800KbpsMethod NeoEsp8266Uart1Ws2812Method;
 typedef NeoEsp8266Uart1Ws2812xMethod NeoEsp8266Uart1Ws2811Method;
+typedef NeoEsp8266Uart1Ws2805Method NeoEsp8266Uart1Ws2814Method;
 typedef NeoEsp8266Uart1Ws2812xMethod NeoEsp8266Uart1Ws2816Method;
 typedef NeoEsp8266Uart1Tm1814Method NeoEsp8266Uart1Tm1914Method;
 typedef NeoEsp8266Uart1Sk6812Method NeoEsp8266Uart1Lc8812Method;
@@ -489,6 +490,7 @@ typedef NeoEsp8266AsyncUart0Ws2812xMethod NeoEsp8266AsyncUart0Ws2813Method;
 typedef NeoEsp8266AsyncUart0800KbpsMethod NeoEsp8266AsyncUart0Ws2812Method;
 typedef NeoEsp8266AsyncUart0Ws2812xMethod NeoEsp8266AsyncUart0Ws2811Method;
 typedef NeoEsp8266AsyncUart0Ws2812xMethod NeoEsp8266AsyncUart0Ws2816Method;
+typedef NeoEsp8266AsyncUart0Ws2805Method NeoEsp8266AsyncUart0Ws2814Method;
 typedef NeoEsp8266AsyncUart0Tm1814Method NeoEsp8266AsyncUart0Tm1914Method;
 typedef NeoEsp8266AsyncUart0Sk6812Method NeoEsp8266AsyncUart0Lc8812Method;
 
@@ -506,6 +508,7 @@ typedef NeoEsp8266AsyncUart1Ws2812xMethod NeoEsp8266AsyncUart1Ws2813Method;
 typedef NeoEsp8266AsyncUart1800KbpsMethod NeoEsp8266AsyncUart1Ws2812Method;
 typedef NeoEsp8266AsyncUart1Ws2812xMethod NeoEsp8266AsyncUart1Ws2811Method;
 typedef NeoEsp8266AsyncUart1Ws2812xMethod NeoEsp8266AsyncUart1Ws2816Method;
+typedef NeoEsp8266AsyncUart1Ws2805Method NeoEsp8266AsyncUart1Ws2814Method;
 typedef NeoEsp8266AsyncUart1Tm1814Method NeoEsp8266AsyncUart1Tm1914Method;
 typedef NeoEsp8266AsyncUart1Sk6812Method NeoEsp8266AsyncUart1Lc8812Method;
 
@@ -525,6 +528,7 @@ typedef NeoEsp8266Uart0Ws2812xInvertedMethod NeoEsp8266Uart0Ws2813InvertedMethod
 typedef NeoEsp8266Uart0800KbpsInvertedMethod NeoEsp8266Uart0Ws2812InvertedMethod;
 typedef NeoEsp8266Uart0Ws2812xInvertedMethod NeoEsp8266Uart0Ws2811InvertedMethod;
 typedef NeoEsp8266Uart0Ws2812xInvertedMethod NeoEsp8266Uart0Ws2816InvertedMethod;
+typedef NeoEsp8266Uart0Ws2805InvertedMethod NeoEsp8266Uart0Ws2814InvertedMethod;
 typedef NeoEsp8266Uart0Tm1814InvertedMethod NeoEsp8266Uart0Tm1914InvertedMethod;
 typedef NeoEsp8266Uart0Sk6812InvertedMethod NeoEsp8266Uart0Lc8812InvertedMethod;
 
@@ -542,6 +546,7 @@ typedef NeoEsp8266Uart1Ws2812xInvertedMethod NeoEsp8266Uart1Ws2813InvertedMethod
 typedef NeoEsp8266Uart1800KbpsInvertedMethod NeoEsp8266Uart1Ws2812InvertedMethod;
 typedef NeoEsp8266Uart1Ws2812xInvertedMethod NeoEsp8266Uart1Ws2811InvertedMethod;
 typedef NeoEsp8266Uart1Ws2812xInvertedMethod NeoEsp8266Uart1Ws2816InvertedMethod;
+typedef NeoEsp8266Uart1Ws2805InvertedMethod NeoEsp8266Uart1Ws2814InvertedMethod;
 typedef NeoEsp8266Uart1Tm1814InvertedMethod NeoEsp8266Uart1Tm1914InvertedMethod;
 typedef NeoEsp8266Uart1Sk6812InvertedMethod NeoEsp8266Uart1Lc8812InvertedMethod;
 
@@ -559,6 +564,7 @@ typedef NeoEsp8266AsyncUart0Ws2812xInvertedMethod NeoEsp8266AsyncUart0Ws2813Inve
 typedef NeoEsp8266AsyncUart0800KbpsInvertedMethod NeoEsp8266AsyncUart0Ws2812InvertedMethod;
 typedef NeoEsp8266AsyncUart0Ws2812xInvertedMethod NeoEsp8266AsyncUart0Ws2811InvertedMethod;
 typedef NeoEsp8266AsyncUart0Ws2812xInvertedMethod NeoEsp8266AsyncUart0Ws2816InvertedMethod;
+typedef NeoEsp8266AsyncUart0Ws2805InvertedMethod NeoEsp8266AsyncUart0Ws2814InvertedMethod;
 typedef NeoEsp8266AsyncUart0Tm1814InvertedMethod NeoEsp8266AsyncUart0Tm1914InvertedMethod;
 typedef NeoEsp8266AsyncUart0Sk6812InvertedMethod NeoEsp8266AsyncUart0Lc8812InvertedMethod;
 
@@ -576,6 +582,7 @@ typedef NeoEsp8266AsyncUart1Ws2812xInvertedMethod NeoEsp8266AsyncUart1Ws2813Inve
 typedef NeoEsp8266AsyncUart1800KbpsInvertedMethod NeoEsp8266AsyncUart1Ws2812InvertedMethod;
 typedef NeoEsp8266AsyncUart1Ws2812xInvertedMethod NeoEsp8266AsyncUart1Ws2811InvertedMethod;
 typedef NeoEsp8266AsyncUart1Ws2812xInvertedMethod NeoEsp8266AsyncUart1Ws2816InvertedMethod;
+typedef NeoEsp8266AsyncUart1Ws2805InvertedMethod NeoEsp8266AsyncUart1Ws2814InvertedMethod;
 typedef NeoEsp8266AsyncUart1Tm1814InvertedMethod NeoEsp8266AsyncUart1Tm1914InvertedMethod;
 typedef NeoEsp8266AsyncUart1Sk6812InvertedMethod NeoEsp8266AsyncUart1Lc8812InvertedMethod;
 #endif

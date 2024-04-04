@@ -326,6 +326,7 @@ typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstanceN> Rp
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstanceN> Rp2040x4NGs1903Method;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstanceN> Rp2040x4N800KbpsMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstanceN> Rp2040x4N400KbpsMethod;
+typedef Rp2040x4NWs2805Method Rp2040x4NWs2814Method;
 
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstance0> Rp2040x4Pio0Ws2811Method;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance0> Rp2040x4Pio0Ws2812xMethod;
@@ -340,6 +341,7 @@ typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstance0> Rp
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance0> Rp2040x4Pio0Gs1903Method;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance0> Rp2040x4Pio0800KbpsMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance0> Rp2040x4Pio0400KbpsMethod;
+typedef Rp2040x4Pio0Ws2805Method Rp2040x4Pio0Ws2814Method;
 
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstance1> Rp2040x4Pio1Ws2811Method;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance1> Rp2040x4Pio1Ws2812xMethod;
@@ -354,6 +356,7 @@ typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstance1> Rp
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance1> Rp2040x4Pio1Gs1903Method;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance1> Rp2040x4Pio1800KbpsMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance1> Rp2040x4Pio1400KbpsMethod;
+typedef Rp2040x4Pio1Ws2805Method Rp2040x4Pio1Ws2814Method;
 
 // inverted
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstanceN, true> Rp2040x4NWs2811InvertedMethod;
@@ -369,6 +372,7 @@ typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstanceN, tr
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstanceN, true> Rp2040x4NGs1903InvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstanceN, true> Rp2040x4N800KbpsInvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstanceN, true> Rp2040x4N400KbpsInvertedMethod;
+typedef Rp2040x4NWs2805InvertedMethod Rp2040x4NWs2814InvertedMethod;
 
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstance0, true> Rp2040x4Pio0Ws2811InvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance0, true> Rp2040x4Pio0Ws2812xInvertedMethod;
@@ -383,6 +387,7 @@ typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstance0, tr
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance0, true> Rp2040x4Pio0Gs1903InvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance0, true> Rp2040x4Pio0800KbpsInvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance0, true> Rp2040x4Pio0400KbpsInvertedMethod;
+typedef Rp2040x4Pio0Ws2805InvertedMethod Rp2040x4Pio0Ws2814InvertedMethod;
 
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstance1, true> Rp2040x4Pio1Ws2811InvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance1, true> Rp2040x4Pio1Ws2812xInvertedMethod;
@@ -397,6 +402,7 @@ typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstance1, tr
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance1, true> Rp2040x4Pio1Gs1903InvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance1, true> Rp2040x4Pio1800KbpsInvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance1, true> Rp2040x4Pio1400KbpsInvertedMethod;
+typedef Rp2040x4Pio1Ws2805InvertedMethod Rp2040x4Pio1Ws2814InvertedMethod;
 
 // PIO 1 method is the default method, and still x4 instances 
 typedef Rp2040x4Pio1Ws2812xMethod NeoWs2813Method;
@@ -405,6 +411,7 @@ typedef Rp2040x4Pio1800KbpsMethod NeoWs2812Method;
 typedef Rp2040x4Pio1Ws2812xMethod NeoWs2811Method;
 typedef Rp2040x4Pio1Ws2812xMethod NeoWs2816Method;
 typedef Rp2040x4Pio1Ws2805Method NeoWs2805Method;
+typedef Rp2040x4Pio1Ws2814Method NeoWs2814Method;
 typedef Rp2040x4Pio1Sk6812Method NeoSk6812Method;
 typedef Rp2040x4Pio1Tm1814Method NeoTm1814Method;
 typedef Rp2040x4Pio1Tm1829Method NeoTm1829Method;
@@ -423,6 +430,7 @@ typedef Rp2040x4Pio1Ws2812xInvertedMethod NeoWs2811InvertedMethod;
 typedef Rp2040x4Pio1800KbpsInvertedMethod NeoWs2812InvertedMethod;
 typedef Rp2040x4Pio1Ws2812xInvertedMethod NeoWs2816InvertedMethod;
 typedef Rp2040x4Pio1Ws2805InvertedMethod NeoWs2805InvertedMethod;
+typedef Rp2040x4Pio1Ws2814InvertedMethod NeoWs2814InvertedMethod;
 typedef Rp2040x4Pio1Sk6812InvertedMethod NeoSk6812InvertedMethod;
 typedef Rp2040x4Pio1Tm1814InvertedMethod NeoTm1814InvertedMethod;
 typedef Rp2040x4Pio1Tm1829InvertedMethod NeoTm1829InvertedMethod;

@@ -91,7 +91,7 @@ public:
     const static uint32_t T1H = (F_CPU / 1265823 - CYCLES_LOOPTEST); // 0.795
     const static uint32_t Period = (F_CPU / 917431 - CYCLES_LOOPTEST); // 1.09us
 
-    static const uint32_t ResetTimeUs = 300; // spec is 280, intentially longer for compatiblity use
+    static const uint32_t ResetTimeUs = 300; // spec is 280, intentionally longer for compatiblity use
     const static uint32_t TLatch = (F_CPU / 22222 - CYCLES_LOOPTEST); // 45us, be generous
 };
 
@@ -302,6 +302,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedIntertek, NeoEspNotInverted, t
 typedef NeoEsp32BitBangWs2812xMethod NeoEsp32BitBangWs2813Method;
 typedef NeoEsp32BitBang800KbpsMethod NeoEsp32BitBangWs2812Method;
 typedef NeoEsp32BitBangWs2812xMethod NeoEsp32BitBangWs2816Method;
+typedef NeoEsp32BitBangWs2805Method NeoEsp32BitBangWs2814Method;
 typedef NeoEsp32BitBangTm1814Method NeoEsp32BitBangTm1914Method;
 typedef NeoEsp32BitBangSk6812Method NeoEsp32BitBangLc8812Method;
 
@@ -319,6 +320,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedIntertek, NeoEspInverted, true
 typedef NeoEsp32BitBangWs2812xInvertedMethod NeoEsp32BitBangWs2813InvertedMethod;
 typedef NeoEsp32BitBang800KbpsInvertedMethod NeoEsp32BitBangWs2812InvertedMethod;
 typedef NeoEsp32BitBangWs2812xInvertedMethod NeoEsp32BitBangWs2816InvertedMethod;
+typedef NeoEsp32BitBangWs2805InvertedMethod NeoEsp32BitBangWs2814InvertedMethod;
 typedef NeoEsp32BitBangTm1814InvertedMethod NeoEsp32BitBangTm1914InvertedMethod;
 typedef NeoEsp32BitBangSk6812InvertedMethod NeoEsp32BitBangLc8812InvertedMethod;
 
@@ -336,6 +338,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedIntertek, NeoEspNotInverted, f
 typedef NeoEsp32BitBangWs2812xMethod NeoEsp32BitBangWs2813NoIntrMethod;
 typedef NeoEsp32BitBang800KbpsMethod NeoEsp32BitBangWs2812NoIntrMethod;
 typedef NeoEsp32BitBangWs2812xMethod NeoEsp32BitBangWs2816NoIntrMethod;
+typedef NeoEsp32BitBangWs2805Method NeoEsp32BitBangWs2814NoIntrMethod;
 typedef NeoEsp32BitBangTm1814Method NeoEsp32BitBangTm1914NoIntrMethod;
 typedef NeoEsp32BitBangSk6812Method NeoEsp32BitBangLc8812NoIntrMethod;
 
@@ -353,6 +356,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedIntertek, NeoEspInverted, fals
 typedef NeoEsp32BitBangWs2812xInvertedMethod NeoEsp32BitBangWs2813InvertedNoIntrMethod;
 typedef NeoEsp32BitBang800KbpsInvertedMethod NeoEsp32BitBangWs2812InvertedNoIntrMethod;
 typedef NeoEsp32BitBangWs2812xInvertedMethod NeoEsp32BitBangWs2816InvertedNoIntrMethod;
+typedef NeoEsp32BitBangWs2805InvertedMethod NeoEsp32BitBangWs2814InvertedNoIntrMethod;
 typedef NeoEsp32BitBangTm1814InvertedMethod NeoEsp32BitBangTm1914InvertedNoIntrMethod;
 typedef NeoEsp32BitBangSk6812InvertedMethod NeoEsp32BitBangLc8812InvertedNoIntrMethod;
 
@@ -372,6 +376,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedIntertek, NeoEspNotInverted, t
 typedef NeoEsp8266BitBangWs2812xMethod NeoEsp8266BitBangWs2813Method;
 typedef NeoEsp8266BitBang800KbpsMethod NeoEsp8266BitBangWs2812Method;
 typedef NeoEsp8266BitBangWs2812xMethod NeoEsp8266BitBangWs2816Method;
+typedef NeoEsp8266BitBangWs2805Method NeoEsp8266BitBangWs2814Method;
 typedef NeoEsp8266BitBangTm1814Method NeoEsp8266BitBangTm1914Method;
 typedef NeoEsp8266BitBangSk6812Method NeoEsp8266BitBangLc8812Method;
 
@@ -389,6 +394,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedIntertek, NeoEspInverted, true
 typedef NeoEsp8266BitBangWs2812xInvertedMethod NeoEsp8266BitBangWs2813InvertedMethod;
 typedef NeoEsp8266BitBang800KbpsInvertedMethod NeoEsp8266BitBangWs2812InvertedMethod;
 typedef NeoEsp8266BitBangWs2812xInvertedMethod NeoEsp8266BitBangWs2816InvertedMethod;
+typedef NeoEsp8266BitBangWs2805InvertedMethod NeoEsp8266BitBangWs2814InvertedMethod;
 typedef NeoEsp8266BitBangTm1814InvertedMethod NeoEsp8266BitBangTm1914InvertedMethod;
 typedef NeoEsp8266BitBangSk6812InvertedMethod NeoEsp8266BitBangLc8812InvertedMethod;
 
@@ -406,6 +412,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedIntertek, NeoEspNotInverted, f
 typedef NeoEsp8266BitBangWs2812xMethod NeoEsp8266BitBangWs2813NoIntrMethod;
 typedef NeoEsp8266BitBang800KbpsMethod NeoEsp8266BitBangWs2812NoIntrMethod;
 typedef NeoEsp8266BitBangWs2812xMethod NeoEsp8266BitBangWs2816NoIntrMethod;
+typedef NeoEsp8266BitBangWs2805Method NeoEsp8266BitBangWs2814NoIntrMethod;
 typedef NeoEsp8266BitBangTm1814Method NeoEsp8266BitBangTm1914NoIntrMethod;
 typedef NeoEsp8266BitBangSk6812Method NeoEsp8266BitBangLc8812NoIntrMethod;
 
@@ -423,6 +430,7 @@ typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedIntertek, NeoEspInverted, fals
 typedef NeoEsp8266BitBangWs2812xInvertedMethod NeoEsp8266BitBangWs2813InvertedNoIntrMethod;
 typedef NeoEsp8266BitBang800KbpsInvertedMethod NeoEsp8266BitBangWs2812InvertedNoIntrMethod;
 typedef NeoEsp8266BitBangWs2812xInvertedMethod NeoEsp8266BitBangWs2816InvertedNoIntrMethod;
+typedef NeoEsp8266BitBangWs2805InvertedMethod NeoEsp8266BitBangWs2814InvertedNoIntrMethod;
 typedef NeoEsp8266BitBangTm1814InvertedMethod NeoEsp8266BitBangTm1914InvertedNoIntrMethod;
 typedef NeoEsp8266BitBangSk6812InvertedMethod NeoEsp8266BitBangLc8812InvertedNoIntrMethod;
 
