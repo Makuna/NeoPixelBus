@@ -380,31 +380,35 @@ typedef NeoArmTm1814InvertedMethod NeoArmTm1914InvertedMethod;
 #error "Teensy-LC: Sorry, only 48 MHz is supported, please set Tools > CPU Speed to 48 MHz"
 #endif // F_CPU == 48000000
 
-#elif defined(__SAMD21G18A__) // Arduino Zero
+#elif defined(__SAMD21G18A__) // Arduino Zero, SEEED XIAO
 
 
 class NeoArmSamd21g18aSpeedProps800KbpsBase
 {
 public:
+    // should match Zero Bit TH
     static void BitPreWait()
     {
-        asm("nop; nop; nop; nop; nop; nop; nop; nop;");
+        asm("nop; nop; nop; nop; nop; nop; ");
     }
+    // should match One Bit TH - BitPreWait (with pin clear after)
     static void BitT1hWait()
     {
         asm("nop; nop; nop; nop; nop; nop; nop; nop;"
             "nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop; nop;");
+            "nop; ");
     }
+    // should match Zero Bit TL - BitPreWait (with pin clear before)
     static void BitT0lWait()
     {
         asm("nop; nop; nop; nop; nop; nop; nop; nop;"
             "nop; nop; nop; nop; nop; nop; nop; nop;"
-            "nop; nop; nop; nop;");
+            "nop; ");
     }
+    // this should match cycles it takes to prepare next byte
     static void BitPostWait()
     {
-        asm("nop; nop; nop; nop; nop; nop; nop; nop; nop;");
+        asm("nop; nop; nop; nop; nop;");
     }
 };
 
@@ -442,10 +446,12 @@ public:
 class NeoArmSamd21g18aSpeedProps400KbpsBase
 {
 public:
+    // should match Zero Bit TH
     static void BitPreWait()
     {
         asm("nop; nop; nop; nop; nop; nop; nop; nop; nop; nop; nop;");
     }
+    // should match One Bit TH - BitPreWait (with pin clear after)
     static void BitT1hWait()
     {
         asm("nop; nop; nop; nop; nop; nop; nop; nop;"
@@ -453,6 +459,7 @@ public:
             "nop; nop; nop; nop; nop; nop; nop; nop;"
             "nop; nop; nop;");
     }
+    // should match Zero Bit TL - BitPreWait (with pin clear before)
     static void BitT0lWait()
     {
         asm("nop; nop; nop; nop; nop; nop; nop; nop;"
@@ -460,6 +467,7 @@ public:
             "nop; nop; nop; nop; nop; nop; nop; nop;"
             "nop; nop; nop;");
     }
+    // this should match cycles it takes to prepare next byte
     static void BitPostWait()
     {
         asm("nop; nop; nop; nop; nop; nop; nop;");
@@ -512,7 +520,9 @@ public:
                 *clr = pinMask;
                 T_SPEEDPROPS::BitT0lWait();
             }
-            if (bitMask >>= 1)
+
+            bitMask >>= 1;
+            if (bitMask)
             {
                 T_SPEEDPROPS::BitPostWait();
             }
@@ -901,9 +911,9 @@ typedef NeoArmSk6812Method NeoLc8812Method;
 typedef NeoArm800KbpsMethod NeoWs2812Method;
 typedef NeoArmApa106Method NeoApa106Method;
 typedef NeoArmWs2812xMethod Neo800KbpsMethod;
-#ifdef NeoArm400KbpsMethod // this is needed due to missing 400Kbps for some platforms
-typedef NeoArm400KbpsMethod Neo400KbpsMethod;
-#endif
+
+//typedef NeoArm400KbpsMethod Neo400KbpsMethod; //  due to missing 400Kbps for some platforms
+
 // there is no non-invert methods for arm, but the norm for TM1814 is inverted, so
 typedef NeoArmTm1814InvertedMethod NeoTm1814InvertedMethod;
 typedef NeoArmTm1914InvertedMethod NeoTm1914InvertedMethod;
