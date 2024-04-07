@@ -87,9 +87,9 @@ class NeoEsp8266DmaSpeedWs2805 : public NeoEsp8266DmaSpeedBase
 {
 public:
     const static uint32_t I2sClockDivisor = 4; // 0-63
-    const static uint32_t I2sBaseClockDivisor = 17; // 0-63
-    const static uint32_t ByteSendTimeUs = 14; // us it takes to send a single pixel element
-    const static uint32_t ResetTimeUs = 300;
+    const static uint32_t I2sBaseClockDivisor = 11; // 0-63
+    const static uint32_t ByteSendTimeUs = 9; // us it takes to send a single pixel element
+    const static uint32_t ResetTimeUs = 300; // spec is 280, intentionally longer for compatiblity use
 };
 
 class NeoEsp8266DmaSpeedSk6812 : public NeoEsp8266DmaSpeed800KbpsBase
@@ -162,9 +162,9 @@ class NeoEsp8266DmaInvertedSpeedWs2805 : public NeoEsp8266DmaInvertedSpeedBase
 {
 public:
     const static uint32_t I2sClockDivisor = 4; // 0-63
-    const static uint32_t I2sBaseClockDivisor = 17; // 0-63
-    const static uint32_t ByteSendTimeUs = 14; // us it takes to send a single pixel element
-    const static uint32_t ResetTimeUs = 300;
+    const static uint32_t I2sBaseClockDivisor = 11; // 0-63
+    const static uint32_t ByteSendTimeUs = 9; // us it takes to send a single pixel element
+    const static uint32_t ResetTimeUs = 300; // spec is 280, intentionally longer for compatiblity use
 };
 
 class NeoEsp8266DmaInvertedSpeedSk6812 : public NeoEsp8266DmaInvertedSpeed800KbpsBase
@@ -397,6 +397,7 @@ private:
 // normal
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaSpeedWs2812x>> NeoEsp8266DmaWs2812xMethod;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaSpeedWs2805>> NeoEsp8266DmaWs2805Method;
+typedef NeoEsp8266DmaWs2805Method NeoEsp8266DmaWs2814Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaSpeedSk6812>> NeoEsp8266DmaSk6812Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaSpeedTm1814>> NeoEsp8266DmaTm1814Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaSpeedTm1829>> NeoEsp8266DmaTm1829Method;
@@ -410,6 +411,7 @@ typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaPixelSpacingEncode<NeoEsp8266DmaSpe
 // inverted
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaInvertedSpeedWs2812x>> NeoEsp8266DmaInvertedWs2812xMethod;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaInvertedSpeedWs2805>> NeoEsp8266DmaInvertedWs2805Method;
+typedef NeoEsp8266DmaInvertedWs2805Method NeoEsp8266DmaInvertedWs2814Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaInvertedSpeedSk6812>> NeoEsp8266DmaInvertedSk6812Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaInvertedSpeedTm1814>> NeoEsp8266DmaInvertedTm1814Method;
 typedef NeoEsp8266DmaMethodBase<NeoEsp8266DmaEncode<NeoEsp8266DmaInvertedSpeedTm1829>> NeoEsp8266DmaInvertedTm1829Method;
@@ -426,6 +428,7 @@ typedef NeoEsp8266Dma800KbpsMethod NeoWs2812Method;
 typedef NeoEsp8266DmaWs2812xMethod NeoWs2811Method;
 typedef NeoEsp8266DmaWs2812xMethod NeoWs2816Method;
 typedef NeoEsp8266DmaWs2805Method NeoWs2805Method;
+typedef NeoEsp8266DmaWs2814Method NeoWs2814Method;
 typedef NeoEsp8266DmaSk6812Method NeoSk6812Method;
 typedef NeoEsp8266DmaTm1814Method NeoTm1814Method;
 typedef NeoEsp8266DmaTm1829Method NeoTm1829Method;
@@ -444,6 +447,7 @@ typedef NeoEsp8266DmaInverted800KbpsMethod NeoWs2812InvertedMethod;
 typedef NeoEsp8266DmaInvertedWs2812xMethod NeoWs2811InvertedMethod;
 typedef NeoEsp8266DmaInvertedWs2812xMethod NeoWs2816InvertedMethod;
 typedef NeoEsp8266DmaInvertedWs2805Method NeoWs2805InvertedMethod;
+typedef NeoEsp8266DmaInvertedWs2814Method NeoWs2814InvertedMethod;
 typedef NeoEsp8266DmaInvertedSk6812Method NeoSk6812InvertedMethod;
 typedef NeoEsp8266DmaInvertedTm1814Method NeoTm1814InvertedMethod;
 typedef NeoEsp8266DmaInvertedTm1829Method NeoTm1829InvertedMethod;
