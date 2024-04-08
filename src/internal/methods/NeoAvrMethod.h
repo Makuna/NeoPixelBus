@@ -125,13 +125,6 @@ public:
     static const uint32_t ResetTimeUs = 100;
 };
 
-class NeoAvrSpeed600KbpsIps : public NeoAvrSpeed600KbpsBase
-{
-public:
-    static const uint32_t ResetTimeUs = 300;
-    static const uint16_t InterpixelTimeUs = 8; // 12.4, with loop overhead of about 5us for loop
-};
-
 class NeoAvrSpeedTm1814 : public NeoAvrSpeed800KbpsBase
 {
 public:
@@ -177,17 +170,13 @@ template<typename T_SPEED> class NeoAvrMethodBase
 public:
     typedef NeoNoSettings SettingsObject;
 
-    NeoAvrMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize),
-        _pin(pin),
-        _port(NULL),
-        _pinMask(0)
+    NeoAvrMethodBase(uint8_t pin, 
+        [[maybe_unused]] uint16_t pixelCount, 
+        [[maybe_unused]] size_t elementSize, 
+        [[maybe_unused]] size_t settingsSize) :
+        _pin(pin)
     {
         pinMode(pin, OUTPUT);
-
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
-
         _port = portOutputRegister(digitalPinToPort(pin));
         _pinMask = digitalPinToBitMask(pin);
     }
@@ -195,8 +184,6 @@ public:
     ~NeoAvrMethodBase()
     {
         pinMode(_pin, INPUT);
-
-        free(_data);
     }
 
     bool IsReadyToUpdate() const
@@ -213,14 +200,15 @@ public:
         _endTime = micros();
     }
 
-    void Update(bool)
+    template <typename T_COLOR_OBJECT,
+        typename T_COLOR_FEATURE,
+        typename T_SHADER> 
+    void Update(
+        T_COLOR_OBJECT* pixels,
+        size_t countPixels,
+        const typename T_COLOR_FEATURE::SettingsObject& featureSettings,
+        const T_SHADER& shader)
     {
-        // Data latch = 50+ microsecond pause in the output stream.  Rather than
-        // put a delay at the end of the function, the ending time is noted and
-        // the function will simply hold off (if needed) on issuing the
-        // subsequent round of data until the latch time has elapsed.  This
-        // allows the mainline code to start generating the next frame of data
-        // rather than stalling for the latch.
         while (!IsReadyToUpdate())
         {
 #if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA) && !defined(ARDUINO_AVR_DIGISPARK)
@@ -228,104 +216,60 @@ public:
 #endif
         }
 
-        noInterrupts(); // Need 100% focus on instruction timing
+        const size_t sendDataSize = T_COLOR_FEATURE::SettingsSize >= T_COLOR_FEATURE::PixelSize ? T_COLOR_FEATURE::SettingsSize : T_COLOR_FEATURE::PixelSize;
+        uint8_t sendData[sendDataSize];
 
-        T_SPEED::send_data(_data, _sizeData, _port, _pinMask);
+        // if there are settings at the front
+        if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
+        {
+            noInterrupts(); // Need 100% focus on instruction timing
+            T_SPEED::send_data(sendData, T_COLOR_FEATURE::SettingsSize, _port, _pinMask);
+            interrupts();
+        }
+        
+        // send primary color data
+        T_COLOR_OBJECT* pixel = pixels;
+        T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
 
-        interrupts();
+        while (pixel < pixelEnd)
+        {
+            typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
+            T_COLOR_FEATURE::applyPixelColor(sendData, T_COLOR_FEATURE::PixelSize, color);
+
+            noInterrupts(); // Need 100% focus on instruction timing
+            T_SPEED::send_data(sendData, T_COLOR_FEATURE::PixelSize, _port, _pinMask);
+            interrupts();
+
+            pixel++;
+        }
+
+        // if there are settings at the back
+        if (T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
+        {
+            noInterrupts(); // Need 100% focus on instruction timing
+            T_SPEED::send_data(sendData, T_COLOR_FEATURE::SettingsSize, _port, _pinMask);
+            interrupts();
+        }
 
         // save EOD time for latch on next call
         _endTime = micros();
     }
-
-    bool AlwaysUpdate()
-    {
-        // this method requires update to be called only if changes to buffer
-        return false;
-    }
-
-    uint8_t* getData() const
-    {
-        return _data;
-    };
-
-    size_t getDataSize() const
-    {
-        return _sizeData;
-    };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
     }
 
 protected:
-    const size_t  _sizeData;     // size of _data below       
     const uint8_t _pin;         // output pin number
+    volatile uint8_t* _port;         // Output PORT register
 
     uint32_t _endTime;       // Latch timing reference
-    uint8_t* _data;        // Holds data stream which include LED color values and other settings as needed
-    
-    volatile uint8_t* _port;         // Output PORT register
     uint8_t  _pinMask;      // Output PORT bitmask
-};
-
-template<typename T_SPEED> class NeoAvrIpsMethodBase : public NeoAvrMethodBase<T_SPEED>
-{
-public:
-    NeoAvrIpsMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        NeoAvrMethodBase<T_SPEED>(pin, pixelCount, elementSize, settingsSize),
-        _elementSize(elementSize)
-    {
-    }
-
-    ~NeoAvrIpsMethodBase()
-    {
-    }
-
-    void Update(bool)
-    {
-        // Data latch = 50+ microsecond pause in the output stream.  Rather than
-        // put a delay at the end of the function, the ending time is noted and
-        // the function will simply hold off (if needed) on issuing the
-        // subsequent round of data until the latch time has elapsed.  This
-        // allows the mainline code to start generating the next frame of data
-        // rather than stalling for the latch.
-        while (!NeoAvrMethodBase<T_SPEED>::IsReadyToUpdate())
-        {
-#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA) && !defined(ARDUINO_AVR_DIGISPARK)
-            yield(); // allows for system yield if needed
-#endif
-        }
-
-        noInterrupts(); // Need 100% focus on instruction timing
-
-        uint8_t* dataPixel = NeoAvrMethodBase<T_SPEED>::_data;
-        const uint8_t* dataEnd = dataPixel + NeoAvrMethodBase<T_SPEED>::_sizeData;
-
-        while (dataPixel < dataEnd)
-        {
-            T_SPEED::send_data(dataPixel, 
-                _elementSize, 
-                NeoAvrMethodBase<T_SPEED>::_port, 
-                NeoAvrMethodBase<T_SPEED>::_pinMask);
-            dataPixel += _elementSize;
-            delayMicroseconds(T_SPEED::InterpixelTimeUs);
-        }
-
-        interrupts();
-
-        // save EOD time for latch on next call
-        NeoAvrMethodBase<T_SPEED>::_endTime = micros();
-    }
-
-private:
-    const size_t _elementSize; // size of a single pixel
 };
 
 typedef NeoAvrMethodBase<NeoAvrSpeedWs2812x> NeoAvrWs2812xMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeedSk6812> NeoAvrSk6812Method;
 typedef NeoAvrMethodBase<NeoAvrSpeedApa106> NeoAvrApa106Method;
-typedef NeoAvrIpsMethodBase<NeoAvrSpeed600KbpsIps> NeoAvr600KbpsIpsMethod;
 
 typedef NeoAvrMethodBase<NeoAvrSpeedTm1814> NeoAvrTm1814InvertedMethod;
 typedef NeoAvrMethodBase<NeoAvrSpeedTm1829> NeoAvrTm1829InvertedMethod;

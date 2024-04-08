@@ -43,7 +43,8 @@ const uint16_t PixelIndex_OutOfBounds = 0xffff;
 #include "internal/NeoMethods.h"
 
 
-template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBus
+template<typename T_COLOR_FEATURE, typename T_METHOD> 
+class NeoPixelBus
 {
 public:
     // Constructor: number of LEDs, pin number

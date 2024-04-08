@@ -28,8 +28,10 @@ License along with NeoPixel.  If not, see
 
 #include "NeoPixelBus.h"
 
-//
-// 
+// T_EXPOSED_COLOR_OBJECT- 
+//    The color object to use for the front buffer, does not need to match the
+//    T_COLOR_FEATURE::ColorObject but must be auto-converted, so no loss of data
+//    
 // T_GAMMA - 
 //    NeoGammaEquationMethod 
 //    NeoGammaCieLabEquationMethod
@@ -37,44 +39,30 @@ License along with NeoPixel.  If not, see
 //    NeoGammaNullMethod
 //    NeoGammaInvert<one of the above>
 
-template<typename T_COLOR_FEATURE, typename T_METHOD, typename T_GAMMA = NeoGammaEquationMethod> class NeoPixelBusLg :
-    public NeoPixelBus<T_COLOR_FEATURE, T_METHOD>
+template<typename T_COLOR_FEATURE, 
+    typename T_METHOD, 
+    typename T_EXPOSED_COLOR_OBJECT, // = T_COLOR_FEATURE::ColorObject,
+    typename T_GAMMA = NeoGammaEquationMethod>
+class NeoPixelBusLg
 {
 public:
     class LuminanceShader
     {
     public:
-        LuminanceShader(uint8_t luminance = 255) :
+        LuminanceShader(typename T_EXPOSED_COLOR_OBJECT::ElementType luminance = T_EXPOSED_COLOR_OBJECT::Max) :
             _luminance(luminance)
         {
         }
 
-        // our shader is always dirty, but these are needed for standard
-        // shader support
-        bool IsDirty() const
-        {
-            return true;
-        };
-
-        void Dirty()
-        {
-        };
-
-        void ResetDirty()
-        {
-        };
-
-        typename T_COLOR_FEATURE::ColorObject Apply(uint16_t, const typename T_COLOR_FEATURE::ColorObject& original)
+        typename T_COLOR_FEATURE::ColorObject Apply(const T_EXPOSED_COLOR_OBJECT& original) const
         {
             // dim and then return gamma adjusted
-            typename T_COLOR_FEATURE::ColorObject color = original.Dim(_luminance);
+            typename T_COLOR_FEATURE::ColorObject color(original.Dim(_luminance));
             return NeoGamma<T_GAMMA>::Correct(color);
         }
 
     protected:
-        uint8_t _luminance;
-
-        bool setLuminance(uint8_t luminance)
+        bool setLuminance(typename T_EXPOSED_COLOR_OBJECT::ElementType luminance)
         {
             bool different = (_luminance != luminance);
 
@@ -86,117 +74,188 @@ public:
             return different;
         }
 
-        uint8_t getLuminance() const
+        typename T_EXPOSED_COLOR_OBJECT::ElementType getLuminance() const
         {
             return _luminance;
         }
 
         friend class NeoPixelBusLg;
-    };
 
-    // Exposed Shader instance for use with NeoDib.Render like
-    // 
-    // image.Render<NeoGrbFeature, MyBusType::LuminanceShader>(strip, strip.Shader);
-    // where MyBusType is defined like
-    // typedef NeoPixelBusLg<NeoGrbFeature, NeoWs2812xMethod> MyBusType;
-    //
-    LuminanceShader Shader;
+    private:
+        typename T_EXPOSED_COLOR_OBJECT::ElementType _luminance;
+    };
 
 public:
     NeoPixelBusLg(uint16_t countPixels, uint8_t pin) :
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pin),
-        Shader()
+        _countPixels(countPixels),
+        _pixels(nullptr),
+        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _shader()
     {
     }
 
     NeoPixelBusLg(uint16_t countPixels, uint8_t pin, NeoBusChannel channel) :
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pin, channel),
-        Shader()
+        _countPixels(countPixels),
+        _pixels(nullptr),
+        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, channel),
+        _shader()
     {
     }
 
     NeoPixelBusLg(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pinClock, pinData),
-        Shader()
+        _countPixels(countPixels),
+        _pixels(nullptr),
+        _method(pinClock, pinData, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _shader()
     {
     }
 
     NeoPixelBusLg(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pinClock, pinData, pinLatch, pinOutputEnable),
-        Shader()
+        _countPixels(countPixels),
+        _pixels(nullptr),
+        _method(pinClock, pinData, pinLatch, pinOutputEnable, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _shader()
     {
     }
 
     NeoPixelBusLg(uint16_t countPixels) :
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels),
-        Shader()
+        _countPixels(countPixels),
+        _pixels(nullptr),
+        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _shader()
     {
     }
 
-     NeoPixelBusLg(uint16_t countPixels, Stream* pixieStream) :
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pixieStream),
-        Shader()
+    NeoPixelBusLg(uint16_t countPixels, Stream* pixieStream) :
+         _countPixels(countPixels),
+         _pixels(nullptr),
+         _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, pixieStream),
+         _shader()
     {
     }
 
     ~NeoPixelBusLg()
     {
+        delete [] _pixels;
     }
 
-    void SetLuminance(uint8_t luminance)
+    void Begin()
     {
-        // does NOT affect current pixel data as there is no safe way
-        // to reconstruct the original color values after being
-        // modified with both luminance and gamma without storing them
-        if (Shader.setLuminance(luminance))
+        _method.Initialize();
+        _initialize();
+    }
+
+    // used by DotStarSpiMethod/DotStarEsp32DmaSpiMethod if pins can be configured
+    void Begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    {
+        _method.Initialize(sck, miso, mosi, ss);
+        _initialize();
+    }
+
+    // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting quad SPI
+    void Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
+    {
+        _method.Initialize(sck, dat0, dat1, dat2, dat3, ss);
+        _initialize();
+    }
+
+    // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting oct SPI
+    void Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
+    {
+        _method.Initialize(sck, dat0, dat1, dat2, dat3, dat4, dat5, dat6, dat7, ss);
+        _initialize();
+    }
+
+    void SetFeatureSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
+    {
+        _featureSettings = settings;
+    }
+
+    void SetMethodSettings(const typename T_METHOD::SettingsObject& settings)
+    {
+        _method.applySettings(settings);
+    }
+
+    void Show()
+    {
+        _method.template Update<T_EXPOSED_COLOR_OBJECT, T_COLOR_FEATURE, LuminanceShader>(_pixels,
+                _countPixels,
+                _featureSettings,
+                _shader);
+    }
+
+    inline bool CanShow() const
+    {
+        return _method.IsReadyToUpdate();
+    }
+
+    uint16_t PixelCount() const
+    {
+        return _countPixels;
+    }
+
+    void SetLuminance(typename T_EXPOSED_COLOR_OBJECT::ElementType luminance)
+    {
+        _shader.setLuminance(luminance);
+    }
+
+    typename T_EXPOSED_COLOR_OBJECT::ElementType GetLuminance() const
+    {
+        return _shader.getLuminance();
+    }
+
+    void SetPixelColor(uint16_t indexPixel, const T_EXPOSED_COLOR_OBJECT& color)
+    {
+        if (indexPixel < _countPixels)
         {
-            this->Dirty();
+            _pixels[indexPixel] = color;
         }
     }
 
-    uint8_t GetLuminance() const
+    T_EXPOSED_COLOR_OBJECT GetPixelColor(uint16_t indexPixel) const
     {
-        return Shader.getLuminance();
-    }
-
-    void SetPixelColor(uint16_t indexPixel, typename T_COLOR_FEATURE::ColorObject color)
-    {
-        color = Shader.Apply(indexPixel, color);
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::SetPixelColor(indexPixel, color);
-    }
-
-    /*
-     GetPixelColor is not overloaded as the original will be used
-     to just return the fully adjusted color value directly with
-     no reverse conversion since it is fraught with inaccuracy
-    */
-
-    void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
-    {
-        color = Shader.Apply(0, color);
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::ClearTo(color);
-    };
-
-    void ClearTo(typename T_COLOR_FEATURE::ColorObject color, uint16_t first, uint16_t last)
-    {
-        color = Shader.Apply(0, color);
-        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::ClearTo(color, first, last);
-    }
-
-    // if the Pixels buffer is manipulated directly, then this can be called 
-    // to apply the luminance and gamma correction to those changes
-    void ApplyPostAdjustments()
-    {
-        if (this->IsDirty())
+        if (indexPixel >= _countPixels)
         {
-            for (uint16_t indexPixel = 0; indexPixel < NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::PixelCount(); indexPixel++)
+            return 0;
+        }
+        return _pixels[indexPixel];
+    }
+
+    void ClearTo(const T_EXPOSED_COLOR_OBJECT& color)
+    {
+        ClearTo(color, 0, _countPixels - 1);
+    }
+
+    void ClearTo(const T_EXPOSED_COLOR_OBJECT& color, uint16_t first, uint16_t last)
+    {
+        if (first < _countPixels &&
+            last < _countPixels &&
+            first <= last)
+        {
+            T_EXPOSED_COLOR_OBJECT* pixels = _pixels + last + 1;
+            T_EXPOSED_COLOR_OBJECT* pixelsFirst = _pixels + first;
+
+            while (pixelsFirst <= --pixels)
             {
-                typename T_COLOR_FEATURE::ColorObject color = NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::GetPixelColor(indexPixel);
-                color = Shader.Apply(indexPixel, color);
-                NeoPixelBus<T_COLOR_FEATURE, T_METHOD>::SetPixelColor(indexPixel, color);
+                *pixels = color;
             }
-            this->Dirty();
         }
+    }
+
+    // TODO:  Move other modification methods over
+
+protected:
+    const uint16_t _countPixels; 
+
+    T_EXPOSED_COLOR_OBJECT* _pixels;
+    T_METHOD _method;
+    LuminanceShader _shader;
+    typename T_COLOR_FEATURE::SettingsObject _featureSettings;
+
+    void _initialize()
+    {
+        _pixels = new T_EXPOSED_COLOR_OBJECT[_countPixels];
+        ClearTo(0);
     }
 };
 
