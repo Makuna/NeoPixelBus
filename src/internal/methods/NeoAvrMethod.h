@@ -219,12 +219,12 @@ public:
         const size_t sendDataSize = T_COLOR_FEATURE::SettingsSize >= T_COLOR_FEATURE::PixelSize ? T_COLOR_FEATURE::SettingsSize : T_COLOR_FEATURE::PixelSize;
         uint8_t sendData[sendDataSize];
 
+        noInterrupts(); // Need 100% focus on instruction timing
+
         // if there are settings at the front
         if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
         {
-            noInterrupts(); // Need 100% focus on instruction timing
             T_SPEED::send_data(sendData, T_COLOR_FEATURE::SettingsSize, _port, _pinMask);
-            interrupts();
         }
         
         // send primary color data
@@ -236,9 +236,7 @@ public:
             typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
             T_COLOR_FEATURE::applyPixelColor(sendData, T_COLOR_FEATURE::PixelSize, color);
 
-            noInterrupts(); // Need 100% focus on instruction timing
             T_SPEED::send_data(sendData, T_COLOR_FEATURE::PixelSize, _port, _pinMask);
-            interrupts();
 
             pixel++;
         }
@@ -246,10 +244,10 @@ public:
         // if there are settings at the back
         if (T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
         {
-            noInterrupts(); // Need 100% focus on instruction timing
             T_SPEED::send_data(sendData, T_COLOR_FEATURE::SettingsSize, _port, _pinMask);
-            interrupts();
         }
+
+        interrupts();
 
         // save EOD time for latch on next call
         _endTime = micros();

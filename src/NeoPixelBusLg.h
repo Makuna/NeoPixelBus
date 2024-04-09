@@ -41,8 +41,8 @@ License along with NeoPixel.  If not, see
 
 template<typename T_COLOR_FEATURE, 
     typename T_METHOD, 
-    typename T_EXPOSED_COLOR_OBJECT, // = T_COLOR_FEATURE::ColorObject,
-    typename T_GAMMA = NeoGammaEquationMethod>
+    typename T_EXPOSED_COLOR_OBJECT = typename T_COLOR_FEATURE::ColorObject,
+    typename T_GAMMA = NeoGammaTableMethod>
 class NeoPixelBusLg
 {
 public:

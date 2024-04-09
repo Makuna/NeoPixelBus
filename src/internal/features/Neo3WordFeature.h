@@ -31,47 +31,20 @@ class Neo3WordFeature :
     public NeoWordElements<6, Rgb48Color, uint16_t>
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
 
-        // due to endianness the byte order must be copied to output
-        *p++ = color[V_IC_1] >> 8;
-        *p++ = color[V_IC_1] & 0xff;
-        *p++ = color[V_IC_2] >> 8;
-        *p++ = color[V_IC_2] & 0xff;
-        *p++ = color[V_IC_3] >> 8;
-        *p = color[V_IC_3] & 0xff;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        // due to endianness the byte order must be copied to output
-        color[V_IC_1] = (static_cast<uint16_t>(*p++) << 8);
-        color[V_IC_1] |= *p++;
-        color[V_IC_2] = (static_cast<uint16_t>(*p++) << 8);
-        color[V_IC_2] |= *p++;
-        color[V_IC_3] = (static_cast<uint16_t>(*p++) << 8);
-        color[V_IC_3] |= *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel));
-
-        // PROGMEM unit of storage expected to be the same size as color element
-        //    so no endianness issues to worry about
-        color[V_IC_1] = pgm_read_word(p++);
-        color[V_IC_2] = pgm_read_word(p++);
-        color[V_IC_3] = pgm_read_word(p);
-
-        return color;
+            // due to endianness the byte order must be copied to output
+            *p++ = color[V_IC_1] >> 8;
+            *p++ = color[V_IC_1] & 0xff;
+            *p++ = color[V_IC_2] >> 8;
+            *p++ = color[V_IC_2] & 0xff;
+            *p++ = color[V_IC_3] >> 8;
+            *p = color[V_IC_3] & 0xff;
+        }
     }
 
  };
