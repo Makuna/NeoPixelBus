@@ -28,46 +28,22 @@ License along with NeoPixel.  If not, see
 
 
 class P9813BgrFeature : 
-    public NeoByteElements<4, RgbColor, uint32_t>,
+    public NeoElementsBase<4, RgbColor>,
     public NeoElementsNoSettings
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
 
-        *p++ = 0xC0 | ((~color.B & 0xC0) >> 2) | ((~color.G & 0xC0) >> 4) | ((~color.R & 0xC0) >> 6);
-        *p++ = color.B;
-        *p++ = color.G;
-        *p = color.R;
+            *p++ = 0xC0 | ((~color.B & 0xC0) >> 2) | ((~color.G & 0xC0) >> 4) | ((~color.R & 0xC0) >> 6);
+            *p++ = color.B;
+            *p++ = color.G;
+            *p = color.R;
+        }
     }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        p++; // ignore the first byte
-        color.B = *p++;
-        color.G = *p++;
-        color.R = *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        p++; // ignore the first byte
-        color.B = pgm_read_byte(p++);
-        color.G = pgm_read_byte(p++);
-        color.R = pgm_read_byte(p);
-
-        return color;
-    }
-
 };
 
 

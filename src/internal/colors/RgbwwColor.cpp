@@ -61,10 +61,10 @@ RgbwwColor::RgbwwColor(const HsbColor& color)
     *this = rgbColor;
 }
 
-uint8_t RgbwwColor::CalculateBrightness() const
+ElementType RgbwwColor::CalculateBrightness() const
 {
-    uint8_t colorB = static_cast<uint8_t>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
-    uint8_t whiteB = static_cast<uint8_t>((static_cast<uint16_t>(WW) + static_cast<uint16_t>(CW)) / 2);
+    ElementType colorB = static_cast<ElementType>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
+    ElementType whiteB = static_cast<ElementType>((static_cast<uint16_t>(WW) + static_cast<uint16_t>(CW)) / 2);
 
     return (whiteB > colorB) ? whiteB : colorB;
 }
@@ -89,7 +89,7 @@ RgbwwColor RgbwwColor::Brighten(uint8_t ratio) const
         _elementBrighten(CW, ratio));
 }
 
-void RgbwwColor::Darken(uint8_t delta)
+void RgbwwColor::Darken(ElementType delta)
 {
     if (R > delta)
     {
@@ -137,7 +137,7 @@ void RgbwwColor::Darken(uint8_t delta)
     }
 }
 
-void RgbwwColor::Lighten(uint8_t delta)
+void RgbwwColor::Lighten(ElementType delta)
 {
     if (IsColorLess())
     {

@@ -36,12 +36,13 @@ struct HsbColor;
 // ------------------------------------------------------------------------
 struct RgbwwwColor : RgbColorBase
 {
+    typedef uint8_t ElementType;
     typedef NeoRgbwwwCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
     // Construct a RgbwwwColor using R, G, B, W1, W2, W3 values (0-255)
     // ------------------------------------------------------------------------
-    RgbwwwColor(uint8_t r, uint8_t g, uint8_t b, uint8_t w1, uint8_t w2, uint8_t w3) :
+    RgbwwwColor(ElementType r, ElementType g, ElementType b, ElementType w1, ElementType w2, ElementType w3) :
         R(r), G(g), B(b), W1(w1), W2(w2), W3(w3)
     {
     };
@@ -51,7 +52,7 @@ struct RgbwwwColor : RgbColorBase
     // White is set incrementally across the three whites, 
     // where 1 = (0,0,1), 2 = (0,1,1), 3 = (1,1,1), 4 = (1,1,2)
     // ------------------------------------------------------------------------
-    RgbwwwColor(uint8_t r, uint8_t g, uint8_t b, uint16_t w) :
+    RgbwwwColor(ElementType r, ElementType g, ElementType b, uint16_t w) :
         R(r), G(g), B(b)
     {
         ApplyAsIncrementalWhite(w);
@@ -62,7 +63,7 @@ struct RgbwwwColor : RgbColorBase
     // This works well for creating gray tone colors
     // (0) = black, (255) = white, (128) = gray
     // ------------------------------------------------------------------------
-    RgbwwwColor(uint8_t brightness) :
+    RgbwwwColor(ElementType brightness) :
         R(0), G(0), B(0), W1(brightness), W2(brightness), W3(brightness)
     {
     };
@@ -137,7 +138,7 @@ struct RgbwwwColor : RgbColorBase
     //   negative - this is less than other
     //   positive - this is greater than other
     // ------------------------------------------------------------------------
-    int16_t CompareTo(const RgbwwwColor& other, uint8_t epsilon = 1)
+    int16_t CompareTo(const RgbwwwColor& other, ElementType epsilon = 1)
     {
         return _Compare<RgbwwwColor, int16_t>(*this, other, epsilon);
     }
@@ -150,7 +151,7 @@ struct RgbwwwColor : RgbColorBase
     //   negative - left is less than right
     //   positive - left is greater than right
     // ------------------------------------------------------------------------
-    static int16_t Compare(const RgbwwwColor& left, const RgbwwwColor& right, uint8_t epsilon = 1)
+    static int16_t Compare(const RgbwwwColor& left, const RgbwwwColor& right, ElementType epsilon = 1)
     {
         return _Compare<RgbwwwColor, int16_t>(left, right, epsilon);
     }
@@ -160,7 +161,7 @@ struct RgbwwwColor : RgbColorBase
     // access elements in order by index rather than R,G,B,W1,W2,W3
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint8_t operator[](size_t idx) const
+    ElementType operator[](size_t idx) const
     {
         switch (idx)
         {
@@ -184,7 +185,7 @@ struct RgbwwwColor : RgbColorBase
     // access elements in order by index rather than R,G,B,W1,W2
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint8_t& operator[](size_t idx)
+    ElementType& operator[](size_t idx)
     {
         switch (idx)
         {
@@ -224,7 +225,7 @@ struct RgbwwwColor : RgbColorBase
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
-    uint8_t CalculateBrightness() const;
+    ElementType CalculateBrightness() const;
 
     // ------------------------------------------------------------------------
     // Dim will return a new color that is blended to black with the given ratio
@@ -232,7 +233,7 @@ struct RgbwwwColor : RgbColorBase
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    RgbwwwColor Dim(uint8_t ratio) const;
+    RgbwwwColor Dim(ElementType ratio) const;
 
     // ------------------------------------------------------------------------
     // Brighten will return a new color that is blended to white with the given ratio
@@ -240,21 +241,21 @@ struct RgbwwwColor : RgbColorBase
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    RgbwwwColor Brighten(uint8_t ratio) const;
+    RgbwwwColor Brighten(ElementType ratio) const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to dim the color
     // ------------------------------------------------------------------------
-    void Darken(uint8_t delta);
+    void Darken(ElementType delta);
 
     // ------------------------------------------------------------------------
     // Lighten will adjust the color by the given delta toward white
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to lighten the color
     // ------------------------------------------------------------------------
-    void Lighten(uint8_t delta);
+    void Lighten(ElementType delta);
 
     // ------------------------------------------------------------------------
     // LinearBlend between two colors by the amount defined by progress variable
@@ -306,8 +307,8 @@ struct RgbwwwColor : RgbColorBase
     // ------------------------------------------------------------------------
     void ApplyAsIncrementalWhite(uint16_t white)
     {
-        uint8_t value = white / 3;
-        uint8_t remainder = white % 3;
+        ElementType value = white / 3;
+        ElementType remainder = white % 3;
 
         W1 = value;
         W2 = value;
@@ -331,24 +332,25 @@ struct RgbwwwColor : RgbColorBase
     // (0,0,0, 0,255,0) is white2 and
     // Note (255,255,255, 255,255,255) is extreme bright white
     // ------------------------------------------------------------------------
-    uint8_t R;
-    uint8_t G;
-    uint8_t B;
-    uint8_t W1;
-    uint8_t W2;
-    uint8_t W3;
+    ElementType R;
+    ElementType G;
+    ElementType B;
+    ElementType W1;
+    ElementType W2;
+    ElementType W3;
 
-    const static uint8_t Max = 255;
+    const static ElementType Max = 255;
     const static size_t Count = 6; // six elements in []
+    const static size_t Size = Count * sizeof(ElementType);
     const static uint16_t MaxIncrementalWhite = 765;
 
 private:
-    inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)
+    inline static ElementType _elementDim(ElementType value, ElementType ratio)
     {
         return (static_cast<uint16_t>(value) * (static_cast<uint16_t>(ratio) + 1)) >> 8;
     }
 
-    inline static uint8_t _elementBrighten(uint8_t value, uint8_t ratio)
+    inline static ElementType _elementBrighten(ElementType value, ElementType ratio)
     {
         uint16_t element = ((static_cast<uint16_t>(value) + 1) << 8) / (static_cast<uint16_t>(ratio) + 1);
 

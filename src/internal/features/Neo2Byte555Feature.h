@@ -28,47 +28,20 @@ License along with NeoPixel.  If not, see
  
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class Neo2Byte555Feature :
-    public NeoByteElements<2, RgbColor, uint16_t>
+    public NeoElementsBase<2, RgbColor>
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
-        uint16_t color555;
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
+            uint16_t color555;
 
-        encodePixel(&color555, color);
-        *p++ = color555 >> 8;
-        *p = color555 & 0xff;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        uint16_t color555;
-
-        color555 = ((*p++) << 8);
-        color555 |= (*p);
-
-        decodePixel(&color, color555);
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        uint16_t color555;
-
-        color555 = (pgm_read_byte(p++) << 8);
-        color555 |= pgm_read_byte(p);
-
-        decodePixel(&color, color555);
-
-        return color;
+            encodePixel(&color555, color);
+            *p++ = color555 >> 8;
+            *p = color555 & 0xff;
+        }
     }
 
 protected:

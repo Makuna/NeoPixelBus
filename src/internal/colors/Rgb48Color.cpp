@@ -51,9 +51,9 @@ Rgb48Color::Rgb48Color(const HslColor& color)
 
     _HslToRgb(color, &r, &g, &b);
 
-    R = static_cast<uint16_t>(r * Max);
-    G = static_cast<uint16_t>(g * Max);
-    B = static_cast<uint16_t>(b * Max);
+    R = static_cast<ElementType>(r * Max);
+    G = static_cast<ElementType>(g * Max);
+    B = static_cast<ElementType>(b * Max);
 }
 
 Rgb48Color::Rgb48Color(const HsbColor& color)
@@ -64,14 +64,14 @@ Rgb48Color::Rgb48Color(const HsbColor& color)
 
     _HsbToRgb(color, &r, &g, &b);
 
-    R = static_cast<uint16_t>(r * Max);
-    G = static_cast<uint16_t>(g * Max);
-    B = static_cast<uint16_t>(b * Max);
+    R = static_cast<ElementType>(r * Max);
+    G = static_cast<ElementType>(g * Max);
+    B = static_cast<ElementType>(b * Max);
 }
 
-uint16_t Rgb48Color::CalculateBrightness() const
+ElementType Rgb48Color::CalculateBrightness() const
 {
-    return static_cast<uint16_t>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
+    return static_cast<ElementType>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
 }
 
 Rgb48Color Rgb48Color::Dim(uint16_t ratio) const
@@ -86,7 +86,7 @@ Rgb48Color Rgb48Color::Brighten(uint16_t ratio) const
     return Rgb48Color(_elementBrighten(R, ratio), _elementBrighten(G, ratio), _elementBrighten(B, ratio));
 }
 
-void Rgb48Color::Darken(uint16_t delta)
+void Rgb48Color::Darken(ElementType delta)
 {
     if (R > delta)
     {
@@ -116,7 +116,7 @@ void Rgb48Color::Darken(uint16_t delta)
     }
 }
 
-void Rgb48Color::Lighten(uint16_t delta)
+void Rgb48Color::Lighten(ElementType delta)
 {
     if (R < Max - delta)
     {

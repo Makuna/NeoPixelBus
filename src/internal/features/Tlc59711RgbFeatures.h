@@ -97,8 +97,6 @@ class Tlc59711ElementsSettings
 {
 public:
     typedef Tlc69711Settings SettingsObject;
-
-
     static constexpr size_t SettingsSize = Tlc69711Settings::c_settingsPerChipSize;
 
     static void Encode(uint8_t* encoded, const SettingsObject& settings)
@@ -111,7 +109,7 @@ public:
         *encoded = settings.GreenGroupBrightness << 7 | settings.RedGroupBrightness;
     }
 
-    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    static bool applyFrontSettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
         // how the hell do we store the setting that doesn't go into the data stream'
         // Thought A:
@@ -139,20 +137,17 @@ public:
         //   have the method know details how to duplicate it if needed for emi
         //   as it already neeeds to interleaving settings per chip with data
         
-        // settings are at the front of the data stream
-        Encode(pData, settings);
+        if (SettingsSize <= sizeData)
+        {
+            // settings are at the front of the data stream
+            Encode(pData, settings);
+        }
+        return true;
     }
 
-    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    static bool applyBackSettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
-        // settings are at the front of the data stream
-        return pData + SettingsSize;
-    }
-
-    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
-    {
-        // settings are at the front of the data stream
-        return pData + SettingsSize;
+        return false;
     }
 
 private:

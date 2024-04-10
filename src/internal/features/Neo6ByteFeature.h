@@ -28,48 +28,21 @@ License along with NeoPixel.  If not, see
 
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3, uint8_t V_IC_4, uint8_t V_IC_5, uint8_t V_IC_6>
 class Neo6ByteFeature :
-    public NeoByteElements<6, RgbwwwColor, uint16_t>
+    public NeoElementsBase<6, RgbwwwColor>
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
 
-        *p++ = color[V_IC_1];
-        *p++ = color[V_IC_2];
-        *p++ = color[V_IC_3];
-        *p++ = color[V_IC_4];
-        *p++ = color[V_IC_5];
-        *p = color[V_IC_6];
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color[V_IC_1] = *p++;
-        color[V_IC_2] = *p++;
-        color[V_IC_3] = *p++;
-        color[V_IC_4] = *p++;
-        color[V_IC_5] = *p++;
-        color[V_IC_6] = *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
-
-        color[V_IC_1] = pgm_read_byte(p++);
-        color[V_IC_2] = pgm_read_byte(p++);
-        color[V_IC_3] = pgm_read_byte(p++);
-        color[V_IC_4] = pgm_read_byte(p++);
-        color[V_IC_5] = pgm_read_byte(p++);
-        color[V_IC_6] = pgm_read_byte(p);
-
-        return color;
+            *p++ = color[V_IC_1];
+            *p++ = color[V_IC_2];
+            *p++ = color[V_IC_3];
+            *p++ = color[V_IC_4];
+            *p++ = color[V_IC_5];
+            *p = color[V_IC_6];
+        }
     }
 };

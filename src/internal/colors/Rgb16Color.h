@@ -37,7 +37,7 @@ struct Rgb16Color : RgbColorBase
     // ------------------------------------------------------------------------
     // Construct a Rgb16Color using R, G, B values (0-255)
     // ------------------------------------------------------------------------
-    Rgb16Color(uint8_t r, uint8_t g, uint8_t b) 
+    Rgb16Color(ElementType r, ElementType g, ElementType b) 
     {
         setR(r);
         setG(g);
@@ -49,7 +49,7 @@ struct Rgb16Color : RgbColorBase
     // This works well for creating gray tone colors
     // (0) = black, (255) = white, (128) = gray
     // ------------------------------------------------------------------------
-    Rgb16Color(uint8_t brightness) 
+    Rgb16Color(ElementType brightness) 
     {
         setR(brightness);
         setG(brightness);
@@ -123,32 +123,32 @@ struct Rgb16Color : RgbColorBase
     // ------------------------------------------------------------------------
     // properties
     // ------------------------------------------------------------------------
-    void setR(uint8_t r)
+    void setR(ElementType r)
     {
         Color565 &= 0x07ff;
         Color565 |= ((r & 0xf8) << 8);
     };
-    uint8_t getR() const
+    ElementType getR() const
     {
         return (Color565 & 0xf800) >> 8;
     };
 
-    void setG(uint8_t g)
+    void setG(ElementType g)
     {
         Color565 &= 0xf81f;
-        Color565 |= ((g & 0xfe) << 3);
+        Color565 |= ((g & 0xfc) << 3);
     };
-    uint8_t getG() const
+    ElementType getG() const
     {
         return (Color565 & 0x07e0) >> 3;
     };
 
-    void setB(uint8_t b)
+    void setB(ElementType b)
     {
         Color565 &= 0xffe0;
         Color565 |= ((b & 0xf8) >> 3);
     };
-    uint8_t getB() const
+    ElementType getB() const
     {
         return (Color565 & 0x001f) << 3;
     };
@@ -158,7 +158,7 @@ struct Rgb16Color : RgbColorBase
     // access elements in order by index rather than R,G,B
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint8_t operator[](size_t idx) const
+    ElementType operator[](size_t idx) const
     {
         switch (idx)
         {
@@ -188,7 +188,7 @@ struct Rgb16Color : RgbColorBase
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
-    uint8_t CalculateBrightness() const
+    ElementType CalculateBrightness() const
     {
         RgbColor converted = *this;
         return converted.CalculateBrightness();
@@ -227,7 +227,7 @@ struct Rgb16Color : RgbColorBase
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to dim the color
     // ------------------------------------------------------------------------
-    void Darken(uint8_t delta)
+    void Darken(ElementType delta)
     {
         RgbColor converted = *this;
 
@@ -242,7 +242,7 @@ struct Rgb16Color : RgbColorBase
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to lighten the color
     // ------------------------------------------------------------------------
-    void Lighten(uint8_t delta)
+    void Lighten(ElementType delta)
     {
         RgbColor converted = *this;
 
@@ -309,7 +309,8 @@ struct Rgb16Color : RgbColorBase
 
     uint16_t Color565;
 
-    const static uint8_t Max = 255;
+    const static ElementType Max = 255;
     const static size_t Count = 3; // three elements in []
+    const static size_t Size = 2;
 };
 

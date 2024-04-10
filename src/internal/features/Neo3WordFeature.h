@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class Neo3WordFeature :
-    public NeoWordElements<6, Rgb48Color, uint16_t>
+    public NeoElementsBase<6, Rgb48Color>
 {
 public:
     static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)

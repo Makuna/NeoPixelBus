@@ -28,40 +28,18 @@ License along with NeoPixel.  If not, see
 
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class Neo3Byte777Feature :
-    public NeoByteElements<3, RgbColor, uint8_t>
+    public NeoElementsBase<3, RgbColor>
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
 
-        *p++ = (color[V_IC_1] >> 1) | 0x80;
-        *p++ = (color[V_IC_2] >> 1) | 0x80;
-        *p = (color[V_IC_3] >> 1) | 0x80;
-    }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color[V_IC_1] = (*p++) << 1;
-        color[V_IC_2] = (*p++) << 1;
-        color[V_IC_3] = (*p) << 1;
-
-        return color;
-    }
-
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel);
-
-        color[V_IC_1] = (pgm_read_byte(p++)) << 1;
-        color[V_IC_2] = (pgm_read_byte(p++)) << 1;
-        color[V_IC_3] = (pgm_read_byte(p)) << 1;
-
-        return color;
+            *p++ = (color[V_IC_1] >> 1) | 0x80;
+            *p++ = (color[V_IC_2] >> 1) | 0x80;
+            *p = (color[V_IC_3] >> 1) | 0x80;
+        }
     }
 };

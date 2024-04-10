@@ -43,7 +43,7 @@ RgbwColor::RgbwColor(const RgbwwColor& color) :
     R(color.R),
     G(color.G),
     B(color.B),
-    W(static_cast<uint8_t>((static_cast<uint16_t>(color.WW) + static_cast<uint16_t>(color.CW)) / 2))
+    W(static_cast<ElementType>((static_cast<uint16_t>(color.WW) + static_cast<uint16_t>(color.CW)) / 2))
 {
 };
 
@@ -51,7 +51,7 @@ RgbwColor::RgbwColor(const RgbwwwColor& color) :
     R(color.R),
     G(color.G),
     B(color.B),
-    W(static_cast<uint8_t>((static_cast<uint16_t>(color.W1) + static_cast<uint16_t>(color.W2) + static_cast<uint16_t>(color.W3)) / 3))
+    W(static_cast<ElementType>((static_cast<uint16_t>(color.W1) + static_cast<uint16_t>(color.W2) + static_cast<uint16_t>(color.W3)) / 3))
 {
 };
 
@@ -67,7 +67,7 @@ RgbwColor::RgbwColor(const Rgbww80Color& color) :
     R(color.R >> 8),
     G(color.G >> 8),
     B(color.B >> 8),
-    W(static_cast<uint8_t>((static_cast<uint32_t>(color.WW) + static_cast<uint32_t>(color.CW)) >> 9)) // div 2 >> 8
+    W(static_cast<ElementType>((static_cast<uint32_t>(color.WW) + static_cast<uint32_t>(color.CW)) >> 9)) // div 2 >> 8
 {
 };
 
@@ -95,9 +95,9 @@ RgbwColor::RgbwColor(const HsbColor& color)
     *this = rgbColor;
 }
 
-uint8_t RgbwColor::CalculateBrightness() const
+ElementType RgbwColor::CalculateBrightness() const
 {
-    uint8_t colorB = static_cast<uint8_t>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
+    ElementType colorB = static_cast<ElementType>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
     if (W > colorB)
     {
         return W;
@@ -120,7 +120,7 @@ RgbwColor RgbwColor::Brighten(uint8_t ratio) const
     return RgbwColor(_elementBrighten(R, ratio), _elementBrighten(G, ratio), _elementBrighten(B, ratio), _elementBrighten(W, ratio));
 }
 
-void RgbwColor::Darken(uint8_t delta)
+void RgbwColor::Darken(ElementType delta)
 {
     if (R > delta)
     {
@@ -159,7 +159,7 @@ void RgbwColor::Darken(uint8_t delta)
     }
 }
 
-void RgbwColor::Lighten(uint8_t delta)
+void RgbwColor::Lighten(ElementType delta)
 {
     if (IsColorLess())
     {

@@ -28,43 +28,19 @@ License along with NeoPixel.  If not, see
 
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class DotStarL4Feature :
-    public NeoByteElements<4, RgbwColor, uint32_t>
+    public NeoElementsBase<4, RgbwColor>
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
 
-        *p++ = 0xE0 | (color.W < 31 ? color.W : 31); // upper three bits are always 111
-        *p++ = color[V_IC_1];
-        *p++ = color[V_IC_2];
-        *p = color[V_IC_3];
+            *p++ = 0xE0 | (color.W < 31 ? color.W : 31); // upper three bits are always 111
+            *p++ = color[V_IC_1];
+            *p++ = color[V_IC_2];
+            *p = color[V_IC_3];
+        }
     }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.W = (*p++) & 0x1F; // mask out upper three bits
-        color[V_IC_1] = *p++;
-        color[V_IC_2] = *p++;
-        color[V_IC_3] = *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        color.W = pgm_read_byte(p++) & 0x1F; // mask out upper three bits
-        color[V_IC_1] = pgm_read_byte(p++);
-        color[V_IC_2] = pgm_read_byte(p++);
-        color[V_IC_3] = pgm_read_byte(p);
-
-        return color;
-    }
-
 };

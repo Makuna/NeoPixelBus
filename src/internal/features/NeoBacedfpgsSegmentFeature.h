@@ -28,66 +28,28 @@ License along with NeoPixel.  If not, see
 
 // BACEDF.G+ byte order
 class NeoBacedfpgsSegmentFeature :
-    public NeoByteElements<9, SevenSegDigit, uint8_t>,
+    public NeoElementsBase<9, SevenSegDigit>,
     public NeoElementsNoSettings
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
 
-        // Segment Digit is Abcdefgps order
-        *p++ = color.Segment[LedSegment_B];
-        *p++ = color.Segment[LedSegment_A];
-        *p++ = color.Segment[LedSegment_C];
+            // Segment Digit is Abcdefgps order
+            *p++ = color.Segment[LedSegment_B];
+            *p++ = color.Segment[LedSegment_A];
+            *p++ = color.Segment[LedSegment_C];
 
-        *p++ = color.Segment[LedSegment_E];
-        *p++ = color.Segment[LedSegment_D];
-        *p++ = color.Segment[LedSegment_F];
+            *p++ = color.Segment[LedSegment_E];
+            *p++ = color.Segment[LedSegment_D];
+            *p++ = color.Segment[LedSegment_F];
 
-        *p++ = color.Segment[LedSegment_Decimal];
-        *p++ = color.Segment[LedSegment_G];
-        *p++ = color.Segment[LedSegment_Custom];
+            *p++ = color.Segment[LedSegment_Decimal];
+            *p++ = color.Segment[LedSegment_G];
+            *p++ = color.Segment[LedSegment_Custom];
+        }
     }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        color.Segment[LedSegment_B] = *p++;
-        color.Segment[LedSegment_A] = *p++;
-        color.Segment[LedSegment_C] = *p++;
-
-        color.Segment[LedSegment_E] = *p++;
-        color.Segment[LedSegment_D] = *p++;
-        color.Segment[LedSegment_F] = *p++;
-
-        color.Segment[LedSegment_Decimal] = *p++;
-        color.Segment[LedSegment_G] = *p++;
-        color.Segment[LedSegment_Custom] = *p++;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
-
-        color.Segment[LedSegment_B] = pgm_read_byte(p++);
-        color.Segment[LedSegment_A] = pgm_read_byte(p++);
-        color.Segment[LedSegment_C] = pgm_read_byte(p++);
-
-        color.Segment[LedSegment_E] = pgm_read_byte(p++);
-        color.Segment[LedSegment_D] = pgm_read_byte(p++);
-        color.Segment[LedSegment_F] = pgm_read_byte(p++);
-
-        color.Segment[LedSegment_Decimal] = pgm_read_byte(p++);
-        color.Segment[LedSegment_G] = pgm_read_byte(p++);
-        color.Segment[LedSegment_Custom] = pgm_read_byte(p++);
-
-        return color;
-    }
-
 };

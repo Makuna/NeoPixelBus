@@ -206,7 +206,7 @@ struct RgbColor : RgbColorBase
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    RgbColor Dim(ElementType ratio) const;
+    RgbColor Dim(uint8_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Brighten will return a new color that is blended to white with the given ratio
@@ -214,7 +214,7 @@ struct RgbColor : RgbColorBase
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    RgbColor Brighten(ElementType ratio) const;
+    RgbColor Brighten(uint8_t ratio) const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black

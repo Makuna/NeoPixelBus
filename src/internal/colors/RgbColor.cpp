@@ -108,9 +108,9 @@ RgbColor::RgbColor(const HslColor& color)
 
     _HslToRgb(color, &r, &g, &b);
 
-    R = static_cast<uint8_t>(r * Max);
-    G = static_cast<uint8_t>(g * Max);
-    B = static_cast<uint8_t>(b * Max);
+    R = static_cast<ElementType>(r * Max);
+    G = static_cast<ElementType>(g * Max);
+    B = static_cast<ElementType>(b * Max);
 }
 
 RgbColor::RgbColor(const HsbColor& color)
@@ -121,9 +121,9 @@ RgbColor::RgbColor(const HsbColor& color)
 
     _HsbToRgb(color, &r, &g, &b);
 
-    R = static_cast<uint8_t>(r * Max);
-    G = static_cast<uint8_t>(g * Max);
-    B = static_cast<uint8_t>(b * Max);
+    R = static_cast<ElementType>(r * Max);
+    G = static_cast<ElementType>(g * Max);
+    B = static_cast<ElementType>(b * Max);
 }
 
 uint8_t RgbColor::CalculateBrightness() const
@@ -143,7 +143,7 @@ RgbColor RgbColor::Brighten(uint8_t ratio) const
     return RgbColor(_elementBrighten(R, ratio), _elementBrighten(G, ratio), _elementBrighten(B, ratio));
 }
 
-void RgbColor::Darken(uint8_t delta)
+void RgbColor::Darken(ElementType delta)
 {
     if (R > delta)
     {
@@ -173,7 +173,7 @@ void RgbColor::Darken(uint8_t delta)
     }
 }
 
-void RgbColor::Lighten(uint8_t delta)
+void RgbColor::Lighten(ElementType delta)
 {
     if (R < Max - delta)
     {

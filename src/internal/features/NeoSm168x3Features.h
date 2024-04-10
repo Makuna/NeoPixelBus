@@ -135,22 +135,19 @@ public:
     typedef T_SETTINGS SettingsObject;
     static const size_t SettingsSize = 2;
 
-    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    static bool applyFrontSettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    {
+        return false;
+    }
+
+    static bool applyBackSettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
         // settings are at the end of the data stream
-        uint8_t* pDest = pData + sizeData - SettingsSize;
-
-        settings.Encode(pDest);
-    }
-
-    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
-    {
-        return pData;
-    }
-
-    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
-    {
-        return pData;
+        if (SettingsSize <= sizeData)
+        {
+            settings.Encode(pData);
+        }
+        return true;
     }
 };
 

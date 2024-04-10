@@ -47,9 +47,9 @@ Rgbw64Color::Rgbw64Color(const HsbColor& color)
     *this = rgbColor;
 }
 
-uint16_t Rgbw64Color::CalculateBrightness() const
+ElementType Rgbw64Color::CalculateBrightness() const
 {
-    uint16_t colorB = static_cast<uint16_t>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
+    ElementType colorB = static_cast<ElementType>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
     if (W > colorB)
     {
         return W;
@@ -60,19 +60,19 @@ uint16_t Rgbw64Color::CalculateBrightness() const
     }
 }
 
-Rgbw64Color Rgbw64Color::Dim(uint16_t ratio) const
+Rgbw64Color Rgbw64Color::Dim(ElementType ratio) const
 {
     // specifically avoids float math
     return Rgbw64Color(_elementDim(R, ratio), _elementDim(G, ratio), _elementDim(B, ratio), _elementDim(W, ratio));
 }
 
-Rgbw64Color Rgbw64Color::Brighten(uint16_t ratio) const
+Rgbw64Color Rgbw64Color::Brighten(ElementType ratio) const
 {
     // specifically avoids float math
     return Rgbw64Color(_elementBrighten(R, ratio), _elementBrighten(G, ratio), _elementBrighten(B, ratio), _elementBrighten(W, ratio));
 }
 
-void Rgbw64Color::Darken(uint16_t delta)
+void Rgbw64Color::Darken(ElementType delta)
 {
     if (R > delta)
     {
@@ -111,7 +111,7 @@ void Rgbw64Color::Darken(uint16_t delta)
     }
 }
 
-void Rgbw64Color::Lighten(uint16_t delta)
+void Rgbw64Color::Lighten(ElementType delta)
 {
     if (IsColorLess())
     {

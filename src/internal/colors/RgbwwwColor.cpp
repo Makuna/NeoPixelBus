@@ -62,15 +62,15 @@ RgbwwwColor::RgbwwwColor(const HsbColor& color)
     *this = rgbColor;
 }
 
-uint8_t RgbwwwColor::CalculateBrightness() const
+ElementType RgbwwwColor::CalculateBrightness() const
 {
-    uint8_t colorB = static_cast<uint8_t>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
-    uint8_t whiteB = static_cast<uint8_t>((static_cast<uint16_t>(W1) + static_cast<uint16_t>(W2) + static_cast<uint16_t>(W3)) / 3);
+    ElementType colorB = static_cast<ElementType>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
+    ElementType whiteB = static_cast<ElementType>((static_cast<uint16_t>(W1) + static_cast<uint16_t>(W2) + static_cast<uint16_t>(W3)) / 3);
 
     return (whiteB > colorB) ? whiteB : colorB;
 }
 
-RgbwwwColor RgbwwwColor::Dim(uint8_t ratio) const
+RgbwwwColor RgbwwwColor::Dim(ElementType ratio) const
 {
     // specifically avoids float math
     return RgbwwwColor(_elementDim(R, ratio), 
@@ -81,7 +81,7 @@ RgbwwwColor RgbwwwColor::Dim(uint8_t ratio) const
         _elementDim(W3, ratio));
 }
 
-RgbwwwColor RgbwwwColor::Brighten(uint8_t ratio) const
+RgbwwwColor RgbwwwColor::Brighten(ElementType ratio) const
 {
     // specifically avoids float math
     return RgbwwwColor(_elementBrighten(R, ratio), 
@@ -92,7 +92,7 @@ RgbwwwColor RgbwwwColor::Brighten(uint8_t ratio) const
         _elementBrighten(W3, ratio));
 }
 
-void RgbwwwColor::Darken(uint8_t delta)
+void RgbwwwColor::Darken(ElementType delta)
 {
     if (R > delta)
     {
@@ -149,7 +149,7 @@ void RgbwwwColor::Darken(uint8_t delta)
     }
 }
 
-void RgbwwwColor::Lighten(uint8_t delta)
+void RgbwwwColor::Lighten(ElementType delta)
 {
     if (IsColorLess())
     {

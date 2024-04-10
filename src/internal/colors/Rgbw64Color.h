@@ -36,12 +36,13 @@ struct HsbColor;
 // ------------------------------------------------------------------------
 struct Rgbw64Color : RgbColorBase
 {
+    typedef uint16_t ElementType;
     typedef NeoRgbwCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
     // Construct a Rgbw64Color using R, G, B, W values (0-65535)
     // ------------------------------------------------------------------------
-    Rgbw64Color(uint16_t r, uint16_t g, uint16_t b, uint16_t w = 0) :
+    Rgbw64Color(ElementType r, ElementType g, ElementType b, ElementType w = 0) :
         R(r), G(g), B(b), W(w)
     {
     };
@@ -51,7 +52,7 @@ struct Rgbw64Color : RgbColorBase
     // This works well for creating gray tone colors
     // (0) = black, (65535) = white, (32768) = gray
     // ------------------------------------------------------------------------
-    Rgbw64Color(uint16_t brightness) :
+    Rgbw64Color(ElementType brightness) :
         R(0), G(0), B(0), W(brightness)
     {
     };
@@ -81,10 +82,10 @@ struct Rgbw64Color : RgbColorBase
     Rgbw64Color(const RgbwColor& color)
     {
         // x16 = map(x8, 0, 255, 0, 65535); // refactors to just * 257 
-        R = (uint16_t)color.R * 257; // 257 = MAXUINT16/MAXUINT8 = 65535/255
-        G = (uint16_t)color.G * 257;
-        B = (uint16_t)color.B * 257;
-        W = (uint16_t)color.W * 257;
+        R = (ElementType)color.R * 257; // 257 = MAXUINT16/MAXUINT8 = 65535/255
+        G = (ElementType)color.G * 257;
+        B = (ElementType)color.B * 257;
+        W = (ElementType)color.W * 257;
     };
 
 
@@ -135,7 +136,7 @@ struct Rgbw64Color : RgbColorBase
    //   negative - this is less than other
    //   positive - this is greater than other
    // ------------------------------------------------------------------------
-    int32_t CompareTo(const Rgbw64Color& other, uint16_t epsilon = 256)
+    int32_t CompareTo(const Rgbw64Color& other, ElementType epsilon = 256)
     {
         return _Compare<Rgbw64Color, int32_t>(*this, other, epsilon);
     }
@@ -148,7 +149,7 @@ struct Rgbw64Color : RgbColorBase
     //   negative - left is less than right
     //   positive - left is greater than right
     // ------------------------------------------------------------------------
-    static int32_t Compare(const Rgbw64Color& left, const Rgbw64Color& right, uint16_t epsilon = 256)
+    static int32_t Compare(const Rgbw64Color& left, const Rgbw64Color& right, ElementType epsilon = 256)
     {
         return _Compare<Rgbw64Color, int32_t>(left, right, epsilon);
     }
@@ -158,7 +159,7 @@ struct Rgbw64Color : RgbColorBase
     // access elements in order by index rather than R,G,B
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint16_t operator[](size_t idx) const
+    ElementType operator[](size_t idx) const
     {
         switch (idx)
         {
@@ -178,7 +179,7 @@ struct Rgbw64Color : RgbColorBase
     // access elements in order by index rather than R,G,B
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint16_t& operator[](size_t idx)
+    ElementType& operator[](size_t idx)
     {
         switch (idx)
         {
@@ -214,7 +215,7 @@ struct Rgbw64Color : RgbColorBase
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
-    uint16_t CalculateBrightness() const;
+    ElementType CalculateBrightness() const;
 
     // ------------------------------------------------------------------------
     // Dim will return a new color that is blended to black with the given ratio
@@ -222,7 +223,7 @@ struct Rgbw64Color : RgbColorBase
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    Rgbw64Color Dim(uint16_t ratio) const;
+    Rgbw64Color Dim(ElementType ratio) const;
 
     // ------------------------------------------------------------------------
     // Dim will return a new color that is blended to black with the given ratio
@@ -232,7 +233,7 @@ struct Rgbw64Color : RgbColorBase
     // ------------------------------------------------------------------------
     Rgbw64Color Dim(uint8_t ratio) const
     {
-        uint16_t expanded = ratio << 8;
+        ElementType expanded = ratio << 8;
         return Dim(expanded);
     }
 
@@ -242,7 +243,7 @@ struct Rgbw64Color : RgbColorBase
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    Rgbw64Color Brighten(uint16_t ratio) const;
+    Rgbw64Color Brighten(ElementType ratio) const;
 
     // ------------------------------------------------------------------------
     // Brighten will return a new color that is blended to white with the given ratio
@@ -252,7 +253,7 @@ struct Rgbw64Color : RgbColorBase
     // ------------------------------------------------------------------------
     Rgbw64Color Brighten(uint8_t ratio) const
     {
-        uint16_t expanded = ratio << 8;
+        ElementType expanded = ratio << 8;
         return Brighten(expanded);
     }
 
@@ -261,14 +262,14 @@ struct Rgbw64Color : RgbColorBase
     // NOTE: This is a simple linear change
     // delta - (0-65535) the amount to dim the color
     // ------------------------------------------------------------------------
-    void Darken(uint16_t delta);
+    void Darken(ElementType delta);
 
     // ------------------------------------------------------------------------
     // Lighten will adjust the color by the given delta toward white
     // NOTE: This is a simple linear change
     // delta - (0-65535) the amount to lighten the color
     // ------------------------------------------------------------------------
-    void Lighten(uint16_t delta);
+    void Lighten(ElementType delta);
 
     // ------------------------------------------------------------------------
     // LinearBlend between two colors by the amount defined by progress variable
@@ -299,7 +300,7 @@ struct Rgbw64Color : RgbColorBase
         float x, 
         float y);
 
-    uint16_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
+    uint32_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
     {
         auto total = 0;
 
@@ -316,21 +317,22 @@ struct Rgbw64Color : RgbColorBase
     // (0,0,0,0) is black and (65535,65535,65535, 0) and (0,0,0,65535) is white
     // Note (65535,65535,65535,65535) is extreme bright white
     // ------------------------------------------------------------------------
-    uint16_t R;
-    uint16_t G;
-    uint16_t B;
-    uint16_t W;
+    ElementType R;
+    ElementType G;
+    ElementType B;
+    ElementType W;
 
-    const static uint16_t Max = 65535;
+    const static ElementType Max = 65535;
     const static size_t Count = 4; // four elements in []
+    const static size_t Size = Count * sizeof(ElementType);
 
 private:
-    inline static uint16_t _elementDim(uint16_t value, uint16_t ratio)
+    inline static ElementType _elementDim(ElementType value, ElementType ratio)
     {
         return (static_cast<uint32_t>(value) * (static_cast<uint32_t>(ratio) + 1)) >> 16;
     }
 
-    inline static uint16_t _elementBrighten(uint16_t value, uint16_t ratio)
+    inline static ElementType _elementBrighten(ElementType value, ElementType ratio)
     {
         uint32_t element = ((static_cast<uint32_t>(value) + 1) << 16) / (static_cast<uint32_t>(ratio) + 1);
 

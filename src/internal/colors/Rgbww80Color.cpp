@@ -52,15 +52,15 @@ Rgbww80Color::Rgbww80Color(const Rgbw64Color& color) :
 {
 };
 
-uint16_t Rgbww80Color::CalculateBrightness() const
+ElementType Rgbww80Color::CalculateBrightness() const
 {
-    uint16_t colorB = static_cast<uint16_t>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
-    uint16_t whiteB = static_cast<uint16_t>((static_cast<uint32_t>(WW) + static_cast<uint32_t>(CW)) / 2);
+    ElementType colorB = static_cast<ElementType>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
+    ElementType whiteB = static_cast<ElementType>((static_cast<uint32_t>(WW) + static_cast<uint32_t>(CW)) / 2);
 
     return (whiteB > colorB) ? whiteB : colorB;
 }
 
-Rgbww80Color Rgbww80Color::Dim(uint16_t ratio) const
+Rgbww80Color Rgbww80Color::Dim(ElementType ratio) const
 {
     // specifically avoids float math
     return Rgbww80Color(_elementDim(R, ratio), 
@@ -70,7 +70,7 @@ Rgbww80Color Rgbww80Color::Dim(uint16_t ratio) const
         _elementDim(CW, ratio));
 }
 
-Rgbww80Color Rgbww80Color::Brighten(uint16_t ratio) const
+Rgbww80Color Rgbww80Color::Brighten(ElementType ratio) const
 {
     // specifically avoids float math
     return Rgbww80Color(_elementBrighten(R, ratio), 
@@ -80,7 +80,7 @@ Rgbww80Color Rgbww80Color::Brighten(uint16_t ratio) const
         _elementBrighten(CW, ratio));
 }
 
-void Rgbww80Color::Darken(uint16_t delta)
+void Rgbww80Color::Darken(ElementType delta)
 {
     if (R > delta)
     {
@@ -128,7 +128,7 @@ void Rgbww80Color::Darken(uint16_t delta)
     }
 }
 
-void Rgbww80Color::Lighten(uint16_t delta)
+void Rgbww80Color::Lighten(ElementType delta)
 {
     if (IsColorLess())
     {

@@ -61,36 +61,33 @@ public:
     typedef NeoTm1814Settings SettingsObject;
     static const size_t SettingsSize = 8;
 
-    static void applySettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
+    static bool applyFrontSettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
         // settings are at the front of the data stream
-        uint8_t* pSet = pData;
-
-        // C1
-        *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_1]) - SettingsObject::MinCurrent) / EncodeDivisor;
-        *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_2]) - SettingsObject::MinCurrent) / EncodeDivisor;
-        *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_3]) - SettingsObject::MinCurrent) / EncodeDivisor;
-        *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_4]) - SettingsObject::MinCurrent) / EncodeDivisor;
-        
-        uint8_t* pC1 = pData;
-
-        // C2
-        for (uint8_t elem = 0; elem < 4; elem++)
+        if (SettingsSize <= sizeData)
         {
-            *pSet++ = ~(*pC1++);
+            uint8_t* pSet = pData;
+
+            // C1
+            *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_1]) - SettingsObject::MinCurrent) / EncodeDivisor;
+            *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_2]) - SettingsObject::MinCurrent) / EncodeDivisor;
+            *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_3]) - SettingsObject::MinCurrent) / EncodeDivisor;
+            *pSet++ = (SettingsObject::LimitCurrent(settings[V_IC_4]) - SettingsObject::MinCurrent) / EncodeDivisor;
+
+            uint8_t* pC1 = pData;
+
+            // C2
+            for (uint8_t elem = 0; elem < 4; elem++)
+            {
+                *pSet++ = ~(*pC1++);
+            }
         }
+        return true;
     }
 
-    static uint8_t* pixels([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData)
+    static bool applyBackSettings([[maybe_unused]] uint8_t* pData, [[maybe_unused]] size_t sizeData, [[maybe_unused]] const SettingsObject& settings)
     {
-        // settings are at the front of the data stream
-        return pData + SettingsSize;
-    }
-
-    static const uint8_t* pixels([[maybe_unused]] const uint8_t* pData, [[maybe_unused]] size_t sizeData)
-    {
-        // settings are at the front of the data stream
-        return pData + SettingsSize;
+        return false;
     }
 };
 

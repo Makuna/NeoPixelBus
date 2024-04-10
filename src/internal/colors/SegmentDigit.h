@@ -65,13 +65,14 @@ public:
 // ------------------------------------------------------------------------
 struct SevenSegDigit
 {
+    typedef uint8_t ElementType;
     typedef NeoSevenSegCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
     // Construct a SevenSegDigit using 
     //   the default brightness to apply to all segments
     // ------------------------------------------------------------------------
-    SevenSegDigit(uint8_t defaultBrightness)
+    SevenSegDigit(ElementType defaultBrightness)
     {
         memset(Segment, defaultBrightness, sizeof(Segment));
     }
@@ -82,7 +83,7 @@ struct SevenSegDigit
     //   the brightness to apply to them, (0-255)
     //   the default brightness to apply to those not set in the bitmask (0-255)
     // ------------------------------------------------------------------------
-    SevenSegDigit(uint8_t bitmask, uint8_t brightness, uint8_t defaultBrightness = 0);
+    SevenSegDigit(uint8_t bitmask, ElementType brightness, ElementType defaultBrightness = 0);
 
     // ------------------------------------------------------------------------
     // Construct a SevenSegDigit using 
@@ -90,7 +91,7 @@ struct SevenSegDigit
     //   the brightness to apply to them, (0-255)
     //   the default brightness to apply to those not set in the bitmask (0-255)
     // ------------------------------------------------------------------------
-    SevenSegDigit(char letter, uint8_t brightness, uint8_t defaultBrightness = 0, bool maintainCase = false);
+    SevenSegDigit(char letter, ElementType brightness, ElementType defaultBrightness = 0, bool maintainCase = false);
 
     // ------------------------------------------------------------------------
     // Construct a SevenSegDigit that will have its values set in latter operations
@@ -125,7 +126,7 @@ struct SevenSegDigit
     // access elements in order of the Segments
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint8_t operator[](size_t idx) const
+    ElementType operator[](size_t idx) const
     {
         return Segment[idx];
     }
@@ -135,7 +136,7 @@ struct SevenSegDigit
     // access elements in order by index rather than R,G,B
     // see static Count for the number of elements
     // ------------------------------------------------------------------------
-    uint8_t& operator[](size_t idx)
+    ElementType& operator[](size_t idx)
     {
         return Segment[idx];
     }
@@ -144,7 +145,7 @@ struct SevenSegDigit
     // CalculateBrightness will calculate the overall brightness
     // NOTE: This is a simple linear brightness
     // ------------------------------------------------------------------------
-    uint8_t CalculateBrightness() const;
+    ElementType CalculateBrightness() const;
 
     // ------------------------------------------------------------------------
     // Dim will return a new SevenSegDigit that is blended to off with the given ratio
@@ -152,7 +153,7 @@ struct SevenSegDigit
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    SevenSegDigit Dim(uint8_t ratio) const;
+    SevenSegDigit Dim(ElementType ratio) const;
 
     // ------------------------------------------------------------------------
     // Brighten will return a new SevenSegDigit that is blended to full bright with the given ratio
@@ -160,21 +161,21 @@ struct SevenSegDigit
     // 
     // NOTE: This is a simple linear blend
     // ------------------------------------------------------------------------
-    SevenSegDigit Brighten(uint8_t ratio) const;
+    SevenSegDigit Brighten(ElementType ratio) const;
 
     // ------------------------------------------------------------------------
     // Darken will adjust the color by the given delta toward black
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to dim the segment
     // ------------------------------------------------------------------------
-    void Darken(uint8_t delta);
+    void Darken(ElementType delta);
 
     // ------------------------------------------------------------------------
     // Lighten will adjust the color by the given delta toward white
     // NOTE: This is a simple linear change
     // delta - (0-255) the amount to lighten the segment
     // ------------------------------------------------------------------------
-    void Lighten(uint8_t delta);
+    void Lighten(ElementType delta);
 
     // ------------------------------------------------------------------------
     // LinearBlend between two colors by the amount defined by progress variable
@@ -210,8 +211,8 @@ struct SevenSegDigit
     static void SetString(T_SET_TARGET& target, 
             uint16_t indexDigit, 
             const char* str, 
-            uint8_t brightness, 
-            uint8_t defaultBrightness = 0)
+            ElementType brightness, 
+            ElementType defaultBrightness = 0)
     {
         if (str == nullptr)
         {
@@ -287,10 +288,13 @@ struct SevenSegDigit
     // segment members (0-255) where each represents the segment location
     // and the value defines the brightnes (0) is off and (255) is full brightness
     // ------------------------------------------------------------------------
-    static const uint8_t Count = 9;
-    uint8_t Segment[Count];
+    const static ElementType Max = 255;
+    const static uint8_t Count = 9;
+    const static size_t Size = Count * sizeof(ElementType);
 
-    const static uint8_t Max = 255;
+    ElementType Segment[Count];
+
+    
 
     // segment decode maps from ascii relative first char in map to a bitmask of segments
     //
@@ -300,14 +304,14 @@ struct SevenSegDigit
     static const uint8_t DecodeSpecial[4]; // , - . /
 
 protected:
-    void init(uint8_t bitmask, uint8_t brightness, uint8_t defaultBrightness);
+    void init(uint8_t bitmask, ElementType brightness, ElementType defaultBrightness);
 
-    inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)
+    inline static ElementType _elementDim(ElementType value, ElementType ratio)
     {
         return (static_cast<uint16_t>(value) * (static_cast<uint16_t>(ratio) + 1)) >> 8;
     }
 
-    inline static uint8_t _elementBrighten(uint8_t value, uint8_t ratio)
+    inline static ElementType _elementBrighten(ElementType value, ElementType ratio)
     {
         uint16_t element = ((static_cast<uint16_t>(value) + 1) << 8) / (static_cast<uint16_t>(ratio) + 1);
 

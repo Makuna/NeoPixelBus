@@ -58,7 +58,7 @@ const uint8_t SevenSegDigit::DecodeSpecial[] = {
     // ,     -     .     /
     0x80, 0x40, 0x80, 0x40 };
 
-void SevenSegDigit::init(uint8_t bitmask, uint8_t brightness, uint8_t defaultBrightness)
+void SevenSegDigit::init(uint8_t bitmask, ElementType brightness, ElementType defaultBrightness)
 {
     for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
     {
@@ -67,12 +67,12 @@ void SevenSegDigit::init(uint8_t bitmask, uint8_t brightness, uint8_t defaultBri
     }
 }
 
-SevenSegDigit::SevenSegDigit(uint8_t bitmask, uint8_t brightness, uint8_t defaultBrightness)
+SevenSegDigit::SevenSegDigit(uint8_t bitmask, ElementType brightness, ElementType defaultBrightness)
 {
     init(bitmask, brightness, defaultBrightness);
 };
 
-SevenSegDigit::SevenSegDigit(char letter, uint8_t brightness, uint8_t defaultBrightness, bool maintainCase)
+SevenSegDigit::SevenSegDigit(char letter, ElementType brightness, ElementType defaultBrightness, bool maintainCase)
 {
     if (letter >= '0' && letter <= '9')
     {
@@ -108,7 +108,7 @@ SevenSegDigit::SevenSegDigit(char letter, uint8_t brightness, uint8_t defaultBri
     }
 };
 
-uint8_t SevenSegDigit::CalculateBrightness() const
+ElementType SevenSegDigit::CalculateBrightness() const
 {
     uint16_t sum = 0;
 
@@ -117,10 +117,10 @@ uint8_t SevenSegDigit::CalculateBrightness() const
         sum += Segment[iSegment];
     }
 
-    return static_cast<uint8_t>(sum / Count);
+    return static_cast<ElementType>(sum / Count);
 }
 
-SevenSegDigit SevenSegDigit::Dim(uint8_t ratio) const
+SevenSegDigit SevenSegDigit::Dim(ElementType ratio) const
 {
     SevenSegDigit result;
 
@@ -131,7 +131,7 @@ SevenSegDigit SevenSegDigit::Dim(uint8_t ratio) const
     return result;
 }
 
-SevenSegDigit SevenSegDigit::Brighten(uint8_t ratio) const
+SevenSegDigit SevenSegDigit::Brighten(ElementType ratio) const
 {
     SevenSegDigit result;
 
@@ -142,11 +142,11 @@ SevenSegDigit SevenSegDigit::Brighten(uint8_t ratio) const
     return result;
 }
 
-void SevenSegDigit::Darken(uint8_t delta)
+void SevenSegDigit::Darken(ElementType delta)
 {
     for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
     {
-        uint8_t element = Segment[iSegment];
+        ElementType element = Segment[iSegment];
         if (element > delta)
         {
             element -= delta;
@@ -159,11 +159,11 @@ void SevenSegDigit::Darken(uint8_t delta)
     }
 }
 
-void SevenSegDigit::Lighten(uint8_t delta)
+void SevenSegDigit::Lighten(ElementType delta)
 {
     for (uint8_t iSegment = 0; iSegment < Count; iSegment++)
     {
-        uint8_t element = Segment[iSegment];
+        ElementType element = Segment[iSegment];
         if (element < 255 - delta)
         {
             element += delta;
@@ -187,7 +187,7 @@ SevenSegDigit SevenSegDigit::LinearBlend(const SevenSegDigit& left, const SevenS
     return result;
 }
 
-SevenSegDigit SevenSegDigit::LinearBlend(const SevenSegDigit& left, const SevenSegDigit& right, uint8_t progress)
+SevenSegDigit SevenSegDigit::LinearBlend(const SevenSegDigit& left, const SevenSegDigit& right, ElementType progress)
 {
     SevenSegDigit result;
 
