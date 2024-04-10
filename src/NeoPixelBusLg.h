@@ -243,6 +243,13 @@ public:
     }
 
     // TODO:  Move other modification methods over
+    void RotateLeft(uint16_t rotationCount)
+    {
+        if ((_countPixels - 1) >= rotationCount)
+        {
+            _rotateLeft(rotationCount, 0, _countPixels - 1);
+        }
+    }
 
 protected:
     const uint16_t _countPixels; 
@@ -256,6 +263,37 @@ protected:
     {
         _pixels = new T_EXPOSED_COLOR_OBJECT[_countPixels];
         ClearTo(0);
+    }
+
+    void _rotateLeft(uint16_t rotationCount, uint16_t first, uint16_t last)
+    {
+        // store in temp
+        T_EXPOSED_COLOR_OBJECT temp[rotationCount];
+        T_EXPOSED_COLOR_OBJECT* pixel = _pixels;
+
+        for (uint16_t index = 0; index < rotationCount; index++)
+        {
+            temp[index] = _pixels[first + index];
+        }
+
+        // shift data
+        _shiftLeft(rotationCount, first, last);
+
+        // move temp back
+        for (uint16_t index = 0; index < rotationCount; index++)
+        {
+            _pixels[last - (rotationCount - 1) + index] = temp[index];
+        }
+    }
+
+    void _shiftLeft(uint16_t shiftCount, uint16_t first, uint16_t last)
+    {
+        uint16_t front = first + shiftCount;
+       
+        while (first <= last)
+        {
+            _pixels[first++] = _pixels[front++];
+        }
     }
 };
 
