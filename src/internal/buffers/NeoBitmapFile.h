@@ -229,9 +229,9 @@ public:
         int16_t ySrc,
         int16_t wSrc)
     {
-        NeoShaderNop<typename T_COLOR_FEATURE::ColorObject> shaderNop;
+        NeoShaderNop<typename T_COLOR_FEATURE::ColorObject, typename T_COLOR_FEATURE::ColorObject> shaderNop;
 
-        Render<NeoShaderNop<typename T_COLOR_FEATURE::ColorObject>>(destBuffer, shaderNop, indexPixel, xSrc, ySrc, wSrc);
+        Render<NeoShaderNop<typename T_COLOR_FEATURE::ColorObject, typename T_COLOR_FEATURE::ColorObject>>(destBuffer, shaderNop, indexPixel, xSrc, ySrc, wSrc);
     };
 
     template <typename T_SHADER> void Render(NeoBufferContext<T_COLOR_FEATURE> destBuffer,
@@ -285,9 +285,9 @@ public:
         int16_t hSrc,
         LayoutMapCallback layoutMap)
     {
-        NeoShaderNop<typename T_COLOR_FEATURE::ColorObject> shaderNop;
+        NeoShaderNop<typename T_COLOR_FEATURE::ColorObject, typename T_COLOR_FEATURE::ColorObject> shaderNop;
 
-        Render<NeoShaderNop<typename T_COLOR_FEATURE::ColorObject>>(destBuffer,
+        Render<NeoShaderNop<typename T_COLOR_FEATURE::ColorObject, typename T_COLOR_FEATURE::ColorObject>>(destBuffer,
             shaderNop, 
             xDest,
             yDest,

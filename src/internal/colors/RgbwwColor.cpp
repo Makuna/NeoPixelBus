@@ -61,7 +61,7 @@ RgbwwColor::RgbwwColor(const HsbColor& color)
     *this = rgbColor;
 }
 
-ElementType RgbwwColor::CalculateBrightness() const
+RgbwwColor::ElementType RgbwwColor::CalculateBrightness() const
 {
     ElementType colorB = static_cast<ElementType>((static_cast<uint16_t>(R) + static_cast<uint16_t>(G) + static_cast<uint16_t>(B)) / 3);
     ElementType whiteB = static_cast<ElementType>((static_cast<uint16_t>(WW) + static_cast<uint16_t>(CW)) / 2);

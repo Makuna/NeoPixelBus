@@ -108,7 +108,7 @@ SevenSegDigit::SevenSegDigit(char letter, ElementType brightness, ElementType de
     }
 };
 
-ElementType SevenSegDigit::CalculateBrightness() const
+SevenSegDigit::ElementType SevenSegDigit::CalculateBrightness() const
 {
     uint16_t sum = 0;
 

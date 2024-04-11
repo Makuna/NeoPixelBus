@@ -52,7 +52,7 @@ Rgbww80Color::Rgbww80Color(const Rgbw64Color& color) :
 {
 };
 
-ElementType Rgbww80Color::CalculateBrightness() const
+Rgbww80Color::ElementType Rgbww80Color::CalculateBrightness() const
 {
     ElementType colorB = static_cast<ElementType>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
     ElementType whiteB = static_cast<ElementType>((static_cast<uint32_t>(WW) + static_cast<uint32_t>(CW)) / 2);

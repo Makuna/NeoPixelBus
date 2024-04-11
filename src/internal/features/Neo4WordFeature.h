@@ -33,16 +33,19 @@ class Neo4WordFeature :
 public:
     static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
 
-        // due to endianness the byte order must be copied to output
-        *p++ = color[V_IC_1] >> 8;
-        *p++ = color[V_IC_1] & 0xff;
-        *p++ = color[V_IC_2] >> 8;
-        *p++ = color[V_IC_2] & 0xff;
-        *p++ = color[V_IC_3] >> 8;
-        *p++ = color[V_IC_3] & 0xff;
-        *p++ = color[V_IC_4] >> 8;
-        *p = color[V_IC_4] & 0xff;
+            // due to endianness the byte order must be copied to output
+            *p++ = color[V_IC_1] >> 8;
+            *p++ = color[V_IC_1] & 0xff;
+            *p++ = color[V_IC_2] >> 8;
+            *p++ = color[V_IC_2] & 0xff;
+            *p++ = color[V_IC_3] >> 8;
+            *p++ = color[V_IC_3] & 0xff;
+            *p++ = color[V_IC_4] >> 8;
+            *p = color[V_IC_4] & 0xff;
+        }
     }
  };

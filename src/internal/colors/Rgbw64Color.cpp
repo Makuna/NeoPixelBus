@@ -47,7 +47,7 @@ Rgbw64Color::Rgbw64Color(const HsbColor& color)
     *this = rgbColor;
 }
 
-ElementType Rgbw64Color::CalculateBrightness() const
+Rgbw64Color::ElementType Rgbw64Color::CalculateBrightness() const
 {
     ElementType colorB = static_cast<ElementType>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
     if (W > colorB)

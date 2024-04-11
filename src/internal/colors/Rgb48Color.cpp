@@ -69,7 +69,7 @@ Rgb48Color::Rgb48Color(const HsbColor& color)
     B = static_cast<ElementType>(b * Max);
 }
 
-ElementType Rgb48Color::CalculateBrightness() const
+Rgb48Color::ElementType Rgb48Color::CalculateBrightness() const
 {
     return static_cast<ElementType>((static_cast<uint32_t>(R) + static_cast<uint32_t>(G) + static_cast<uint32_t>(B)) / 3);
 }

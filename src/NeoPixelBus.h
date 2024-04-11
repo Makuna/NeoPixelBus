@@ -42,103 +42,129 @@ const uint16_t PixelIndex_OutOfBounds = 0xffff;
 #include "internal/NeoBusChannel.h"
 #include "internal/NeoMethods.h"
 
-
-template<typename T_COLOR_FEATURE, typename T_METHOD> 
+// T_COLOR_FEATURE - 
+//    The color feature object that defines bit depth, order, and any settings related
+//    to them
+// 
+// T_METHOD -
+//    The led feature objec that defines specific timing and hardware used to send the data
+//    stream on the pin
+// 
+// T_EXPOSED_COLOR_OBJECT- 
+//    The color object to use for the front buffer, does not need to match the
+//    T_COLOR_FEATURE::ColorObject but must be auto-converted, so no loss of data
+// 
+template<typename T_COLOR_FEATURE, 
+    typename T_METHOD,
+    typename T_EXPOSED_COLOR_OBJECT = typename T_COLOR_FEATURE::ColorObject,
+    typename T_SHADER = NeoShaderNop<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject>>
 class NeoPixelBus
 {
 public:
-    // Constructor: number of LEDs, pin number
-    // NOTE:  Pin Number maybe ignored due to hardware limitations of the method.
-   
     NeoPixelBus(uint16_t countPixels, uint8_t pin) :
         _countPixels(countPixels),
-        _state(0),
-        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
+        _pixels(nullptr),
+        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _shader()
     {
     }
 
     NeoPixelBus(uint16_t countPixels, uint8_t pin, NeoBusChannel channel) :
         _countPixels(countPixels),
-        _state(0),
-        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, channel)
+        _pixels(nullptr),
+        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, channel),
+        _shader()
     {
     }
 
     NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
         _countPixels(countPixels),
-        _state(0),
-        _method(pinClock, pinData, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
+        _pixels(nullptr),
+        _method(pinClock, pinData, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _shader()
     {
     }
 
     NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
         _countPixels(countPixels),
-        _state(0),
-        _method(pinClock, pinData, pinLatch, pinOutputEnable, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
+        _pixels(nullptr),
+        _method(pinClock, pinData, pinLatch, pinOutputEnable, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _shader()
     {
     }
 
     NeoPixelBus(uint16_t countPixels) :
         _countPixels(countPixels),
-        _state(0),
-        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize)
+        _pixels(nullptr),
+        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _shader()
     {
     }
 
     NeoPixelBus(uint16_t countPixels, Stream* pixieStream) :
         _countPixels(countPixels),
-        _state(0),
-        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, pixieStream)
+        _pixels(nullptr),
+        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, pixieStream),
+        _shader()
     {
     }
 
     ~NeoPixelBus()
     {
+        delete[] _pixels;
     }
 
+/*  Is this used anymore
     operator NeoBufferContext<T_COLOR_FEATURE>()
     {
         Dirty(); // we assume you are playing with bits
         return NeoBufferContext<T_COLOR_FEATURE>(_pixels(), PixelsSize());
     }
+*/
 
     void Begin()
     {
         _method.Initialize();
-        ClearTo(0);
+        _initialize();
     }
 
     // used by DotStarSpiMethod/DotStarEsp32DmaSpiMethod if pins can be configured
     void Begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
         _method.Initialize(sck, miso, mosi, ss);
-        ClearTo(0);
+        _initialize();
     }
 
     // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting quad SPI
     void Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
     {
         _method.Initialize(sck, dat0, dat1, dat2, dat3, ss);
-        ClearTo(0);
+        _initialize();
     }
 
     // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting oct SPI
     void Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
     {
         _method.Initialize(sck, dat0, dat1, dat2, dat3, dat4, dat5, dat6, dat7, ss);
-        ClearTo(0);
+        _initialize();
     }
 
-    void Show(bool maintainBufferConsistency = true)
+    void SetFeatureSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
     {
-        if (!IsDirty() && !_method.AlwaysUpdate())
-        {
-            return;
-        }
+        _featureSettings = settings;
+    }
 
-        _method.Update(maintainBufferConsistency);
+    void SetMethodSettings(const typename T_METHOD::SettingsObject& settings)
+    {
+        _method.applySettings(settings);
+    }
 
-        ResetDirty();
+    void Show()
+    {
+        _method.template Update<T_EXPOSED_COLOR_OBJECT, T_COLOR_FEATURE, T_SHADER>(_pixels,
+            _countPixels,
+            _featureSettings,
+            _shader);
     }
 
     inline bool CanShow() const
@@ -146,34 +172,9 @@ public:
         return _method.IsReadyToUpdate();
     };
 
-    bool IsDirty() const
+    T_EXPOSED_COLOR_OBJECT* Pixels()
     {
-        return  (_state & NEO_DIRTY);
-    };
-
-    void Dirty()
-    {
-        _state |= NEO_DIRTY;
-    };
-
-    void ResetDirty()
-    {
-        _state &= ~NEO_DIRTY;
-    };
-
-    uint8_t* Pixels() 
-    {
-        return _pixels();
-    };
-
-    size_t PixelsSize() const
-    {
-        return _method.getDataSize() - T_COLOR_FEATURE::SettingsSize;
-    };
-
-    size_t PixelSize() const
-    {
-        return T_COLOR_FEATURE::PixelSize;
+        return _pixels;
     };
 
     uint16_t PixelCount() const
@@ -185,23 +186,17 @@ public:
     {
         if (indexPixel < _countPixels)
         {
-            T_COLOR_FEATURE::applyPixelColor(_pixels(), indexPixel, color);
-            Dirty();
+            _pixels[indexPixel] = color;
         }
     };
 
-    typename T_COLOR_FEATURE::ColorObject GetPixelColor(uint16_t indexPixel) const
+    T_EXPOSED_COLOR_OBJECT GetPixelColor(uint16_t indexPixel) const
     {
-        if (indexPixel < _countPixels)
+        if (indexPixel >= _countPixels)
         {
-            return T_COLOR_FEATURE::retrievePixelColor(_pixels(), indexPixel);
-        }
-        else
-        {
-            // Pixel # is out of bounds, this will get converted to a 
-            // color object type initialized to 0 (black)
             return 0;
         }
+        return _pixels[indexPixel];
     };
 
     template <typename T_COLOROBJECT> T_COLOROBJECT GetPixelColor(uint16_t indexPixel) const
@@ -209,33 +204,24 @@ public:
         return T_COLOROBJECT(GetPixelColor(indexPixel));
     }
 
-    void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
+    void ClearTo(const T_EXPOSED_COLOR_OBJECT& color)
     {
-        uint8_t temp[T_COLOR_FEATURE::PixelSize]; 
-        uint8_t* pixels = _pixels();
+        ClearTo(color, 0, _countPixels - 1);
+    }
 
-        T_COLOR_FEATURE::applyPixelColor(temp, 0, color);
-
-        T_COLOR_FEATURE::replicatePixel(pixels, temp, _countPixels);
-
-        Dirty();
-    };
-
-    void ClearTo(typename T_COLOR_FEATURE::ColorObject color, uint16_t first, uint16_t last)
+    void ClearTo(const T_EXPOSED_COLOR_OBJECT& color, uint16_t first, uint16_t last)
     {
         if (first < _countPixels &&
             last < _countPixels &&
             first <= last)
         {
-            uint8_t temp[T_COLOR_FEATURE::PixelSize];
-            uint8_t* pixels = _pixels();
-            uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, first);
+            T_EXPOSED_COLOR_OBJECT* pixels = _pixels + last + 1;
+            T_EXPOSED_COLOR_OBJECT* pixelsFirst = _pixels + first;
 
-            T_COLOR_FEATURE::applyPixelColor(temp, 0, color);
-
-            T_COLOR_FEATURE::replicatePixel(pFront, temp, last - first + 1);
-
-            Dirty();
+            while (pixelsFirst <= --pixels)
+            {
+                *pixels = color;
+            }
         }
     }
 
@@ -263,7 +249,6 @@ public:
         if ((_countPixels - 1) >= shiftCount)
         {
             _shiftLeft(shiftCount, 0, _countPixels - 1);
-            Dirty();
         }
     }
 
@@ -275,7 +260,6 @@ public:
             (last - first) >= shiftCount)
         {
             _shiftLeft(shiftCount, first, last);
-            Dirty();
         }
     }
 
@@ -303,7 +287,6 @@ public:
         if ((_countPixels - 1) >= shiftCount)
         {
             _shiftRight(shiftCount, 0, _countPixels - 1);
-            Dirty();
         }
     }
 
@@ -315,32 +298,19 @@ public:
             (last - first) >= shiftCount)
         {
             _shiftRight(shiftCount, first, last);
-            Dirty();
         }
     }
     
     void SwapPixelColor(uint16_t indexPixelOne, uint16_t indexPixelTwo)
     {
         auto colorOne = GetPixelColor(indexPixelOne);
-        auto colorTwo = GetPixelColor(indexPixelTwo);
 
-        SetPixelColor(indexPixelOne, colorTwo);
+        SetPixelColor(indexPixelOne, GetPixelColor(indexPixelTwo));
         SetPixelColor(indexPixelTwo, colorOne);
     };
 
-    void SetPixelSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
-    {
-        T_COLOR_FEATURE::applySettings(_method.getData(), _method.getDataSize(), settings);
-        Dirty();
-    };
 
-    void SetMethodSettings(const typename T_METHOD::SettingsObject& settings)
-    {
-        _method.applySettings(settings);
-        Dirty();
-    };
- 
-    uint32_t CalcTotalMilliAmpere(const typename T_COLOR_FEATURE::ColorObject::SettingsObject& settings)
+    uint32_t CalcTotalMilliAmpere(const typename T_EXPOSED_COLOR_OBJECT::SettingsObject& settings)
     {
         uint32_t total = 0; // in 1/10th milliamps
 
@@ -356,86 +326,75 @@ public:
 protected:
     const uint16_t _countPixels; // Number of RGB LEDs in strip
 
-    uint8_t _state;     // internal state
+    T_EXPOSED_COLOR_OBJECT* _pixels;
     T_METHOD _method;
+    T_SHADER _shader;
+    typename T_COLOR_FEATURE::SettingsObject _featureSettings;
 
-    uint8_t* _pixels()
+    void _initialize()
     {
-        // get pixels data within the data stream
-        return T_COLOR_FEATURE::pixels(_method.getData(), _method.getDataSize());
-    }
-
-    const uint8_t* _pixels() const
-    {
-        // get pixels data within the data stream
-        return T_COLOR_FEATURE::pixels(_method.getData(), _method.getDataSize());
+        _pixels = new T_EXPOSED_COLOR_OBJECT[_countPixels];
+        ClearTo(0);
     }
 
     void _rotateLeft(uint16_t rotationCount, uint16_t first, uint16_t last)
     {
         // store in temp
-        uint8_t temp[rotationCount * T_COLOR_FEATURE::PixelSize];
-        uint8_t* pixels = _pixels();
+        T_EXPOSED_COLOR_OBJECT temp[rotationCount];
 
-        uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, first);
-
-        T_COLOR_FEATURE::movePixelsInc(temp, pFront, rotationCount);
+        for (uint16_t index = 0; index < rotationCount; index++)
+        {
+            temp[index] = _pixels[first + index];
+        }
 
         // shift data
         _shiftLeft(rotationCount, first, last);
 
         // move temp back
-        pFront = T_COLOR_FEATURE::getPixelAddress(pixels, last - (rotationCount - 1));
-        T_COLOR_FEATURE::movePixelsInc(pFront, temp, rotationCount);
-
-        Dirty();
+        for (uint16_t index = 0; index < rotationCount; index++)
+        {
+            _pixels[last - (rotationCount - 1) + index] = temp[index];
+        }
     }
 
     void _shiftLeft(uint16_t shiftCount, uint16_t first, uint16_t last)
     {
         uint16_t front = first + shiftCount;
-        uint16_t count = last - front + 1;
 
-        uint8_t* pixels = _pixels();
-        uint8_t* pFirst = T_COLOR_FEATURE::getPixelAddress(pixels, first);
-        uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, front);
-
-        T_COLOR_FEATURE::movePixelsInc(pFirst, pFront, count);
-
-        // intentional no dirty
+        while (first <= last)
+        {
+            _pixels[first++] = _pixels[front++];
+        }
     }
 
     void _rotateRight(uint16_t rotationCount, uint16_t first, uint16_t last)
     {
         // store in temp
-        uint8_t temp[rotationCount * T_COLOR_FEATURE::PixelSize];
-        uint8_t* pixels = _pixels();
+        T_EXPOSED_COLOR_OBJECT temp[rotationCount];
 
-        uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, last - (rotationCount - 1));
-
-        T_COLOR_FEATURE::movePixelsDec(temp, pFront, rotationCount);
+        for (uint16_t index = 0; index < rotationCount; index++)
+        {
+            temp[index] = _pixels[last - (rotationCount - 1) + index];
+        }
 
         // shift data
         _shiftRight(rotationCount, first, last);
 
         // move temp back
-        pFront = T_COLOR_FEATURE::getPixelAddress(pixels, first);
-        T_COLOR_FEATURE::movePixelsDec(pFront, temp, rotationCount);
-
-        Dirty();
+        for (uint16_t index = 0; index < rotationCount; index++)
+        {
+            _pixels[first + index] = temp[index];
+        }
     }
 
     void _shiftRight(uint16_t shiftCount, uint16_t first, uint16_t last)
     {
-        uint16_t front = first + shiftCount;
-        uint16_t count = last - front + 1;
+        uint16_t front = last - shiftCount;
 
-        uint8_t* pixels = _pixels();
-        uint8_t* pFirst = T_COLOR_FEATURE::getPixelAddress(pixels, first);
-        uint8_t* pFront = T_COLOR_FEATURE::getPixelAddress(pixels, front);
-
-        T_COLOR_FEATURE::movePixelsDec(pFront, pFirst, count);
-        // intentional no dirty
+        while (first <= last)
+        {
+            _pixels[last--] = _pixels[front--];
+        }
     }
 };
 

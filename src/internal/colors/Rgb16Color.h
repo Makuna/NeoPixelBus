@@ -32,6 +32,7 @@ License along with NeoPixel.  If not, see
 // ------------------------------------------------------------------------
 struct Rgb16Color : RgbColorBase
 {
+    typedef uint8_t ElementType;
     typedef NeoRgbCurrentSettings SettingsObject;
 
     // ------------------------------------------------------------------------
