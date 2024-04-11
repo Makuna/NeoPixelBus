@@ -97,6 +97,54 @@ class NeoPixelBusLg :
         LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>
 {
 public:
+    NeoPixelBusLg(uint16_t countPixels, uint8_t pin) :
+        NeoPixelBus<T_COLOR_FEATURE,
+            T_METHOD,
+            T_EXPOSED_COLOR_OBJECT,
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pin)
+    {
+    }
+
+    NeoPixelBusLg(uint16_t countPixels, uint8_t pin, NeoBusChannel channel) :
+        NeoPixelBus<T_COLOR_FEATURE,
+            T_METHOD,
+            T_EXPOSED_COLOR_OBJECT,
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pin, channel)
+    {
+    }
+
+    NeoPixelBusLg(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
+        NeoPixelBus<T_COLOR_FEATURE,
+            T_METHOD,
+            T_EXPOSED_COLOR_OBJECT,
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pinClock, pinData)
+    {
+    }
+
+    NeoPixelBusLg(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
+        NeoPixelBus<T_COLOR_FEATURE,
+            T_METHOD,
+            T_EXPOSED_COLOR_OBJECT,
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pinClock, pinData, pinLatch, pinOutputEnable)
+    {
+    }
+
+    NeoPixelBusLg(uint16_t countPixels) :
+        NeoPixelBus<T_COLOR_FEATURE,
+            T_METHOD,
+            T_EXPOSED_COLOR_OBJECT,
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels)
+    {
+    }
+
+    NeoPixelBusLg(uint16_t countPixels, Stream* pixieStream) :
+        NeoPixelBus<T_COLOR_FEATURE,
+            T_METHOD,
+            T_EXPOSED_COLOR_OBJECT,
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pixieStream)
+    {
+    }
+
     void SetLuminance(typename T_EXPOSED_COLOR_OBJECT::ElementType luminance)
     {
         this->_shader.setLuminance(luminance);
