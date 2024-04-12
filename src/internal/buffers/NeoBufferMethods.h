@@ -26,30 +26,34 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-template<typename T_COLOR_FEATURE> class NeoBufferMethod
+template<typename T_COLOR_OBJECT> class NeoBufferMethod
 {
 public:
     NeoBufferMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels = nullptr) :
         _width(width),
         _height(height)
     {
-        _pixels = (uint8_t*)malloc(PixelsSize());
+        _pixels = new T_COLOR_OBJECT[PixelCount()];
+
         if (pixels)
         {
             // copy from progmem to initialize
-            T_COLOR_FEATURE::movePixelsInc_P(_pixels, pixels, PixelCount());
+            for (size_t index = 0; index < PixelCount(); index++)
+            {
+                _pixels[index] = T_COLOR_OBJECT::PgmRead(pixels + T_COLOR_OBJECT::Size * indexPixel);
+            }
         }
     }
 
     ~NeoBufferMethod()
     {
-        free(_pixels);
+        delete [] _pixels;
         _pixels = nullptr;
     }
 
-    operator NeoBufferContext<T_COLOR_FEATURE>()
+    operator NeoBufferContext<T_COLOR_OBJECT>()
     {
-        return NeoBufferContext<T_COLOR_FEATURE>(Pixels(), PixelsSize());
+        return NeoBufferContext<T_COLOR_OBJECT>(Pixels(), PixelsCount());
     }
 
     uint8_t* Pixels() const
@@ -64,7 +68,7 @@ public:
 
     size_t PixelSize() const
     {
-        return T_COLOR_FEATURE::PixelSize;
+        return T_COLOR_OBJECT::Size;
     };
 
     uint16_t PixelCount() const
@@ -82,15 +86,15 @@ public:
         return _height;
     };
 
-    void SetPixelColor(uint16_t indexPixel, typename T_COLOR_FEATURE::ColorObject color)
+    void SetPixelColor(uint16_t indexPixel, T_COLOR_OBJECT color)
     {
         if (indexPixel < PixelCount())
         {
-            T_COLOR_FEATURE::applyPixelColor(_pixels, indexPixel, color);
+            _pixels[indexPixel] = color;
         }
     };
 
-    void SetPixelColor(int16_t x, int16_t y, typename T_COLOR_FEATURE::ColorObject color)
+    void SetPixelColor(int16_t x, int16_t y, T_COLOR_OBJECT color)
     {
         if (x < 0 || x >= _width || y < 0 || y >= _height)
         {
@@ -98,10 +102,10 @@ public:
         }
 
         uint16_t indexPixel = x + y * _width;
-        T_COLOR_FEATURE::applyPixelColor(_pixels, indexPixel, color);
+        _pixels[indexPixel] = color;
     };
 
-    typename T_COLOR_FEATURE::ColorObject GetPixelColor(uint16_t indexPixel) const
+    T_COLOR_OBJECT GetPixelColor(uint16_t indexPixel) const
     {
         if (indexPixel >= PixelCount())
         {
@@ -110,10 +114,10 @@ public:
             return 0;
         }
 
-        return T_COLOR_FEATURE::retrievePixelColor(_pixels, indexPixel);
+        return _pixels[indexPixel];
     };
 
-    typename T_COLOR_FEATURE::ColorObject GetPixelColor(int16_t x, int16_t y) const
+    T_COLOR_OBJECT GetPixelColor(int16_t x, int16_t y) const
     {
         if (x < 0 || x >= _width || y < 0 || y >= _height)
         {
@@ -123,30 +127,26 @@ public:
         }
 
         uint16_t indexPixel = x + y * _width;
-        return T_COLOR_FEATURE::retrievePixelColor(_pixels, indexPixel);
+        return _pixels[indexPixel];
     };
 
-    void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
+    void ClearTo(T_COLOR_OBJECT color)
     {
-        uint8_t temp[T_COLOR_FEATURE::PixelSize];
+        T_COLOR_OBJECT* pixel = _pixels;
+        T_COLOR_OBJECT* pixelEnd = pixel + PixelCount();
 
-        T_COLOR_FEATURE::applyPixelColor(temp, 0, color);
-
-        T_COLOR_FEATURE::replicatePixel(_pixels, temp, PixelCount());
+        while (pixel < pixelEnd)
+        {
+            *pixel++ = color;
+        }
     };
 
-    void CopyPixels(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
-    {
-        T_COLOR_FEATURE::movePixelsInc(pPixelDest, pPixelSrc, count);
-    }
-
-    typedef typename T_COLOR_FEATURE::ColorObject ColorObject;
-    typedef T_COLOR_FEATURE ColorFeature;
+    typedef T_COLOR_OBJECT ColorObject;
 
 private:
     const uint16_t _width; 
     const uint16_t _height;
-    uint8_t* _pixels;
+    T_COLOR_OBJECT* _pixels;
 };
 
 

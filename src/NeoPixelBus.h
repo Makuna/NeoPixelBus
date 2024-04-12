@@ -114,13 +114,11 @@ public:
         delete[] _pixels;
     }
 
-/*  Is this used anymore
-    operator NeoBufferContext<T_COLOR_FEATURE>()
+
+    operator NeoBufferContext<T_EXPOSED_COLOR_OBJECT>()
     {
-        Dirty(); // we assume you are playing with bits
-        return NeoBufferContext<T_COLOR_FEATURE>(_pixels(), PixelsSize());
+        return NeoBufferContext<T_EXPOSED_COLOR_OBJECT>(_pixels, _countPixels);
     }
-*/
 
     void Begin()
     {

@@ -277,6 +277,12 @@ struct RgbwColor : RgbColorBase
         float x, 
         float y);
 
+
+    static RgbwColor PgmRead(PGM_VOID_P pPixelSrc)
+    {
+        return _PgmReadByBytes<RgbwColor>(pPixelSrc);
+    }
+
     uint16_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
     {
         auto total = 0;

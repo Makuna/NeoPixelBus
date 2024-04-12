@@ -26,7 +26,7 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-template<typename T_COLOR_FEATURE> class NeoBufferProgmemMethod
+template<typename T_COLOR_OBJECT> class NeoBufferProgmemMethod
 {
 public:
     NeoBufferProgmemMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels) :
@@ -36,24 +36,14 @@ public:
     {
     }
 
-    operator NeoBufferContext<T_COLOR_FEATURE>()
+    operator NeoBufferContext<T_COLOR_OBJECT>()
     {
-        return NeoBufferContext<T_COLOR_FEATURE>(Pixels(), PixelsSize());
+        return NeoBufferContext<T_COLOR_OBJECT>(Pixels(), PixelsCount());
     }
 
     const uint8_t* Pixels() const
     {
         return reinterpret_cast<const uint8_t*>(_pixels);
-    };
-
-    size_t PixelsSize() const
-    {
-        return PixelSize() * PixelCount();
-    };
-
-    size_t PixelSize() const
-    {
-        return T_COLOR_FEATURE::PixelSize;
     };
 
     uint16_t PixelCount() const
@@ -71,17 +61,17 @@ public:
         return _height;
     };
 
-    void SetPixelColor(uint16_t indexPixel, typename T_COLOR_FEATURE::ColorObject color)
+    void SetPixelColor(uint16_t indexPixel, T_COLOR_OBJECT color)
     {
         // PROGMEM is read only, this will do nothing
     };
 
-    void SetPixelColor(uint16_t x, uint16_t y, typename T_COLOR_FEATURE::ColorObject color)
+    void SetPixelColor(uint16_t x, uint16_t y, T_COLOR_OBJECT color)
     {
         // PROGMEM is read only, this will do nothing
     };
 
-    typename T_COLOR_FEATURE::ColorObject GetPixelColor(uint16_t indexPixel) const
+    T_COLOR_OBJECT GetPixelColor(uint16_t indexPixel) const
     {
         if (indexPixel >= PixelCount())
         {
@@ -90,10 +80,11 @@ public:
             return 0;
         }
 
-        return T_COLOR_FEATURE::retrievePixelColor_P(_pixels, indexPixel);
+        return T_COLOR_OBJECT::PgmRead(_pixels + T_COLOR_OBJECT::Size * indexPixel);
     };
 
-    typename T_COLOR_FEATURE::ColorObject GetPixelColor(int16_t x, int16_t y) const
+
+    T_COLOR_OBJECT GetPixelColor(int16_t x, int16_t y) const
     {
         if (x < 0 || x >= _width || y < 0 || y >= _height)
         {
@@ -103,21 +94,15 @@ public:
         }
 
         uint16_t indexPixel = x + y * _width;
-        return T_COLOR_FEATURE::retrievePixelColor_P(_pixels, indexPixel);
+        return GetPixelColor(indexPixel);
     };
 
-    void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
+    void ClearTo(T_COLOR_OBJECT color)
     {
         // PROGMEM is read only, this will do nothing
     };
 
-    void CopyPixels(uint8_t* pPixelDest, const uint8_t* pPixelSrc, uint16_t count)
-    {
-        T_COLOR_FEATURE::movePixelsInc_P(pPixelDest, pPixelSrc, count);
-    }
-
-    typedef typename T_COLOR_FEATURE::ColorObject ColorObject;
-    typedef T_COLOR_FEATURE ColorFeature;
+    typedef T_COLOR_OBJECT ColorObject;
 
 private:
     const uint16_t _width;

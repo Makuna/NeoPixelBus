@@ -27,14 +27,12 @@ License along with NeoPixel.  If not, see
 
 #include "buffers/LayoutMapCallback.h"
 #include "buffers/NeoShaderNop.h"
-#include "buffers/NeoShaderBase.h"
-#include "buffers/NeoBufferContext.h"
 
+#include "buffers/NeoBufferContext.h"
 #include "buffers/NeoBuffer.h"
 #include "buffers/NeoBufferMethods.h"
 #include "buffers/NeoBufferProgmemMethod.h"
 
-#include "buffers/NeoDib.h"
 #include "buffers/NeoBitmapFile.h"
 #include "buffers/NeoVerticalSpriteSheet.h"
 

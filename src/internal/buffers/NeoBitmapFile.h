@@ -67,10 +67,10 @@ enum BmpCompression
     BI_CmykRle4
 };
 
-// T_COLOR_FEATURE - one of the Features
+// T_COLOR_OBJECT - one of the color objects (RgbColor, RgbwColor)
 // T_FILE_METHOD - any standard File object following Arduino File methods/members
 //
-template<typename T_COLOR_FEATURE, typename T_FILE_METHOD> class NeoBitmapFile
+template<typename T_COLOR_OBJECT, typename T_FILE_METHOD> class NeoBitmapFile
 {
 public:
     NeoBitmapFile() :
@@ -156,7 +156,7 @@ public:
 
     size_t PixelSize() const
     {
-        return T_COLOR_FEATURE::PixelSize;
+        return T_COLOR_OBJECT::Size;
     };
 
     uint16_t PixelCount() const
@@ -174,7 +174,7 @@ public:
         return _height;
     };
 
-    typename T_COLOR_FEATURE::ColorObject GetPixelColor(int16_t x, int16_t y) 
+    T_COLOR_OBJECT GetPixelColor(int16_t x, int16_t y) 
     {
         if (x < 0 || x >= _width || y < 0 || y >= _height)
         {
@@ -183,7 +183,7 @@ public:
             return 0;
         }
 
-        typename T_COLOR_FEATURE::ColorObject color;
+        T_COLOR_OBJECT color;
         if (!seek(x, y) || !readPixel(&color))
         {
             return 0;
@@ -193,15 +193,15 @@ public:
     };
 
 
-    template <typename T_SHADER> void Render(NeoBufferContext<T_COLOR_FEATURE> destBuffer,
+    template <typename T_SHADER> void Render(NeoBufferContext<T_COLOR_OBJECT> destBuffer,
         T_SHADER& shader,
         uint16_t indexPixel,
         int16_t xSrc,
         int16_t ySrc,
         int16_t wSrc)
     {
-        const uint16_t destPixelCount = destBuffer.PixelCount();
-        typename T_COLOR_FEATURE::ColorObject color(0);
+        const uint16_t destPixelCount = destBuffer.PixelCount;
+        T_COLOR_OBJECT color(0);
         xSrc = constrainX(xSrc);
         ySrc = constrainY(ySrc);
 
@@ -218,23 +218,23 @@ public:
                     }
                 }
 
-                T_COLOR_FEATURE::applyPixelColor(destBuffer.Pixels, indexPixel, color);
+                destBuffer.Pixels[indexPixel] = color;
             }
         }
     }
     
-    void Blt(NeoBufferContext<T_COLOR_FEATURE> destBuffer,
+    void Blt(NeoBufferContext<T_COLOR_OBJECT> destBuffer,
         uint16_t indexPixel,
         int16_t xSrc,
         int16_t ySrc,
         int16_t wSrc)
     {
-        NeoShaderNop<typename T_COLOR_FEATURE::ColorObject, typename T_COLOR_FEATURE::ColorObject> shaderNop;
+        NeoShaderNop<T_COLOR_OBJECT, T_COLOR_OBJECT> shaderNop;
 
-        Render<NeoShaderNop<typename T_COLOR_FEATURE::ColorObject, typename T_COLOR_FEATURE::ColorObject>>(destBuffer, shaderNop, indexPixel, xSrc, ySrc, wSrc);
+        Render<NeoShaderNop<T_COLOR_OBJECT, T_COLOR_OBJECT>>(destBuffer, shaderNop, indexPixel, xSrc, ySrc, wSrc);
     };
 
-    template <typename T_SHADER> void Render(NeoBufferContext<T_COLOR_FEATURE> destBuffer,
+    template <typename T_SHADER> void Render(NeoBufferContext<T_COLOR_OBJECT> destBuffer,
         T_SHADER& shader,
         int16_t xDest,
         int16_t yDest,
@@ -244,8 +244,8 @@ public:
         int16_t hSrc,
         LayoutMapCallback layoutMap)
     {
-        const uint16_t destPixelCount = destBuffer.PixelCount();
-        typename T_COLOR_FEATURE::ColorObject color(0);
+        const uint16_t destPixelCount = destBuffer.PixelCount;
+        T_COLOR_OBJECT color(0);
 
         for (int16_t y = 0; y < hSrc; y++)
         {
@@ -269,14 +269,14 @@ public:
 
                     if (indexDest < destPixelCount)
                     {
-                        T_COLOR_FEATURE::applyPixelColor(destBuffer.Pixels, indexDest, color);
+                        destBuffer.Pixels[indexDest] = color;
                     }
                 }
             }
         }
     };
 
-    void Blt(NeoBufferContext<T_COLOR_FEATURE> destBuffer,
+    void Blt(NeoBufferContext<T_COLOR_OBJECT> destBuffer,
         int16_t xDest,
         int16_t yDest,
         int16_t xSrc,
@@ -285,9 +285,9 @@ public:
         int16_t hSrc,
         LayoutMapCallback layoutMap)
     {
-        NeoShaderNop<typename T_COLOR_FEATURE::ColorObject, typename T_COLOR_FEATURE::ColorObject> shaderNop;
+        NeoShaderNop<T_COLOR_OBJECT, T_COLOR_OBJECT> shaderNop;
 
-        Render<NeoShaderNop<typename T_COLOR_FEATURE::ColorObject, typename T_COLOR_FEATURE::ColorObject>>(destBuffer,
+        Render<NeoShaderNop<T_COLOR_OBJECT, T_COLOR_OBJECT>>(destBuffer,
             shaderNop, 
             xDest,
             yDest,

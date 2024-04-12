@@ -28,21 +28,17 @@ License along with NeoPixel.  If not, see
 // This is used to allow a template classes that share common buffer concept to
 // be able to pass that common information to functions 
 // The template classes just need to expose a conversion operator to this type
-template <typename T_COLOR_FEATURE> struct NeoBufferContext
+template <typename T_COLOR_OBJECT> struct NeoBufferContext
 {
-    NeoBufferContext(uint8_t* pixels, 
-        size_t sizePixels) :
+    NeoBufferContext(T_COLOR_OBJECT* pixels,
+        size_t pixelsCount) :
         Pixels(pixels),
-        SizePixels(sizePixels)
+        PixelsCount(pixelsCount)
     {
     }
 
-    uint16_t PixelCount() const
-    {
-        return SizePixels / T_COLOR_FEATURE::PixelSize;
-    };
+    typedef T_COLOR_OBJECT ColorObject;
 
-    uint8_t* Pixels;
-    const size_t SizePixels;
-    
-};
+    T_COLOR_OBJECT* Pixels;
+    const size_t PixelsCount;
+ ;

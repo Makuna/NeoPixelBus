@@ -269,6 +269,12 @@ struct Rgb48Color : RgbColorBase
         float x, 
         float y);
 
+
+    static Rgb48Color PgmRead(PGM_VOID_P pPixelSrc)
+    {
+        return _PgmReadByWords<Rgb48Color>(pPixelSrc);
+    }
+
     uint32_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
     {
         auto total = 0;

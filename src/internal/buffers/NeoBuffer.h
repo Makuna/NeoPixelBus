@@ -33,7 +33,7 @@ template<typename T_BUFFER_METHOD> class NeoBuffer
 {
 public:
     NeoBuffer(uint16_t width,
-        uint16_t height,
+        uint16_t height = 1,
         PGM_VOID_P pixels = nullptr) :
         _method(width, height, pixels)
     {
@@ -43,7 +43,7 @@ public:
     {
     }
 
-    operator NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature>()
+    operator NeoBufferContext<typename T_BUFFER_METHOD::ColorObject>()
     {
         return _method;
     }
@@ -68,14 +68,27 @@ public:
         int16_t y,
         typename T_BUFFER_METHOD::ColorObject color)
     {
-        _method.SetPixelColor(PixelIndex(x, y), color);
+        _method.SetPixelColor(x, y, color);
+    };
+
+    void SetPixelColor(
+        uint16_t index,
+        typename T_BUFFER_METHOD::ColorObject color)
+    {
+        _method.SetPixelColor(index, color);
     };
 
     typename T_BUFFER_METHOD::ColorObject GetPixelColor(
         int16_t x,
         int16_t y) const
     {
-        return _method.GetPixelColor(PixelIndex(x, y));
+        return _method.GetPixelColor(x, y);
+    };
+
+    typename T_BUFFER_METHOD::ColorObject GetPixelColor(
+        uint16_t index) const
+    {
+        return _method.GetPixelColor(index);
     };
 
     void ClearTo(typename T_BUFFER_METHOD::ColorObject color)
@@ -83,12 +96,12 @@ public:
         _method.ClearTo(color);
     };
 
-    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature> destBuffer,
-        uint16_t indexPixel)
+    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer,
+        uint16_t destPixelIndex)
     {
         uint16_t destPixelCount = destBuffer.PixelCount();
-        // validate indexPixel
-        if (indexPixel >= destPixelCount)
+        // validate destPixelIndex
+        if (destPixelIndex >= destPixelCount)
         {
             return;
         }
@@ -101,11 +114,14 @@ public:
             copyCount = srcPixelCount;
         }
 
-        uint8_t* pDest = T_BUFFER_METHOD::ColorFeature::getPixelAddress(destBuffer.Pixels, indexPixel);
-        _method.CopyPixels(pDest, _method.Pixels(), copyCount);
+        for (uint16_t index = 0; index < copyCount; index++)
+        {
+            typename T_BUFFER_METHOD::ColorObject color = _method.GetPixelColor(index);
+            destBuffer.Pixels[destPixelIndex + index] = color;
+        }
     }
 
-    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature> destBuffer,
+    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer,
         int16_t xDest,
         int16_t yDest,
         int16_t xSrc,
@@ -120,20 +136,18 @@ public:
         {
             for (int16_t x = 0; x < wSrc; x++)
             {
-                uint16_t indexDest = layoutMap(xDest + x, yDest + y);
+                uint16_t destPixelIndex = layoutMap(xDest + x, yDest + y);
  
-                if (indexDest < destPixelCount)
+                if (destPixelIndex < destPixelCount)
                 {
-                    const uint8_t* pSrc = T_BUFFER_METHOD::ColorFeature::getPixelAddress(_method.Pixels(), PixelIndex(xSrc + x, ySrc + y));
-                    uint8_t* pDest = T_BUFFER_METHOD::ColorFeature::getPixelAddress(destBuffer.Pixels, indexDest);
-
-                    _method.CopyPixels(pDest, pSrc, 1);
+                    typename T_BUFFER_METHOD::ColorObject color = _method.GetPixelColor(xSrc + x, ySrc + y);
+                    destBuffer.Pixels[destPixelIndex] = color;
                 }
             }
         }
     }
 
-    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature> destBuffer,
+    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer,
         int16_t xDest,
         int16_t yDest,
         LayoutMapCallback layoutMap)
@@ -141,21 +155,19 @@ public:
         Blt(destBuffer, xDest, yDest, 0, 0, Width(), Height(), layoutMap);
     }
 
-    template <typename T_SHADER> void Render(NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature> destBuffer, T_SHADER& shader)
+    template <typename T_SHADER> void Render(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer, T_SHADER& shader)
     {
-        uint16_t countPixels = destBuffer.PixelCount();
+        uint16_t destPixelCount = destBuffer.PixelCount();
 
-        if (countPixels > _method.PixelCount())
+        if (destPixelCount > _method.PixelCount())
         {
-            countPixels = _method.PixelCount();
+            destPixelCount = _method.PixelCount();
         }
 
         for (uint16_t indexPixel = 0; indexPixel < countPixels; indexPixel++)
         {
-            const uint8_t* pSrc = T_BUFFER_METHOD::ColorFeature::getPixelAddress(_method.Pixels(), indexPixel);
-            uint8_t* pDest = T_BUFFER_METHOD::ColorFeature::getPixelAddress(destBuffer.Pixels, indexPixel);
-
-            shader.Apply(indexPixel, pDest, pSrc);
+            typename T_BUFFER_METHOD::ColorObject color = _method.GetPixelColor(indexPixel);
+            destBuffer.Pixels[indexPixel] = shader.Apply(color);
         }
     }
 
