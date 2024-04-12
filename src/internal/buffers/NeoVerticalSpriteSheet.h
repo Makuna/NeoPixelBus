@@ -83,12 +83,12 @@ public:
     };
 
     void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature> destBuffer,
-        uint16_t indexPixel,
+        uint16_t destPixelIndex,
         uint16_t indexSprite)
     {
         uint16_t destPixelCount = destBuffer.PixelCount();
-        // validate indexPixel
-        if (indexPixel >= destPixelCount)
+        // validate destPixelIndex
+        if (destPixelIndex >= destPixelCount)
         {
             return;
         }
@@ -98,17 +98,20 @@ public:
         {
             return;
         }
+
         // calc how many we can copy
-        uint16_t copyCount = destPixelCount - indexPixel;
+        uint16_t copyCount = destPixelCount - destPixelIndex;
 
         if (copyCount > SpriteWidth())
         {
             copyCount = SpriteWidth();
         }
 
-        uint8_t* pDest = T_BUFFER_METHOD::ColorFeature::getPixelAddress(destBuffer.Pixels, indexPixel);
-        const uint8_t* pSrc = T_BUFFER_METHOD::ColorFeature::getPixelAddress(_method.Pixels(), pixelIndex(indexSprite, 0, 0));
-        _method.CopyPixels(pDest, pSrc, copyCount);
+        for (uint16_t index = 0; index < copyCount; index++)
+        {
+            typename T_BUFFER_METHOD::ColorObject color = _method.GetPixelColor(pixelIndex(indexSprite, index));
+            destBuffer.Pixels[destPixelIndex + index] = color;
+        }
     }
 
     void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature> destBuffer,
@@ -131,10 +134,8 @@ public:
  
                 if (indexDest < destPixelCount)
                 {
-                    const uint8_t* pSrc = T_BUFFER_METHOD::ColorFeature::getPixelAddress(_method.Pixels(), pixelIndex(indexSprite, srcX, srcY));
-                    uint8_t* pDest = T_BUFFER_METHOD::ColorFeature::getPixelAddress(destBuffer.Pixels, indexDest);
-
-                    _method.CopyPixels(pDest, pSrc, 1);
+                    typename T_BUFFER_METHOD::ColorObject color = _method.GetPixelColor(pixelIndex(indexSprite, srcX, srcY));
+                    destBuffer.Pixels[destPixelIndex + indexDest] = color;
                 }
             }
         }
@@ -160,6 +161,19 @@ private:
             static_cast<uint16_t>(y) < SpriteHeight())
         {
             result = x + y * SpriteWidth() + indexSprite * _spriteHeight * SpriteWidth();
+        }
+        return result;
+    }
+
+    uint16_t pixelIndex(uint16_t indexSprite,
+        uint16_t index) const
+    {
+        uint16_t result = PixelIndex_OutOfBounds;
+
+        if (indexSprite < _spriteCount &&
+            index < SpriteWidth() * SpriteHeight())
+        {
+            result = index + indexSprite * _spriteHeight * SpriteWidth();
         }
         return result;
     }

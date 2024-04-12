@@ -107,7 +107,7 @@ public:
         }
 
         // calc how many we can copy
-        uint16_t copyCount = destPixelCount - indexPixel;
+        uint16_t copyCount = destPixelCount - destPixelIndex;
         uint16_t srcPixelCount = PixelCount();
         if (copyCount > srcPixelCount)
         {
