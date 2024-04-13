@@ -42,7 +42,7 @@ public:
     {
     }
 
-    operator NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature>()
+    operator NeoBufferContext<typename T_BUFFER_METHOD::ColorObject>()
     {
         return _method;
     }
@@ -82,11 +82,11 @@ public:
         _method.ClearTo(color);
     };
 
-    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature> destBuffer,
+    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer,
         uint16_t destPixelIndex,
         uint16_t indexSprite)
     {
-        uint16_t destPixelCount = destBuffer.PixelCount();
+        uint16_t destPixelCount = destBuffer.PixelCount;
         // validate destPixelIndex
         if (destPixelIndex >= destPixelCount)
         {
@@ -114,7 +114,7 @@ public:
         }
     }
 
-    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorFeature> destBuffer,
+    void Blt(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer,
         int16_t x,
         int16_t y,
         uint16_t indexSprite,
@@ -135,7 +135,7 @@ public:
                 if (indexDest < destPixelCount)
                 {
                     typename T_BUFFER_METHOD::ColorObject color = _method.GetPixelColor(pixelIndex(indexSprite, srcX, srcY));
-                    destBuffer.Pixels[destPixelIndex + indexDest] = color;
+                    destBuffer.Pixels[indexDest] = color;
                 }
             }
         }

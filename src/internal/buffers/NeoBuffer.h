@@ -29,7 +29,8 @@ License along with NeoPixel.  If not, see
 //      NeoBufferMethod
 //      NeoBufferProgmemMethod
 //
-template<typename T_BUFFER_METHOD> class NeoBuffer
+template <typename T_BUFFER_METHOD> 
+class NeoBuffer
 {
 public:
     NeoBuffer(uint16_t width,
@@ -155,13 +156,14 @@ public:
         Blt(destBuffer, xDest, yDest, 0, 0, Width(), Height(), layoutMap);
     }
 
-    template <typename T_SHADER> void Render(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer, T_SHADER& shader)
+    template <typename T_SHADER> 
+    void Render(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer, T_SHADER& shader)
     {
-        uint16_t destPixelCount = destBuffer.PixelCount();
+        uint16_t countPixels = destBuffer.PixelCount;
 
-        if (destPixelCount > _method.PixelCount())
+        if (countPixels > _method.PixelCount())
         {
-            destPixelCount = _method.PixelCount();
+            countPixels = _method.PixelCount();
         }
 
         for (uint16_t indexPixel = 0; indexPixel < countPixels; indexPixel++)

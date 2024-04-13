@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 #include "NeoPixelBus.h"
 
-template<typename T_EXPOSED_COLOR_OBJECT, 
+template <typename T_EXPOSED_COLOR_OBJECT, 
     typename T_FEATURE_COLOR_OBJECT,
     typename T_GAMMA>
 class LuminanceShader

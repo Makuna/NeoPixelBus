@@ -1,7 +1,7 @@
 // NeoPixelBufferShader
 // This example will provide a shader class to the NeoPixelBuffer that will dim and brighten
-// the pixels that are in the buffer (a device dependent bitmap)
-//
+// the pixels that are in the buffer (a device independant bitmap)
+// It is just a demonstration of using a custom shader
 
 #include <NeoPixelBus.h>
 
@@ -14,7 +14,7 @@ NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 // the buffer object, 
 // defined to use memory with the same feature as the strip
 // initialized with the same number of pixels as our strip
-NeoBuffer<NeoBufferMethod<NeoGrbFeature>> image(8,8,NULL);
+NeoBuffer<NeoBufferMethod<RgbColor>> image(8, 8, NULL);
 
 const RgbColor BrightRed(255, 0, 0);
 const RgbColor BrightGreen(0, 255, 0);
@@ -36,53 +36,40 @@ const RgbColor White(255);
 const RgbColor Black(0);
 
 // define a custom shader object that provides brightness support
-// based upon the NeoShaderBase
-template<typename T_COLOR_FEATURE> class BrightnessShader : public NeoShaderBase
+class BrightnessShader
 {
 public:
-  BrightnessShader():
-    NeoShaderBase(),
-    _brightness(255) // default to full bright
-  {}
+    BrightnessShader() :
+        _brightness(255) // default to full bright
+    {}
 
-  // required for a shader object, it will be called for
-  // every pixel
-  void Apply(uint16_t index, uint8_t* pDest, const uint8_t* pSrc)
-  {
-    // we don't care what the index is so we ignore it
-    //
-    // to apply our brightness shader, 
-    // use the source color, modify, and apply to the destination 
-    
-    // for every byte in the pixel,
-    // scale the source value by the brightness and 
-    // store it in the destination byte
-    const uint8_t* pSrcEnd = pSrc + T_COLOR_FEATURE::PixelSize;
-    while (pSrc != pSrcEnd)
+    // required for a shader object, it will be called for
+    // every pixel
+    RgbColor Apply(const RgbColor& color)
     {
-        *pDest++ = (*pSrc++ * (uint16_t(_brightness) + 1)) >> 8;
+        // to apply our brightness shader, 
+        // use the source color, modify, and return it 
+        return color.Dim(_brightness);
     }
-  }
 
-  // provide an accessor to set brightness
-  void setBrightness(uint8_t brightness)
-  {
-    _brightness = brightness;
-    Dirty(); // must call dirty when a property changes
-  }
+    // provide an accessor to set brightness
+    void setBrightness(uint8_t brightness)
+    {
+        _brightness = brightness;
+    }
 
-  // provide an accessor to get brightness
-  uint8_t getBrightness()
-  {
-    return _brightness;
-  }
-  
+    // provide an accessor to get brightness
+    uint8_t getBrightness()
+    {
+        return _brightness;
+    }
+
 private:
-  uint8_t _brightness;    
+    uint8_t _brightness;
 };
 
-// create an instance of our shader object with the same feature as our buffer
-BrightnessShader<NeoGrbFeature> shader;
+// create an instance of our shader object 
+BrightnessShader shader;
 
 // some dimming tracking variables and settings
 int8_t delta;
@@ -103,7 +90,7 @@ void setup()
     // dibs do not default to any color, 
     // so clear it to black if you aren't going to draw
     // into every pixel
-    image.ClearTo(Black); 
+    image.ClearTo(Black);
 
     // draw a pattern into the image
     uint8_t x = 0;
@@ -123,7 +110,7 @@ void setup()
     image.SetPixelColor(x++, y, BrightCyan);
     image.SetPixelColor(x++, y, BrightBlue);
     image.SetPixelColor(x++, y, BrightPurple);
-    
+
     Serial.println();
     Serial.println("Running...");
 
@@ -132,36 +119,32 @@ void setup()
 
 void loop()
 {
-  // we increment by delta every 30ms
-  delay(30);
-  
-  // update the brightness in shader
-  //
-  uint8_t brightness = shader.getBrightness();
-  // check if we flip directions
-  if (brightness == 0)
-  {
-    delta = 1; // increment
-  }
-  else if (brightness == 255)
-  {
-    delta = -1; // decrement
-  }
-  // modify and apply
-  brightness += delta;
-  shader.setBrightness(brightness);
-  
-  Serial.println(brightness);
-   
-  
-  // render the image using the shader and then call Show()
-  // these two should be called together in order
-  //
+    // we increment by delta every 30ms
+    delay(30);
 
-  // need to provide the type of color feature for the strip and
-  // the type of our custom shader
-  image.Render<BrightnessShader<NeoGrbFeature>>(strip, shader);
-  strip.Show();
+    // update the brightness in shader
+    //
+    uint8_t brightness = shader.getBrightness();
+    // check if we flip directions
+    if (brightness == 0)
+    {
+        delta = 1; // increment
+    }
+    else if (brightness == 255)
+    {
+        delta = -1; // decrement
+    }
+    // modify and apply
+    brightness += delta;
+    shader.setBrightness(brightness);
+
+    Serial.println(brightness);
+
+
+    // render the image using the shader and then call Show()
+    // these two should be called together in order
+    //
+    image.Render<BrightnessShader>(strip, shader);
+    strip.Show();
 
 }
-

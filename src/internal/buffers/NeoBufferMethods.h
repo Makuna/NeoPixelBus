@@ -26,7 +26,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-template<typename T_COLOR_OBJECT> class NeoBufferMethod
+template <typename T_COLOR_OBJECT> 
+class NeoBufferMethod
 {
 public:
     NeoBufferMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels = nullptr) :
@@ -37,10 +38,12 @@ public:
 
         if (pixels)
         {
+            const uint8_t* pixelsSrc = static_cast<const uint8_t*>(pixels);
+
             // copy from progmem to initialize
             for (size_t index = 0; index < PixelCount(); index++)
             {
-                _pixels[index] = T_COLOR_OBJECT::PgmRead(pixels + T_COLOR_OBJECT::Size * indexPixel);
+                _pixels[index] = T_COLOR_OBJECT::PgmRead(pixelsSrc + T_COLOR_OBJECT::Size * index);
             }
         }
     }
@@ -53,7 +56,7 @@ public:
 
     operator NeoBufferContext<T_COLOR_OBJECT>()
     {
-        return NeoBufferContext<T_COLOR_OBJECT>(Pixels(), PixelsCount());
+        return NeoBufferContext<T_COLOR_OBJECT>(Pixels(), PixelCount());
     }
 
     uint8_t* Pixels() const
@@ -96,7 +99,8 @@ public:
 
     void SetPixelColor(int16_t x, int16_t y, T_COLOR_OBJECT color)
     {
-        if (x < 0 || x >= _width || y < 0 || y >= _height)
+        if (x < 0 || static_cast<uint16_t>(x) >= _width || 
+            y < 0 || static_cast<uint16_t>(y) >= _height)
         {
             return;
         }

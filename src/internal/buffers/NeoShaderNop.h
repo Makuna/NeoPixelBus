@@ -25,7 +25,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-template<typename T_EXPOSED_COLOR_OBJECT, typename T_FEATURE_COLOR_OBJECT> 
+template <typename T_EXPOSED_COLOR_OBJECT, typename T_FEATURE_COLOR_OBJECT> 
 class NeoShaderNop
 {
 public:

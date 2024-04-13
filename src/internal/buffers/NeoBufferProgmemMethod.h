@@ -26,7 +26,8 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-template<typename T_COLOR_OBJECT> class NeoBufferProgmemMethod
+template <typename T_COLOR_OBJECT> 
+class NeoBufferProgmemMethod
 {
 public:
     NeoBufferProgmemMethod(uint16_t width, uint16_t height, PGM_VOID_P pixels) :
@@ -38,7 +39,7 @@ public:
 
     operator NeoBufferContext<T_COLOR_OBJECT>()
     {
-        return NeoBufferContext<T_COLOR_OBJECT>(Pixels(), PixelsCount());
+        return NeoBufferContext<T_COLOR_OBJECT>(Pixels(), PixelCount());
     }
 
     const uint8_t* Pixels() const
@@ -80,7 +81,9 @@ public:
             return 0;
         }
 
-        return T_COLOR_OBJECT::PgmRead(_pixels + T_COLOR_OBJECT::Size * indexPixel);
+        const uint8_t* pixelsSrc = static_cast<const uint8_t*>(_pixels);
+
+        return T_COLOR_OBJECT::PgmRead(pixelsSrc + T_COLOR_OBJECT::Size * indexPixel);
     };
 
 

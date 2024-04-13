@@ -70,26 +70,31 @@ protected:
     template <typename T_COLOR> static T_COLOR 
         _PgmReadByBytes(PGM_VOID_P pPixelSrc)
     {
+        T_COLOR result;
         const uint8_t* pSrc = reinterpret_cast<const uint8_t*>(pPixelSrc);
         const uint8_t* pEnd = pSrc + T_COLOR::Count;
         uint8_t index = 0;
 
         while (pSrc < pEnd)
         {
-            color[index++] = pgm_read_byte(pSrc++);
+            result[index++] = pgm_read_byte(pSrc++);
         }
+
+        return result;
     }
 
     template <typename T_COLOR> static T_COLOR
         _PgmReadByWords(PGM_VOID_P pPixelSrc)
     {
+        T_COLOR result;
         const uint16_t* pSrc = reinterpret_cast<const uint16_t*>(pPixelSrc);
         const uint16_t* pEnd = pSrc + T_COLOR::Count;
         uint8_t index = 0;
 
         while (pSrc < pEnd)
         {
-            color[index++] = pgm_read_word(pSrc++);
+            result[index++] = pgm_read_word(pSrc++);
         }
+        return result;
     }
 };

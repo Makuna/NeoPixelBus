@@ -14,7 +14,7 @@
 #include <SPI.h> 
 #include <SD.h> 
 
-const int chipSelect = D8; // make sure to set this to your SD carder reader CS
+const int chipSelect = 8; // make sure to set this to your SD carder reader CS
 
 //typedef NeoGrbFeature MyPixelColorFeature;
 typedef NeoGrbwFeature MyPixelColorFeature;
@@ -30,7 +30,7 @@ NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
 
 // our NeoBitmapFile will use the same color feature as NeoPixelBus and
 // we want it to use the SD File object 
-NeoBitmapFile<MyPixelColorFeature, File> image;
+NeoBitmapFile<MyPixelColorFeature::ColorObject, File> image;
 
 uint16_t animState;
 
@@ -68,7 +68,7 @@ void setup() {
     Serial.println("card initialized.");
 
     // open the file
-    File bitmapFile = SD.open("strings.bmp"); 
+    File bitmapFile = SD.open("strings.bmp");
     if (!bitmapFile)
     {
         Serial.println("File open fail, or not present");

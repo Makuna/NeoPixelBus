@@ -70,7 +70,8 @@ enum BmpCompression
 // T_COLOR_OBJECT - one of the color objects (RgbColor, RgbwColor)
 // T_FILE_METHOD - any standard File object following Arduino File methods/members
 //
-template<typename T_COLOR_OBJECT, typename T_FILE_METHOD> class NeoBitmapFile
+template <typename T_COLOR_OBJECT, typename T_FILE_METHOD> 
+class NeoBitmapFile
 {
 public:
     NeoBitmapFile() :
@@ -213,7 +214,7 @@ public:
                 {
                     if (readPixel(&color))
                     {
-                        color = shader.Apply(indexPixel, color);
+                        color = shader.Apply(color);
                         xSrc++;
                     }
                 }

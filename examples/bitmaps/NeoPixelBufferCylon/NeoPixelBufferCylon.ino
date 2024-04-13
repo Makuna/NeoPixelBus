@@ -19,7 +19,7 @@ typedef NeoGrbFeature MyPixelColorFeature;
 // typedef NeoGrbwFeature MyPixelColorFeature;
 
 const uint16_t PixelCount = 16; // the sample images are meant for 16 pixels
-const uint16_t PixelPin = 2;  
+const uint16_t PixelPin = 2;
 const uint16_t AnimCount = 1; // we only need one
 
 NeoPixelBus<MyPixelColorFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
@@ -28,11 +28,11 @@ NeoPixelBus<MyPixelColorFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
 
 // sprite sheet stored in progmem using the same pixel feature as the NeoPixelBus
-NeoVerticalSpriteSheet<NeoBufferProgmemMethod<MyPixelColorFeature>> spriteSheet(
-        myImageWidth, // image width and sprite width since its vertical sprite sheet
-        myImageHeight,  // image height
-        1, // sprite is only one pixel high
-        myImage);
+NeoVerticalSpriteSheet<NeoBufferProgmemMethod<MyPixelColorFeature::ColorObject>> spriteSheet(
+    myImageWidth, // image width and sprite width since its vertical sprite sheet
+    myImageHeight,  // image height
+    1, // sprite is only one pixel high
+    myImage);
 
 uint16_t indexSprite;
 
@@ -71,4 +71,3 @@ void loop()
     animations.UpdateAnimations();
     strip.Show();
 }
-
