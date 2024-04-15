@@ -313,8 +313,8 @@ public:
 class NeoEsp32RmtInvertedSpeedWs2812x : public NeoEsp32RmtInvertedSpeedBase
 {
 public:
-    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(400, 850);
-    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(800, 450);
+    const static DRAM_ATTR uint32_t RmtBit0 = Item32Val(315, 935); // WS2812B / WS2815 compat compromise
+    const static DRAM_ATTR uint32_t RmtBit1 = Item32Val(890, 360); // WS2812B / WS2815 compat compromise
     const static DRAM_ATTR uint16_t RmtDurationReset = FromNs(300000); // 300us
 
     static void IRAM_ATTR Translate(const void* src,
