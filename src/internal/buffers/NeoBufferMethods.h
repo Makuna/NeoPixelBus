@@ -54,6 +54,24 @@ public:
         _pixels = nullptr;
     }
 
+    NeoBufferMethod& operator=(const NeoBufferMethod& other)
+    {
+        uint16_t pixelCount = PixelCount();
+        uint16_t pixelCountOther = other.PixelCount();
+
+        if (pixelCount > pixelCountOther)
+        {
+            pixelCount = pixelCountOther;
+        }
+
+        for (size_t index = 0; index < pixelCount; index++)
+        {
+            _pixels[index] = other._pixels[index];
+        }
+
+        return *this;
+    }
+
     operator NeoBufferContext<T_COLOR_OBJECT>()
     {
         return NeoBufferContext<T_COLOR_OBJECT>(Pixels(), PixelCount());

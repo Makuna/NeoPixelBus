@@ -157,7 +157,9 @@ public:
     }
 
     template <typename T_SHADER> 
-    void Render(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer, T_SHADER& shader, uint16_t startIndex = 0)
+    void Render(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer, 
+        T_SHADER& shader, 
+        uint16_t startIndex = 0)
     {
         uint16_t countPixels = destBuffer.PixelCount;
 
@@ -175,7 +177,7 @@ public:
 
     template <typename T_SHADER>
     void Render(NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> destBuffer, 
-        NeoBufferContext<typename T_BUFFER_METHOD::ColorObject> srcBufferB,
+        const NeoBuffer<T_BUFFER_METHOD>& srcBufferB,
         T_SHADER& shader, 
         uint16_t startIndex = 0)
     {
@@ -189,7 +191,8 @@ public:
         for (uint16_t indexPixel = 0; indexPixel < countPixels; indexPixel++)
         {
             typename T_BUFFER_METHOD::ColorObject color = _method.GetPixelColor(indexPixel);
-            destBuffer.Pixels[indexPixel + startIndex] = shader.Apply(color, srcBufferB.Pixels[indexPixel]);
+            typename T_BUFFER_METHOD::ColorObject colorB = srcBufferB.GetPixelColor(indexPixel);
+            destBuffer.Pixels[indexPixel + startIndex] = shader.Apply(color, colorB);
         }
     }
 
@@ -209,7 +212,7 @@ public:
         return result;
     }
 
-private:
+protected:
     T_BUFFER_METHOD _method;
 };
 

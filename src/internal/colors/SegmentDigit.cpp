@@ -25,6 +25,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #include <Arduino.h>
+#include "RgbColorBase.h"
 #include "SegmentDigit.h"
 
 //

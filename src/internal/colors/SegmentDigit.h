@@ -63,7 +63,7 @@ public:
 // ending at the decimal point
 // "abcdefg."
 // ------------------------------------------------------------------------
-struct SevenSegDigit
+struct SevenSegDigit : RgbColorBase
 {
     typedef uint8_t ElementType;
     typedef NeoSevenSegCurrentSettings SettingsObject;
@@ -191,6 +191,10 @@ struct SevenSegDigit
     // ------------------------------------------------------------------------
     static SevenSegDigit LinearBlend(const SevenSegDigit& left, const SevenSegDigit& right, uint8_t progress);
 
+    static SevenSegDigit PgmRead(PGM_VOID_P pPixelSrc)
+    {
+        return _PgmReadByBytes<SevenSegDigit>(pPixelSrc);
+    }
 
     uint32_t CalcTotalTenthMilliAmpere(const SettingsObject& settings)
     {
