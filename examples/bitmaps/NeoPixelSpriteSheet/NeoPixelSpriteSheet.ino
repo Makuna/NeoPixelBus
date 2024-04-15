@@ -1,45 +1,37 @@
-// NeoPixelBufferCylon
-// This example will move a Cylon Red Eye back and forth across the 
+// NeoPixelSpriteSheet
+// This example will use a NeoVerticalSpriteSheet to animate a 
+// moving Cylon Red Eye back and forth across the 
 // the full collection of pixels on the strip. 
 //
-// This will demonstrate the use of the NeoVerticalSpriteSheet 
-// 
+
 
 #include <NeoPixelBus.h>
 #include <NeoPixelAnimator.h>
 
-// The actual image is contained in the data structure in one of the Cylon*.h files
-// You will need to use the one that has the same color feature as your NeoPixelBus
-// There are two provided, but you can create your own easily enough using 
-// free versions of Paint.Net and the plugin 
-#include "CylonGrb.h"
-typedef NeoGrbFeature MyPixelColorFeature;
+// The actual image is contained in the data structure in the CylonRgb.h file
+#include "CylonRgb.h"
 
-// #include "CylonGrbw.h"
-// typedef NeoGrbwFeature MyPixelColorFeature;
-
-const uint16_t PixelCount = 16; // the sample images are meant for 16 pixels
-const uint16_t PixelPin = 2;
+const uint16_t PixelCount = myImageWidth; // the sample images are meant for 16 pixels, so we use the same for pixelcount
+const uint16_t PixelPin = 2; // for esp8266 the pin is ignored in most methods
 const uint16_t AnimCount = 1; // we only need one
 
-NeoPixelBus<MyPixelColorFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
-// for esp8266 omit the pin
-//NeoPixelBus<MyPixelColorFeature, NeoWs2812xMethod> strip(PixelCount);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
 
 // sprite sheet stored in progmem using the same pixel feature as the NeoPixelBus
-NeoVerticalSpriteSheet<NeoBufferProgmemMethod<MyPixelColorFeature::ColorObject>> spriteSheet(
+NeoVerticalSpriteSheet_P<RgbColor> spriteSheet(
     myImageWidth, // image width and sprite width since its vertical sprite sheet
     myImageHeight,  // image height
-    1, // sprite is only one pixel high
+    1, // sprite is only one pixel high in this example
     myImage);
 
+// animation state
 uint16_t indexSprite;
 
 void LoopAnimUpdate(const AnimationParam& param)
 {
     // wait for this animation to complete,
-    // we are using it as a timer of sorts
+    // we are using it as a timer
     if (param.state == AnimationState_Completed)
     {
         // done, time to restart this position tracking animation/timer
@@ -67,7 +59,7 @@ void loop()
 {
     // this is all that is needed to keep it running
     // and avoiding using delay() is always a good thing for
-    // any timing related routines
+    // any timing related solutions
     animations.UpdateAnimations();
     strip.Show();
 }

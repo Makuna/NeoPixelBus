@@ -25,13 +25,23 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
-template <typename T_EXPOSED_COLOR_OBJECT, typename T_FEATURE_COLOR_OBJECT> 
+template <typename T_SRC_COLOR_OBJECT, typename T_DEST_COLOR_OBJECT = T_SRC_COLOR_OBJECT>
 class NeoShaderNop
 {
 public:
-    static T_FEATURE_COLOR_OBJECT Apply(const T_EXPOSED_COLOR_OBJECT& color)
+    // This method signature is used by NeoPixelBus/NeoPixelBusLg where the 
+    // destination color is never considered as its just not available
+    static T_DEST_COLOR_OBJECT Apply(const T_SRC_COLOR_OBJECT& color)
     {
         return color;
+    };
+
+    // This method segnature is used by Render methods where the 
+    // colorSrcB color is either the previous destination color or a 
+    // secondary source color
+    static T_DEST_COLOR_OBJECT Apply(const T_SRC_COLOR_OBJECT& colorSrc, [[maybe_unused]] const T_DEST_COLOR_OBJECT& colorAlternate)
+    {
+        return colorSrc;
     };
 };
 

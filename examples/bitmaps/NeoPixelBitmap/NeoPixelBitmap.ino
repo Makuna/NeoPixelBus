@@ -16,28 +16,23 @@
 
 const int chipSelect = 8; // make sure to set this to your SD carder reader CS
 
-//typedef NeoGrbFeature MyPixelColorFeature;
-typedef NeoGrbwFeature MyPixelColorFeature;
-
 const uint16_t PixelCount = 144; // the sample images are meant for 144 pixels
-const uint16_t PixelPin = 2;
+const uint16_t PixelPin = 2; // for esp8266 the pin is ignored with most methods
 const uint16_t AnimCount = 1; // we only need one
 
-NeoPixelBus<MyPixelColorFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
-// for esp8266 omit the pin
-//NeoPixelBus<MyPixelColorFeature, NeoWs2812xMethod> strip(PixelCount);
+NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 NeoPixelAnimator animations(AnimCount); // NeoPixel animation management object
 
-// our NeoBitmapFile will use the same color feature as NeoPixelBus and
-// we want it to use the SD File object 
-NeoBitmapFile<MyPixelColorFeature::ColorObject, File> image;
+// our NeoBitmapFile will use the RgbColor
+NeoBitmapFile<RgbColor, File> image;
 
+// animation state
 uint16_t animState;
 
 void LoopAnimUpdate(const AnimationParam& param)
 {
     // wait for this animation to complete,
-    // we are using it as a timer of sorts
+    // we are using it as a timer
     if (param.state == AnimationState_Completed)
     {
         // done, time to restart this position tracking animation/timer
@@ -49,7 +44,8 @@ void LoopAnimUpdate(const AnimationParam& param)
     }
 }
 
-void setup() {
+void setup() 
+{
     Serial.begin(115200);
     while (!Serial); // wait for serial attach
 
@@ -89,10 +85,11 @@ void setup() {
     animations.StartAnimation(0, 30, LoopAnimUpdate);
 }
 
-void loop() {
+void loop() 
+{
     // this is all that is needed to keep it running
     // and avoiding using delay() is always a good thing for
-    // any timing related routines
+    // any timing related solutions
     animations.UpdateAnimations();
     strip.Show();
 }

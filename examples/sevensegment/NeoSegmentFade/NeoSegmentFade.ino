@@ -63,15 +63,11 @@ public:
     {  
     }
 
-    SevenSegDigit Apply(uint16_t indexDigit, SevenSegDigit digit)
+    SevenSegDigit Apply(const SevenSegDigit& digitSrcA, const SevenSegDigit& digitSrcB)
     {
-        // since we call EndingDigits.Render below, the digit argument is
-        // from the EndingDigits so no need to call GetPixelColor to get it
-        // create a digit that is a blend between the last seconds
-        // value and the next seconds value using the BlendAmount
         SevenSegDigit blendDigit = SevenSegDigit::LinearBlend(
-            StartingDigits.GetPixelColor(indexDigit),
-            digit,
+            digitSrcA,
+            digitSrcB,
             BlendAmount);
 
         return blendDigit;
@@ -88,7 +84,8 @@ void FadeAnimation(const AnimationParam& param)
     // set the shader property BlendAmount to the animation progress
     blendShader.BlendAmount = param.progress;
     // apply it to the strip at the SecondsDigit location
-    EndingDigits.Render<SevenSegmentFeature, DigitBlendShader>(strip, 
+    StartingDigits.Render<SevenSegDigit, DigitBlendShader>(strip,
+        EndingDigits, // using a second source
         blendShader, 
         SecondsDigit);
 }

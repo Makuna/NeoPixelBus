@@ -214,7 +214,7 @@ public:
                 {
                     if (readPixel(&color))
                     {
-                        color = shader.Apply(color);
+                        color = shader.Apply(color, destBuffer.Pixels[indexPixel]);
                         xSrc++;
                     }
                 }
@@ -230,9 +230,9 @@ public:
         int16_t ySrc,
         int16_t wSrc)
     {
-        NeoShaderNop<T_COLOR_OBJECT, T_COLOR_OBJECT> shaderNop;
+        NeoShaderNop<T_COLOR_OBJECT> shaderNop;
 
-        Render<NeoShaderNop<T_COLOR_OBJECT, T_COLOR_OBJECT>>(destBuffer, shaderNop, indexPixel, xSrc, ySrc, wSrc);
+        Render<NeoShaderNop<T_COLOR_OBJECT>>(destBuffer, shaderNop, indexPixel, xSrc, ySrc, wSrc);
     };
 
     template <typename T_SHADER> void Render(NeoBufferContext<T_COLOR_OBJECT> destBuffer,
@@ -261,16 +261,15 @@ public:
 
                     if (static_cast<uint16_t>(xFile) < _width)
                     {
-                        if (readPixel(&color))
+                        if (indexDest < destPixelCount)
                         {
-                            color = shader.Apply(indexDest, color);
-                            xFile++;
+                            if (readPixel(&color))
+                            {
+                                color = shader.Apply(color, destBuffer.Pixels[indexDest]);
+                                xFile++;
+                            }
+                            destBuffer.Pixels[indexDest] = color;
                         }
-                    }
-
-                    if (indexDest < destPixelCount)
-                    {
-                        destBuffer.Pixels[indexDest] = color;
                     }
                 }
             }
@@ -286,9 +285,9 @@ public:
         int16_t hSrc,
         LayoutMapCallback layoutMap)
     {
-        NeoShaderNop<T_COLOR_OBJECT, T_COLOR_OBJECT> shaderNop;
+        NeoShaderNop<T_COLOR_OBJECT> shaderNop;
 
-        Render<NeoShaderNop<T_COLOR_OBJECT, T_COLOR_OBJECT>>(destBuffer,
+        Render<NeoShaderNop<T_COLOR_OBJECT>>(destBuffer,
             shaderNop, 
             xDest,
             yDest,

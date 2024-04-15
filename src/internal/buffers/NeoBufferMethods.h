@@ -153,5 +153,16 @@ private:
     T_COLOR_OBJECT* _pixels;
 };
 
+template <typename T_COLOR_OBJECT>
+class NeoDib : public NeoBuffer<NeoBufferMethod<T_COLOR_OBJECT>>
+{
+public:
+    NeoDib(uint16_t width,
+        uint16_t height = 1,
+        PGM_VOID_P pixels = nullptr) :
+        NeoBuffer<NeoBufferMethod<T_COLOR_OBJECT>>(width, height, pixels)
+    {
 
+    }
+};
 

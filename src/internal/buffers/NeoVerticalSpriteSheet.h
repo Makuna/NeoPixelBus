@@ -29,10 +29,10 @@ License along with NeoPixel.  If not, see
 //      NeoBufferMethod
 //      NeoBufferProgmemMethod
 //
-template<typename T_BUFFER_METHOD> class NeoVerticalSpriteSheet
+template<typename T_BUFFER_METHOD> class NeoVerticalSpriteSheetBuffer
 {
 public:
-    NeoVerticalSpriteSheet(uint16_t width,
+    NeoVerticalSpriteSheetBuffer(uint16_t width,
         uint16_t height,
         uint16_t spriteHeight,
         PGM_VOID_P pixels) :
@@ -176,5 +176,31 @@ private:
             result = index + indexSprite * _spriteHeight * SpriteWidth();
         }
         return result;
+    }
+};
+
+template <typename T_COLOR_OBJECT>
+class NeoVerticalSpriteSheet : public NeoVerticalSpriteSheetBuffer<NeoBufferMethod<T_COLOR_OBJECT>>
+{
+public:
+    NeoVerticalSpriteSheet(uint16_t width,
+        uint16_t height,
+        uint16_t spriteHeight,
+        PGM_VOID_P pixels) :
+        NeoVerticalSpriteSheetBuffer<NeoBufferMethod<T_COLOR_OBJECT>>(width, height, spriteHeight, pixels)
+    {
+    }
+};
+
+template <typename T_COLOR_OBJECT>
+class NeoVerticalSpriteSheet_P : public NeoVerticalSpriteSheetBuffer<NeoBufferProgmemMethod<T_COLOR_OBJECT>>
+{
+public:
+    NeoVerticalSpriteSheet_P(uint16_t width,
+        uint16_t height,
+        uint16_t spriteHeight,
+        PGM_VOID_P pixels) :
+        NeoVerticalSpriteSheetBuffer<NeoBufferProgmemMethod<T_COLOR_OBJECT>>(width, height, spriteHeight, pixels)
+    {
     }
 };

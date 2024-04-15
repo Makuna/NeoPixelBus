@@ -1,6 +1,6 @@
 // NeoPixelBufferShader
 // This example will provide a shader class to the NeoPixelBuffer that will dim and brighten
-// the pixels that are in the buffer (a device independant bitmap)
+// the pixels that are in the buffer
 // It is just a demonstration of using a custom shader
 
 #include <NeoPixelBus.h>
@@ -11,10 +11,10 @@ const uint8_t PixelPin = 2;  // make sure to set this to the correct pin, ignore
 // three element GRB pixels, change to your needs
 NeoPixelBus<NeoGrbFeature, NeoWs2812xMethod> strip(PixelCount, PixelPin);
 
-// the buffer object, 
-// defined to use memory with the same feature as the strip
+// the buffer object, a NeoDib
+// defined to use memory with the same color object as the strip
 // initialized with the same number of pixels as our strip
-NeoBuffer<NeoBufferMethod<RgbColor>> image(8, 8, NULL);
+NeoDib<RgbColor> image(8, 8, NULL);
 
 const RgbColor BrightRed(255, 0, 0);
 const RgbColor BrightGreen(0, 255, 0);
@@ -45,11 +45,11 @@ public:
 
     // required for a shader object, it will be called for
     // every pixel
-    RgbColor Apply(const RgbColor& color)
+    RgbColor Apply(const RgbColor& colorSrc, [[maybe_unused]] const RgbColor& colorDest)
     {
         // to apply our brightness shader, 
         // use the source color, modify, and return it 
-        return color.Dim(_brightness);
+        return colorSrc.Dim(_brightness);
     }
 
     // provide an accessor to set brightness

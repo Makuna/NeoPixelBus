@@ -112,3 +112,16 @@ private:
     const uint16_t _height;
     PGM_VOID_P _pixels;
 };
+
+template <typename T_COLOR_OBJECT>
+class NeoDib_P : public NeoBuffer<NeoBufferProgmemMethod<T_COLOR_OBJECT>>
+{
+public:
+    NeoDib_P(uint16_t width,
+        uint16_t height,
+        PGM_VOID_P pixels) :
+        NeoBuffer<NeoBufferProgmemMethod<T_COLOR_OBJECT>>(width, height, pixels)
+    {
+
+    }
+};
