@@ -235,14 +235,15 @@ public:
         const T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
         uint16_t stripCount = _pixelCount;
 
-        while (--stripCount)
+        while (stripCount--)
         {
             typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
-            T_COLOR_FEATURE::applyPixelColor(sendData, T_COLOR_FEATURE::PixelSize, color);
+            T_COLOR_FEATURE::applyPixelColor(sendData, sendDataSize, color);
 
             T_SPEED::send_data(sendData, T_COLOR_FEATURE::PixelSize, _port, _pinMask);
 
-            if (++pixel == pixelEnd)
+            pixel++;
+            if (pixel >= pixelEnd)
             {
                 // restart at first
                 pixel = pixels;

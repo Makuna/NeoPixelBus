@@ -131,11 +131,7 @@ public:
 
     ~NeoPixelBus()
     {
-#if defined(NEOPIXEBUS_NO_ARRAY_NEW)
-        free(_pixels);
-#else
         delete[] _pixels;
-#endif
     }
 
 
@@ -356,11 +352,7 @@ protected:
 
     void _initialize()
     {
-#if defined(NEOPIXEBUS_NO_ARRAY_NEW)
-        _pixels = static_cast<T_EXPOSED_COLOR_OBJECT*>(malloc(_countPixels * sizeof(T_EXPOSED_COLOR_OBJECT)));
-#else
         _pixels = new T_EXPOSED_COLOR_OBJECT[_countPixels];
-#endif
         ClearTo(0);
     }
 
@@ -416,11 +408,11 @@ protected:
 
     void _shiftRight(uint16_t shiftCount, uint16_t first, uint16_t last)
     {
-        uint16_t front = last - shiftCount;
+        uint16_t back = last - shiftCount;
 
-        while (first <= last)
+        while (first < last)
         {
-            _pixels[last--] = _pixels[front--];
+            _pixels[last--] = _pixels[back--];
         }
     }
 };

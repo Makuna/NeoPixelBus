@@ -57,6 +57,7 @@ License along with NeoPixel.  If not, see
 #if defined(ARDUINO_AVR_DIGISPARK) || \
     defined(ARDUINO_AVR_DIGISPARKPRO) 
 #define NEOPIXEBUS_NO_ARRAY_NEW 1
+
 #endif
 
 // some platforms do not define this standard progmem type for some reason
