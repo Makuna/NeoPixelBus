@@ -249,7 +249,7 @@ struct HtmlColor
         return Parse<T_HTMLCOLORNAMES>(name, MAX_HTML_COLOR_NAME_LEN + 1);
     }
 
-#if !defined(ARDUINO_AVR_DIGISPARK)
+#if !defined(NEOPIXEBUS_NO_STRING)
     template <typename T_HTMLCOLORNAMES> size_t Parse(String const &name)
     { 
         return Parse<T_HTMLCOLORNAMES>(name.c_str(), name.length() + 1);

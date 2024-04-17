@@ -174,7 +174,8 @@ public:
         [[maybe_unused]] uint16_t pixelCount, 
         [[maybe_unused]] size_t elementSize, 
         [[maybe_unused]] size_t settingsSize) :
-        _pin(pin)
+        _pin(pin),
+        _pixelCount(pixelCount)
     {
         pinMode(pin, OUTPUT);
         _port = portOutputRegister(digitalPinToPort(pin));
@@ -211,7 +212,7 @@ public:
     {
         while (!IsReadyToUpdate())
         {
-#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA) && !defined(ARDUINO_AVR_DIGISPARK)
+#if !defined(NEOPIXEBUS_NO_YIELD)
             yield(); // allows for system yield if needed
 #endif
         }
@@ -222,26 +223,34 @@ public:
         noInterrupts(); // Need 100% focus on instruction timing
 
         // if there are settings at the front
+        //
         if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
         {
             T_SPEED::send_data(sendData, T_COLOR_FEATURE::SettingsSize, _port, _pinMask);
         }
         
         // send primary color data
+        //
         T_COLOR_OBJECT* pixel = pixels;
-        T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
+        const T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
+        uint16_t stripCount = _pixelCount;
 
-        while (pixel < pixelEnd)
+        while (--stripCount)
         {
             typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
             T_COLOR_FEATURE::applyPixelColor(sendData, T_COLOR_FEATURE::PixelSize, color);
 
             T_SPEED::send_data(sendData, T_COLOR_FEATURE::PixelSize, _port, _pinMask);
 
-            pixel++;
+            if (++pixel == pixelEnd)
+            {
+                // restart at first
+                pixel = pixels;
+            }
         }
 
         // if there are settings at the back
+        //
         if (T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
         {
             T_SPEED::send_data(sendData, T_COLOR_FEATURE::SettingsSize, _port, _pinMask);
@@ -259,6 +268,7 @@ public:
 
 protected:
     const uint8_t _pin;         // output pin number
+    const uint16_t _pixelCount; // count of pixels in the strip
     volatile uint8_t* _port;         // Output PORT register
 
     uint32_t _endTime;       // Latch timing reference

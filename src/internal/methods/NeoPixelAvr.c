@@ -33,6 +33,10 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+// Handy AVR ASM Reference links:
+// https://onlinedocs.microchip.com/pr/GUID-317042D4-BCCE-4065-BB05-AC4312DBC2C4-en-US-2/index.html?GUID-E152F8C1-EEE2-4A9D-A728-568E1B02F740
+// 
+
 // must also check for arm due to Teensy incorrectly having ARDUINO_ARCH_AVR set
 #if (defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)) && !defined(__arm__)
 
@@ -169,10 +173,12 @@ void send_data_8mhz_800_PortD(uint8_t* data, size_t sizeData, uint8_t pinMask)
         "mov %[n1]   , %[hi]"    "\n\t" // 0-1   n1 = hi
         "out  %[port] , %[lo]"    "\n\t" // 1    PORT = lo
         "brne headD"              "\n"   // 2    while(i) (Z flag set above)
+        // outputs
         : [byte]  "+r" (b),
         [n1]    "+r" (n1),
         [n2]    "+r" (n2),
         [count] "+w" (i)
+        // inputs
         : [port]   "I" (_SFR_IO_ADDR(PORTD)),
         [ptr]    "e" (ptr),
         [hi]     "r" (hi),
@@ -266,8 +272,15 @@ void send_data_8mhz_800_PortB(uint8_t* data, size_t sizeData, uint8_t pinMask)
         "mov %[n1]   , %[hi]"    "\n\t"
         "out  %[port] , %[lo]"    "\n\t"
         "brne headB"              "\n"
-        : [byte] "+r" (b), [n1] "+r" (n1), [n2] "+r" (n2), [count] "+w" (i)
-        : [port] "I" (_SFR_IO_ADDR(PORTB)), [ptr] "e" (ptr), [hi] "r" (hi),
+        // outputs
+        : [byte] "+r" (b), 
+        [n1] "+r" (n1), 
+        [n2] "+r" (n2), 
+        [count] "+w" (i)
+        // inputs
+        : [port] "I" (_SFR_IO_ADDR(PORTB)), 
+        [ptr] "e" (ptr), 
+        [hi] "r" (hi),
         [lo] "r" (lo));
 }
 
@@ -318,14 +331,16 @@ void send_data_8mhz_400(uint8_t* data, size_t sizeData, volatile uint8_t* port, 
         "ld   %[byte] , %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 16)
         "sbiw %[count], 1"        "\n\t" // 2    i--           (T = 18)
         "brne head20"             "\n"   // 2    if(i != 0) -> (next byte)
+        // outputs
         : [port]  "+e" (port),
-        [byte]  "+r" (b),
-        [bit]   "+r" (bit),
+        [byte]  "+r" (b),  // l = lower register
+        [bit]   "+d" (bit), // d = upper register, due to ldi, must be upper register
         [next]  "+r" (next),
         [count] "+w" (i)
-        : [hi]    "r" (hi),
-        [lo]    "r" (lo),
-        [ptr]   "e" (ptr));
+        // inputs
+        : [ptr] "e" (ptr),
+        [hi]    "r" (hi), // a = simple upper register (16-23)
+        [lo]     "r" (lo));
 }
 
 #elif (F_CPU >= 11100000UL) && (F_CPU <= 14300000UL)  // 12Mhz CPU
@@ -394,9 +409,11 @@ void send_data_12mhz_800_PortD(uint8_t* data, size_t sizeData, uint8_t pinMask)
         "out  %[port], %[lo]"    "\n\t" // 1    PORT = lo       (T = 11)
         "ret"                    "\n\t" // 4    nop nop nop nop (T = 15)
         "doneD:"                 "\n"
+        // outputs
         : [byte]  "+r" (b),
         [next]  "+r" (next),
         [count] "+w" (i)
+        // inputs
         : [port]   "I" (_SFR_IO_ADDR(PORTD)),
         [ptr]    "e" (ptr),
         [hi]     "r" (hi),
@@ -461,8 +478,14 @@ void send_data_12mhz_800_PortB(uint8_t* data, size_t sizeData, uint8_t pinMask)
         "out  %[port], %[lo]"    "\n\t"
         "ret"                    "\n\t"
         "doneB:"                 "\n"
-        : [byte] "+r" (b), [next] "+r" (next), [count] "+w" (i)
-        : [port] "I" (_SFR_IO_ADDR(PORTB)), [ptr] "e" (ptr), [hi] "r" (hi),
+        // outputs
+        : [byte] "+r" (b), 
+        [next] "+r" (next), 
+        [count] "+w" (i)
+        // inputs
+        : [port] "I" (_SFR_IO_ADDR(PORTB)), 
+        [ptr] "e" (ptr), 
+        [hi] "r" (hi),
         [lo] "r" (lo));
 }
 
@@ -514,14 +537,16 @@ void send_data_12mhz_400(uint8_t* data,
         "ld   %[byte] , %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 26)
         "sbiw %[count], 1"        "\n\t" // 2    i--           (T = 28)
         "brne head30"             "\n"   // 1-2  if(i != 0) -> (next byte)
+        // outputs
         : [port]  "+e" (port),
         [byte]  "+r" (b),
-        [bit]   "+r" (bit),
+        [bit]   "+d" (bit), // d = upper register, due to ldi, must be upper register
         [next]  "+r" (next),
         [count] "+w" (i)
-        : [hi]     "r" (hi),
-        [lo]     "r" (lo),
-        [ptr]    "e" (ptr));
+        // inputs
+        : [ptr] "e" (ptr),
+        [hi]     "r" (hi), // a = simple upper register (16-23)
+        [lo]     "r" (lo));
 }
 
 #elif (F_CPU >= 15400000UL) && (F_CPU <= 19000000UL)  // 16Mhz CPU
@@ -571,13 +596,15 @@ void send_data_16mhz_800(uint8_t* data, size_t sizeData, volatile uint8_t* port,
         "nop"                      "\n\t" // 1    nop           (T = 16)
         "sbiw %[count], 1"         "\n\t" // 2    i--           (T = 18)
         "brne head20"             "\n"   // 2    if(i != 0) -> (next byte)
+        // outputs
         : [port]  "+e" (port),
-        [byte]  "+r" (b),
-        [bit]   "+r" (bit),
+        [byte]  "+r" (b),  // l = lower register
+        [bit]   "+d" (bit), // d = upper register, due to ldi, must be upper register
         [next]  "+r" (next),
         [count] "+w" (i)
+        // inputs
         : [ptr]    "e" (ptr),
-        [hi]     "r" (hi),
+        [hi]     "r" (hi), // a = simple upper register (16-23)
         [lo]     "r" (lo));
 }
 
@@ -639,11 +666,13 @@ void send_data_16mhz_400(uint8_t* data,
         "rjmp .+0"                "\n\t" // 2    nop nop       (T = 36)
         "sbiw %[count], 1"        "\n\t" // 2    i--           (T = 38)
         "brne head40"             "\n"   // 1-2  if(i != 0) -> (next byte)
+        // outputs
         : [port]  "+e" (port),
         [byte]  "+r" (b),
-        [bit]   "+r" (bit),
+        [bit]   "+d" (bit), // d = upper register, due to ldi, must be upper register
         [next]  "+r" (next),
         [count] "+w" (i)
+        // inputs
         : [ptr]    "e" (ptr),
         [hi]     "r" (hi),
         [lo]     "r" (lo));
@@ -701,11 +730,13 @@ void send_data_16mhz_600(uint8_t* data,
             "ld   %[byte] , %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 23)
             "sbiw %[count], 1"        "\n\t" // 2    i--           (T = 25)
             "brne head60"             "\n"   // 1-2  if(i != 0) -> (next byte)
+        // outputs
         : [port] "+e" (port),
         [byte]  "+r" (b),
-        [bit]   "+r" (bit),
+        [bit]   "+d" (bit), // d = upper register, due to ldi, must be upper register
         [next]  "+r" (next),
         [count] "+w" (i)
+        // inputs
         : [ptr] "e" (ptr),
         [hi]     "r" (hi),
         [lo]     "r" (lo));
@@ -769,7 +800,7 @@ void send_data_32mhz(uint8_t* data,
         // outputs
         :   [port] "+e" (port),
             [byte]  "+r" (b),
-            [bit]   "+r" (bit),
+            [bit]   "+d" (bit), // d = upper register, due to ldi, must be upper register
             [next]  "+r" (next),
             [cycle]  "+r" (cycle),
             [count] "+w" (i)

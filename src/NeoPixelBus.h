@@ -42,6 +42,26 @@ const uint16_t PixelIndex_OutOfBounds = 0xffff;
 #include "internal/NeoBusChannel.h"
 #include "internal/NeoMethods.h"
 
+
+struct BusView
+{
+    BusView(uint16_t stripCount) :
+        PixelCount(stripCount),
+        StripCount(stripCount)
+    {
+    }
+
+    BusView(uint16_t repeatedPixelsCount, 
+            uint16_t stripCount ) :
+        PixelCount(repeatedPixelsCount),
+        StripCount(stripCount)
+    {
+    }
+
+    const uint16_t PixelCount; // exposed count of pixels that will be repeated to fill strip
+    const uint16_t StripCount; // actual data stream count of pixels
+};
+
 // T_COLOR_FEATURE - 
 //    The color feature object that defines bit depth, order, and any settings related
 //    to them
@@ -61,57 +81,61 @@ template<typename T_COLOR_FEATURE,
 class NeoPixelBus
 {
 public:
-    NeoPixelBus(uint16_t countPixels, uint8_t pin) :
-        _countPixels(countPixels),
+    NeoPixelBus(const BusView& busView, uint8_t pin) :
+        _countPixels(busView.PixelCount),
         _pixels(nullptr),
-        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _method(pin, busView.StripCount, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
         _shader()
     {
     }
 
-    NeoPixelBus(uint16_t countPixels, uint8_t pin, NeoBusChannel channel) :
-        _countPixels(countPixels),
+    NeoPixelBus(const BusView& busView, uint8_t pin, NeoBusChannel channel) :
+        _countPixels(busView.PixelCount),
         _pixels(nullptr),
-        _method(pin, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, channel),
+        _method(pin, busView.StripCount, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, channel),
         _shader()
     {
     }
 
-    NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
-        _countPixels(countPixels),
+    NeoPixelBus(const BusView& busView, uint8_t pinClock, uint8_t pinData) :
+        _countPixels(busView.PixelCount),
         _pixels(nullptr),
-        _method(pinClock, pinData, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _method(pinClock, pinData, busView.StripCount, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
         _shader()
     {
     }
 
-    NeoPixelBus(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
-        _countPixels(countPixels),
+    NeoPixelBus(const BusView& busView, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
+        _countPixels(busView.PixelCount),
         _pixels(nullptr),
-        _method(pinClock, pinData, pinLatch, pinOutputEnable, countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _method(pinClock, pinData, pinLatch, pinOutputEnable, busView.StripCount, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
         _shader()
     {
     }
 
-    NeoPixelBus(uint16_t countPixels) :
-        _countPixels(countPixels),
+    NeoPixelBus(const BusView& busView) :
+        _countPixels(busView.PixelCount),
         _pixels(nullptr),
-        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
+        _method(busView.StripCount, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize),
         _shader()
     {
     }
 
-    NeoPixelBus(uint16_t countPixels, Stream* pixieStream) :
-        _countPixels(countPixels),
+    NeoPixelBus(const BusView& busView, Stream* pixieStream) :
+        _countPixels(busView.PixelCount),
         _pixels(nullptr),
-        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, pixieStream),
+        _method(busView.StripCount, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, pixieStream),
         _shader()
     {
     }
 
     ~NeoPixelBus()
     {
+#if defined(NEOPIXEBUS_NO_ARRAY_NEW)
+        free(_pixels);
+#else
         delete[] _pixels;
+#endif
     }
 
 
@@ -119,6 +143,7 @@ public:
     {
         return NeoBufferContext<T_EXPOSED_COLOR_OBJECT>(_pixels, _countPixels);
     }
+
 
     void Begin()
     {
@@ -331,7 +356,11 @@ protected:
 
     void _initialize()
     {
+#if defined(NEOPIXEBUS_NO_ARRAY_NEW)
+        _pixels = static_cast<T_EXPOSED_COLOR_OBJECT*>(malloc(_countPixels * sizeof(T_EXPOSED_COLOR_OBJECT)));
+#else
         _pixels = new T_EXPOSED_COLOR_OBJECT[_countPixels];
+#endif
         ClearTo(0);
     }
 

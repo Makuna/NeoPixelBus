@@ -97,51 +97,51 @@ class NeoPixelBusLg :
         LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>
 {
 public:
-    NeoPixelBusLg(uint16_t countPixels, uint8_t pin) :
+    NeoPixelBusLg(const BusView& busView, uint8_t pin) :
         NeoPixelBus<T_COLOR_FEATURE,
             T_METHOD,
             T_EXPOSED_COLOR_OBJECT,
-            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pin)
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(busView, pin)
     {
     }
 
-    NeoPixelBusLg(uint16_t countPixels, uint8_t pin, NeoBusChannel channel) :
+    NeoPixelBusLg(const BusView& busView, uint8_t pin, NeoBusChannel channel) :
         NeoPixelBus<T_COLOR_FEATURE,
             T_METHOD,
             T_EXPOSED_COLOR_OBJECT,
-            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pin, channel)
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(busView, pin, channel)
     {
     }
 
-    NeoPixelBusLg(uint16_t countPixels, uint8_t pinClock, uint8_t pinData) :
+    NeoPixelBusLg(const BusView& busView, uint8_t pinClock, uint8_t pinData) :
         NeoPixelBus<T_COLOR_FEATURE,
             T_METHOD,
             T_EXPOSED_COLOR_OBJECT,
-            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pinClock, pinData)
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(busView, pinClock, pinData)
     {
     }
 
-    NeoPixelBusLg(uint16_t countPixels, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
+    NeoPixelBusLg(const BusView& busView, uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable = NOT_A_PIN) :
         NeoPixelBus<T_COLOR_FEATURE,
             T_METHOD,
             T_EXPOSED_COLOR_OBJECT,
-            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pinClock, pinData, pinLatch, pinOutputEnable)
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(busView, pinClock, pinData, pinLatch, pinOutputEnable)
     {
     }
 
-    NeoPixelBusLg(uint16_t countPixels) :
+    NeoPixelBusLg(const BusView& busView) :
         NeoPixelBus<T_COLOR_FEATURE,
             T_METHOD,
             T_EXPOSED_COLOR_OBJECT,
-            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels)
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(busView)
     {
     }
 
-    NeoPixelBusLg(uint16_t countPixels, Stream* pixieStream) :
+    NeoPixelBusLg(const BusView& busView, Stream* pixieStream) :
         NeoPixelBus<T_COLOR_FEATURE,
             T_METHOD,
             T_EXPOSED_COLOR_OBJECT,
-            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(countPixels, pixieStream)
+            LuminanceShader<T_EXPOSED_COLOR_OBJECT, typename T_COLOR_FEATURE::ColorObject, T_GAMMA>>(busView, pixieStream)
     {
     }
 

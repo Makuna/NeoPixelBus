@@ -32,8 +32,31 @@ License along with NeoPixel.  If not, see
 // ...then you can either add the platform symbol to the list so NEOPIXEBUS_NO_STL gets defined or
 // go to boards.txt and enable c++ by adding (teensy31.build.flags.libs=-lstdc++) and set to "smallest code" option in Arduino
 //
-#if defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR) || defined(STM32L432xx) || defined(STM32L476xx) || defined(ARDUINO_ARCH_SAM)
+#if defined(ARDUINO_ARCH_AVR) ||        \
+    defined(ARDUINO_ARCH_MEGAAVR) ||    \
+    defined(STM32L432xx) ||             \
+    defined(STM32L476xx) ||             \
+    defined(ARDUINO_ARCH_SAM)
 #define NEOPIXEBUS_NO_STL 1
+#endif
+
+// some platforms do not support a yield statement
+#if defined(ARDUINO_TEEONARDU_LEO) ||       \
+    defined(ARDUINO_TEEONARDU_FLORA) ||     \
+        defined(ARDUINO_AVR_DIGISPARK) ||   \
+        defined(ARDUINO_AVR_DIGISPARKPRO)
+#define NEOPIXEBUS_NO_YIELD 1
+#endif
+
+// some platforms do not support String
+#if defined(ARDUINO_AVR_DIGISPARK)
+#define NEOPIXEBUS_NO_STRING 1
+#endif
+
+// some platforms do not support new []!?
+#if defined(ARDUINO_AVR_DIGISPARK) || \
+    defined(ARDUINO_AVR_DIGISPARKPRO) 
+#define NEOPIXEBUS_NO_ARRAY_NEW 1
 #endif
 
 // some platforms do not define this standard progmem type for some reason

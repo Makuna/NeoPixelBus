@@ -111,7 +111,7 @@ public:
     {
         while (!IsReadyToUpdate())
         {
-#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA) && !defined(ARDUINO_AVR_DIGISPARK)
+#if !defined(NEOPIXEBUS_NO_YIELD)
             yield(); // allows for system yield if needed
 #endif
         }
