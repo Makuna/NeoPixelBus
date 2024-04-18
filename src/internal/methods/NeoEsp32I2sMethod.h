@@ -156,19 +156,26 @@ template<typename T_SPEED, typename T_BUS, typename T_INVERT> class NeoEsp32I2sM
 public:
     typedef NeoNoSettings SettingsObject;
 
-    NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t pixelSize, size_t settingsSize)  :
-        _sizeData(pixelCount * pixelSize + settingsSize),
-        _pin(pin)
+    NeoEsp32I2sMethodBase(uint8_t pin, 
+        uint16_t pixelCount, 
+        size_t pixelSize, 
+        size_t settingsSize)  :
+        _pin(pin),
+        _pixelCount(pixelCount)
     {
-        construct(pixelCount, pixelSize, settingsSize);
+        construct(pixelSize, settingsSize);
     }
 
-    NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t pixelSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(pixelCount * pixelSize + settingsSize),
+    NeoEsp32I2sMethodBase(uint8_t pin, 
+        uint16_t pixelCount, 
+        size_t pixelSize, 
+        size_t settingsSize, 
+        NeoBusChannel channel) :
         _pin(pin),
+        _pixelCount(pixelCount),
         _bus(channel)
     {
-        construct(pixelCount, pixelSize, settingsSize);
+        construct(pixelSize, settingsSize);
     }
 
     ~NeoEsp32I2sMethodBase()
@@ -183,7 +190,6 @@ public:
         gpio_matrix_out(_pin, SIG_GPIO_OUT_IDX, false, false);
         pinMode(_pin, INPUT);
 
-        free(_data);
         heap_caps_free(_i2sBuffer);
     }
 
@@ -208,7 +214,14 @@ public:
         i2sSetPins(_bus.I2sBusNumber, _pin, -1, -1, T_INVERT::Inverted);
     }
 
-    void Update(bool)
+    template <typename T_COLOR_OBJECT,
+        typename T_COLOR_FEATURE,
+        typename T_SHADER>
+    void Update(
+        T_COLOR_OBJECT* pixels,
+        size_t countPixels,
+        const typename T_COLOR_FEATURE::SettingsObject& featureSettings,
+        const T_SHADER& shader)
     {
         // wait for not actively sending data
         while (!IsReadyToUpdate())
@@ -216,46 +229,63 @@ public:
             yield();
         }
 
-        FillBuffers();
+        const size_t sendDataSize = T_COLOR_FEATURE::SettingsSize >= T_COLOR_FEATURE::PixelSize ? T_COLOR_FEATURE::SettingsSize : T_COLOR_FEATURE::PixelSize;
+        uint8_t sendData[sendDataSize];
+        uint8_t* dma = _i2sBuffer;
+
+        // if there are settings at the front
+        //
+        if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
+        {
+            FillBuffer(sendData, T_COLOR_FEATURE::SettingsSize, &dma);
+        }
+
+        // fill primary color data
+        //
+        T_COLOR_OBJECT* pixel = pixels;
+        const T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
+        uint16_t stripCount = _pixelCount;
+
+        while (stripCount--)
+        {
+            typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
+            T_COLOR_FEATURE::applyPixelColor(sendData, sendDataSize, color);
+
+            FillBuffer(sendData, T_COLOR_FEATURE::PixelSize, &dma);
+
+            pixel++;
+            if (pixel >= pixelEnd)
+            {
+                // restart at first
+                pixel = pixels;
+            }
+        }
+
+        // if there are settings at the back
+        //
+        if (T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
+        {
+            FillBuffer(sendData, T_COLOR_FEATURE::SettingsSize, &dma);
+        }
 
         i2sWrite(_bus.I2sBusNumber);
     }
 
-    bool AlwaysUpdate()
-    {
-        // this method requires update to be called only if changes to buffer
-        return false;
-    }
-
-    uint8_t* getData() const
-    {
-        return _data;
-    };
-
-    size_t getDataSize() const
-    {
-        return _sizeData;
-    }
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
     }
 
 private:
-    const size_t  _sizeData;    // Size of '_data' buffer 
     const uint8_t _pin;            // output pin number
+    const uint16_t _pixelCount; // count of pixels in the strip
     const T_BUS _bus; // holds instance for multi bus support
-
-    uint8_t*  _data;        // Holds LED color values
 
     size_t _i2sBufferSize; // total size of _i2sBuffer
     uint8_t* _i2sBuffer;  // holds the DMA buffer that is referenced by _i2sBufDesc
 
-    void construct(uint16_t pixelCount, size_t pixelSize, size_t settingsSize) 
+    void construct(size_t pixelSize, size_t settingsSize) 
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
-
         // must have a 4 byte aligned buffer for i2s
         // since the reset/silence at the end is used for looping
         // it also needs to 4 byte aligned
@@ -263,7 +293,7 @@ private:
         size_t dmaPixelSize = c_dmaBytesPerPixelBytes * pixelSize;
         size_t resetSize = NeoUtil::RoundUp(c_dmaBytesPerPixelBytes * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs, 4);
 
-        _i2sBufferSize = NeoUtil::RoundUp(pixelCount * dmaPixelSize + dmaSettingsSize, 4) +
+        _i2sBufferSize = NeoUtil::RoundUp(_pixelCount * dmaPixelSize + dmaSettingsSize, 4) +
                 resetSize;
 
         _i2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(_i2sBufferSize, MALLOC_CAP_DMA));
@@ -272,7 +302,7 @@ private:
         memset(_i2sBuffer, 0x00, _i2sBufferSize);
     }
 
-    void FillBuffers()
+    void FillBuffer(const uint8_t* sendData, size_t sendDataSize, uint8_t** buffer)
     {
         const uint16_t bitpatterns[16] =
         {
@@ -282,13 +312,17 @@ private:
             0b1110111010001000, 0b1110111010001110, 0b1110111011101000, 0b1110111011101110,
         };
 
-        uint16_t* pDma = reinterpret_cast<uint16_t*>(_i2sBuffer);
-        uint8_t* pEnd = _data + _sizeData;
-        for (uint8_t* pPixel = _data; pPixel < pEnd; pPixel++)
-        {
-            *(pDma++) = bitpatterns[((*pPixel) & 0x0f)];
-            *(pDma++) = bitpatterns[((*pPixel) >> 4) & 0x0f];
+        uint16_t* pDma = reinterpret_cast<uint16_t*>(*buffer);
+        const uint8_t* pEnd = sendData + sendDataSize;
+
+        while (sendData < pEnd)
+        { 
+            *(pDma++) = bitpatterns[((*sendData) & 0x0f)];
+            *(pDma++) = bitpatterns[((*sendData) >> 4) & 0x0f];
+            sendData++;
         }
+
+        *buffer = reinterpret_cast<uint8_t*>(pDma);
     }
 };
 
