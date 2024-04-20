@@ -171,7 +171,7 @@ public:
     typedef NeoNoSettings SettingsObject;
 
     NeoAvrMethodBase(uint8_t pin, 
-        [[maybe_unused]] uint16_t pixelCount, 
+        uint16_t pixelCount, 
         [[maybe_unused]] size_t elementSize, 
         [[maybe_unused]] size_t settingsSize) :
         _pin(pin),

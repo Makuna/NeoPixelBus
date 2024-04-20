@@ -60,6 +60,25 @@ License along with NeoPixel.  If not, see
 
 #endif
 
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) && !defined(ARDUINO_ESP32C6_DEV) && !defined(ARDUINO_ESP32H2_DEV)
+
+inline
+static uint32_t getEspCycleCount(void)
+{
+    uint32_t ccount;
+
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+    __asm__ __volatile__("csrr %0,0x7e2":"=r" (ccount));
+    //ccount = esp_cpu_get_ccount();
+#else
+    __asm__ __volatile__("rsr %0,ccount":"=a" (ccount));
+#endif
+    return ccount;
+}
+
+#endif
+
+
 // some platforms do not define this standard progmem type for some reason
 //
 #ifndef PGM_VOID_P

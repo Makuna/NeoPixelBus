@@ -39,14 +39,12 @@ License along with NeoPixel.  If not, see
 #define CYCLES_LOOPTEST   (4) // adjustment due to loop exit test instruction cycles
 #endif
 
-extern bool neoEspBitBangWriteSpacingPixels(const uint8_t* pixels, 
-    const uint8_t* end, 
-    uint8_t pin, 
-    uint32_t t0h, 
-    uint32_t t1h, 
+extern bool neoEspBitBangWriteSpacingPixels(const uint8_t* data,
+    size_t dataSize,
+    uint8_t pin,
+    uint32_t t0h,
+    uint32_t t1h,
     uint32_t period,
-    size_t sizePixel,
-    uint32_t tLatch, 
     bool invert);
 
 
@@ -188,27 +186,25 @@ public:
     const static uint32_t TLatch = 0;
 };
 
-template<typename T_SPEED, typename T_INVERTED, bool V_INTER_PIXEL_ISR> class NeoEspBitBangMethodBase
+template<typename T_SPEED, typename T_INVERTED, bool V_INTER_PIXEL_ISR> 
+class NeoEspBitBangMethodBase
 {
 public:
     typedef NeoNoSettings SettingsObject;
 
-    NeoEspBitBangMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizePixel(elementSize),
-        _sizeData(pixelCount * elementSize + settingsSize),
-        _pin(pin)
+    NeoEspBitBangMethodBase(uint8_t pin, 
+        uint16_t pixelCount, 
+        [[maybe_unused]] size_t elementSize,
+        [[maybe_unused]] size_t settingsSize) :
+        _pin(pin),
+        _pixelCount(pixelCount)
     {
         pinMode(pin, OUTPUT);
-
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
     ~NeoEspBitBangMethodBase()
     {
         pinMode(_pin, INPUT);
-
-        free(_data);
     }
 
     bool IsReadyToUpdate() const
@@ -225,10 +221,18 @@ public:
         _endTime = micros();
     }
 
-    void Update(bool)
+    template <typename T_COLOR_OBJECT,
+        typename T_COLOR_FEATURE,
+        typename T_SHADER>
+    void Update(
+        T_COLOR_OBJECT* pixels,
+        size_t countPixels,
+        const typename T_COLOR_FEATURE::SettingsObject& featureSettings,
+        const T_SHADER& shader)
     {
-        bool done = false;
-        for (unsigned retries = 0; !done && retries < 4; ++retries)
+        bool wasInterrupted = true; 
+
+        for (unsigned retries = 0; wasInterrupted && retries < 4; ++retries)
         {
             // Data latch = 50+ microsecond pause in the output stream.  Rather than
             // put a delay at the end of the function, the ending time is noted and
@@ -241,45 +245,91 @@ public:
                 yield(); // allows for system yield if needed
             }
 
-            done = neoEspBitBangWriteSpacingPixels(_data,
-                _data + _sizeData,
-                _pin,
-                T_SPEED::T0H,
-                T_SPEED::T1H,
-                T_SPEED::Period,
-                _sizePixel,
-                NeoEspTLatch<T_SPEED, V_INTER_PIXEL_ISR>::TLatch,
-                T_INVERTED::IdleLevel);
+            wasInterrupted = false;
+
+            const size_t sendDataSize = T_COLOR_FEATURE::SettingsSize >= T_COLOR_FEATURE::PixelSize ? T_COLOR_FEATURE::SettingsSize : T_COLOR_FEATURE::PixelSize;
+            uint8_t sendData[sendDataSize];
+            uint32_t cycleLast = getEspCycleCount();
+
+            // if there are settings at the front
+            //
+            if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
+            {
+                cycleLast = neoEspBitBangWriteSpacingPixels(sendData,
+                    T_COLOR_FEATURE::SettingsSize,
+                    _pin,
+                    T_SPEED::T0H,
+                    T_SPEED::T1H,
+                    T_SPEED::Period,
+                    T_INVERTED::IdleLevel);
+            }
+
+            // send primary color data
+            //
+            T_COLOR_OBJECT* pixel = pixels;
+            const T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
+            uint16_t stripCount = _pixelCount;
+
+            while (!wasInterrupted && stripCount--)
+            {
+                typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
+                T_COLOR_FEATURE::applyPixelColor(sendData, sendDataSize, color);
+
+                if ((getEspCycleCount() - cycleLast) > NeoEspTLatch<T_SPEED, V_INTER_PIXEL_ISR>::TLatch)
+                {
+                    wasInterrupted = true;  
+                }
+                else
+                {
+                    cycleLast = neoEspBitBangWriteSpacingPixels(sendData,
+                        T_COLOR_FEATURE::PixelSize,
+                        _pin,
+                        T_SPEED::T0H,
+                        T_SPEED::T1H,
+                        T_SPEED::Period,
+                        T_INVERTED::IdleLevel);
+
+                    pixel++;
+                    if (pixel >= pixelEnd)
+                    {
+                        // restart at first
+                        pixel = pixels;
+                    }
+                }
+            }
+
+            // if there are settings at the back
+            //
+            if (!wasInterrupted && T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
+            {
+                if ((getEspCycleCount() - cycleLast) > NeoEspTLatch<T_SPEED, V_INTER_PIXEL_ISR>::TLatch)
+                {
+                    wasInterrupted = true;
+                }
+                else
+                {
+                    cycleLast = neoEspBitBangWriteSpacingPixels(sendData,
+                        T_COLOR_FEATURE::SettingsSize,
+                        _pin,
+                        T_SPEED::T0H,
+                        T_SPEED::T1H,
+                        T_SPEED::Period,
+                        T_INVERTED::IdleLevel);
+                }
+            }
 
             // save EOD time for latch on next call
             _endTime = micros();
         }
     }
 
-    bool AlwaysUpdate()
-    {
-        // this method requires update to be called only if changes to buffer
-        return false;
-    }
-
-    uint8_t* getData() const
-    {
-        return _data;
-    };
-
-    size_t getDataSize() const
-    {
-        return _sizeData;
-    };
-
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
     }
 
 private:
-    const size_t _sizePixel; // size of a pixel in _data
-    const size_t  _sizeData;   // Size of '_data' buffer below
     const uint8_t _pin;            // output pin number
+    const uint16_t _pixelCount; // count of pixels in the strip
 
     uint32_t _endTime;       // Latch timing reference
     uint8_t* _data;        // Holds LED color values

@@ -28,47 +28,15 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
+#include "..\NeoUtil.h"
+
 #if ESP_IDF_VERSION_MAJOR>=5
 #include <soc/gpio_struct.h>
 #endif
 
-static inline uint32_t getCycleCount(void)
-{
-    uint32_t ccount;
-
-#if defined(CONFIG_IDF_TARGET_ESP32C3)
-    __asm__ __volatile__("csrr %0,0x7e2":"=r" (ccount));
-    //ccount = esp_cpu_get_ccount();
-#else
-    __asm__ __volatile__("rsr %0,ccount":"=a" (ccount));
-#endif
-    return ccount;
-}
-
 // Interrupt lock class, used for RAII interrupt disabling
-class InterruptLock {
-#if defined(ARDUINO_ARCH_ESP32)
-    portMUX_TYPE updateMux;
-#endif
-
-    inline void lock()
-    {
-#if defined(ARDUINO_ARCH_ESP32)
-        portENTER_CRITICAL(&updateMux);
-#else
-        noInterrupts();
-#endif
-    }
-
-    inline void unlock()
-    {        
-#if defined(ARDUINO_ARCH_ESP32)
-        portEXIT_CRITICAL(&updateMux);
-#else
-        interrupts();
-#endif
-    }
-
+class InterruptLock 
+{
 public:
 
     inline void poll()
@@ -79,7 +47,7 @@ public:
     
     inline InterruptLock()
 #if defined(ARDUINO_ARCH_ESP32)
-        : updateMux(portMUX_INITIALIZER_UNLOCKED)
+        : _updateMux(portMUX_INITIALIZER_UNLOCKED)
 #endif    
     { 
         lock();
@@ -89,23 +57,46 @@ public:
     {
         unlock();
     }
+
+private:
+#if defined(ARDUINO_ARCH_ESP32)
+    portMUX_TYPE _updateMux;
+#endif
+
+    inline void lock()
+    {
+#if defined(ARDUINO_ARCH_ESP32)
+        portENTER_CRITICAL(&_updateMux);
+#else
+        noInterrupts();
+#endif
+    }
+
+    inline void unlock()
+    {
+#if defined(ARDUINO_ARCH_ESP32)
+        portEXIT_CRITICAL(&_updateMux);
+#else
+        interrupts();
+#endif
+    }
 };
 
-bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
-    const uint8_t* end,
+__attribute__((flatten))
+uint32_t IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* data,
+    size_t dataSize,
     uint8_t pin,
     uint32_t t0h,
     uint32_t t1h,
     uint32_t period,
-    size_t sizePixel,
-    uint32_t tLatch,
     bool invert)
 {
+    const uint8_t* dataEnd = data + dataSize;
     uint32_t setValue = _BV(pin);
     uint32_t clearValue = _BV(pin);
     uint8_t mask = 0x80;
-    uint8_t subpix = *pixels++;
-    uint8_t element = 0;
+    uint8_t subpix = *data++;
+    
     uint32_t cyclesStart = 0; // trigger emediately
     uint32_t cyclesNext = 0;
 
@@ -153,7 +144,7 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
 
         // after we have done as much work as needed for this next bit
         // now wait for the HIGH
-        while (((cyclesStart = getCycleCount()) - cyclesNext) < period);
+        while (((cyclesStart = getEspCycleCount()) - cyclesNext) < period);
 
         // set pin state
 #if defined(ARDUINO_ARCH_ESP32)
@@ -163,7 +154,7 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
 #endif
 
         // wait for the LOW
-        while ((getCycleCount() - cyclesStart) < cyclesBit);
+        while ((getEspCycleCount() - cyclesStart) < cyclesBit);
 
         // reset pin start
 #if defined(ARDUINO_ARCH_ESP32)
@@ -180,37 +171,18 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
         {
             // no more bits to send in this byte
             // check for another byte
-            if (pixels >= end)
+            if (data >= dataEnd)
             {
                 // no more bytes to send so stop
                 break;
             }
             // reset mask to first bit and get the next byte
             mask = 0x80;
-            subpix = *pixels++;
-
-            // Hack: permit interrupts to fire
-            // If we get held up more than the latch period, stop.
-            // We do this at the end of an element to ensure that each
-            // element always gets valid data, even if we don't update
-            // every element.
-            if (tLatch)
-            {
-                ++element;
-                if (element == sizePixel)
-                {
-                    isrGuard.poll();
-                    if ((getCycleCount() - cyclesNext) > tLatch)
-                    {
-                        return false;    // failed
-                    }
-                    element = 0;
-                }
-            }
+            subpix = *data++;
         }
     }
 
-    return true;   // update complete
+    return getEspCycleCount();  
 }
 
 

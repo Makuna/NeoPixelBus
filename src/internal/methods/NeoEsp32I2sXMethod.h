@@ -58,7 +58,7 @@ public:
 
     const static size_t MuxBusDataSize = 1;
 
-    static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
+    static void EncodeIntoDma(uint8_t** dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
         // 1234  - order
@@ -84,7 +84,7 @@ public:
         const uint32_t EncodedOneBit = 0x01010001;
 #endif
 
-        uint32_t* pDma = reinterpret_cast<uint32_t*>(dmaBuffer);
+        uint32_t* pDma = reinterpret_cast<uint32_t*>(*dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
 
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
@@ -100,6 +100,8 @@ public:
                 value <<= 1;
             }
         }
+        // return the buffer pointer advanced by encoding progress
+        *dmaBuffer = reinterpret_cast<uint8_t*>(pDma);
     }
 };
 
@@ -113,7 +115,7 @@ public:
 
     const static size_t MuxBusDataSize = 2;
 
-    static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
+    static void EncodeIntoDma(uint8_t** dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
         // 1234 5678 - order
@@ -177,14 +179,14 @@ public:
     }
 
 protected:
-    static void Fillx16(uint8_t* dmaBuffer, 
+    static void Fillx16(uint8_t** dmaBuffer, 
         const uint8_t* data,
         size_t sizeData,
         uint8_t muxShift,
         const uint64_t EncodedZeroBit64,
         const uint64_t EncodedOneBit64)
     {
-        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(dmaBuffer);
+        uint64_t* pDma64 = reinterpret_cast<uint64_t*>(*dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
 
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
@@ -200,6 +202,8 @@ protected:
                 value <<= 1;
             }
         }
+        // return the buffer pointer advanced by encoding progress
+        *dmaBuffer = reinterpret_cast<uint8_t*>(pDma64);
     }
 };
 
@@ -403,192 +407,37 @@ public:
         MuxMap.Reset();
     }
 
-    void StartWrite(uint8_t i2sBusNumber)
+    void ResetBuffer()
     {
-        if (MuxMap.IsAllMuxBusesUpdated())
+        // to keep the inner loops for EncodeIntoDma smaller
+        // they will just OR in their values
+        // so the buffer must be cleared first
+        if (MuxMap.IsNoMuxBusesUpdate())
         {
-            MuxMap.ResetMuxBusesUpdated();
-            i2sWrite(i2sBusNumber);
+            // clear all the data in preperation for each mux channel to add
+            memset(I2sBuffer, 0x00, I2sBufferSize);
         }
     }
 
-    void FillBuffers(const uint8_t* data, 
+    void FillBuffer(uint8_t** dmaBuffer,
+            const uint8_t* data, 
             size_t sizeData, 
-            uint8_t muxId,
-            uint8_t i2sBusNumber)
+            uint8_t muxId)
     {
-        // wait for not actively sending data
-        while (!i2sWriteDone(i2sBusNumber))
-        {
-            yield();
-        }
-
-        // to keep the inner loops for EncodeIntoDma smaller
-        // they will just OR in their values
-        // so the buffer must be cleared first
-        if (MuxMap.IsNoMuxBusesUpdate())
-        {
-            // clear all the data in preperation for each mux channel to add
-            memset(I2sBuffer, 0x00, I2sBufferSize);
-        }
-
-        MuxMap.EncodeIntoDma(I2sBuffer,
+        MuxMap.EncodeIntoDma(dmaBuffer,
             data,
             sizeData,
             muxId);
-
-        MuxMap.MarkMuxBusUpdated(muxId);
-    }
-};
-
-//
-// Implementation of a Double Buffered version of a I2sContext
-// Manages the underlying I2S details including the buffer(s)
-// This creates a front buffer that can be filled while actively sending
-// the back buffer, thus improving async operation of the i2s DMA.
-// Note that the back buffer must be DMA memory, a limited resource, so
-// the front buffer uses normal memory and copies rather than swap pointers
-// 
-// T_MUXMAP - NeoEspI2sMuxMap - tracking class for mux state
-//
-template<typename T_MUXMAP>
-class NeoEspI2sDblBuffContext
-{
-public:
-    const static size_t DmaBitsPerPixelBit = 4;
-
-    size_t I2sBufferSize; // total size of I2sBuffer
-    uint8_t* I2sBuffer;    // holds the DMA buffer that is referenced by I2sBufDesc
-    uint8_t* I2sEditBuffer; // hold a editable buffer that is copied to I2sBuffer
-    T_MUXMAP MuxMap;
-
-    // as a static instance, all members get initialized to zero
-    // and the constructor is called at inconsistent time to other globals
-    // so its not useful to have or rely on, 
-    // but without it presence they get zeroed far too late
-    NeoEspI2sDblBuffContext()
-            //:
-            //I2sBufferSize(0),
-            //I2sBuffer(nullptr),
-            //I2sEditBuffer(nullptr),
-            //MuxMap()
-    {
     }
 
-    void Construct(const uint8_t busNumber, uint32_t i2sSampleRate)
-    {
-        // construct only once on first time called
-        if (I2sBuffer == nullptr)
-        {
-            // MuxMap.MaxBusDataSize = max size in bytes of a single channel
-            // DmaBitsPerPixelBit = how many dma bits/byte are needed for each source (pixel) bit/byte
-            // T_MUXMAP::MuxBusDataSize = the true size of data for selected mux mode (not exposed size as i2s0 only supports 16bit mode)
-            I2sBufferSize = MuxMap.MaxBusDataSize * 8 * DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
-
-            // must have a 4 byte aligned buffer for i2s
-            uint32_t alignment = I2sBufferSize % 4;
-            if (alignment)
-            {
-                I2sBufferSize += 4 - alignment;
-            }
-
-            size_t dmaBlockCount = (I2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
-
-            I2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(I2sBufferSize, MALLOC_CAP_DMA));
-            if (I2sBuffer == nullptr)
-            {
-                log_e("send buffer memory allocation failure (size %u)",
-                    I2sBufferSize);
-            }
-            memset(I2sBuffer, 0x00, I2sBufferSize);
-
-            I2sEditBuffer = static_cast<uint8_t*>(malloc(I2sBufferSize));
-            if (I2sEditBuffer == nullptr)
-            {
-                log_e("edit buffer memory allocation failure (size %u)",
-                    I2sBufferSize);
-            }
-            memset(I2sEditBuffer, 0x00, I2sBufferSize);
-
-            i2sInit(busNumber,
-                true,
-                T_MUXMAP::MuxBusDataSize,
-                i2sSampleRate,
-#if defined(CONFIG_IDF_TARGET_ESP32S2)
-                // using these modes on ESP32S2 actually allows it to function
-                // in both x8 and x16
-                I2S_CHAN_STEREO,
-                I2S_FIFO_16BIT_DUAL,
-#else
-                // but they won't work on ESP32 in parallel mode, but these will
-                I2S_CHAN_RIGHT_TO_LEFT,
-                I2S_FIFO_16BIT_SINGLE,
-#endif
-                dmaBlockCount,
-                I2sBuffer,
-                I2sBufferSize);
-        }
-    }
-
-    void Destruct(const uint8_t busNumber)
-    {
-        if (I2sBuffer == nullptr)
-        {
-            return;
-        }
-
-        i2sSetPins(busNumber, -1, -1, -1, false);
-        i2sDeinit(busNumber);
-
-        free(I2sEditBuffer);
-        heap_caps_free(I2sBuffer);
-
-        I2sBufferSize = 0;
-        I2sBuffer = nullptr;
-        I2sEditBuffer = nullptr;
-
-        MuxMap.Reset();
-    }
 
     void StartWrite(uint8_t i2sBusNumber)
     {
         if (MuxMap.IsAllMuxBusesUpdated())
         {
             MuxMap.ResetMuxBusesUpdated();
-
-            // wait for not actively sending data
-            while (!i2sWriteDone(i2sBusNumber))
-            {
-                yield();
-            }
-
-            // copy edit buffer to sending buffer
-            memcpy(I2sBuffer, I2sEditBuffer, I2sBufferSize);
-
             i2sWrite(i2sBusNumber);
         }
-    }
-
-    void FillBuffers(const uint8_t* data,
-        size_t sizeData,
-        uint8_t muxId,
-        uint8_t i2sBusNumber)
-    {
-        // to keep the inner loops for EncodeIntoDma smaller
-        // they will just OR in their values
-        // so the buffer must be cleared first
-        if (MuxMap.IsNoMuxBusesUpdate())
-        {
-            // clear all the data in preperation for each mux channel to add
-            memset(I2sEditBuffer, 0x00, I2sBufferSize);
-        }
-
-        MuxMap.EncodeIntoDma(I2sEditBuffer,
-            data,
-            sizeData,
-            muxId);
-
-        MuxMap.MarkMuxBusUpdated(muxId);
     }
 };
 
@@ -596,10 +445,7 @@ public:
 //
 // Implementation of the low level interface into i2s mux bus
 // 
-// T_BUSCONTEXT - the context to use, currently only NeoEspI2sDblBuffContext but there is
-//      a plan to provide one that doesn't implement the front buffer but would be less
-//      async as it would have to wait until the last frame was completely sent before
-//      updating and new data
+// T_BUSCONTEXT - the context to use, currently only NeoEspI2sMonoBuffContext
 // T_BUS - the bus id, NeoEsp32I2sBusZero, NeoEsp32I2sBusOne
 //
 template<typename T_BUSCONTEXT, typename T_BUS> 
@@ -636,24 +482,28 @@ public:
         _muxId = s_context.MuxMap.InvalidMuxId;
     }
 
-    void StartWrite()
-    {
-        s_context.StartWrite(T_BUS::I2sBusNumber);
-    }
-
     bool IsWriteDone() const
     {
         return i2sWriteDone(T_BUS::I2sBusNumber);
     }
 
-    void FillBuffers(const uint8_t* data, size_t sizeData)
+    uint8_t* BeginUpdate()
     {
-        s_context.FillBuffers(data, sizeData, _muxId, T_BUS::I2sBusNumber);
+        s_context.ResetBuffer();
+        return s_context.I2sBuffer;
     }
 
-    void MarkUpdated()
+    void FillBuffer(uint8_t** dmaBuffer,
+        const uint8_t* data,
+        size_t sizeData)
+    {
+        s_context.FillBuffer(dmaBuffer, data, sizeData, _muxId);
+    }
+
+    void EndUpdate()
     {
         s_context.MuxMap.MarkMuxBusUpdated(_muxId);
+        s_context.StartWrite(T_BUS::I2sBusNumber); // only when all buses are update is actual write started
     }
 
 private:
@@ -677,11 +527,11 @@ public:
     typedef NeoNoSettings SettingsObject;
 
     NeoEsp32I2sXMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin),
+        _pixelCount(pixelCount),
         _bus()
     {
-        _bus.RegisterNewMuxBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);        
+        _bus.RegisterNewMuxBus((pixelCount * elementSize + settingsSize) + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);
     }
 
     ~NeoEsp32I2sXMethodBase()
@@ -692,8 +542,6 @@ public:
         }
 
         _bus.DeregisterMuxBus(_pin);
-
-        free(_data);
     }
 
     bool IsReadyToUpdate() const
@@ -704,37 +552,65 @@ public:
     void Initialize()
     {
         _bus.Initialize(_pin, T_SPEED::I2sSampleRate, T_INVERT::Inverted);
+    }
 
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        if (_data == nullptr)
+    template <typename T_COLOR_OBJECT,
+        typename T_COLOR_FEATURE,
+        typename T_SHADER>
+    void Update(
+        T_COLOR_OBJECT* pixels,
+        size_t countPixels,
+        const typename T_COLOR_FEATURE::SettingsObject& featureSettings,
+        const T_SHADER& shader)
+    {
+        // wait for not actively sending data
+        while (!_bus.IsWriteDone())
         {
-            log_e("front buffer memory allocation failure");
+            yield();
         }
-        // data cleared later in Begin()
-    }
 
-    void Update(bool)
-    {
-        _bus.FillBuffers(_data, _sizeData);
-        _bus.StartWrite(); // only triggers actual write after all mux busses have updated
-    }
+        const size_t sendDataSize = T_COLOR_FEATURE::SettingsSize >= T_COLOR_FEATURE::PixelSize ? T_COLOR_FEATURE::SettingsSize : T_COLOR_FEATURE::PixelSize;
+        uint8_t sendData[sendDataSize];
+        uint8_t* data = _bus.BeginUpdate();
 
-    bool AlwaysUpdate()
-    {
-        // this method requires update to be called even if no changes to method buffer
-        // as edit buffer is always cleared and then copied to send buffer and all
-        // mux bus needs to included
-        return true;
-    }
+        // if there are settings at the front
+        //
+        if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
+        {
+            _bus.FillBuffer(&data, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
 
-    uint8_t* getData() const
-    {
-        return _data;
-    };
+        // apply primary color data
+        //
+        T_COLOR_OBJECT* pixel = pixels;
+        const T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
+        uint16_t stripCount = _pixelCount;
 
-    size_t getDataSize() const
-    {
-        return _sizeData;
+        while (stripCount--)
+        {
+            typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
+            T_COLOR_FEATURE::applyPixelColor(sendData, sendDataSize, color);
+
+            _bus.FillBuffer(&data, sendData, T_COLOR_FEATURE::PixelSize);
+
+            pixel++;
+
+            if (pixel >= pixelEnd)
+            {
+                // restart at first
+                pixel = pixels;
+            }
+        }
+
+
+        // if there are settings at the back
+        //
+        if (T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
+        {
+            _bus.FillBuffer(&data, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
+
+        _bus.EndUpdate(); // triggers actual write after all mux busses have updated
     }
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
@@ -742,21 +618,16 @@ public:
     }
 
 private:
-    const size_t  _sizeData;    // Size of '_data' buffer 
-    const uint8_t _pin;         // output pin number
+    const uint8_t _pin;            // output pin number
+    const uint16_t _pixelCount; // count of pixels in the strip
 
     T_BUS _bus;          // holds instance for mux bus support
-    uint8_t* _data;      // Holds LED color values
 };
 
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
 
 typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux8Bus;
 typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux16Bus;
-
-typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0DblMux8Bus;
-
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0DblMux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8DblWs2812xMethod;
 
 #else
 
@@ -766,8 +637,6 @@ typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, Neo
 
 typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux8Bus;
 typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux16Bus;
-
-typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1DblMux8Bus;
 
 #endif
 
@@ -815,8 +684,6 @@ typedef NeoEsp32I2s0X16Sk6812Method  NeoEsp32I2s0X16Lc8812Method;
 #if !defined(CONFIG_IDF_TARGET_ESP32S2)
 
 // I2s1x8
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1DblMux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8DblWs2812xMethod;
-
 typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Ws2812xMethod;
 typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2805, NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Ws2805Method;
 typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s1Mux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s1X8Sk6812Method;
