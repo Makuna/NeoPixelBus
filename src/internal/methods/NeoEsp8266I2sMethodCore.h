@@ -326,7 +326,7 @@ protected:
         I2SC |= I2STXS; // Start transmission
     }
 
-    void WriteI2s()
+    void IRAM_ATTR WriteI2s()
     {
         // first two items are the state blocks
         slc_queue_item* itemLoopBreaker = &(_i2sBufDesc[1]);

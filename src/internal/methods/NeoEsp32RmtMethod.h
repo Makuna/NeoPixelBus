@@ -566,7 +566,7 @@ public:
 
     NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
         _pin(pin),
-        _sizeData(pixelCount* elementSize + settingsSize),
+        _sizeDataSending(pixelCount* elementSize + settingsSize),
         _pixelCount(pixelCount)
     {
         construct();
@@ -574,7 +574,7 @@ public:
 
     NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
         _pin(pin),
-        _sizeData(pixelCount* elementSize + settingsSize),
+        _sizeDataSending(pixelCount* elementSize + settingsSize),
         _pixelCount(pixelCount),
         _channel(channel)
     {
@@ -677,7 +677,7 @@ public:
             }
 
             // now start the RMT transmit with the editing buffer before we swap
-            ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_write_sample(_channel.RmtChannelNumber, _dataSending, _sizeData, false));
+            ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_write_sample(_channel.RmtChannelNumber, _dataSending, _sizeDataSending, false));
         }
     }
 
@@ -688,7 +688,7 @@ public:
 private:
     const uint8_t _pin;            // output pin number
     const uint16_t _pixelCount; // count of pixels in the strip
-    const size_t  _sizeData;      // Size of '_data*' buffers 
+    const size_t  _sizeDataSending;      // Size of '_data*' buffers 
 
     const T_CHANNEL _channel; // holds instance for multi channel support
 
@@ -698,7 +698,7 @@ private:
 
     void construct()
     {
-        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
+        _dataSending = static_cast<uint8_t*>(malloc(_sizeDataSending));
         // no need to initialize it, it gets overwritten on every send
     }
 
