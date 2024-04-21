@@ -142,21 +142,18 @@ class NeoEsp8266UartBase
 {
 protected:
     const size_t    _sizeData;   // Size of '_data' buffer below
-    uint8_t* _data;        // Holds LED color values
+    const uint16_t _pixelCount; // count of pixels in the strip
     uint32_t _startTime;     // Microsecond count when last update started
 
     NeoEsp8266UartBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize)
+        _sizeData(pixelCount * elementSize + settingsSize),
+        _pixelCount(pixelCount)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
     ~NeoEsp8266UartBase()
     {
-        free(_data);
     }
-
 };
 
 // this template method class is used to glue uart feature and context for
@@ -166,7 +163,8 @@ protected:
 // T_UARTFEATURE - (UartFeature0 | UartFeature1)
 // T_UARTCONTEXT - (NeoEsp8266UartContext | NeoEsp8266UartInterruptContext)
 //
-template<typename T_UARTFEATURE, typename T_UARTCONTEXT> class NeoEsp8266Uart : public NeoEsp8266UartBase
+template<typename T_UARTFEATURE, typename T_UARTCONTEXT> 
+class NeoEsp8266Uart : public NeoEsp8266UartBase
 {
 protected:
     NeoEsp8266Uart(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
@@ -189,7 +187,7 @@ protected:
         T_UARTFEATURE::Init(uartBaud, invert);
     }
 
-    void UpdateUart(bool)
+    uint8_t* BeginTransaction()
     {
         // Since the UART can finish sending queued bytes in the FIFO in
         // the background, instead of waiting for the FIFO to flush
@@ -197,13 +195,26 @@ protected:
         // when it will finish.
         _startTime = micros();
 
+        // weird, but we need a valid pointer
+        // the pointer is dereferenced, but what it points out is not
+        return reinterpret_cast<uint8_t*>(this); 
+    }
+
+    bool AppendData([[maybe_unused]] uint8_t** buffer, const uint8_t* sendData, size_t sendDataSize)
+    {
         // Then keep filling the FIFO until done
-        const uint8_t* ptr = _data;
-        const uint8_t* end = ptr + _sizeData;
+        const uint8_t* ptr = sendData;
+        const uint8_t* end = ptr + sendDataSize;
         while (ptr != end)
         {
             ptr = const_cast<uint8_t*>(T_UARTCONTEXT::FillUartFifo(T_UARTFEATURE::Index, ptr, end));
         }
+        return true;
+    }
+
+    bool EndTransaction()
+    {
+        return true;
     }
 };
 
@@ -222,7 +233,8 @@ protected:
 // T_UARTFEATURE - (UartFeature0 | UartFeature1)
 // T_UARTCONTEXT - (NeoEsp8266UartContext | NeoEsp8266UartInterruptContext)
 //
-template<typename T_UARTFEATURE, typename T_UARTCONTEXT> class NeoEsp8266AsyncUart : public NeoEsp8266UartBase
+template<typename T_UARTFEATURE, typename T_UARTCONTEXT> 
+class NeoEsp8266AsyncUart : public NeoEsp8266UartBase
 {
 protected:
     NeoEsp8266AsyncUart(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
@@ -252,32 +264,34 @@ protected:
         _context.Attach(T_UARTFEATURE::Index);
     }
 
-    void UpdateUart(bool maintainBufferConsistency)
+
+    uint8_t* BeginTransaction()
+    {
+        return _dataSending;
+    }
+
+    bool AppendData(uint8_t** buffer, const uint8_t* sendData, size_t sendDataSize)
+    {
+        memcpy(*buffer, sendData, sendDataSize);
+        *buffer += sendDataSize;
+        return true;
+    }
+
+    bool EndTransaction()
     {
         // Instruct ESP8266 hardware uart to send the pixels asynchronously
-        _context.StartSending(T_UARTFEATURE::Index, 
-            _data,
-            _data + _sizeData);
+        _context.StartSending(T_UARTFEATURE::Index,
+            _dataSending,
+            _dataSending + _sizeData);
 
         // Annotate when we started to send bytes, so we can calculate when we are ready to send again
         _startTime = micros();
-
-        if (maintainBufferConsistency)
-        {
-            // copy editing to sending,
-            // this maintains the contract that "colors present before will
-            // be the same after", otherwise GetPixelColor will be inconsistent
-            memcpy(_dataSending, _data, _sizeData);
-        }
-
-        // swap so the user can modify without affecting the async operation
-        std::swap(_dataSending, _data);
+        return true;
     }
 
 private:
     T_UARTCONTEXT _context;
-
-    uint8_t* _dataSending;  // Holds a copy of LED color values taken when UpdateUart began
+    uint8_t* _dataSending;  // buffer used to hold pixel data to send async
 };
 
 class NeoEsp8266UartSpeed800KbpsBase
@@ -399,36 +413,62 @@ public:
         this->_startTime = micros() - getPixelTime();
     }
 
-    void Update(bool maintainBufferConsistency)
+    template <typename T_COLOR_OBJECT,
+        typename T_COLOR_FEATURE,
+        typename T_SHADER>
+    void Update(
+        T_COLOR_OBJECT* pixels,
+        size_t countPixels,
+        const typename T_COLOR_FEATURE::SettingsObject& featureSettings,
+        const T_SHADER& shader)
     {
-        // Data latch = 50+ microsecond pause in the output stream.  Rather than
-        // put a delay at the end of the function, the ending time is noted and
-        // the function will simply hold off (if needed) on issuing the
-        // subsequent round of data until the latch time has elapsed.  This
-        // allows the mainline code to start generating the next frame of data
-        // rather than stalling for the latch.
-        while (!this->IsReadyToUpdate())
+        // wait for not actively sending data
+        while (!IsReadyToUpdate())
         {
             yield();
         }
-        this->UpdateUart(maintainBufferConsistency);
+
+        const size_t sendDataSize = T_COLOR_FEATURE::SettingsSize >= T_COLOR_FEATURE::PixelSize ? T_COLOR_FEATURE::SettingsSize : T_COLOR_FEATURE::PixelSize;
+        uint8_t sendData[sendDataSize];
+        uint8_t* transaction = this->BeginTransaction();
+
+        // if there are settings at the front
+        //
+        if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
+        {
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
+
+        // fill primary color data
+        //
+        T_COLOR_OBJECT* pixel = pixels;
+        const T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
+        uint16_t stripCount = this->_pixelCount;
+
+        while (stripCount--)
+        {
+            typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
+            T_COLOR_FEATURE::applyPixelColor(sendData, sendDataSize, color);
+
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::PixelSize);
+
+            pixel++;
+            if (pixel >= pixelEnd)
+            {
+                // restart at first
+                pixel = pixels;
+            }
+        }
+
+        // if there are settings at the back
+        //
+        if (T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
+        {
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
+
+        this->EndTransaction();
     }
-
-    bool AlwaysUpdate()
-    {
-        // this method requires update to be called only if changes to buffer
-        return false;
-    }
-
-    uint8_t* getData() const
-    {
-        return this->_data;
-    };
-
-    size_t getDataSize() const
-    {
-        return this->_sizeData;
-    };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
