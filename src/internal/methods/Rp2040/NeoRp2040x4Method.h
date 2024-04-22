@@ -54,16 +54,18 @@ public:
     typedef NeoNoSettings SettingsObject;
 
     NeoRp2040x4MethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
-        _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin),
+        _sizeData(pixelCount * elementSize + settingsSize),
+        _pixelCount(pixelCount),
         _mergedFifoCount((_pio.Instance->dbg_cfginfo & PIO_DBG_CFGINFO_FIFO_DEPTH_BITS) * 2) // merged TX / RX FIFO buffer in words
     {
         construct();
     }
 
     NeoRp2040x4MethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(pixelCount* elementSize + settingsSize),
         _pin(pin),
+        _sizeData(pixelCount* elementSize + settingsSize),
+        _pixelCount(pixelCount),
         _pio(channel),
         _mergedFifoCount((_pio.Instance->dbg_cfginfo& PIO_DBG_CFGINFO_FIFO_DEPTH_BITS) * 2) // merged TX / RX FIFO buffer in words
     {
@@ -97,7 +99,6 @@ public:
 
         pinMode(_pin, INPUT);
 
-        free(_dataEditing);
         free(_dataSending);
     }
 
@@ -238,7 +239,14 @@ Serial.println();
         dma_irqn_set_channel_enabled(V_IRQ_INDEX, _dmaChannel, true);
     }
 
-    void Update(bool maintainBufferConsistency)
+    template <typename T_COLOR_OBJECT,
+        typename T_COLOR_FEATURE,
+        typename T_SHADER>
+    void Update(
+        T_COLOR_OBJECT* pixels,
+        size_t countPixels,
+        const typename T_COLOR_FEATURE::SettingsObject& featureSettings,
+        const T_SHADER& shader)
     {
         // wait for last send
         while (!IsReadyToUpdate())
@@ -246,39 +254,70 @@ Serial.println();
             yield();  
         }
   
+        const size_t sendDataSize = T_COLOR_FEATURE::SettingsSize >= T_COLOR_FEATURE::PixelSize ? T_COLOR_FEATURE::SettingsSize : T_COLOR_FEATURE::PixelSize;
+        uint8_t sendData[sendDataSize];
+        uint8_t* transaction = this->BeginTransaction();
+
+        // if there are settings at the front
+        //
+        if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
+        {
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
+
+        // fill primary color data
+        //
+        T_COLOR_OBJECT* pixel = pixels;
+        const T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
+        uint16_t stripCount = this->_pixelCount;
+
+        while (stripCount--)
+        {
+            typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
+            T_COLOR_FEATURE::applyPixelColor(sendData, sendDataSize, color);
+
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::PixelSize);
+
+            pixel++;
+            if (pixel >= pixelEnd)
+            {
+                // restart at first
+                pixel = pixels;
+            }
+        }
+
+        // if there are settings at the back
+        //
+        if (T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
+        {
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
+
+        this->EndTransaction();
+    }
+
+    uint8_t* BeginTransaction()
+    {
+        return _dataSending;
+    }
+
+    bool AppendData(uint8_t** buffer, const uint8_t* sendData, size_t sendDataSize)
+    {
+        memcpy(*buffer, sendData, sendDataSize);
+        *buffer += sendDataSize;
+        return true;
+    }
+
+    bool EndTransaction()
+    {
         _dmaState.SetSending();
 
         // start next send
         // 
-        dma_channel_set_read_addr(_dmaChannel, _dataEditing, false);
+        dma_channel_set_read_addr(_dmaChannel, _dataSending, false);
         dma_channel_start(_dmaChannel); // Start new transfer
 
-        if (maintainBufferConsistency)
-        {
-            // copy editing to sending,
-            // this maintains the contract that "colors present before will
-            // be the same after", otherwise GetPixelColor will be inconsistent
-            memcpy(_dataSending, _dataEditing, _sizeData);
-        }
-
-        // swap so the user can modify without affecting the async operation
-        std::swap(_dataSending, _dataEditing);
-    }
-
-    bool AlwaysUpdate()
-    {
-        // this method requires update to be called only if changes to buffer
-        return false;
-    }
-
-    uint8_t* getData() const
-    {
-        return _dataEditing;
-    };
-
-    size_t getDataSize() const
-    {
-        return _sizeData;
+        return true;
     }
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
@@ -286,8 +325,10 @@ Serial.println();
     }
 
 private:
-    const size_t  _sizeData;     // Size of '_data*' buffers 
     const uint8_t _pin;          // output pin number
+    const size_t  _sizeData;     // Size of '_data*' buffers 
+    const uint16_t _pixelCount; // count of pixels in the strip
+
     const T_PIO_INSTANCE _pio;   // holds instance for multi channel support
     const uint8_t _mergedFifoCount;
 
@@ -295,7 +336,6 @@ private:
     uint32_t _fifoCacheEmptyDelta; // delta between dma IRQ finished and PIO Fifo empty
 
     // Holds data stream which include LED color values and other settings as needed
-    uint8_t*  _dataEditing;   // exposed for get and set
     uint8_t*  _dataSending;   // used for async send using DMA
 
     // holds pio state
@@ -304,9 +344,6 @@ private:
 
     void construct()
     {
-        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin() with a ClearTo(0)
-
         _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
         // no need to initialize it, it gets overwritten on every send
     }
