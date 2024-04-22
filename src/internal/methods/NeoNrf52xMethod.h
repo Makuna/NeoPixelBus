@@ -360,18 +360,18 @@ public:
     typedef NeoNoSettings SettingsObject;
 
     NeoNrf52xMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize),
-        _pin(pin)
+        _pin(pin),
+        _pixelCount(pixelCount)
     {
-        construct();
+        construct(pixelCount * elementSize + settingsSize);
     }
 
     NeoNrf52xMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(pixelCount* elementSize + settingsSize),
         _pin(pin),
+        _pixelCount(pixelCount),
         _bus(channel)
     {
-        construct();
+        construct(pixelCount * elementSize + settingsSize);
     }
 
     ~NeoNrf52xMethodBase()
@@ -385,7 +385,6 @@ public:
 
         pinMode(_pin, INPUT);
 
-        free(_data);
         free(_dmaBuffer);
     }
 
@@ -406,60 +405,112 @@ public:
         dmaStart();
     }
 
-    void Update(bool)
+    template <typename T_COLOR_OBJECT,
+        typename T_COLOR_FEATURE,
+        typename T_SHADER>
+    void Update(
+        T_COLOR_OBJECT* pixels,
+        size_t countPixels,
+        const typename T_COLOR_FEATURE::SettingsObject& featureSettings,
+        const T_SHADER& shader)
     {
-        // Data latch = 50+ microsecond pause in the output stream.  Rather than
-        // put a delay at the end of the function, the ending time is noted and
-        // the function will simply hold off (if needed) on issuing the
-        // subsequent round of data until the latch time has elapsed.  This
-        // allows the mainline code to start generating the next frame of data
-        // rather than stalling for the latch.
+        // wait for not actively sending data
         while (!IsReadyToUpdate())
         {
-            yield(); // allows for system yield if needed
+            yield();
         }
 
-        FillBuffer();
+        const size_t sendDataSize = T_COLOR_FEATURE::SettingsSize >= T_COLOR_FEATURE::PixelSize ? T_COLOR_FEATURE::SettingsSize : T_COLOR_FEATURE::PixelSize;
+        uint8_t sendData[sendDataSize];
+        uint8_t* transaction = this->BeginTransaction();
+
+        // if there are settings at the front
+        //
+        if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
+        {
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
+
+        // fill primary color data
+        //
+        T_COLOR_OBJECT* pixel = pixels;
+        const T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
+        uint16_t stripCount = this->_pixelCount;
+
+        while (stripCount--)
+        {
+            typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
+            T_COLOR_FEATURE::applyPixelColor(sendData, sendDataSize, color);
+
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::PixelSize);
+
+            pixel++;
+            if (pixel >= pixelEnd)
+            {
+                // restart at first
+                pixel = pixels;
+            }
+        }
+
+        // if there are settings at the back
+        //
+        if (T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
+        {
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
+
+        this->EndTransaction(&transaction);
+    }
+
+    uint8_t* BeginTransaction()
+    {
+        return reinterpret_cast<uint8_t*>(_dmaBuffer);
+    }
+
+    bool AppendData(uint8_t** buffer, const uint8_t* sendData, size_t sendDataSize)
+    {
+        nrf_pwm_values_common_t* pDma = reinterpret_cast<nrf_pwm_values_common_t*>(*buffer);
+        const uint8_t* pEnd = sendData + sendDataSize;
+
+        for (const uint8_t* pData = sendData; pData < pEnd; pData++)
+        {
+            uint8_t data = *pData;
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                *(pDma++) = (data & 0x80) ? T_SPEED::Bit1 : T_SPEED::Bit0;
+                data <<= 1;
+            }
+        }
+
+        *buffer = reinterpret_cast<uint8_t*>(pDma);
+        return true;
+    }
+
+    bool EndTransaction([[maybe_unused]] uint8_t** buffer)
+    {
         dmaStart();
+
+        return true;
     }
-
-    bool AlwaysUpdate()
-    {
-        // this method requires update to be called only if changes to buffer
-        return false;
-    }
-
-    uint8_t* getData() const
-    {
-        return _data;
-    };
-
-    size_t getDataSize() const
-    {
-        return _sizeData;
-    };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
     }
 
 private:
-    const size_t   _sizeData;    // Size of '_data' buffer below
     const uint8_t _pin;      // output pin number
+    const uint16_t _pixelCount; // count of pixels in the strip
     const T_BUS _bus; // holds instance for multi channel support
 
-    uint8_t* _data;        // Holds LED color values
     size_t   _dmaBufferSize; // total size of _dmaBuffer
     nrf_pwm_values_common_t* _dmaBuffer;     // Holds pixel data in native format for PWM hardware
 
-    void construct()
+    void construct(size_t sizeData)
     {
         pinMode(_pin, OUTPUT);
 
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
-
-        _dmaBufferSize = c_dmaBytesPerDataByte * _sizeData + sizeof(nrf_pwm_values_common_t);
+        _dmaBufferSize = c_dmaBytesPerDataByte * sizeData + sizeof(nrf_pwm_values_common_t);
         _dmaBuffer = static_cast<nrf_pwm_values_common_t*>(malloc(_dmaBufferSize));
     }
 
@@ -507,22 +558,10 @@ private:
     void FillBuffer()
     {
         nrf_pwm_values_common_t* pDma = _dmaBuffer;
-        nrf_pwm_values_common_t* pDmaEnd = _dmaBuffer + (_dmaBufferSize / sizeof(nrf_pwm_values_common_t));
-        uint8_t* pEnd = _data + _sizeData;
+        const nrf_pwm_values_common_t* pDmaEnd = _dmaBuffer + (_dmaBufferSize / sizeof(nrf_pwm_values_common_t));
 
-        for (uint8_t* pData = _data; pData < pEnd; pData++)
-        {
-            uint8_t data = *pData;
-
-            for (uint8_t bit = 0; bit < 8; bit++)
-            {
-                *(pDma++) = (data & 0x80) ? T_SPEED::Bit1 : T_SPEED::Bit0;
-                data <<= 1;
-            }
-        }
-
-        // fill the rest with BitReset as it will get repeated when delaying or
-        // at the end before being stopped
+        // fill the dma buffer with BitReset 
+        //  
         while (pDma < pDmaEnd)
         {
             *(pDma++) = T_SPEED::BitReset;

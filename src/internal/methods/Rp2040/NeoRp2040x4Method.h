@@ -26,7 +26,7 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-#ifdef ARDUINO_ARCH_RP2040
+#if defined(ARDUINO_ARCH_RP2040)
 
 //#define NEORP2040_DEBUG 
 

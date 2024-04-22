@@ -37,21 +37,19 @@ template<typename T_SPEED> class NeoArmMethodBase
 public:
     typedef NeoNoSettings SettingsObject;
 
-    NeoArmMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize),
-        _pin(pin)
+    NeoArmMethodBase(uint8_t pin, 
+        uint16_t pixelCount, 
+        [[maybe_unused]] size_t elementSize, 
+        [[maybe_unused]] size_t settingsSize) :
+        _pin(pin),
+        _pixelCount(pixelCount)
     {
         pinMode(pin, OUTPUT);
-
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
     ~NeoArmMethodBase()
     {
         pinMode(_pin, INPUT);
-
-        free(_data);
     }
 
     bool IsReadyToUpdate() const
@@ -68,55 +66,97 @@ public:
         _endTime = micros();
     }
 
-    void Update(bool)
+    template <typename T_COLOR_OBJECT,
+        typename T_COLOR_FEATURE,
+        typename T_SHADER>
+    void Update(
+        T_COLOR_OBJECT* pixels,
+        size_t countPixels,
+        const typename T_COLOR_FEATURE::SettingsObject& featureSettings,
+        const T_SHADER& shader)
     {
-        // Data latch = 50+ microsecond pause in the output stream.  Rather than
-        // put a delay at the end of the function, the ending time is noted and
-        // the function will simply hold off (if needed) on issuing the
-        // subsequent round of data until the latch time has elapsed.  This
-        // allows the mainline code to start generating the next frame of data
-        // rather than stalling for the latch.
+        // wait for not actively sending data
         while (!IsReadyToUpdate())
         {
-            yield(); // allows for system yield if needed
+            yield();
         }
 
+        const size_t sendDataSize = T_COLOR_FEATURE::SettingsSize >= T_COLOR_FEATURE::PixelSize ? T_COLOR_FEATURE::SettingsSize : T_COLOR_FEATURE::PixelSize;
+        uint8_t sendData[sendDataSize];
+        uint8_t* transaction = this->BeginTransaction();
+
+        // if there are settings at the front
+        //
+        if (T_COLOR_FEATURE::applyFrontSettings(sendData, sendDataSize, featureSettings))
+        {
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
+
+        // fill primary color data
+        //
+        T_COLOR_OBJECT* pixel = pixels;
+        const T_COLOR_OBJECT* pixelEnd = pixel + countPixels;
+        uint16_t stripCount = this->_pixelCount;
+
+        while (stripCount--)
+        {
+            typename T_COLOR_FEATURE::ColorObject color = shader.Apply(*pixel);
+            T_COLOR_FEATURE::applyPixelColor(sendData, sendDataSize, color);
+
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::PixelSize);
+
+            pixel++;
+            if (pixel >= pixelEnd)
+            {
+                // restart at first
+                pixel = pixels;
+            }
+        }
+
+        // if there are settings at the back
+        //
+        if (T_COLOR_FEATURE::applyBackSettings(sendData, sendDataSize, featureSettings))
+        {
+            this->AppendData(&transaction, sendData, T_COLOR_FEATURE::SettingsSize);
+        }
+
+        this->EndTransaction();
+    }
+
+    uint8_t* BeginTransaction()
+    {
         noInterrupts(); // Need 100% focus on instruction timing
+        // weird, but we need a valid pointer
+        // the pointer is dereferenced, but what it points out is not
+        return reinterpret_cast<uint8_t*>(this);
+    }
 
-        T_SPEED::send_pixels(_data, _sizeData, _pin);
+    bool AppendData([[maybe_unused]] uint8_t** buffer, const uint8_t* sendData, size_t sendDataSize)
+    {
+        T_SPEED::send_data(sendData, sendDataSize, _pin);
+        return true;
+    }
 
+    bool EndTransaction()
+    {
         interrupts();
 
         // save EOD time for latch on next call
         _endTime = micros();
+
+        return true;
     }
-
-    bool AlwaysUpdate()
-    {
-        // this method requires update to be called only if changes to buffer
-        return false;
-    }
-
-    uint8_t* getData() const
-    {
-        return _data;
-    };
-
-    size_t getDataSize() const
-    {
-        return _sizeData;
-    };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
     }
 
 private:
-    const  size_t    _sizeData;   // Size of '_data' buffer below
+    const uint8_t _pin;            // output pin number
+    const uint16_t _pixelCount; // count of pixels in the strip
 
     uint32_t _endTime;       // Latch timing reference
     uint8_t* _data;        // Holds LED color values
-    uint8_t _pin;            // output pin number
 };
 
 // Teensy 3.0 or 3.1 (3.2) or 3.5 or 3.6
@@ -192,10 +232,10 @@ template<typename T_SPEEDPROPS> class NeoArmMk20dxSpeedBase
 public:
     static const uint32_t ResetTimeUs = T_SPEEDPROPS::ResetTimeUs;
 
-    static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
+    static void send_data(const uint8_t* data, size_t sizeData, uint8_t pin)
     {
-        uint8_t* p = pixels;
-        uint8_t* end = p + sizePixels;
+        const uint8_t* p = data;
+        const uint8_t* end = p + sizeData;
         uint8_t pix;
         uint8_t mask;
 
@@ -249,15 +289,15 @@ typedef NeoArmTm1814InvertedMethod NeoArmTm1914InvertedMethod;
 class NeoArmMk26z64Speed800KbpsBase
 {
 public:
-    static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
+    static void send_data(const uint8_t* data, size_t sizeData, uint8_t pin)
     {
-        uint8_t* p = pixels;
+        const uint8_t* p = data;
         uint8_t pix;
         uint8_t count;
         uint8_t dly;
         uint8_t bitmask = digitalPinToBitMask(pin);
         volatile uint8_t* reg = portSetRegister(pin);
-        uint32_t num = sizePixels;
+        uint32_t num = sizeData;
 
         asm volatile(
             "L%=_begin:"				"\n\t"
@@ -491,12 +531,12 @@ template<typename T_SPEEDPROPS> class NeoArmSamd21g18aSpeedBase
 public:
     static const uint32_t ResetTimeUs = T_SPEEDPROPS::ResetTimeUs;
 
-    static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
+    static void send_data(const uint8_t* data, size_t sizeData, uint8_t pin)
     {
         // Tried this with a timer/counter, couldn't quite get adequate
         // resolution.  So yay, you get a load of goofball NOPs...
-        uint8_t* ptr = pixels;
-        uint8_t* end = ptr + sizePixels;;
+        const uint8_t* ptr = data;
+        const uint8_t* end = ptr + sizeData;;
         uint8_t p = *ptr++;
         uint8_t bitMask = 0x80;
         uint8_t portNum = g_APinDescription[pin].ulPort;
@@ -657,13 +697,13 @@ template<typename T_SPEEDPROPS> class NeoArmStm32SpeedBase
 public:
     static const uint32_t ResetTimeUs = T_SPEEDPROPS::ResetTimeUs;
 
-    static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
+    static void send_data(const uint8_t* data, size_t sizeData, uint8_t pin)
     {
         // Tried this with a timer/counter, couldn't quite get adequate
         // resolution.  So yay, you get a load of goofball NOPs...
 
-        uint8_t* ptr = pixels;
-        uint8_t* end = ptr + sizePixels;
+        const uint8_t* ptr = data;
+        const uint8_t* end = ptr + sizeData;
         uint8_t p = *ptr++;
         uint8_t bitMask = 0x80;
 
@@ -814,7 +854,7 @@ template<typename T_SPEEDPROPS> class NeoArmOtherSpeedBase
 public:
     static const uint32_t ResetTimeUs = T_SPEEDPROPS::ResetTimeUs;
 
-    static void send_pixels(uint8_t* pixels, size_t sizePixels, uint8_t pin)
+    static void send_data(const uint8_t* data, size_t sizeData, uint8_t pin)
     {
         uint32_t pinMask;
         uint32_t t;
@@ -823,8 +863,8 @@ public:
         volatile WoReg* portClear;
         volatile WoReg* timeValue;
         volatile WoReg* timeReset;
-        uint8_t* p;
-        uint8_t* end;
+        const uint8_t* p;
+        const uint8_t* end;
         uint8_t pix;
         uint8_t mask;
 
@@ -841,8 +881,8 @@ public:
         portClear = &(port->PIO_CODR);            // starting timer to minimize
         timeValue = &(TC1->TC_CHANNEL[0].TC_CV);  // the initial 'while'.
         timeReset = &(TC1->TC_CHANNEL[0].TC_CCR);
-        p = pixels;
-        end = p + sizePixels;
+        p = data;
+        end = p + sizeData;
         pix = *p++;
         mask = 0x80;
 
