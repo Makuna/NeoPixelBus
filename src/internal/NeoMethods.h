@@ -37,6 +37,7 @@ License along with NeoPixel.  If not, see
 #include "methods/Tlc59711GenericMethod.h"
 #include "methods/Sm16716GenericMethod.h"
 #include "methods/Mbi6033GenericMethod.h"
+#include "methods/Hd108GenericMethod.h"
 
 //Adafruit Pixie via UART, not platform specific
 //
