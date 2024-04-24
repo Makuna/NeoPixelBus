@@ -14,10 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// ESP32 C3 & S3 I2S is not supported yet due to significant changes to interface
-#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(ARDUINO_ESP32C3_DEV) && !defined(ARDUINO_ESP32S3_DEV) && !defined(ARDUINO_ESP32C6_DEV) && !defined(ARDUINO_ESP32H2_DEV)
+#if defined(ARDUINO_ARCH_ESP32)
 
 #include "sdkconfig.h" // this sets useful config symbols, like CONFIG_IDF_TARGET_ESP32C3
+
+// ESP32 C3, S3, C6, and H2 I2S is not supported yet due to significant changes to interface
+#if !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 
 #include <string.h>
 #include <stdio.h>
@@ -47,7 +49,6 @@
 #include "soc/dport_reg.h"
 #endif
 
-#include "soc/sens_reg.h"
 #include "driver/gpio.h"
 #include "driver/i2s.h"
 
@@ -1046,5 +1047,6 @@ bool i2sGetClks(uint8_t bus_num,
 }
 #endif
 
-#endif // defined(ARDUINO_ARCH_ESP32) ** !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
+#endif //  !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 
+#endif // defined(ARDUINO_ARCH_ESP32)
