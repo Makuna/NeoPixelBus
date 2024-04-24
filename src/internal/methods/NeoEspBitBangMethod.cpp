@@ -24,9 +24,9 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) && !defined(ARDUINO_ESP32C6_DEV) && !defined(ARDUINO_ESP32H2_DEV)
-
 #include <Arduino.h>
+
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) 
 
 #if ESP_IDF_VERSION_MAJOR>=5
 #include <soc/gpio_struct.h>
@@ -36,7 +36,7 @@ static inline uint32_t getCycleCount(void)
 {
     uint32_t ccount;
 
-#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
     __asm__ __volatile__("csrr %0,0x7e2":"=r" (ccount));
     //ccount = esp_cpu_get_ccount();
 #else
@@ -110,7 +110,7 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     uint32_t cyclesNext = 0;
 
 #if defined(ARDUINO_ARCH_ESP32)
-#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
     volatile uint32_t* setRegister = &GPIO.out_w1ts.val;
     volatile uint32_t* clearRegister = &GPIO.out_w1tc.val;
     setValue = _BV(pin); 
@@ -118,7 +118,7 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
 #else
     volatile uint32_t* setRegister = &GPIO.out_w1ts;
     volatile uint32_t* clearRegister = &GPIO.out_w1tc;
-#endif // defined(CONFIG_IDF_TARGET_ESP32C3)
+#endif // defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
 #else
     uint32_t setRegister = PERIPHS_GPIO_BASEADDR + GPIO_OUT_W1TS_ADDRESS;
     uint32_t clearRegister = PERIPHS_GPIO_BASEADDR + GPIO_OUT_W1TC_ADDRESS;
