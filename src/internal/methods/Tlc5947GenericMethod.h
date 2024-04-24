@@ -142,10 +142,9 @@ public:
 
     void Update(bool)
     { 
-        
         digitalWrite(_pinOutputEnable, HIGH);
-        
         digitalWrite(_pinLatch, LOW);
+
         _wire.beginTransaction();
 
         // We need to write the channels in reverse order. Get a Pointer to the last channel.
@@ -159,6 +158,7 @@ public:
         }        
       
         _wire.endTransaction();
+
         digitalWrite(_pinLatch, HIGH);
         digitalWrite(_pinLatch, LOW);
         digitalWrite(_pinOutputEnable, LOW);

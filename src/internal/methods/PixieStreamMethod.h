@@ -72,8 +72,13 @@ public:
     {
         while (!IsReadyToUpdate())
         {
+#if !defined(NEOPIXEBUS_NO_YIELD)
+            yield(); // allows for system yield if needed
+#endif
         }
+
         _stream->write(_data, _sizeData);
+
         _usEndTime = micros(); // Save time to ensure 1ms delay
     }
 
