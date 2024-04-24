@@ -28,62 +28,30 @@ License along with NeoPixel.  If not, see
 
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class DotStarL4WordFeature :
-    public NeoWordElements<8, Rgbw64Color, uint32_t>
+    public NeoElementsBase<8, Rgbw64Color>
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
 
-        uint8_t brightness = (color.W < 31 ? color.W : 31);
+            uint8_t brightness = (color.W < 31 ? color.W : 31);
 
-        // upper bit is always 1 and three 5 bit brightness
-        // {1}{5}{5}{5}
-        // 1rrr rrgg gggb bbbb
-        *p++ = 0x80 | (brightness << 2) | (brightness > 3);  
-        *p++ = (brightness << 5) | (brightness);
+            // upper bit is always 1 and three 5 bit brightness
+            // {1}{5}{5}{5}
+            // 1rrr rrgg gggb bbbb
+            *p++ = 0x80 | (brightness << 2) | (brightness > 3);
+            *p++ = (brightness << 5) | (brightness);
 
-        // due to endianness the byte order must be copied to output
-        *p++ = color[V_IC_1] >> 8;
-        *p++ = color[V_IC_1] & 0xff;
-        *p++ = color[V_IC_2] >> 8;
-        *p++ = color[V_IC_2] & 0xff;
-        *p++ = color[V_IC_3] >> 8;
-        *p = color[V_IC_3] & 0xff;
+            // due to endianness the byte order must be copied to output
+            *p++ = color[V_IC_1] >> 8;
+            *p++ = color[V_IC_1] & 0xff;
+            *p++ = color[V_IC_2] >> 8;
+            *p++ = color[V_IC_2] & 0xff;
+            *p++ = color[V_IC_3] >> 8;
+            *p = color[V_IC_3] & 0xff;
+        }
     }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        p++; // ignore the first byte
-        color.W = (*p++) & 0x1F; // mask out all but lower five bits
-
-        // due to endianness the byte order must be copied to output
-        color[V_IC_1] = (static_cast<uint16_t>(*p++) << 8);
-        color[V_IC_1] |= *p++;
-        color[V_IC_2] = (static_cast<uint16_t>(*p++) << 8);
-        color[V_IC_2] |= *p++;
-        color[V_IC_3] = (static_cast<uint16_t>(*p++) << 8);
-        color[V_IC_3] |= *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel));
-
-        // PROGMEM unit of storage expected to be the same size as color element
-        //    so no endianness issues to worry about
-        color.W = pgm_read_word(p++) & 0x001F; // mask out all but lower five bits
-        color[V_IC_1] = pgm_read_word(p++);
-        color[V_IC_2] = pgm_read_word(p++);
-        color[V_IC_3] = pgm_read_word(p);
-
-        return color;
-    }
-
 };

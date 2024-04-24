@@ -566,16 +566,16 @@ public:
 
     NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
         _pin(pin),
-        _sizeDataSending(pixelCount* elementSize + settingsSize),
-        _pixelCount(pixelCount)
+        _pixelCount(pixelCount),
+        _sizeDataSending(pixelCount * elementSize + settingsSize)
     {
         construct();
     }
 
     NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
         _pin(pin),
-        _sizeDataSending(pixelCount* elementSize + settingsSize),
         _pixelCount(pixelCount),
+        _sizeDataSending(pixelCount * elementSize + settingsSize),
         _channel(channel)
     {
         construct();
@@ -686,15 +686,14 @@ public:
     }
 
 private:
-    const uint8_t _pin;            // output pin number
-    const uint16_t _pixelCount; // count of pixels in the strip
-    const size_t  _sizeDataSending;      // Size of '_data*' buffers 
+    const uint8_t _pin;             // output pin number
+    const uint16_t _pixelCount;     // count of pixels in the strip
+    const size_t _sizeDataSending;  // Size of '_data*' buffers 
 
     const T_CHANNEL _channel; // holds instance for multi channel support
 
     // Holds data stream which include LED color values and other settings as needed
     uint8_t*  _dataSending;   // used for async send using RMT
-
 
     void construct()
     {

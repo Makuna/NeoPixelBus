@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class DotStarX4ByteFeature :
-    public NeoByteElements<4, RgbColor, uint32_t>
+    public NeoElementsBase<4, RgbColor>
 {
 public:
     static void applyPixelColor(uint8_t* pixel, size_t pixelSize, ColorObject color)

@@ -28,56 +28,24 @@ License along with NeoPixel.  If not, see
 
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
 class DotStarX4WordFeature :
-    public NeoWordElements<8, Rgb48Color, uint32_t>
+    public NeoElementsBase<8, Rgb48Color>
 {
 public:
-    static void applyPixelColor(uint8_t* pPixels, uint16_t indexPixel, ColorObject color)
+    static void applyPixelColor(uint8_t* pixel, uint16_t pixelSize, ColorObject color)
     {
-        uint8_t* p = getPixelAddress(pPixels, indexPixel);
+        if (PixelSize <= pixelSize)
+        {
+            uint8_t* p = pixel;
 
-        *p++ = 0xff; // upper bit is always 1 and three 5 bit brightness at max
-        *p++ = 0xff; // {1}{5}{5}{5}
-        // due to endianness the byte order must be copied to output
-        *p++ = color[V_IC_1] >> 8;
-        *p++ = color[V_IC_1] & 0xff;
-        *p++ = color[V_IC_2] >> 8;
-        *p++ = color[V_IC_2] & 0xff;
-        *p++ = color[V_IC_3] >> 8;
-        *p = color[V_IC_3] & 0xff;
+            *p++ = 0xff; // upper bit is always 1 and three 5 bit brightness at max
+            *p++ = 0xff; // {1}{5}{5}{5}
+            // due to endianness the byte order must be copied to output
+            *p++ = color[V_IC_1] >> 8;
+            *p++ = color[V_IC_1] & 0xff;
+            *p++ = color[V_IC_2] >> 8;
+            *p++ = color[V_IC_2] & 0xff;
+            *p++ = color[V_IC_3] >> 8;
+            *p = color[V_IC_3] & 0xff;
+        }
     }
-
-    static ColorObject retrievePixelColor(const uint8_t* pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint8_t* p = getPixelAddress(pPixels, indexPixel);
-
-        p++; // ignore the first two bytes
-        p++;
-
-        // due to endianness the byte order must be copied to output
-        color[V_IC_1] = (static_cast<uint16_t>(*p++) << 8);
-        color[V_IC_1] |= *p++;
-        color[V_IC_2] = (static_cast<uint16_t>(*p++) << 8);
-        color[V_IC_2] |= *p++;
-        color[V_IC_3] = (static_cast<uint16_t>(*p++) << 8);
-        color[V_IC_3] |= *p;
-
-        return color;
-    }
-
-    static ColorObject retrievePixelColor_P(PGM_VOID_P pPixels, uint16_t indexPixel)
-    {
-        ColorObject color;
-        const uint16_t* p = reinterpret_cast<const uint16_t*>(getPixelAddress(reinterpret_cast<const uint8_t*>(pPixels), indexPixel));
-
-        // PROGMEM unit of storage expected to be the same size as color element
-        //    so no endianness issues to worry about
-        p++; // ignore the first word
-        color[V_IC_1] = pgm_read_word(p++);
-        color[V_IC_2] = pgm_read_word(p++);
-        color[V_IC_3] = pgm_read_word(p);
-
-        return color;
-    }
-
 };
