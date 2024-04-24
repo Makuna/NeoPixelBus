@@ -410,6 +410,45 @@ typedef NeoEsp32BitBangWs2805InvertedMethod NeoEsp32BitBangWs2814InvertedNoIntrM
 typedef NeoEsp32BitBangTm1814InvertedMethod NeoEsp32BitBangTm1914InvertedNoIntrMethod;
 typedef NeoEsp32BitBangSk6812InvertedMethod NeoEsp32BitBangLc8812InvertedNoIntrMethod;
 
+#if defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
+// 
+// Esp32 C6 && H2 currently use BitBang as the default until other support
+// is created, as they are not compatible with older generation chips
+typedef NeoEsp32BitBangWs2812xMethod NeoWs2813Method;
+typedef NeoEsp32BitBangWs2812xMethod NeoWs2812xMethod;
+typedef NeoEsp32BitBang800KbpsMethod NeoWs2812Method;
+typedef NeoEsp32BitBangWs2812xMethod NeoWs2811Method;
+typedef NeoEsp32BitBangWs2812xMethod NeoWs2816Method;
+typedef NeoEsp32BitBangWs2805Method NeoWs2805Method;
+typedef NeoEsp32BitBangWs2814Method NeoWs2814Method;
+typedef NeoEsp32BitBangSk6812Method NeoSk6812Method;
+typedef NeoEsp32BitBangTm1814Method NeoTm1814Method;
+typedef NeoEsp32BitBangTm1829Method NeoTm1829Method;
+typedef NeoEsp32BitBangTm1914Method NeoTm1914Method;
+typedef NeoEsp32BitBangSk6812Method NeoLc8812Method;
+typedef NeoEsp32BitBangApa106Method NeoApa106Method;
+
+typedef NeoEsp32BitBangWs2812xMethod Neo800KbpsMethod;
+typedef NeoEsp32BitBang400KbpsMethod Neo400KbpsMethod;
+
+typedef NeoEsp32BitBangWs2812xInvertedMethod NeoWs2813InvertedMethod;
+typedef NeoEsp32BitBangWs2812xInvertedMethod NeoWs2812xInvertedMethod;
+typedef NeoEsp32BitBangWs2812xInvertedMethod NeoWs2811InvertedMethod;
+typedef NeoEsp32BitBangWs2812xInvertedMethod NeoWs2816InvertedMethod;
+typedef NeoEsp32BitBangWs2805InvertedMethod NeoWs2805InvertedMethod;
+typedef NeoEsp32BitBangWs2814InvertedMethod NeoWs2814InvertedMethod;
+typedef NeoEsp32BitBang800KbpsInvertedMethod NeoWs2812InvertedMethod;
+typedef NeoEsp32BitBangSk6812InvertedMethod NeoSk6812InvertedMethod;
+typedef NeoEsp32BitBangTm1814InvertedMethod NeoTm1814InvertedMethod;
+typedef NeoEsp32BitBangTm1829InvertedMethod NeoTm1829InvertedMethod;
+typedef NeoEsp32BitBangTm1914InvertedMethod NeoTm1914InvertedMethod;
+typedef NeoEsp32BitBangSk6812InvertedMethod NeoLc8812InvertedMethod;
+typedef NeoEsp32BitBangApa106InvertedMethod NeoApa106InvertedMethod;
+
+typedef NeoEsp32BitBangWs2812xInvertedMethod Neo800KbpsInvertedMethod;
+typedef NeoEsp32BitBang400KbpsInvertedMethod Neo400KbpsInvertedMethod;
+#endif
+
 #else // defined(ARDUINO_ARCH_ESP8266)
 
 typedef NeoEspBitBangMethodBase<NeoEspBitBangSpeedWs2811, NeoEspNotInverted, true> NeoEsp8266BitBangWs2811Method;
@@ -483,6 +522,8 @@ typedef NeoEsp8266BitBangWs2812xInvertedMethod NeoEsp8266BitBangWs2816InvertedNo
 typedef NeoEsp8266BitBangWs2805InvertedMethod NeoEsp8266BitBangWs2814InvertedNoIntrMethod;
 typedef NeoEsp8266BitBangTm1814InvertedMethod NeoEsp8266BitBangTm1914InvertedNoIntrMethod;
 typedef NeoEsp8266BitBangSk6812InvertedMethod NeoEsp8266BitBangLc8812InvertedNoIntrMethod;
+
+
 
 #endif // defined(ARDUINO_ARCH_ESP32)
 
