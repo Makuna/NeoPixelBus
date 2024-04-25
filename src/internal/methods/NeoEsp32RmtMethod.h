@@ -594,10 +594,9 @@ public:
         free(_dataSending);
     }
 
-
     bool IsReadyToUpdate() const
     {
-        return (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_wait_tx_done(_channel.RmtChannelNumber, 0)));
+        return (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT_SILENT_TIMEOUT(rmt_wait_tx_done(_channel.RmtChannelNumber, 0)));
     }
 
     void Initialize()
