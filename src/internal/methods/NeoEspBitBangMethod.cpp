@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) 
 
-#include "..\NeoUtil.h"
+#include "../NeoUtil.h"
 
 #if ESP_IDF_VERSION_MAJOR>=5
 #include <soc/gpio_struct.h>
