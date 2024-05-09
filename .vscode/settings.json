@@ -1,0 +1,6 @@
+{
+    "C_Cpp.default.defines": [
+        "ARDUINO_ARCH_ESP32",
+        "CONFIG_IDF_TARGET_ESP32S3"
+    ]
+}
