@@ -24,10 +24,10 @@ extern "C"
 //
 // true size of mux channel, 16 bit
 //
-class NeoEspI2sMuxBusSize16Bit
+class NeoEspLcdMuxBusSize16Bit
 {
 public:
-    NeoEspI2sMuxBusSize16Bit() {};
+    NeoEspLcdMuxBusSize16Bit() {};
 
     const static size_t MuxBusDataSize = 2;
 
@@ -127,10 +127,10 @@ protected:
 // tracks mux channels used and if updated
 // 
 // T_FLAG - type used to store bit flags, UINT8_t for 8 channels, UINT16_t for 16
-// T_MUXSIZE - true size of mux channel = NeoEspI2sMuxBusSize8Bit or NeoEspI2sMuxBusSize16Bit
+// T_MUXSIZE - true size of mux channel = NeoEspLcdMuxBusSize8Bit or NeoEspLcdMuxBusSize16Bit
 //
 template<typename T_FLAG, typename T_MUXSIZE> 
-class NeoEspI2sMuxMap : public T_MUXSIZE
+class NeoEspLcdMuxMap : public T_MUXSIZE
 {
 public:
     const static uint8_t InvalidMuxId = -1;
@@ -145,7 +145,7 @@ public:
     // and the constructor is called at inconsistent time to other globals
     // so its not useful to have or rely on, 
     // but without it presence they get zeroed far too late
-    NeoEspI2sMuxMap() 
+    NeoEspLcdMuxMap() 
     //    //:
     //    //MaxBusDataSize(0),
     //    //UpdateMap(0),
@@ -228,32 +228,32 @@ public:
 };
 
 //
-// Implementation of a Single Buffered version of a I2sContext
+// Implementation of a Single Buffered version of a LcdContext
 // Manages the underlying I2S details including the buffer
 // This creates only a actively sending back buffer, 
 // Note that the back buffer must be DMA memory, a limited resource
 // 
-// T_MUXMAP - NeoEspI2sMuxMap - tracking class for mux state
+// T_MUXMAP - NeoEspLcdMuxMap - tracking class for mux state
 //
 template<typename T_MUXMAP> 
-class NeoEspI2sMonoBuffContext 
+class NeoEspLcdMonoBuffContext 
 {
 public:
     const static size_t DmaBitsPerPixelBit = 4;
 
-    size_t I2sBufferSize; // total size of I2sBuffer
-    uint8_t* I2sBuffer;    // holds the DMA buffer that is referenced by I2sBufDesc
+    size_t LcdBufferSize; // total size of LcdBuffer
+    uint8_t* LcdBuffer;    // holds the DMA buffer that is referenced by LcdBufDesc
     T_MUXMAP MuxMap;
 
     // as a static instance, all members get initialized to zero
     // and the constructor is called at inconsistent time to other globals
     // so its not useful to have or rely on, 
     // but without it presence they get zeroed far too late
-    NeoEspI2sMonoBuffContext()
+    NeoEspLcdMonoBuffContext()
         //:
-        //I2sBufferSize(0),
-        //I2sBuffer(nullptr),
-        //I2sEditBuffer(nullptr),
+        //LcdBufferSize(0),
+        //LcdBuffer(nullptr),
+        //LcdEditBuffer(nullptr),
         //MuxMap()
     {
     }
@@ -261,29 +261,29 @@ public:
     void Construct(const uint8_t busNumber, uint32_t i2sSampleRate)
     {
         // construct only once on first time called
-        if (I2sBuffer == nullptr)
+        if (LcdBuffer == nullptr)
         {
             // MuxMap.MaxBusDataSize = max size in bytes of a single channel
             // DmaBitsPerPixelBit = how many dma bits/byte are needed for each source (pixel) bit/byte
             // T_MUXMAP::MuxBusDataSize = the true size of data for selected mux mode (not exposed size as i2s0 only supports 16bit mode)
-            I2sBufferSize = MuxMap.MaxBusDataSize * 8 * DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
+            LcdBufferSize = MuxMap.MaxBusDataSize * 8 * DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
 
             // must have a 4 byte aligned buffer for i2s
-            uint32_t alignment = I2sBufferSize % 4;
+            uint32_t alignment = LcdBufferSize % 4;
             if (alignment)
             {
-                I2sBufferSize += 4 - alignment;
+                LcdBufferSize += 4 - alignment;
             }
 
-            size_t dmaBlockCount = (I2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
+            size_t dmaBlockCount = (LcdBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
 
-            I2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(I2sBufferSize, MALLOC_CAP_DMA));
-            if (I2sBuffer == nullptr)
+            LcdBuffer = static_cast<uint8_t*>(heap_caps_malloc(LcdBufferSize, MALLOC_CAP_DMA));
+            if (LcdBuffer == nullptr)
             {
                 log_e("send buffer memory allocation failure (size %u)",
-                    I2sBufferSize);
+                    LcdBufferSize);
             }
-            memset(I2sBuffer, 0x00, I2sBufferSize);
+            memset(LcdBuffer, 0x00, LcdBufferSize);
 
             i2sInit(busNumber,
                 true,
@@ -300,14 +300,14 @@ public:
                 I2S_FIFO_16BIT_SINGLE,
 #endif
                 dmaBlockCount,
-                I2sBuffer,
-                I2sBufferSize);
+                LcdBuffer,
+                LcdBufferSize);
         }
     }
 
     void Destruct(const uint8_t busNumber)
     {
-        if (I2sBuffer == nullptr)
+        if (LcdBuffer == nullptr)
         {
             return;
         }
@@ -315,10 +315,10 @@ public:
         i2sSetPins(busNumber, -1, -1, -1, false);
         i2sDeinit(busNumber);
 
-        heap_caps_free(I2sBuffer);
+        heap_caps_free(LcdBuffer);
 
-        I2sBufferSize = 0;
-        I2sBuffer = nullptr;
+        LcdBufferSize = 0;
+        LcdBuffer = nullptr;
 
         MuxMap.Reset();
     }
@@ -331,7 +331,7 @@ public:
         if (MuxMap.IsNoMuxBusesUpdate())
         {
             // clear all the data in preperation for each mux channel to add
-            memset(I2sBuffer, 0x00, I2sBufferSize);
+            memset(LcdBuffer, 0x00, LcdBufferSize);
         }
     }
 
@@ -361,14 +361,14 @@ public:
 //
 // Implementation of the low level interface into i2s mux bus
 // 
-// T_BUSCONTEXT - the context to use, currently only NeoEspI2sMonoBuffContext
-// T_BUS - the bus id, NeoEsp32I2sBusZero, NeoEsp32I2sBusOne
+// T_BUSCONTEXT - the context to use, currently only NeoEspLcdMonoBuffContext
+// T_BUS - the bus id, NeoEsp32LcdBusZero, NeoEsp32LcdBusOne
 //
 template<typename T_BUSCONTEXT, typename T_BUS> 
-class NeoEsp32I2sMuxBus
+class NeoEsp32LcdMuxBus
 {
 public:    
-    NeoEsp32I2sMuxBus() :
+    NeoEsp32LcdMuxBus() :
         _muxId(s_context.MuxMap.InvalidMuxId)
     {
     }
@@ -380,15 +380,15 @@ public:
 
     void Initialize(uint8_t pin, uint32_t i2sSampleRate, bool invert)
     {
-        s_context.Construct(T_BUS::I2sBusNumber, i2sSampleRate);
-        i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, s_context.MuxMap.MuxBusDataSize, invert);
+        s_context.Construct(T_BUS::LcdBusNumber, i2sSampleRate);
+        i2sSetPins(T_BUS::LcdBusNumber, pin, _muxId, s_context.MuxMap.MuxBusDataSize, invert);
     }
 
     void DeregisterMuxBus(uint8_t pin)
     {
         if (s_context.MuxMap.DeregisterMuxBus(_muxId))
         {
-            s_context.Destruct(T_BUS::I2sBusNumber);
+            s_context.Destruct(T_BUS::LcdBusNumber);
         }
 
         // disconnect muxed pin
@@ -400,13 +400,13 @@ public:
 
     bool IsWriteDone() const
     {
-        return i2sWriteDone(T_BUS::I2sBusNumber);
+        return i2sWriteDone(T_BUS::LcdBusNumber);
     }
 
     uint8_t* BeginUpdate()
     {
         s_context.ResetBuffer();
-        return s_context.I2sBuffer;
+        return s_context.LcdBuffer;
     }
 
     void FillBuffer(uint8_t** dmaBuffer,
@@ -419,7 +419,7 @@ public:
     void EndUpdate()
     {
         s_context.MuxMap.MarkMuxBusUpdated(_muxId);
-        s_context.StartWrite(T_BUS::I2sBusNumber); // only when all buses are update is actual write started
+        s_context.StartWrite(T_BUS::LcdBusNumber); // only when all buses are update is actual write started
     }
 
 private:
@@ -427,22 +427,22 @@ private:
     uint8_t _muxId; 
 };
 
-template<typename T_BUSCONTEXT, typename T_BUS> T_BUSCONTEXT NeoEsp32I2sMuxBus<T_BUSCONTEXT, T_BUS>::s_context = T_BUSCONTEXT();
+template<typename T_BUSCONTEXT, typename T_BUS> T_BUSCONTEXT NeoEsp32LcdMuxBus<T_BUSCONTEXT, T_BUS>::s_context = T_BUSCONTEXT();
 
 //
 // wrapping layer of the i2s mux bus as a NeoMethod
 // 
-// T_SPEED - NeoEsp32I2sSpeed* (ex NeoEsp32I2sSpeedWs2812x) used to define output signal form
-// T_BUS - NeoEsp32I2sMuxBus, the bus to use
-// T_INVERT - NeoEsp32I2sNotInverted or NeoEsp32I2sInverted, will invert output signal
+// T_SPEED - NeoEsp32LcdSpeed* (ex NeoEsp32LcdSpeedWs2812x) used to define output signal form
+// T_BUS - NeoEsp32LcdMuxBus, the bus to use
+// T_INVERT - NeoEsp32LcdNotInverted or NeoEsp32LcdInverted, will invert output signal
 //
 template<typename T_SPEED, typename T_BUS, typename T_INVERT> 
-class NeoEsp32I2sXMethodBase
+class NeoEsp32LcdXMethodBase
 {
 public:
     typedef NeoNoSettings SettingsObject;
 
-    NeoEsp32I2sXMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+    NeoEsp32LcdXMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _pin(pin),
         _pixelCount(pixelCount),
         _bus()
@@ -450,7 +450,7 @@ public:
         _bus.RegisterNewMuxBus((pixelCount * elementSize + settingsSize) + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);
     }
 
-    ~NeoEsp32I2sXMethodBase()
+    ~NeoEsp32LcdXMethodBase()
     {
         while (!_bus.IsWriteDone())
         {
@@ -467,7 +467,7 @@ public:
 
     void Initialize()
     {
-        _bus.Initialize(_pin, T_SPEED::I2sSampleRate, T_INVERT::Inverted);
+        _bus.Initialize(_pin, T_SPEED::LcdSampleRate, T_INVERT::Inverted);
     }
 
     template <typename T_COLOR_OBJECT,
@@ -540,31 +540,31 @@ private:
     T_BUS _bus;          // holds instance for mux bus support
 };
 
-typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux16Bus;
+typedef NeoEsp32LcdMuxBus<NeoEspLcdMonoBuffContext<NeoEspLcdMuxMap<uint16_t, NeoEspLcdMuxBusSize16Bit>>, NeoEsp32LcdBusZero> NeoEsp32Lcd0Mux16Bus;
 
 #endif
 
 // NORMAL
 //
 
-// I2s0x16
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Ws2812xMethod;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2805,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Ws2805Method;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedSk6812,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Sk6812Method;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1814,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Tm1814Method;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1829,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Tm1829Method;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedTm1914,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sInverted>    NeoEsp32I2s0X16Tm1914Method;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed800Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16800KbpsMethod;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeed400Kbps, NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16400KbpsMethod;
-typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedApa106,  NeoEsp32I2s0Mux16Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X16Apa106Method;
+// Lcd0x16
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32Lcd0Mux16Bus, NeoEsp32LcdNotInverted> NeoEsp32Lcd0X16Ws2812xMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2805,  NeoEsp32Lcd0Mux16Bus, NeoEsp32LcdNotInverted> NeoEsp32Lcd0X16Ws2805Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedSk6812,  NeoEsp32Lcd0Mux16Bus, NeoEsp32LcdNotInverted> NeoEsp32Lcd0X16Sk6812Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedTm1814,  NeoEsp32Lcd0Mux16Bus, NeoEsp32LcdInverted>    NeoEsp32Lcd0X16Tm1814Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedTm1829,  NeoEsp32Lcd0Mux16Bus, NeoEsp32LcdInverted>    NeoEsp32Lcd0X16Tm1829Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedTm1914,  NeoEsp32Lcd0Mux16Bus, NeoEsp32LcdInverted>    NeoEsp32Lcd0X16Tm1914Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeed800Kbps, NeoEsp32Lcd0Mux16Bus, NeoEsp32LcdNotInverted> NeoEsp32Lcd0X16800KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeed400Kbps, NeoEsp32Lcd0Mux16Bus, NeoEsp32LcdNotInverted> NeoEsp32Lcd0X16400KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedApa106,  NeoEsp32Lcd0Mux16Bus, NeoEsp32LcdNotInverted> NeoEsp32Lcd0X16Apa106Method;
 
-typedef NeoEsp32I2s0X16Ws2805Method NeoEsp32I2s0X16Ws2814Method;
-typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2813Method;
-typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2812dMethod;
-typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2811Method;
-typedef NeoEsp32I2s0X16Ws2812xMethod NeoEsp32I2s0X16Ws2816Method;
-typedef NeoEsp32I2s0X16800KbpsMethod NeoEsp32I2s0X16Ws2812Method;
-typedef NeoEsp32I2s0X16Sk6812Method  NeoEsp32I2s0X16Lc8812Method;
+typedef NeoEsp32Lcd0X16Ws2805Method NeoEsp32Lcd0X16Ws2814Method;
+typedef NeoEsp32Lcd0X16Ws2812xMethod NeoEsp32Lcd0X16Ws2813Method;
+typedef NeoEsp32Lcd0X16Ws2812xMethod NeoEsp32Lcd0X16Ws2812dMethod;
+typedef NeoEsp32Lcd0X16Ws2812xMethod NeoEsp32Lcd0X16Ws2811Method;
+typedef NeoEsp32Lcd0X16Ws2812xMethod NeoEsp32Lcd0X16Ws2816Method;
+typedef NeoEsp32Lcd0X16800KbpsMethod NeoEsp32Lcd0X16Ws2812Method;
+typedef NeoEsp32Lcd0X16Sk6812Method  NeoEsp32Lcd0X16Lc8812Method;
 
 
 #endif // defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_IDF_TARGET_ESP32S3)
