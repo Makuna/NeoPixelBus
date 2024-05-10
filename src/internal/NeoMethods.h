@@ -59,7 +59,7 @@ License along with NeoPixel.  If not, see
 #include "methods/NeoEsp32RmtMethod.h"
 #include "methods/DotStarEsp32DmaSpiMethod.h"
 #include "methods/NeoEsp32I2sXMethod.h"
-#include "methods/NeoEsp32LcdXMethod.h"
+#include "methods/NeoEsp32LcdMethod.h"
 
 
 #endif

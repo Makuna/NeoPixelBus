@@ -439,12 +439,12 @@ template<typename T_BUSCONTEXT> T_BUSCONTEXT NeoEsp32LcdMuxBus<T_BUSCONTEXT>::s_
 // T_BUS - NeoEsp32LcdMuxBus, the bus to use
 //
 template<typename T_SPEED, typename T_BUS> 
-class NeoEsp32LcdXMethodBase
+class NeoEsp32LcdMethodBase
 {
 public:
     typedef NeoNoSettings SettingsObject;
 
-    NeoEsp32LcdXMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
+    NeoEsp32LcdMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _pin(pin),
         _pixelCount(pixelCount),
         _bus()
@@ -452,7 +452,7 @@ public:
         _bus.RegisterNewMuxBus((pixelCount * elementSize + settingsSize) + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs);
     }
 
-    ~NeoEsp32LcdXMethodBase()
+    ~NeoEsp32LcdMethodBase()
     {
         while (!_bus.IsWriteDone())
         {
@@ -559,12 +559,12 @@ typedef NeoEsp32LcdMuxBus<NeoEspLcdMonoBuffContext<NeoEspLcdMuxMap<uint16_t, Neo
 class NeoEsp32LcdSpeedWs2812x
 {
 public:
-    const static uint32_t I2sSampleRate = 100000;
+    const static uint32_t LcdSampleRate = 100000;
     const static uint16_t ByteSendTimeUs = 10;
     const static uint16_t ResetTimeUs = 300;
 };
 
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32Lcd0Mux16Bus> NeoEsp32Lcd0X16Ws2812xMethod;
+typedef NeoEsp32LcdMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32Lcd0Mux16Bus> NeoEsp32Lcd0X16Ws2812xMethod;
 
 
 #endif // defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_IDF_TARGET_ESP32S3)
