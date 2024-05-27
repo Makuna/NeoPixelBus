@@ -28,12 +28,12 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #include <Arduino.h>
+
+#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
+
 #include "../NeoSettings.h"
 #include "../NeoBusChannel.h"
 #include "NeoEsp32RmtMethod.h"
-
-#ifdef ARDUINO_ARCH_ESP32
-
 
 // translate NeoPixelBuffer into RMT buffer
 // this is done on the fly so we don't require a send buffer in raw RMT format
@@ -121,6 +121,17 @@ void NeoEsp32RmtSpeedWs2811::Translate(const void* src,
 }
 
 void NeoEsp32RmtSpeedWs2812x::Translate(const void* src,
+    rmt_item32_t* dest,
+    size_t src_size,
+    size_t wanted_num,
+    size_t* translated_size,
+    size_t* item_num)
+{
+    _translate(src, dest, src_size, wanted_num, translated_size, item_num,
+        RmtBit0, RmtBit1, RmtDurationReset);
+}
+
+void NeoEsp32RmtSpeedWs2805::Translate(const void* src,
     rmt_item32_t* dest,
     size_t src_size,
     size_t wanted_num,
@@ -242,6 +253,17 @@ void NeoEsp32RmtInvertedSpeedWs2811::Translate(const void* src,
 }
 
 void NeoEsp32RmtInvertedSpeedWs2812x::Translate(const void* src,
+    rmt_item32_t* dest,
+    size_t src_size,
+    size_t wanted_num,
+    size_t* translated_size,
+    size_t* item_num)
+{
+    _translate(src, dest, src_size, wanted_num, translated_size, item_num,
+        RmtBit0, RmtBit1, RmtDurationReset);
+}
+
+void NeoEsp32RmtInvertedSpeedWs2805::Translate(const void* src,
     rmt_item32_t* dest,
     size_t src_size,
     size_t wanted_num,

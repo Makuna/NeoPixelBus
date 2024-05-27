@@ -84,6 +84,13 @@ public:
     {
     }
 
+    NeoPixelBus(uint16_t countPixels, Stream* pixieStream) :
+        _countPixels(countPixels),
+        _state(0),
+        _method(countPixels, T_COLOR_FEATURE::PixelSize, T_COLOR_FEATURE::SettingsSize, pixieStream)
+    {
+    }
+
     ~NeoPixelBus()
     {
     }
@@ -195,6 +202,11 @@ public:
             return 0;
         }
     };
+
+    template <typename T_COLOROBJECT> T_COLOROBJECT GetPixelColor(uint16_t indexPixel) const
+    {
+        return T_COLOROBJECT(GetPixelColor(indexPixel));
+    }
 
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
     {

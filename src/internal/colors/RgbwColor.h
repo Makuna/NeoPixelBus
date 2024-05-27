@@ -30,6 +30,11 @@ struct HslColor;
 struct HsbColor;
 struct RgbcctColor;
 
+struct RgbwwColor;
+struct RgbwwwColor;
+struct Rgbw64Color;
+struct Rgbww80Color;
+
 // ------------------------------------------------------------------------
 // RgbwColor represents a color object that is represented by Red, Green, Blue
 // component values and an extra White component.  It contains helpful color 
@@ -67,6 +72,26 @@ struct RgbwColor : RgbColorBase
         W(0)
     {
     };
+
+    // ------------------------------------------------------------------------
+    // explicitly Construct a RgbColor using RgbwwColor
+    // ------------------------------------------------------------------------
+    explicit RgbwColor(const RgbwwColor& color);
+
+    // ------------------------------------------------------------------------
+    // explicitly Construct a RgbColor using RgbwwwColor
+    // ------------------------------------------------------------------------
+    explicit RgbwColor(const RgbwwwColor& color);
+
+    // ------------------------------------------------------------------------
+     // explicitly Construct a RgbColor using Rgbw64Color
+     // ------------------------------------------------------------------------
+    explicit RgbwColor(const Rgbw64Color& color);
+
+    // ------------------------------------------------------------------------
+    // explicitly Construct a RgbColor using Rgbww80Color
+    // ------------------------------------------------------------------------
+    explicit RgbwColor(const Rgbww80Color& color);
 
     // ------------------------------------------------------------------------
     // Construct a RgbwColor using HtmlColor

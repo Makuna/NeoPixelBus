@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-DotStarX4Feature provides feature base class to describe color order for
+DotStarX4ByteFeature provides feature base class to describe color order for
   3 color but 4 byte features when used with DotStars
 
 Written by Michael C. Miller.
@@ -27,7 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
-class DotStarX4Feature :
+class DotStarX4ByteFeature :
     public NeoByteElements<4, RgbColor, uint32_t>
 {
 public:
@@ -59,7 +59,7 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
 
-        pgm_read_byte(p++); // ignore the first byte
+        p++; // ignore the first byte
         color[V_IC_1] = pgm_read_byte(p++);
         color[V_IC_2] = pgm_read_byte(p++);
         color[V_IC_3] = pgm_read_byte(p);

@@ -44,6 +44,8 @@ License along with NeoPixel.  If not, see
 
 #include "colors/RgbwwColor.h"
 #include "colors/RgbcctColor.h"
+#include "colors/Rgbww80Color.h"
+#include "colors/RgbwwwColor.h"
 
 #include "colors/SegmentDigit.h"
 

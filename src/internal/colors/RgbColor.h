@@ -27,6 +27,11 @@ License along with NeoPixel.  If not, see
 
 struct RgbwColor;
 struct RgbcctColor; // needed??
+struct RgbwwColor;
+struct RgbwwwColor;
+struct Rgb48Color;
+struct Rgbw64Color;
+struct Rgbww80Color;
 
 // ------------------------------------------------------------------------
 // RgbColor represents a color object that is represented by Red, Green, Blue
@@ -59,6 +64,31 @@ struct RgbColor : RgbColorBase
     // explicitly Construct a RgbColor using RgbwColor
     // ------------------------------------------------------------------------
     explicit RgbColor(const RgbwColor& color);
+
+    // ------------------------------------------------------------------------
+    // explicitly Construct a RgbColor using RgbwwColor
+    // ------------------------------------------------------------------------
+    explicit RgbColor(const RgbwwColor& color);
+
+    // ------------------------------------------------------------------------
+    // explicitly Construct a RgbColor using RgbwwwColor
+    // ------------------------------------------------------------------------
+    explicit RgbColor(const RgbwwwColor& color);
+
+    // ------------------------------------------------------------------------
+    // explicitly Construct a RgbColor using Rgb48Color
+    // ------------------------------------------------------------------------
+    explicit RgbColor(const Rgb48Color& color);
+
+    // ------------------------------------------------------------------------
+    // explicitly Construct a RgbColor using Rgbw64Color
+    // ------------------------------------------------------------------------
+    explicit RgbColor(const Rgbw64Color& color);
+
+    // ------------------------------------------------------------------------
+    // explicitly Construct a RgbColor using Rgbww80Color
+    // ------------------------------------------------------------------------
+    explicit RgbColor(const Rgbww80Color& color);
 
     // ------------------------------------------------------------------------
     // Construct a RgbColor using Rgb16Color

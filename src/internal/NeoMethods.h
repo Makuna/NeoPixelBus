@@ -34,8 +34,14 @@ License along with NeoPixel.  If not, see
 #include "methods/Ws2801GenericMethod.h"
 #include "methods/P9813GenericMethod.h"
 #include "methods/Tlc5947GenericMethod.h"
+#include "methods/Tlc59711GenericMethod.h"
 #include "methods/Sm16716GenericMethod.h"
 #include "methods/Mbi6033GenericMethod.h"
+#include "methods/Hd108GenericMethod.h"
+
+//Adafruit Pixie via UART, not platform specific
+//
+#include "methods/PixieStreamMethod.h"
 
 // Platform specific and One Wire (data) methods
 //
@@ -48,15 +54,23 @@ License along with NeoPixel.  If not, see
 
 #elif defined(ARDUINO_ARCH_ESP32)
 
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "methods/NeoEsp32I2sMethod.h"
 #include "methods/NeoEsp32RmtMethod.h"
-#include "methods/NeoEspBitBangMethod.h"
 #include "methods/DotStarEsp32DmaSpiMethod.h"
 #include "methods/NeoEsp32I2sXMethod.h"
+
+
+#endif
+#include "methods/NeoEspBitBangMethod.h"
 
 #elif defined(ARDUINO_ARCH_NRF52840) // must be before __arm__
 
 #include "methods/NeoNrf52xMethod.h"
+
+#elif defined(ARDUINO_ARCH_RP2040) // must be before __arm__
+
+#include "methods/Rp2040/NeoRp2040x4Method.h"
 
 #elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
 

@@ -678,7 +678,7 @@ void send_data_16mhz_600(uint8_t* data,
     bit = 8;
 
     asm volatile(
-        "head40:"                  "\n\t" // Clk  Pseudocode    (T =  0)
+        "head60:"                  "\n\t" // Clk  Pseudocode    (T =  0)
             "st   %a[port], %[hi]"    "\n\t" // 2    PORT = hi     (T =  2)
             "sbrc %[byte] , 7"        "\n\t" // 1-2  if(b & 0b10000000)
                 "mov  %[next] , %[hi]"   "\n\t" // 0-1   next = hi    (T =  4)
@@ -689,18 +689,18 @@ void send_data_16mhz_600(uint8_t* data,
             "rjmp .+0"                "\n\t" // 2    nop nop       (T = 13)
             "rjmp .+0"                "\n\t" // 2    nop nop       (T = 15)
             "dec  %[bit]"             "\n\t" // 1    bit--         (T = 16)
-            "breq nextbyte40"         "\n\t" // 1-2  if(bit == 0)
+            "breq nextbyte60"         "\n\t" // 1-2  if(bit == 0)
                 "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 18) duplicate here improves high length for non byte boundary
                 "rol  %[byte]"            "\n\t" // 1    b <<= 1       (T = 21)
                 "nop"                     "\n\t" // 1    nop           (T = 22)
                 "rjmp .+0"                "\n\t" // 2    nop nop       (T = 24)
-                "rjmp head40"             "\n\t" // 2    -> head40 (next bit out)
-        "nextbyte40:"              "\n\t" //                    (T = 18)
+                "rjmp head60"             "\n\t" // 2    -> head40 (next bit out)
+        "nextbyte60:"              "\n\t" //                    (T = 18)
             "st   %a[port], %[lo]"    "\n\t" // 2    PORT = lo     (T = 20) duplicate here improves high length while reducing interbyte  
             "ldi  %[bit]  , 8"        "\n\t" // 1    bit = 8       (T = 21)
             "ld   %[byte] , %a[ptr]+" "\n\t" // 2    b = *ptr++    (T = 23)
             "sbiw %[count], 1"        "\n\t" // 2    i--           (T = 25)
-            "brne head40"             "\n"   // 1-2  if(i != 0) -> (next byte)
+            "brne head60"             "\n"   // 1-2  if(i != 0) -> (next byte)
         : [port] "+e" (port),
         [byte]  "+r" (b),
         [bit]   "+r" (bit),

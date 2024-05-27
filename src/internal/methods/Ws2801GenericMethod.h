@@ -86,7 +86,7 @@ public:
     {
         while (!IsReadyToUpdate())
         {
-#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA)
+#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA) && !defined(ARDUINO_AVR_DIGISPARK)
             yield(); // allows for system yield if needed
 #endif
         }

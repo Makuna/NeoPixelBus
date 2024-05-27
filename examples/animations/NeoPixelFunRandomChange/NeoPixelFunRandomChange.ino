@@ -76,7 +76,7 @@ void PickRandom(float luminance)
         // we use HslColor object as it allows us to easily pick a color
         // with the same saturation and luminance 
         uint16_t time = random(100, 400);
-        animationState[pixel].StartingColor = strip.GetPixelColor(pixel);
+        animationState[pixel].StartingColor = strip.GetPixelColor<RgbColor>(pixel);
         animationState[pixel].EndingColor = HslColor(random(360) / 360.0f, 1.0f, luminance);
 
         animations.StartAnimation(pixel, time, BlendAnimUpdate);

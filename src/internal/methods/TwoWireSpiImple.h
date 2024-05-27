@@ -36,7 +36,7 @@ public:
 
     static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
 
-    static const uint32_t Clock = 40000000L;
+    static constexpr uint32_t Clock = 40000000L;
 };
 
 class SpiSpeed30Mhz
@@ -47,7 +47,7 @@ public:
 
     static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
 
-    static const uint32_t Clock = 30000000L;
+    static constexpr uint32_t Clock = 30000000L;
 };
 
 class SpiSpeed20Mhz
@@ -58,7 +58,7 @@ public:
 
     static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
 
-    static const uint32_t Clock = 20000000L;
+    static constexpr uint32_t Clock = 20000000L;
 };
 
 class SpiSpeed15Mhz
@@ -69,7 +69,7 @@ public:
 
     static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
 
-    static const uint32_t Clock = 15000000L;
+    static constexpr uint32_t Clock = 15000000L;
 };
 
 class SpiSpeed10Mhz
@@ -80,7 +80,7 @@ public:
 
     static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
 
-    static const uint32_t Clock = 10000000L;
+    static constexpr uint32_t Clock = 10000000L;
 };
 
 class SpiSpeed5Mhz
@@ -91,7 +91,7 @@ public:
 
     static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
 
-    static const uint32_t Clock = 5000000L;
+    static constexpr uint32_t Clock = 5000000L;
 };
 
 class SpiSpeed2Mhz
@@ -102,7 +102,7 @@ public:
 
     static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
 
-    static const uint32_t Clock = 2000000L;
+    static constexpr uint32_t Clock = 2000000L;
 };
 
 class SpiSpeed1Mhz
@@ -113,7 +113,7 @@ public:
 
     static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
 
-    static const uint32_t Clock = 1000000L;
+    static constexpr uint32_t Clock = 1000000L;
 };
 
 class SpiSpeed500Khz
@@ -124,7 +124,7 @@ public:
 
     static void applySettings([[maybe_unused]] const SettingsObject& settings) {}
 
-    static const uint32_t Clock = 500000L;
+    static constexpr uint32_t Clock = 500000L;
 };
 
 class NeoSpiSettings
@@ -143,7 +143,7 @@ public:
     typedef NeoSpiSettings SettingsObject;
 
     SpiSpeedHz() :
-        Clock(10000000)
+        Clock(SpiSpeed10Mhz::Clock)
     {};
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
@@ -154,7 +154,8 @@ public:
     uint32_t Clock;
 };
 
-template<typename T_SPISPEED> class TwoWireSpiImple
+template <typename T_SPISPEED> 
+class TwoWireSpiImple
 {
 public:
     typedef typename T_SPISPEED::SettingsObject SettingsObject;

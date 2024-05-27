@@ -223,7 +223,7 @@ public:
         // rather than stalling for the latch.
         while (!IsReadyToUpdate())
         {
-#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA)
+#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA) && !defined(ARDUINO_AVR_DIGISPARK)
             yield(); // allows for system yield if needed
 #endif
         }
@@ -292,7 +292,7 @@ public:
         // rather than stalling for the latch.
         while (!NeoAvrMethodBase<T_SPEED>::IsReadyToUpdate())
         {
-#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA)
+#if !defined(ARDUINO_TEEONARDU_LEO) && !defined(ARDUINO_TEEONARDU_FLORA) && !defined(ARDUINO_AVR_DIGISPARK)
             yield(); // allows for system yield if needed
 #endif
         }
@@ -334,11 +334,15 @@ typedef NeoAvrMethodBase<NeoAvrSpeed400Kbps> NeoAvr400KbpsMethod;
 typedef NeoAvrTm1814InvertedMethod NeoAvrTm1914InvertedMethod;
 
 // AVR doesn't have alternatives yet, so there is just the default
+typedef NeoAvrWs2812xMethod NeoWs2805Method;
+typedef NeoWs2805Method NeoWs2814Method;
 typedef NeoAvrWs2812xMethod NeoWs2813Method;
 typedef NeoAvrWs2812xMethod NeoWs2812xMethod;
 typedef NeoAvr800KbpsMethod NeoWs2812Method;
 typedef NeoAvrWs2812xMethod NeoWs2811Method;
 typedef NeoAvrWs2812xMethod NeoWs2816Method;
+typedef NeoAvrWs2812xMethod NeoWs2805Method;
+typedef NeoWs2805Method NeoWs2814Method;
 typedef NeoAvrSk6812Method NeoSk6812Method;
 typedef NeoAvrSk6812Method NeoLc8812Method;
 typedef NeoAvrApa106Method NeoApa106Method;

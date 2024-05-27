@@ -26,6 +26,24 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
+#ifdef ARDUINO_ARCH_ESP32
+#if defined NDEBUG || defined CONFIG_COMPILER_OPTIMIZATION_ASSERTIONS_SILENT
+#define ESP_ERROR_CHECK_WITHOUT_ABORT_SILENT_TIMEOUT(x) ({                                         \
+        esp_err_t err_rc_ = (x);                                                    \
+        err_rc_;                                                                    \
+    })
+#else
+#define ESP_ERROR_CHECK_WITHOUT_ABORT_SILENT_TIMEOUT(x) ({                                         \
+        esp_err_t err_rc_ = (x);                                                    \
+        if (unlikely(err_rc_ != ESP_OK && err_rc_ != ESP_ERR_TIMEOUT)) {                                          \
+            _esp_error_check_failed_without_abort(err_rc_, __FILE__, __LINE__,      \
+                                                  __ASSERT_FUNC, #x);               \
+        }                                                                           \
+        err_rc_;                                                                    \
+    })
+#endif // NDEBUG
+#endif // ARDUINO_ARCH_ESP32
+
 // some platforms do not come with STL or properly defined one, specifically functional
 // if you see...
 // undefined reference to `std::__throw_bad_function_call()'
@@ -52,6 +70,8 @@ License along with NeoPixel.  If not, see
 
 #ifdef PIN_NOT_A_PIN
 #define NOT_A_PIN PIN_NOT_A_PIN
+#else
+#define NOT_A_PIN -1
 #endif
 
 #endif

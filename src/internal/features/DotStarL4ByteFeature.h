@@ -1,5 +1,5 @@
 /*-------------------------------------------------------------------------
-DotStarL4Feature provides feature base class to describe color order for
+DotStarL4ByteFeature provides feature base class to describe color order for
   3 color but 4 byte features when used with DotStars, exposing Luminance as W
 
 Written by Michael C. Miller.
@@ -27,7 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 template <uint8_t V_IC_1, uint8_t V_IC_2, uint8_t V_IC_3>
-class DotStarL4Feature :
+class DotStarL4ByteFeature :
     public NeoByteElements<4, RgbwColor, uint32_t>
 {
 public:

@@ -60,7 +60,7 @@ public:
         ColorObject color;
         const uint8_t* p = getPixelAddress((const uint8_t*)pPixels, indexPixel);
 
-        pgm_read_byte(p++); // ignore the first byte
+        p++; // ignore the first byte
         color.B = pgm_read_byte(p++);
         color.G = pgm_read_byte(p++);
         color.R = pgm_read_byte(p);

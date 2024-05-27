@@ -299,7 +299,7 @@ struct RgbwwColor : RgbColorBase
     uint8_t CW;
 
     const static uint8_t Max = 255;
-    const static size_t Count = 5; // four elements in []
+    const static size_t Count = 5; // five elements in []
 
 private:
     inline static uint8_t _elementDim(uint8_t value, uint8_t ratio)

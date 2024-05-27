@@ -24,15 +24,19 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
-#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
-
 #include <Arduino.h>
+
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32) 
+
+#if ESP_IDF_VERSION_MAJOR>=5
+#include <soc/gpio_struct.h>
+#endif
 
 static inline uint32_t getCycleCount(void)
 {
     uint32_t ccount;
 
-#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
     __asm__ __volatile__("csrr %0,0x7e2":"=r" (ccount));
     //ccount = esp_cpu_get_ccount();
 #else
@@ -41,14 +45,60 @@ static inline uint32_t getCycleCount(void)
     return ccount;
 }
 
-void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
+// Interrupt lock class, used for RAII interrupt disabling
+class InterruptLock {
+#if defined(ARDUINO_ARCH_ESP32)
+    portMUX_TYPE updateMux;
+#endif
+
+    inline void lock()
+    {
+#if defined(ARDUINO_ARCH_ESP32)
+        portENTER_CRITICAL(&updateMux);
+#else
+        noInterrupts();
+#endif
+    }
+
+    inline void unlock()
+    {        
+#if defined(ARDUINO_ARCH_ESP32)
+        portEXIT_CRITICAL(&updateMux);
+#else
+        interrupts();
+#endif
+    }
+
+public:
+
+    inline void poll()
+    {
+        unlock();
+        lock();
+    }
+    
+    inline InterruptLock()
+#if defined(ARDUINO_ARCH_ESP32)
+        : updateMux(portMUX_INITIALIZER_UNLOCKED)
+#endif    
+    { 
+        lock();
+    }
+
+    inline ~InterruptLock()
+    {
+        unlock();
+    }
+};
+
+bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     const uint8_t* end,
     uint8_t pin,
     uint32_t t0h,
     uint32_t t1h,
     uint32_t period,
     size_t sizePixel,
-    uint32_t tSpacing,
+    uint32_t tLatch,
     bool invert)
 {
     uint32_t setValue = _BV(pin);
@@ -60,7 +110,7 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     uint32_t cyclesNext = 0;
 
 #if defined(ARDUINO_ARCH_ESP32)
-#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
     volatile uint32_t* setRegister = &GPIO.out_w1ts.val;
     volatile uint32_t* clearRegister = &GPIO.out_w1tc.val;
     setValue = _BV(pin); 
@@ -68,7 +118,7 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
 #else
     volatile uint32_t* setRegister = &GPIO.out_w1ts;
     volatile uint32_t* clearRegister = &GPIO.out_w1tc;
-#endif // defined(CONFIG_IDF_TARGET_ESP32C3)
+#endif // defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
 #else
     uint32_t setRegister = PERIPHS_GPIO_BASEADDR + GPIO_OUT_W1TS_ADDRESS;
     uint32_t clearRegister = PERIPHS_GPIO_BASEADDR + GPIO_OUT_W1TC_ADDRESS;
@@ -88,6 +138,9 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
         std::swap(setRegister, clearRegister);
         std::swap(setValue, clearValue);
     }
+
+    // Need 100% focus on instruction timing
+    InterruptLock isrGuard;
 
     for (;;)
     {
@@ -136,20 +189,28 @@ void IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
             mask = 0x80;
             subpix = *pixels++;
 
-            // if pixel spacing is needed
-            if (tSpacing)
+            // Hack: permit interrupts to fire
+            // If we get held up more than the latch period, stop.
+            // We do this at the end of an element to ensure that each
+            // element always gets valid data, even if we don't update
+            // every element.
+            if (tLatch)
             {
-                element++;
+                ++element;
                 if (element == sizePixel)
                 {
+                    isrGuard.poll();
+                    if ((getCycleCount() - cyclesNext) > tLatch)
+                    {
+                        return false;    // failed
+                    }
                     element = 0;
-
-                    // wait for pixel spacing
-                    while ((getCycleCount() - cyclesNext) < tSpacing);
                 }
             }
         }
     }
+
+    return true;   // update complete
 }
 
 

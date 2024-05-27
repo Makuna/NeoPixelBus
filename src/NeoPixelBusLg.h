@@ -133,6 +133,12 @@ public:
     {
     }
 
+     NeoPixelBusLg(uint16_t countPixels, Stream* pixieStream) :
+        NeoPixelBus<T_COLOR_FEATURE, T_METHOD>(countPixels, pixieStream),
+        Shader()
+    {
+    }
+
     ~NeoPixelBusLg()
     {
     }
