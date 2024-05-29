@@ -232,10 +232,8 @@ public:
 
     size_t LcdBufferSize; // total size of LcdBuffer
     uint8_t* LcdBuffer;    // holds the DMA buffer that is referenced by LcdBufDesc
-    size_t DmaBufferSize;
     uint8_t* DmaBuffer;     // holds the pointer to the aligned part of the LCD buffer for DMA
     T_MUXMAP MuxMap;
-    dma_descriptor_t* desc;
     gdma_channel_handle_t dma_chan;
 
     // as a static instance, all members get initialized to zero
@@ -256,9 +254,9 @@ public:
         // construct only once on first time called
         if (LcdBuffer == nullptr)
         {
-            uint32_t DmaBufferSize = MuxMap.MaxBusDataSize * DmaBytesPerPixelByte;
-            uint32_t buf_size = DmaBufferSize + 3;        // +3 for long align
-            int num_desc = (DmaBufferSize + 4094) / 4095; // sic. (NOT 4096)
+            uint32_t xfer_size = MuxMap.MaxBusDataSize * DmaBytesPerPixelByte;
+            uint32_t buf_size = xfer_size + 3;        // +3 for long align
+            int num_desc = (xfer_size + 4094) / 4095; // sic. (NOT 4096)
             uint32_t alloc_size =
                 num_desc * sizeof(dma_descriptor_t) + buf_size;
 
@@ -310,16 +308,6 @@ public:
             LCD_CAM.lcd_user.lcd_cmd = 0;            // No command at LCD start
             // Dummy phase(s) MUST be enabled for DMA to trigger reliably.
 
-            // Set up DMA descriptor list (length and data are set before xfer)
-            desc = (dma_descriptor_t *)LcdBuffer; // At start of alloc'd buffer
-            for (int i = 0; i < num_desc; i++) {
-                desc[i].dw0.owner = DMA_DESCRIPTOR_BUFFER_OWNER_DMA;
-                desc[i].dw0.suc_eof = 0;
-                desc[i].next = &desc[i + 1];
-            }
-            desc[num_desc - 1].dw0.suc_eof = 1;
-            desc[num_desc - 1].next = NULL;
-
             // Alloc DMA channel & connect it to LCD periph
             gdma_channel_alloc_config_t dma_chan_config = {
                 .sibling_chan = NULL,
@@ -354,9 +342,7 @@ public:
 
         LcdBufferSize = 0;
         LcdBuffer = nullptr;
-        DmaBufferSize = 0;
         DmaBuffer = nullptr;
-        desc = nullptr;
 
         MuxMap.Reset();
     }
@@ -375,6 +361,16 @@ public:
             uint32_t xfer_size = MuxMap.MaxBusDataSize * DmaBytesPerPixelByte;
             int num_desc = (xfer_size + 4094) / 4095; // sic. (NOT 4096)
             int bytesToGo = xfer_size;
+            
+            dma_descriptor_t * desc = (dma_descriptor_t *)LcdBuffer;
+            for (int i = 0; i < num_desc; i++) {
+                desc[i].dw0.owner = DMA_DESCRIPTOR_BUFFER_OWNER_DMA;
+                desc[i].dw0.suc_eof = 0;
+                desc[i].next = &desc[i + 1];
+            }
+            desc[num_desc - 1].dw0.suc_eof = 1;
+            desc[num_desc - 1].next = NULL;
+
             int offset = 0;
             for (int i = 0; i < num_desc; i++) {
                 int bytesThisPass = bytesToGo;
@@ -409,7 +405,7 @@ public:
         if (MuxMap.IsNoMuxBusesUpdate())
         {
             // clear all the data in preperation for each mux channel to add
-            memset(DmaBuffer, 0x00, DmaBufferSize);
+            memset(LcdBuffer, 0x00, LcdBufferSize);
         }
 
         MuxMap.EncodeIntoDma(DmaBuffer,
