@@ -48,9 +48,58 @@ public:
                 value <<= 1;
             }
         }
+    }
+};
 
-        // return the buffer pointer advanced by encoding progress
-        dmaBuffer = pDma;
+//
+// true size of mux channel, 16 bit
+//
+class NeoEspLcdMuxBusSize16Bit
+{
+public:
+    NeoEspLcdMuxBusSize16Bit() {};
+
+    const static size_t MuxBusDataSize = 2;
+
+    // sizeData = 135 confirmed
+    // (value) at each point is valid, last 3 bytes are 0 but that should be fine, all the rest is legit
+    // *dmaBuffer is valid because the start of the line is GREEN as expected
+    static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
+    {
+        uint8_t* pDma = dmaBuffer;
+        const uint8_t* pEnd = data + sizeData;
+
+        for (const uint8_t* pValue = data; pValue < pEnd; pValue++)
+        {
+            uint8_t value = *pValue;
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                // Get what's already there
+                uint8_t dmaVal1 = *(pDma + 2);
+                uint8_t dmaVal2 = *(pDma + 3);
+
+                // Adjust
+                if (value & 0x80) {
+                    if (muxId < 8) {
+                        dmaVal1 |= 0x01 << muxId;
+                    } else {
+                        dmaVal2 |= 0x01 << (muxId - 8);
+                    }
+                }
+
+                // Write it back
+                *(pDma++) = 0xFF;
+                *(pDma++) = 0xFF;
+                *(pDma++) = dmaVal1;
+                *(pDma++) = dmaVal2;
+                *(pDma++) = 0x00;
+                *(pDma++) = 0x00;
+
+                // Next
+                value <<= 1;
+            }
+        }
     }
 };
 
@@ -179,10 +228,11 @@ class NeoEspLcdMonoBuffContext
 {
 public:
     // Each data bit requires 3 DMA byes
-    const static size_t DmaBytesPerPixelByte = 24;
+    const static size_t DmaBytesPerPixelByte = 24 * T_MUXMAP::MuxBusDataSize;
 
     size_t LcdBufferSize; // total size of LcdBuffer
     uint8_t* LcdBuffer;    // holds the DMA buffer that is referenced by LcdBufDesc
+    size_t DmaBufferSize;
     uint8_t* DmaBuffer;     // holds the pointer to the aligned part of the LCD buffer for DMA
     T_MUXMAP MuxMap;
     dma_descriptor_t* desc;
@@ -206,13 +256,9 @@ public:
         // construct only once on first time called
         if (LcdBuffer == nullptr)
         {
-            // MuxMap.MaxBusDataSize = max size in bytes of a single channel
-            // DmaBitsPerPixelBit = how many dma bits/byte are needed for each source (pixel) bit/byte
-            // T_MUXMAP::MuxBusDataSize = the true size of data for selected mux mode (not exposed size as lcd0 only supports 16bit mode)
-            
-            uint32_t xfer_size = MuxMap.MaxBusDataSize * DmaBytesPerPixelByte;
-            uint32_t buf_size = xfer_size + 3;        // +3 for long align
-            int num_desc = (xfer_size + 4094) / 4095; // sic. (NOT 4096)
+            uint32_t DmaBufferSize = MuxMap.MaxBusDataSize * DmaBytesPerPixelByte;
+            uint32_t buf_size = DmaBufferSize + 3;        // +3 for long align
+            int num_desc = (DmaBufferSize + 4094) / 4095; // sic. (NOT 4096)
             uint32_t alloc_size =
                 num_desc * sizeof(dma_descriptor_t) + buf_size;
 
@@ -258,7 +304,7 @@ public:
             LCD_CAM.lcd_user.lcd_always_out_en = 1;  // Enable 'always out' mode
             LCD_CAM.lcd_user.lcd_8bits_order = 0;    // Do not swap bytes
             LCD_CAM.lcd_user.lcd_bit_order = 0;      // Do not reverse bit order
-            LCD_CAM.lcd_user.lcd_2byte_en = 0;       // 8-bit data mode
+            LCD_CAM.lcd_user.lcd_2byte_en = T_MUXMAP::MuxBusDataSize > 1 ? 1 : 0;
             LCD_CAM.lcd_user.lcd_dummy = 1;          // Dummy phase(s) @ LCD start
             LCD_CAM.lcd_user.lcd_dummy_cyclelen = 0; // 1 dummy phase
             LCD_CAM.lcd_user.lcd_cmd = 0;            // No command at LCD start
@@ -308,6 +354,9 @@ public:
 
         LcdBufferSize = 0;
         LcdBuffer = nullptr;
+        DmaBufferSize = 0;
+        DmaBuffer = nullptr;
+        desc = nullptr;
 
         MuxMap.Reset();
     }
@@ -360,7 +409,7 @@ public:
         if (MuxMap.IsNoMuxBusesUpdate())
         {
             // clear all the data in preperation for each mux channel to add
-            memset(LcdBuffer, 0x00, LcdBufferSize);
+            memset(DmaBuffer, 0x00, DmaBufferSize);
         }
 
         MuxMap.EncodeIntoDma(DmaBuffer,
@@ -536,6 +585,7 @@ private:
 
 
 typedef NeoEsp32LcdMuxBus<NeoEspLcdMonoBuffContext<NeoEspLcdMuxMap<uint8_t, NeoEspLcdMuxBusSize8Bit>>> NeoEsp32LcdMux8Bus;
+typedef NeoEsp32LcdMuxBus<NeoEspLcdMonoBuffContext<NeoEspLcdMuxMap<uint16_t, NeoEspLcdMuxBusSize16Bit>>> NeoEsp32LcdMux16Bus;
 
 class NeoEsp32LcdSpeedWs2812x
 {
@@ -546,6 +596,7 @@ public:
 };
 
 typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux8Bus> NeoEsp32LcdX8Ws2812xMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux16Bus> NeoEsp32LcdX16Ws2812xMethod;
 
 
 #endif // defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_IDF_TARGET_ESP32S3)
