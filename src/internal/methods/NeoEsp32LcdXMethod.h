@@ -1,5 +1,31 @@
 #pragma once
 
+/*-------------------------------------------------------------------------
+NeoPixel library helper functions for Esp32.
+
+Written by Michael C. Miller.
+
+I invest time and resources providing this open source code,
+please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+
+-------------------------------------------------------------------------
+This file is part of the Makuna/NeoPixelBus library.
+
+NeoPixelBus is free software: you can redistribute it and/or modify
+it under the terms of the GNU Lesser General Public License as
+published by the Free Software Foundation, either version 3 of
+the License, or (at your option) any later version.
+
+NeoPixelBus is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with NeoPixel.  If not, see
+<http://www.gnu.org/licenses/>.
+-------------------------------------------------------------------------*/
+
 #if defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_IDF_TARGET_ESP32S3)
 
 extern "C"
@@ -21,6 +47,19 @@ public:
     NeoEspLcdMuxBusSize8Bit() {};
 
     const static size_t MuxBusDataSize = 1;
+    const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches endcoding
+
+    static void InitDma(uint8_t* dmaBuffer, size_t sizeDmaBuffer)
+    {
+        uint8_t* pDma = dmaBuffer;
+        uint8_t* dmaBufferEnd = dmaBuffer + sizeDmaBuffer;
+        while (dmaBufferEnd < dmaBuffer)
+        {
+            *(pDma++) = 0xFF;
+            *(pDma++) = 0x00;
+            *(pDma++) = 0x00;
+        }
+    }
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
@@ -33,16 +72,20 @@ public:
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
+                // first bit already init to 1, skip it
+                pDma++;
+
                 // Get what's already there (offset 1)
-                uint8_t dmaVal = *(pDma + 1);
+                uint8_t dmaVal = *(pDma);
 
                 // Adjust
                 dmaVal |= (value & 0x80) ? (0x01 << muxId) : 0x00;
 
                 // Write it back
-                *(pDma++) = 0xFF;
                 *(pDma++) = dmaVal;
-                *(pDma++) = 0x00;
+                
+                // last bit already initi to 0, skip it
+                pDma++;
 
                 // Next
                 value <<= 1;
@@ -60,12 +103,29 @@ public:
     NeoEspLcdMuxBusSize16Bit() {};
 
     const static size_t MuxBusDataSize = 2;
+    const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches endcoding
+
+    static void InitDma(uint8_t* dmaBuffer, size_t sizeDmaBuffer)
+    {
+        uint8_t* pDma = dmaBuffer;
+        uint8_t* dmaBufferEnd = dmaBuffer + sizeDmaBuffer;
+        while (dmaBufferEnd < dmaBuffer)
+        {
+            *(pDma++) = 0xFF;
+            *(pDma++) = 0xFF;
+            *(pDma++) = 0x00;
+            *(pDma++) = 0x00;
+            *(pDma++) = 0x00;
+            *(pDma++) = 0x00;
+        }
+    }
 
     // sizeData = 135 confirmed
     // (value) at each point is valid, last 3 bytes are 0 but that should be fine, all the rest is legit
     // *dmaBuffer is valid because the start of the line is GREEN as expected
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
+// REVIEW: why cant pDma be a unit16_t* ??
         uint8_t* pDma = dmaBuffer;
         const uint8_t* pEnd = data + sizeData;
 
@@ -75,26 +135,34 @@ public:
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
+                // first bit already init to 1, skip it
+                pDma++;
+                pDma++;
+
                 // Get what's already there
-                uint8_t dmaVal1 = *(pDma + 2);
-                uint8_t dmaVal2 = *(pDma + 3);
+                uint8_t dmaVal1 = *(pDma + 0);
+                uint8_t dmaVal2 = *(pDma + 1);
 
                 // Adjust
-                if (value & 0x80) {
-                    if (muxId < 8) {
+                if (value & 0x80) 
+                {
+                    if (muxId < 8) 
+                    {
                         dmaVal1 |= 0x01 << muxId;
-                    } else {
+                    } 
+                    else 
+                    {
                         dmaVal2 |= 0x01 << (muxId - 8);
                     }
                 }
 
                 // Write it back
-                *(pDma++) = 0xFF;
-                *(pDma++) = 0xFF;
                 *(pDma++) = dmaVal1;
                 *(pDma++) = dmaVal2;
-                *(pDma++) = 0x00;
-                *(pDma++) = 0x00;
+
+                // last bit already initi to 0, skip it
+                pDma++;
+                pDma++;
 
                 // Next
                 value <<= 1;
@@ -127,10 +195,6 @@ public:
     // but without it presence they get zeroed far too late
     NeoEspLcdMuxMap() 
     //    //:
-    //    //MaxBusDataSize(0),
-    //    //UpdateMap(0),
-    //    //UpdateMapMask(0),
-    //    //BusCount(0)
     {
     }
 
@@ -207,12 +271,14 @@ public:
     }
 };
 
+// REVIEW:  Is this actually in IRAM, old compiler bug ignored function attributes in header files
 static IRAM_ATTR bool dma_callback(gdma_channel_handle_t dma_chan,
                                    gdma_event_data_t *event_data,
-                                   void *user_data) {
-  esp_rom_delay_us(5);
-  LCD_CAM.lcd_user.lcd_start = 0;
-  return true;
+                                   void *user_data) 
+{
+    esp_rom_delay_us(5);
+    LCD_CAM.lcd_user.lcd_start = 0;
+    return true;
 }
 
 //
@@ -220,21 +286,21 @@ static IRAM_ATTR bool dma_callback(gdma_channel_handle_t dma_chan,
 // Manages the underlying I2S details including the buffer
 // This creates only a actively sending back buffer, 
 // Note that the back buffer must be DMA memory, a limited resource
+// Assumes a 3 step candence, so pulses are 1/3 and 2/3 of pulse width
 // 
 // T_MUXMAP - NeoEspLcdMuxMap - tracking class for mux state
 //
 template<typename T_MUXMAP> 
 class NeoEspLcdMonoBuffContext 
 {
-public:
-    // Each data bit requires 3 DMA byes
-    const static size_t DmaBytesPerPixelByte = 24 * T_MUXMAP::MuxBusDataSize;
+private:
+    gdma_channel_handle_t _dmaChannel;
+    dma_descriptor_t* _dmaItems; // holds the DMA description table
 
+public:
     size_t LcdBufferSize; // total size of LcdBuffer
-    uint8_t* LcdBuffer;    // holds the DMA buffer that is referenced by LcdBufDesc
-    uint8_t* DmaBuffer;     // holds the pointer to the aligned part of the LCD buffer for DMA
+    uint8_t* LcdBuffer;   // holds the DMA buffer that is referenced by _dmaItems
     T_MUXMAP MuxMap;
-    gdma_channel_handle_t dma_chan;
 
     // as a static instance, all members get initialized to zero
     // and the constructor is called at inconsistent time to other globals
@@ -242,40 +308,86 @@ public:
     // but without it presence they get zeroed far too late
     NeoEspLcdMonoBuffContext()
         //:
-        //LcdBufferSize(0),
-        //LcdBuffer(nullptr),
-        //LcdEditBuffer(nullptr),
-        //MuxMap()
     {
     }
 
     void Construct()
     {
         // construct only once on first time called
-        if (LcdBuffer == nullptr)
+        if (_dmaItems == nullptr)
         {
-            uint32_t xfer_size = MuxMap.MaxBusDataSize * DmaBytesPerPixelByte;
-            uint32_t buf_size = xfer_size + 3;        // +3 for long align
-            int num_desc = (xfer_size + 4094) / 4095; // sic. (NOT 4096)
-            uint32_t alloc_size =
-                num_desc * sizeof(dma_descriptor_t) + buf_size;
+            // MuxMap.MaxBusDataSize = max size in bytes of a single channel
+            // DmaBitsPerPixelBit = how many dma bits/byte are needed for each source (pixel) bit/byte
+            // T_MUXMAP::MuxBusDataSize = the true size of data for selected mux mode (not exposed size as i2s0 only supports 16bit mode)
+            LcdBufferSize = MuxMap.MaxBusDataSize * 8 * T_MUXMAP::DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
 
-            LcdBufferSize = alloc_size;
+            // must have a 4 byte aligned buffer for DMA
+            uint32_t alignment = LcdBufferSize % 4;
+            if (alignment)
+            {
+                LcdBufferSize += 4 - alignment;
+            }
 
-            LcdBuffer = static_cast<uint8_t*>(heap_caps_malloc(LcdBufferSize, MALLOC_CAP_DMA | MALLOC_CAP_8BIT));
+            size_t dmaBlockCount = (LcdBufferSize + DMA_DESCRIPTOR_BUFFER_MAX_SIZE - 1) / DMA_DESCRIPTOR_BUFFER_MAX_SIZE;
+            size_t dmaBlockSize = dmaBlockCount * sizeof(dma_descriptor_t);
+            _dmaItems = static_cast<dma_descriptor_t*>(heap_caps_malloc(dmaBlockSize, MALLOC_CAP_DMA));
+            if (_dmaItems == nullptr)
+            {
+                log_e("LCD Dma Table memory allocation failure (size %u)",
+                    dmaBlockSize);
+            }
+            // required to init to zero as settings these below only resets some fields
+            memset(_dmaItems, 0x00, dmaBlockSize); 
+
+            LcdBuffer = static_cast<uint8_t*>(heap_caps_malloc(LcdBufferSize, MALLOC_CAP_DMA));
             if (LcdBuffer == nullptr)
             {
-                log_e("send buffer memory allocation failure (size %u)",
+                log_e("LCD Dma Buffer memory allocation failure (size %u)",
                     LcdBufferSize);
             }
             memset(LcdBuffer, 0x00, LcdBufferSize);
 
-            // Find first 32-bit aligned address following descriptor list
-            uint32_t *alignedAddr =
-                (uint32_t *)((uint32_t)(&LcdBuffer[num_desc * sizeof(dma_descriptor_t) + 3]) & ~3);
-            uint8_t *dmaBuf = (uint8_t *)alignedAddr;
-            DmaBuffer = dmaBuf;
+            // init dma descriptor blocks
+            // 
+            lldesc_t* itemFirst = _dmaItems;
+            lldesc_t* item = itemFirst;
+            lldesc_t* itemNext = item + 1;
 
+            int dataLeft = LcdBufferSize;
+            uint8_t* pos = LcdBuffer;
+
+            // init blocks with avialable data
+            //
+            while (dataLeft)
+            {
+                // track how much of data goes into this descriptor block
+                size_t blockSize = dataLeft;
+                if (blockSize > DMA_DESCRIPTOR_BUFFER_MAX_SIZE)
+                {
+                    blockSize = DMA_DESCRIPTOR_BUFFER_MAX_SIZE;
+                }
+                dataLeft -= blockSize;
+
+                // init a DMA descriptor item
+                item->dw0.owner = DMA_DESCRIPTOR_BUFFER_OWNER_DMA;
+                item->dw0.suc_eof = 0;
+                item->next = itemNext;
+                item->dw0.size = blockSize;
+                item->buffer = pos;
+
+                pos += blockSize;
+
+                item = itemNext;
+                itemNext++;
+            }
+
+            // last data item is EOF to manage send state using EOF ISR
+            _dmaItems[dmaBlockCount - 1].dw0.suc_eof = 1;
+            _dmaItems[dmaBlockCount - 1].next = NULL;
+
+            // Configure LCD Peripheral
+            // 
+            
             // LCD_CAM isn't enabled by default -- MUST begin with this:
             periph_module_enable(PERIPH_LCD_CAM_MODULE);
             periph_module_reset(PERIPH_LCD_CAM_MODULE);
@@ -313,36 +425,36 @@ public:
                 .sibling_chan = NULL,
                 .direction = GDMA_CHANNEL_DIRECTION_TX,
                 .flags = {.reserve_sibling = 0}};
-            gdma_new_channel(&dma_chan_config, &dma_chan);
-            gdma_connect(dma_chan, GDMA_MAKE_TRIGGER(GDMA_TRIG_PERIPH_LCD, 0));
+            gdma_new_channel(&dma_chan_config, &_dmaChannel);
+            gdma_connect(_dmaChannel, GDMA_MAKE_TRIGGER(GDMA_TRIG_PERIPH_LCD, 0));
             gdma_strategy_config_t strategy_config = {.owner_check = false,
                                                         .auto_update_desc = false};
-            gdma_apply_strategy(dma_chan, &strategy_config);
+            gdma_apply_strategy(_dmaChannel, &strategy_config);
 
             // Enable DMA transfer callback
             gdma_tx_event_callbacks_t tx_cbs = {.on_trans_eof = dma_callback};
-            gdma_register_tx_event_callbacks(dma_chan, &tx_cbs, NULL);
+            gdma_register_tx_event_callbacks(_dmaChannel, &tx_cbs, NULL);
         }
     }
 
     void Destruct()
     {
-        if (LcdBuffer == nullptr)
+        if (_dmaItems == nullptr)
         {
             return;
         }
 
-        // TODO: destroy peripheral pin settings
-        // lcdSetPins(busNumber, -1, -1, -1, false);
-        // lcdDeinit(busNumber);
+        periph_module_disable(PERIPH_LCD_CAM_MODULE);
+        periph_module_reset(PERIPH_LCD_CAM_MODULE);
 
-        gdma_reset(dma_chan);
+        gdma_reset(_dmaChannel);
 
         heap_caps_free(LcdBuffer);
+        heap_caps_free(_dmaItems);
 
         LcdBufferSize = 0;
+        _dmaItems = nullptr;
         LcdBuffer = nullptr;
-        DmaBuffer = nullptr;
 
         MuxMap.Reset();
     }
@@ -353,36 +465,12 @@ public:
         {
             MuxMap.ResetMuxBusesUpdated();
             
-            gdma_reset(dma_chan);
+            gdma_reset(_dmaChannel);
             LCD_CAM.lcd_user.lcd_dout = 1;
             LCD_CAM.lcd_user.lcd_update = 1;
             LCD_CAM.lcd_misc.lcd_afifo_reset = 1;
 
-            uint32_t xfer_size = MuxMap.MaxBusDataSize * DmaBytesPerPixelByte;
-            int num_desc = (xfer_size + 4094) / 4095; // sic. (NOT 4096)
-            int bytesToGo = xfer_size;
-            
-            dma_descriptor_t * desc = (dma_descriptor_t *)LcdBuffer;
-            for (int i = 0; i < num_desc; i++) {
-                desc[i].dw0.owner = DMA_DESCRIPTOR_BUFFER_OWNER_DMA;
-                desc[i].dw0.suc_eof = 0;
-                desc[i].next = &desc[i + 1];
-            }
-            desc[num_desc - 1].dw0.suc_eof = 1;
-            desc[num_desc - 1].next = NULL;
-
-            int offset = 0;
-            for (int i = 0; i < num_desc; i++) {
-                int bytesThisPass = bytesToGo;
-                if (bytesThisPass > 4095)
-                bytesThisPass = 4095;
-                desc[i].dw0.size = desc[i].dw0.length = bytesThisPass;
-                desc[i].buffer = &DmaBuffer[offset];
-                bytesToGo -= bytesThisPass;
-                offset += bytesThisPass;
-            }
-
-            gdma_start(dma_chan, (intptr_t)&desc[0]);
+            gdma_start(_dmaChannel, (intptr_t)&_dmaItems[0]);
             esp_rom_delay_us(1);
             LCD_CAM.lcd_user.lcd_start = 1; 
         }
@@ -404,11 +492,11 @@ public:
         // so the buffer must be cleared first
         if (MuxMap.IsNoMuxBusesUpdate())
         {
-            // clear all the data in preperation for each mux channel to add
-            memset(LcdBuffer, 0x00, LcdBufferSize);
+            // clear all the data in preperation for each mux channel to update their bit
+            MuxMap.InitDma(LcdBuffer, LcdBufferSize);
         }
 
-        MuxMap.EncodeIntoDma(DmaBuffer,
+        MuxMap.EncodeIntoDma(LcdBuffer,
             data,
             sizeData,
             muxId);
