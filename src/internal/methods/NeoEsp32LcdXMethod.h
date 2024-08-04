@@ -125,8 +125,7 @@ public:
     // *dmaBuffer is valid because the start of the line is GREEN as expected
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
-// REVIEW: why cant pDma be a unit16_t* ??
-        uint8_t* pDma = dmaBuffer;
+        uint16_t* pDma = static_cast<uint16_t*>(dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
 
         for (const uint8_t* pValue = data; pValue < pEnd; pValue++)
@@ -137,31 +136,20 @@ public:
             {
                 // first bit already init to 1, skip it
                 pDma++;
-                pDma++;
 
                 // Get what's already there
-                uint8_t dmaVal1 = *(pDma + 0);
-                uint8_t dmaVal2 = *(pDma + 1);
+                uint16_t dmaVal = *(pDma);
 
                 // Adjust
                 if (value & 0x80) 
                 {
-                    if (muxId < 8) 
-                    {
-                        dmaVal1 |= 0x01 << muxId;
-                    } 
-                    else 
-                    {
-                        dmaVal2 |= 0x01 << (muxId - 8);
-                    }
+                    dmaVal |= 0x01 << muxId;
                 }
 
                 // Write it back
-                *(pDma++) = dmaVal1;
-                *(pDma++) = dmaVal2;
-
+                *(pDma++) = dmaVal;
+ 
                 // last bit already initi to 0, skip it
-                pDma++;
                 pDma++;
 
                 // Next
