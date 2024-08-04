@@ -49,22 +49,15 @@ public:
     const static size_t MuxBusDataSize = 1;
     const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches endcoding
 
-    static void InitDma(uint8_t* dmaBuffer, size_t sizeDmaBuffer)
-    {
-        uint8_t* pDma = dmaBuffer;
-        uint8_t* dmaBufferEnd = dmaBuffer + sizeDmaBuffer;
-        while (dmaBufferEnd < dmaBuffer)
-        {
-            *(pDma++) = 0xFF;
-            *(pDma++) = 0x00;
-            *(pDma++) = 0x00;
-        }
-    }
 
+    // by using a 3 step cadence, the dma data can't be updated with a single OR operation as
+    //    its value residges across a non - aligned 3 element type, so it requires three seperate OR
+    //    operations to update a single pixel bit
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
         uint8_t* pDma = dmaBuffer;
         const uint8_t* pEnd = data + sizeData;
+        const uint8_t muxBit = 0x1 << muxId;
 
         for (const uint8_t* pValue = data; pValue < pEnd; pValue++)
         {
@@ -72,19 +65,21 @@ public:
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
-                // first bit already init to 1, skip it
-                pDma++;
+                uint8_t dmaVal;
 
-                // Get what's already there (offset 1)
-                uint8_t dmaVal = *(pDma);
-
-                // Adjust
-                dmaVal |= (value & 0x80) ? (0x01 << muxId) : 0x00;
-
-                // Write it back
+                // first cadence step init to 1
+                dmaVal = *(pDma) | muxBit;
                 *(pDma++) = dmaVal;
-                
-                // last bit already initi to 0, skip it
+
+                // second candence step set based on bit
+                dmaVal = *(pDma);
+                if (value & 0x80)
+                {
+                    dmaVal |= muxBit;
+                    *(pDma++) = dmaVal;
+                }
+
+                // last candence step already init to 0, skip it
                 pDma++;
 
                 // Next
@@ -105,28 +100,14 @@ public:
     const static size_t MuxBusDataSize = 2;
     const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches endcoding
 
-    static void InitDma(uint8_t* dmaBuffer, size_t sizeDmaBuffer)
-    {
-        uint8_t* pDma = dmaBuffer;
-        uint8_t* dmaBufferEnd = dmaBuffer + sizeDmaBuffer;
-        while (dmaBufferEnd < dmaBuffer)
-        {
-            *(pDma++) = 0xFF;
-            *(pDma++) = 0xFF;
-            *(pDma++) = 0x00;
-            *(pDma++) = 0x00;
-            *(pDma++) = 0x00;
-            *(pDma++) = 0x00;
-        }
-    }
-
-    // sizeData = 135 confirmed
-    // (value) at each point is valid, last 3 bytes are 0 but that should be fine, all the rest is legit
-    // *dmaBuffer is valid because the start of the line is GREEN as expected
+    // by using a 3 step cadence, the dma data can't be updated with a single OR operation as
+    //    its value residges across a non - aligned 3 element type, so it requires three seperate OR
+    //    operations to update a single pixel bit
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
         uint16_t* pDma = static_cast<uint16_t*>(dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
+        const uint16_t muxBit = 0x1 << muxId;
 
         for (const uint8_t* pValue = data; pValue < pEnd; pValue++)
         {
@@ -134,22 +115,21 @@ public:
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
-                // first bit already init to 1, skip it
-                pDma++;
+                uint16_t dmaVal;
 
-                // Get what's already there
-                uint16_t dmaVal = *(pDma);
+                // first cadence step init to 1
+                dmaVal = *(pDma) | muxBit;
+                *(pDma++) = dmaVal;
 
-                // Adjust
+                // second candence step set based on bit
+                dmaVal = *(pDma);
                 if (value & 0x80) 
                 {
-                    dmaVal |= 0x01 << muxId;
+                    dmaVal |= muxBit;
+                    *(pDma++) = dmaVal;
                 }
 
-                // Write it back
-                *(pDma++) = dmaVal;
- 
-                // last bit already initi to 0, skip it
+                // last candence step already init to 0, skip it
                 pDma++;
 
                 // Next
@@ -481,7 +461,7 @@ public:
         if (MuxMap.IsNoMuxBusesUpdate())
         {
             // clear all the data in preperation for each mux channel to update their bit
-            MuxMap.InitDma(LcdBuffer, LcdBufferSize);
+            memset(LcdBuffer, 0x00, LcdBufferSize);
         }
 
         MuxMap.EncodeIntoDma(LcdBuffer,
