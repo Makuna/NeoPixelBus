@@ -33,6 +33,7 @@ extern "C"
 #include <driver/periph_ctrl.h>
 #include <esp_private/gdma.h>
 #include <esp_rom_gpio.h>
+//#include <esp_rom_lldesc.h>
 #include <hal/dma_types.h>
 #include <hal/gpio_hal.h>
 #include <soc/lcd_cam_struct.h>
@@ -51,8 +52,8 @@ public:
 
 
     // by using a 3 step cadence, the dma data can't be updated with a single OR operation as
-    //    its value residges across a non - aligned 3 element type, so it requires three seperate OR
-    //    operations to update a single pixel bit
+    //    its value resides across a non-uint16_t aligned 3 element type, so it requires two seperate OR
+    //    operations to update a single pixel bit, the last element can be skipped as its always 0
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
         uint8_t* pDma = dmaBuffer;
@@ -65,19 +66,15 @@ public:
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
-                uint8_t dmaVal;
-
                 // first cadence step init to 1
-                dmaVal = *(pDma) | muxBit;
-                *(pDma++) = dmaVal;
+                *(pDma++) |= muxBit;
 
                 // second candence step set based on bit
-                dmaVal = *(pDma);
                 if (value & 0x80)
                 {
-                    dmaVal |= muxBit;
-                    *(pDma++) = dmaVal;
+                    *(pDma) |= muxBit;
                 }
+                pDma++;
 
                 // last candence step already init to 0, skip it
                 pDma++;
@@ -101,11 +98,11 @@ public:
     const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches endcoding
 
     // by using a 3 step cadence, the dma data can't be updated with a single OR operation as
-    //    its value residges across a non - aligned 3 element type, so it requires three seperate OR
-    //    operations to update a single pixel bit
+    //    its value resides across a non-uint32_t aligned 3 element type, so it requires two seperate OR
+    //    operations to update a single pixel bit, the last element can be skipped as its always 0
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
-        uint16_t* pDma = static_cast<uint16_t*>(dmaBuffer);
+        uint16_t* pDma = reinterpret_cast<uint16_t*>(dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
         const uint16_t muxBit = 0x1 << muxId;
 
@@ -115,19 +112,15 @@ public:
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
-                uint16_t dmaVal;
-
                 // first cadence step init to 1
-                dmaVal = *(pDma) | muxBit;
-                *(pDma++) = dmaVal;
+                *(pDma++) |= muxBit;
 
                 // second candence step set based on bit
-                dmaVal = *(pDma);
                 if (value & 0x80) 
                 {
-                    dmaVal |= muxBit;
-                    *(pDma++) = dmaVal;
+                    *(pDma) |= muxBit;
                 }
+                pDma++;
 
                 // last candence step already init to 0, skip it
                 pDma++;
@@ -162,7 +155,7 @@ public:
     // so its not useful to have or rely on, 
     // but without it presence they get zeroed far too late
     NeoEspLcdMuxMap() 
-    //    //:
+        //:
     {
     }
 
@@ -317,9 +310,9 @@ public:
 
             // init dma descriptor blocks
             // 
-            lldesc_t* itemFirst = _dmaItems;
-            lldesc_t* item = itemFirst;
-            lldesc_t* itemNext = item + 1;
+            dma_descriptor_t* itemFirst = _dmaItems;
+            dma_descriptor_t* item = itemFirst;
+            dma_descriptor_t* itemNext = item + 1;
 
             int dataLeft = LcdBufferSize;
             uint8_t* pos = LcdBuffer;
@@ -363,6 +356,8 @@ public:
             // Reset LCD bus
             LCD_CAM.lcd_user.lcd_reset = 1;
             esp_rom_delay_us(100);
+
+// TODO: see i2sUnitDecimalToFractionClks for calculating div_a and div_b 
 
             // Configure LCD clock
             LCD_CAM.lcd_clock.clk_en = 1;             // Enable clock

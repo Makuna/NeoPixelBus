@@ -87,6 +87,8 @@ public:
 
         uint32_t* pDma = reinterpret_cast<uint32_t*>(dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
+        const uint32_t OneBit = EncodedOneBit64 << muxId;
+        const uint32_t ZeroBit = EncodedZeroBit64 << muxId;
 
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
         {
@@ -96,7 +98,7 @@ public:
             {
                 uint32_t dma = *(pDma);
 
-                dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) << (muxId));
+                dma |= (value & 0x80) ? OneBit : ZeroBit;
                 *(pDma++) = dma;
                 value <<= 1;
             }
@@ -188,6 +190,8 @@ protected:
     {
         uint64_t* pDma64 = reinterpret_cast<uint64_t*>(dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
+        const uint64_t OneBit = EncodedOneBit64 << muxShift;
+        const uint64_t ZeroBit = EncodedZeroBit64 << muxShift;
 
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
         {
@@ -197,7 +201,7 @@ protected:
             {
                 uint64_t dma64 = *(pDma64);
 
-                dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (muxShift));
+                dma64 |= (value & 0x80) ? OneBit : ZeroBit;
                 *(pDma64++) = dma64;
                 value <<= 1;
             }
@@ -228,11 +232,7 @@ public:
     // so its not useful to have or rely on, 
     // but without it presence they get zeroed far too late
     NeoEspI2sMuxMap() 
-    //    //:
-    //    //MaxBusDataSize(0),
-    //    //UpdateMap(0),
-    //    //UpdateMapMask(0),
-    //    //BusCount(0)
+        //:
     {
     }
 
@@ -331,10 +331,6 @@ public:
     // but without it presence they get zeroed far too late
     NeoEspI2sMonoBuffContext()
         //:
-        //I2sBufferSize(0),
-        //I2sBuffer(nullptr),
-        //I2sEditBuffer(nullptr),
-        //MuxMap()
     {
     }
 
