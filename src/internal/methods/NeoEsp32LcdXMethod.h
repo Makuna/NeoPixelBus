@@ -57,12 +57,13 @@ public:
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
         uint8_t* pDma = dmaBuffer;
-        const uint8_t* pEnd = data + sizeData;
+        const uint8_t* pValue = data;
+        const uint8_t* pEnd = pValue + sizeData;
         const uint8_t muxBit = 0x1 << muxId;
 
-        for (const uint8_t* pValue = data; pValue < pEnd; pValue++)
+        while (pValue < pEnd)
         {
-            uint8_t value = *pValue;
+            uint8_t value = *(pValue++);
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
@@ -103,12 +104,13 @@ public:
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
         uint16_t* pDma = reinterpret_cast<uint16_t*>(dmaBuffer);
-        const uint8_t* pEnd = data + sizeData;
+        const uint8_t* pValue = data;
+        const uint8_t* pEnd = pValue + sizeData;
         const uint16_t muxBit = 0x1 << muxId;
 
-        for (const uint8_t* pValue = data; pValue < pEnd; pValue++)
+        while (pValue < pEnd)
         {
-            uint8_t value = *pValue;
+            uint8_t value = *(pValue++);
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
@@ -237,7 +239,7 @@ static IRAM_ATTR bool dma_callback(gdma_channel_handle_t dma_chan,
                                    gdma_event_data_t *event_data,
                                    void *user_data) 
 {
-    esp_rom_delay_us(5);
+//    esp_rom_delay_us(5); This was to handle the that the IRQ is fired on the last DMA block starting to transfer rather than when its done
     LCD_CAM.lcd_user.lcd_start = 0;
     return true;
 }
@@ -280,7 +282,8 @@ public:
             // MuxMap.MaxBusDataSize = max size in bytes of a single channel
             // DmaBitsPerPixelBit = how many dma bits/byte are needed for each source (pixel) bit/byte
             // T_MUXMAP::MuxBusDataSize = the true size of data for selected mux mode (not exposed size as i2s0 only supports 16bit mode)
-            LcdBufferSize = MuxMap.MaxBusDataSize * 8 * T_MUXMAP::DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
+            const size_t DmaBytesPerPixelByte = (8 * T_MUXMAP::DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize);
+            LcdBufferSize = DmaBytesPerPixelByte * MuxMap.MaxBusDataSize;
 
             // must have a 4 byte aligned buffer for DMA
             uint32_t alignment = LcdBufferSize % 4;
@@ -290,8 +293,10 @@ public:
             }
 
             size_t dmaBlockCount = (LcdBufferSize + DMA_DESCRIPTOR_BUFFER_MAX_SIZE - 1) / DMA_DESCRIPTOR_BUFFER_MAX_SIZE;
+            dmaBlockCount++; // extra one at the end for trigger IRQ only
             size_t dmaBlockSize = dmaBlockCount * sizeof(dma_descriptor_t);
-            _dmaItems = static_cast<dma_descriptor_t*>(heap_caps_malloc(dmaBlockSize, MALLOC_CAP_DMA));
+
+            _dmaItems = static_cast<dma_descriptor_t*>(heap_caps_malloc(dmaBlockSize, MALLOC_CAP_DMA | MALLOC_CAP_8BIT));
             if (_dmaItems == nullptr)
             {
                 log_e("LCD Dma Table memory allocation failure (size %u)",
@@ -300,7 +305,7 @@ public:
             // required to init to zero as settings these below only resets some fields
             memset(_dmaItems, 0x00, dmaBlockSize); 
 
-            LcdBuffer = static_cast<uint8_t*>(heap_caps_malloc(LcdBufferSize, MALLOC_CAP_DMA));
+            LcdBuffer = static_cast<uint8_t*>(heap_caps_malloc(LcdBufferSize, MALLOC_CAP_DMA | MALLOC_CAP_8BIT));
             if (LcdBuffer == nullptr)
             {
                 log_e("LCD Dma Buffer memory allocation failure (size %u)",
@@ -314,18 +319,18 @@ public:
             dma_descriptor_t* item = itemFirst;
             dma_descriptor_t* itemNext = item + 1;
 
-            int dataLeft = LcdBufferSize;
+            size_t dataLeft = LcdBufferSize - DmaBytesPerPixelByte; // last one for IRQ use
             uint8_t* pos = LcdBuffer;
 
-            // init blocks with avialable data
+            // init blocks with available data
             //
             while (dataLeft)
             {
                 // track how much of data goes into this descriptor block
                 size_t blockSize = dataLeft;
-                if (blockSize > DMA_DESCRIPTOR_BUFFER_MAX_SIZE)
+                if (blockSize >= DMA_DESCRIPTOR_BUFFER_MAX_SIZE)
                 {
-                    blockSize = DMA_DESCRIPTOR_BUFFER_MAX_SIZE;
+                    blockSize = DMA_DESCRIPTOR_BUFFER_MAX_SIZE - 1;
                 }
                 dataLeft -= blockSize;
 
@@ -334,6 +339,7 @@ public:
                 item->dw0.suc_eof = 0;
                 item->next = itemNext;
                 item->dw0.size = blockSize;
+                item->dw0.length = blockSize;
                 item->buffer = pos;
 
                 pos += blockSize;
@@ -342,9 +348,13 @@ public:
                 itemNext++;
             }
 
-            // last data item is EOF to manage send state using EOF ISR
-            _dmaItems[dmaBlockCount - 1].dw0.suc_eof = 1;
-            _dmaItems[dmaBlockCount - 1].next = NULL;
+            // last dma descriptor item is EOF to manage send state using EOF ISR
+            item->dw0.owner = DMA_DESCRIPTOR_BUFFER_OWNER_DMA;
+            item->dw0.suc_eof = 1;
+            item->next = NULL;
+            item->dw0.size = 0;
+            item->dw0.length = 0;
+            item->buffer = NULL; 
 
             // Configure LCD Peripheral
             // 
@@ -377,7 +387,7 @@ public:
             LCD_CAM.lcd_user.lcd_always_out_en = 1;  // Enable 'always out' mode
             LCD_CAM.lcd_user.lcd_8bits_order = 0;    // Do not swap bytes
             LCD_CAM.lcd_user.lcd_bit_order = 0;      // Do not reverse bit order
-            LCD_CAM.lcd_user.lcd_2byte_en = T_MUXMAP::MuxBusDataSize > 1 ? 1 : 0;
+            LCD_CAM.lcd_user.lcd_2byte_en = (T_MUXMAP::MuxBusDataSize == 2);
             LCD_CAM.lcd_user.lcd_dummy = 1;          // Dummy phase(s) @ LCD start
             LCD_CAM.lcd_user.lcd_dummy_cyclelen = 0; // 1 dummy phase
             LCD_CAM.lcd_user.lcd_cmd = 0;            // No command at LCD start
@@ -596,6 +606,7 @@ public:
     void Update(bool)
     {
         _bus.FillBuffers(_data, _sizeData);
+
         _bus.StartWrite(); // only triggers actual write after all mux busses have updated
     }
 
