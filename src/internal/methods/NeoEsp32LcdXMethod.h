@@ -296,7 +296,7 @@ public:
             dmaBlockCount++; // extra one at the end for trigger IRQ only
             size_t dmaBlockSize = dmaBlockCount * sizeof(dma_descriptor_t);
 
-            _dmaItems = static_cast<dma_descriptor_t*>(heap_caps_malloc(dmaBlockSize, MALLOC_CAP_DMA | MALLOC_CAP_8BIT));
+            _dmaItems = static_cast<dma_descriptor_t*>(heap_caps_malloc(dmaBlockSize, MALLOC_CAP_DMA));
             if (_dmaItems == nullptr)
             {
                 log_e("LCD Dma Table memory allocation failure (size %u)",
@@ -305,7 +305,7 @@ public:
             // required to init to zero as settings these below only resets some fields
             memset(_dmaItems, 0x00, dmaBlockSize); 
 
-            LcdBuffer = static_cast<uint8_t*>(heap_caps_malloc(LcdBufferSize, MALLOC_CAP_DMA | MALLOC_CAP_8BIT));
+            LcdBuffer = static_cast<uint8_t*>(heap_caps_malloc(LcdBufferSize, MALLOC_CAP_DMA));
             if (LcdBuffer == nullptr)
             {
                 log_e("LCD Dma Buffer memory allocation failure (size %u)",
