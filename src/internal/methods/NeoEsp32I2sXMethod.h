@@ -57,6 +57,7 @@ public:
     NeoEspI2sMuxBusSize8Bit() {};
 
     const static size_t MuxBusDataSize = 1;
+    const static size_t DmaBitsPerPixelBit = 4; // 4 step cadence, matches endcoding
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
@@ -86,6 +87,8 @@ public:
 
         uint32_t* pDma = reinterpret_cast<uint32_t*>(dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
+        const uint32_t OneBit = EncodedOneBit << muxId;
+        const uint32_t ZeroBit = EncodedZeroBit << muxId;
 
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
         {
@@ -95,7 +98,7 @@ public:
             {
                 uint32_t dma = *(pDma);
 
-                dma |= (((value & 0x80) ? EncodedOneBit : EncodedZeroBit) << (muxId));
+                dma |= (value & 0x80) ? OneBit : ZeroBit;
                 *(pDma++) = dma;
                 value <<= 1;
             }
@@ -112,6 +115,7 @@ public:
     NeoEspI2sMuxBusSize16Bit() {};
 
     const static size_t MuxBusDataSize = 2;
+    const static size_t DmaBitsPerPixelBit = 4; // 4 step cadence, matches endcoding
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
@@ -186,6 +190,8 @@ protected:
     {
         uint64_t* pDma64 = reinterpret_cast<uint64_t*>(dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
+        const uint64_t OneBit = EncodedOneBit64 << muxShift;
+        const uint64_t ZeroBit = EncodedZeroBit64 << muxShift;
 
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
         {
@@ -195,7 +201,7 @@ protected:
             {
                 uint64_t dma64 = *(pDma64);
 
-                dma64 |= (((value & 0x80) ? EncodedOneBit64 : EncodedZeroBit64) << (muxShift));
+                dma64 |= (value & 0x80) ? OneBit : ZeroBit;
                 *(pDma64++) = dma64;
                 value <<= 1;
             }
@@ -226,11 +232,7 @@ public:
     // so its not useful to have or rely on, 
     // but without it presence they get zeroed far too late
     NeoEspI2sMuxMap() 
-    //    //:
-    //    //MaxBusDataSize(0),
-    //    //UpdateMap(0),
-    //    //UpdateMapMask(0),
-    //    //BusCount(0)
+        //:
     {
     }
 
@@ -319,8 +321,6 @@ template<typename T_MUXMAP>
 class NeoEspI2sMonoBuffContext 
 {
 public:
-    const static size_t DmaBitsPerPixelBit = 4;
-
     size_t I2sBufferSize; // total size of I2sBuffer
     uint8_t* I2sBuffer;    // holds the DMA buffer that is referenced by I2sBufDesc
     T_MUXMAP MuxMap;
@@ -331,10 +331,6 @@ public:
     // but without it presence they get zeroed far too late
     NeoEspI2sMonoBuffContext()
         //:
-        //I2sBufferSize(0),
-        //I2sBuffer(nullptr),
-        //I2sEditBuffer(nullptr),
-        //MuxMap()
     {
     }
 
@@ -346,7 +342,7 @@ public:
             // MuxMap.MaxBusDataSize = max size in bytes of a single channel
             // DmaBitsPerPixelBit = how many dma bits/byte are needed for each source (pixel) bit/byte
             // T_MUXMAP::MuxBusDataSize = the true size of data for selected mux mode (not exposed size as i2s0 only supports 16bit mode)
-            I2sBufferSize = MuxMap.MaxBusDataSize * 8 * DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
+            I2sBufferSize = MuxMap.MaxBusDataSize * 8 * T_MUXMAP::DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
 
             // must have a 4 byte aligned buffer for i2s
             uint32_t alignment = I2sBufferSize % 4;
@@ -455,8 +451,6 @@ template<typename T_MUXMAP>
 class NeoEspI2sDblBuffContext
 {
 public:
-    const static size_t DmaBitsPerPixelBit = 4;
-
     size_t I2sBufferSize; // total size of I2sBuffer
     uint8_t* I2sBuffer;    // holds the DMA buffer that is referenced by I2sBufDesc
     uint8_t* I2sEditBuffer; // hold a editable buffer that is copied to I2sBuffer
@@ -483,7 +477,7 @@ public:
             // MuxMap.MaxBusDataSize = max size in bytes of a single channel
             // DmaBitsPerPixelBit = how many dma bits/byte are needed for each source (pixel) bit/byte
             // T_MUXMAP::MuxBusDataSize = the true size of data for selected mux mode (not exposed size as i2s0 only supports 16bit mode)
-            I2sBufferSize = MuxMap.MaxBusDataSize * 8 * DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
+            I2sBufferSize = MuxMap.MaxBusDataSize * 8 * T_MUXMAP::DmaBitsPerPixelBit * T_MUXMAP::MuxBusDataSize;
 
             // must have a 4 byte aligned buffer for i2s
             uint32_t alignment = I2sBufferSize % 4;

@@ -1,12 +1,12 @@
 //
-// NeoPixel_ESP32_I2sParallel - 
-// This sketch demonstrates the use of the I2S Parallel method allowing upto 8 hardware updated channels
-// This example only works on the ESP32 (C2,S2)
+// NeoPixel_ESP32_LcdParallel - 
+// This sketch demonstrates the use of the LCD Parallel method allowing upto 8 or 16 hardware updated channels
+// This example only works on the ESP32S3
 // 
-// The key part of the method name is Esp32I2s1X8, 
+// The key part of the method name is Esp32LcdX8, 
 //    E2p32 (platform specific method),
-//    I2s peripheral channel 1 (most commonly available), 
-//    X8 (8 parallel channel mode, x16 also available)
+//    Lcd peripheral, 
+//    X8 (8 parallel channel mode, x16 is also supported)
 //
 // In this example, it demonstrates different ColorFeatures, Method specification, and count per strip
 // Note, the first instance of a NeoPixelBus will set the overall timing of all other instances
@@ -14,10 +14,10 @@
 #include <NeoPixelBus.h>
 
 // Demonstrating the use of the first four channels, but the method used allows for eight
-NeoPixelBus<NeoBgrFeature, NeoEsp32I2s1X8Ws2811Method> strip1(120, 15); // note: older WS2811 and longer strip
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812xMethod> strip2(100, 2); // note: modern WS2812 with letter like WS2812b
-NeoPixelBus<NeoGrbFeature, NeoEsp32I2s1X8Ws2812xInvertedMethod> strip3(100, 4); // note: inverted
-NeoPixelBus<NeoGrbwFeature, NeoEsp32I2s1X8Sk6812Method> strip4(50, 16); // note: RGBW and Sk6812 and smaller strip
+NeoPixelBus<NeoBgrFeature, NeoEsp32LcdX8Ws2811Method> strip1(120, 15); // note: older WS2811 and longer strip
+NeoPixelBus<NeoGrbFeature, NeoEsp32LcdX8Ws2812xMethod> strip2(100, 2); // note: modern WS2812 with letter like WS2812b
+NeoPixelBus<NeoGrbFeature, NeoEsp32LcdX8Ws2812xInvertedMethod> strip3(100, 4); // note: inverted
+NeoPixelBus<NeoGrbwFeature, NeoEsp32LcdX8Sk6812Method> strip4(50, 16); // note: RGBW and Sk6812 and smaller strip
 
 void setup() {
     Serial.begin(115200);

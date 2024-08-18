@@ -38,6 +38,7 @@ extern "C"
 
 const uint16_t c_dmaBytesPerPixelBytes = 4;
 
+// --------------------------------------------------------
 class NeoEsp32I2sSpeedWs2812x
 {
 public:
@@ -110,6 +111,7 @@ public:
     const static uint16_t ResetTimeUs = 50;
 };
 
+// --------------------------------------------------------
 class NeoEsp32I2sBusZero
 {
 public:
@@ -139,6 +141,7 @@ public:
     const uint8_t I2sBusNumber;
 };
 
+// --------------------------------------------------------
 class NeoEsp32I2sNotInverted
 {
 public:
@@ -151,6 +154,7 @@ public:
     const static bool Inverted = true;
 };
 
+// --------------------------------------------------------
 template<typename T_SPEED, typename T_BUS, typename T_INVERT> class NeoEsp32I2sMethodBase
 {
 public:
