@@ -1,11 +1,28 @@
 #pragma once
 
-// ESP32C3/S3 I2S is not supported yet due to significant changes to interface
-#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
+#if defined(ARDUINO_ARCH_ESP32)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+    // refactor UnitDecimalToFractionClks into a util.c
+void UnitDecimalToFractionClks(uint8_t* resultN,
+    uint8_t* resultD,
+    double unitDecimal,
+    double accuracy);
+
+#ifdef __cplusplus
+}
+#endif
+
+// ESP32C3/S3 I2S is not supported yet due to significant changes to interface
+#if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3)
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 #include "esp_err.h"
 
@@ -52,14 +69,13 @@ bool i2sWriteDone(uint8_t bus_num);
 bool i2sDump(uint8_t bus_num);
 bool i2sGetClks(uint8_t bus_num, uint8_t* clkm_div_num, uint8_t* clkm_div_b, uint8_t* clkm_div_a );
 
-void i2sUnitDecimalToFractionClks(uint8_t* resultN,
-    uint8_t* resultD,
-    double unitDecimal,
-    double accuracy);
+
 #endif
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
 
 #endif

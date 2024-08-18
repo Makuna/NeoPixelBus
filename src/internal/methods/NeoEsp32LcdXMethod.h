@@ -36,7 +36,9 @@ extern "C"
 //#include <esp_rom_lldesc.h>
 #include <hal/dma_types.h>
 #include <hal/gpio_hal.h>
+#include <hal/lcd_ll.h>
 #include <soc/lcd_cam_struct.h>
+#include "Esp32_i2s.h" // refactor UnitDecimalToFractionClks into a util.c
 }
 
 //
@@ -274,7 +276,7 @@ public:
     {
     }
 
-    void Construct()
+    void Construct(uint16_t nsBitSendTime)
     {
         // construct only once on first time called
         if (_dmaItems == nullptr)
@@ -367,14 +369,46 @@ public:
             LCD_CAM.lcd_user.lcd_reset = 1;
             esp_rom_delay_us(100);
 
-// TODO: see i2sUnitDecimalToFractionClks for calculating div_a and div_b 
+            // calc needed clock scaler values from bit send time
+            //
+            double clkm_div = (double)nsBitSendTime / T_MUXMAP::DmaBitsPerPixelBit / 1000.0 * 240.0; // PLL 240Mhz
+            if (clkm_div > LCD_LL_CLK_FRAC_DIV_N_MAX)
+            {
+                log_e("rate is too low");
+                return;
+            }
+            else if (clkm_div < 2.0)
+            {
+                log_e("rate is too fast, clkmdiv = %f (%u)",
+                    clkm_div,
+                    nsBitSendTime);
+                return;
+            }
+
+            // calc integer and franctional for more precise timing
+            uint8_t clkm_div_Integer = clkm_div;
+            double clkm_Fraction = (clkm_div - clkm_div_Integer);
+            uint8_t divB = 0;
+            uint8_t divA = 0;
+
+            UnitDecimalToFractionClks(&divB, &divA, clkm_Fraction, 0.000001);
+
+            //Serial.print("Clk Div ");
+            //Serial.print(clkm_div);
+            //Serial.print(" = ");
+
+            //Serial.print(clkm_div_Integer);
+            //Serial.print(" ");
+            //Serial.print(divB);
+            //Serial.print("/");
+            //Serial.println(divA);
 
             // Configure LCD clock
             LCD_CAM.lcd_clock.clk_en = 1;             // Enable clock
             LCD_CAM.lcd_clock.lcd_clk_sel = 2;        // PLL240M source
-            LCD_CAM.lcd_clock.lcd_clkm_div_a = 1;     // 1/1 fractional divide,
-            LCD_CAM.lcd_clock.lcd_clkm_div_b = 1;     // plus '99' below yields...
-            LCD_CAM.lcd_clock.lcd_clkm_div_num = 99;  // 1:100 prescale (2.4 MHz CLK)
+            LCD_CAM.lcd_clock.lcd_clkm_div_a = divA;  // scale fractional denomenator,
+            LCD_CAM.lcd_clock.lcd_clkm_div_b = divB;  // scale fractional numerator
+            LCD_CAM.lcd_clock.lcd_clkm_div_num = clkm_div_Integer;  // scale integer (240Mhz clock)
             LCD_CAM.lcd_clock.lcd_ck_out_edge = 0;    // PCLK low in 1st half cycle
             LCD_CAM.lcd_clock.lcd_ck_idle_edge = 0;   // PCLK low idle
             LCD_CAM.lcd_clock.lcd_clk_equ_sysclk = 1; // PCLK = CLK (ignore CLKCNT_N)
@@ -501,9 +535,9 @@ public:
         _muxId = s_context.MuxMap.RegisterNewMuxBus(dataSize);
     }
 
-    void Initialize(uint8_t pin)
+    void Initialize(uint8_t pin, uint16_t nsBitSendTime)
     {
-        s_context.Construct();
+        s_context.Construct(nsBitSendTime);
         
         uint8_t muxIdx = LCD_DATA_OUT0_IDX + _muxId;
         esp_rom_gpio_connect_out_signal(pin, muxIdx, false, false);
@@ -570,7 +604,7 @@ public:
         _pin(pin),
         _bus()
     {
-        size_t numResetBytes = T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs;
+        size_t numResetBytes = T_SPEED::ResetTimeUs / (T_SPEED::BitSendTimeNs*8/1000);
         _bus.RegisterNewMuxBus(_sizeData + numResetBytes);        
     }
 
@@ -593,7 +627,7 @@ public:
 
     void Initialize()
     {
-        _bus.Initialize(_pin);
+        _bus.Initialize(_pin, T_SPEED::BitSendTimeNs);
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         if (_data == nullptr)
@@ -648,13 +682,101 @@ typedef NeoEsp32LcdMuxBus<NeoEspLcdMonoBuffContext<NeoEspLcdMuxMap<uint16_t, Neo
 class NeoEsp32LcdSpeedWs2812x
 {
 public:
-    // Used to calculate how many bytes in a reset pulse
-    const static uint16_t ByteSendTimeUs = 10;
+    const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 300;
 };
 
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux8Bus> NeoEsp32LcdX8Ws2812xMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux16Bus> NeoEsp32LcdX16Ws2812xMethod;
+class NeoEsp32LcdSpeeWs2805
+{
+public:
+    const static uint16_t BitSendTimeNs = 1125;
+    const static uint16_t ResetTimeUs = 300; // spec is 280, intentionally longer for compatiblity use
+};
 
+class NeoEsp32LcdSpeeSk6812
+{
+public:
+    const static uint16_t BitSendTimeNs = 1250;
+    const static uint16_t ResetTimeUs = 80;
+};
+
+class NeoEsp32LcdSpeeTm1814
+{
+public:
+    const static uint16_t BitSendTimeNs = 1250;
+    const static uint16_t ResetTimeUs = 200;
+};
+
+class NeoEsp32LcdSpeeTm1914
+{
+public:
+    const static uint16_t BitSendTimeNs = 1250;
+    const static uint16_t ResetTimeUs = 200;
+};
+
+class NeoEsp32LcdSpeeTm1829
+{
+public:
+    const static uint16_t BitSendTimeNs = 1250;
+    const static uint16_t ResetTimeUs = 200;
+};
+
+class NeoEsp32LcdSpee800Kbps
+{
+public:
+    const static uint16_t BitSendTimeNs = 1250;
+    const static uint16_t ResetTimeUs = 50;
+};
+
+class NeoEsp32LcdSpee400Kbps
+{
+public:
+    const static uint16_t BitSendTimeNs = 2500;
+    const static uint16_t ResetTimeUs = 50;
+};
+
+class NeoEsp32LcdSpeeApa106
+{
+public:
+    const static uint16_t BitSendTimeNs = 1710;
+    const static uint16_t ResetTimeUs = 50;
+};
+
+
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux8Bus> NeoEsp32LcdX8Ws2812xMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeWs2805,   NeoEsp32LcdMux8Bus> NeoEsp32LcdX8Ws2805Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeSk6812,   NeoEsp32LcdMux8Bus> NeoEsp32LcdX8Sk6812Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1814,   NeoEsp32LcdMux8Bus> NeoEsp32LcdX8Tm1814Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1914,   NeoEsp32LcdMux8Bus> NeoEsp32LcdX8Tm1829Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1829,   NeoEsp32LcdMux8Bus> NeoEsp32LcdX8Tm1914Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee800Kbps,  NeoEsp32LcdMux8Bus> NeoEsp32LcdX8800KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee400Kbps,  NeoEsp32LcdMux8Bus> NeoEsp32LcdX8400KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeApa106,   NeoEsp32LcdMux8Bus> NeoEsp32LcdX8Apa106Method;
+
+typedef NeoEsp32LcdX8Ws2805Method NeoEsp32LcdX8Ws2814Method;
+typedef NeoEsp32LcdX8Ws2812xMethod NeoEsp32LcdX8Ws2813Method;
+typedef NeoEsp32LcdX8Ws2812xMethod NeoEsp32LcdX8Ws2812dMethod;
+typedef NeoEsp32LcdX8Ws2812xMethod NeoEsp32LcdX8Ws2811Method;
+typedef NeoEsp32LcdX8Ws2812xMethod NeoEsp32LcdX8Ws2816Method;
+typedef NeoEsp32LcdX8800KbpsMethod NeoEsp32LcdX8Ws2812Method;
+typedef NeoEsp32LcdX8Sk6812Method  NeoEsp32LcdX8Lc8812Method;
+
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux16Bus> NeoEsp32LcdX16Ws2812xMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeWs2805,   NeoEsp32LcdMux16Bus> NeoEsp32LcdX16Ws2805Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeSk6812,   NeoEsp32LcdMux16Bus> NeoEsp32LcdX16Sk6812Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1814,   NeoEsp32LcdMux16Bus> NeoEsp32LcdX16Tm1814Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1914,   NeoEsp32LcdMux16Bus> NeoEsp32LcdX16Tm1829Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1829,   NeoEsp32LcdMux16Bus> NeoEsp32LcdX16Tm1914Method;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee800Kbps,  NeoEsp32LcdMux16Bus> NeoEsp32LcdX16800KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee400Kbps,  NeoEsp32LcdMux16Bus> NeoEsp32LcdX16400KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeApa106,   NeoEsp32LcdMux16Bus> NeoEsp32LcdX16Apa106Method;
+
+typedef NeoEsp32LcdX16Ws2805Method NeoEsp32LcdX16Ws2814Method;
+typedef NeoEsp32LcdX16Ws2812xMethod NeoEsp32LcdX16Ws2813Method;
+typedef NeoEsp32LcdX16Ws2812xMethod NeoEsp32LcdX16Ws2812dMethod;
+typedef NeoEsp32LcdX16Ws2812xMethod NeoEsp32LcdX16Ws2811Method;
+typedef NeoEsp32LcdX16Ws2812xMethod NeoEsp32LcdX16Ws2816Method;
+typedef NeoEsp32LcdX16800KbpsMethod NeoEsp32LcdX16Ws2812Method;
+typedef NeoEsp32LcdX16Sk6812Method  NeoEsp32LcdX16Lc8812Method;
 
 #endif // defined(ARDUINO_ARCH_ESP32) && defined(CONFIG_IDF_TARGET_ESP32S3)
