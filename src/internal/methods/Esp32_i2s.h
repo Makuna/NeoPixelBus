@@ -2,19 +2,7 @@
 
 #if defined(ARDUINO_ARCH_ESP32)
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-    // refactor UnitDecimalToFractionClks into a util.c
-void UnitDecimalToFractionClks(uint8_t* resultN,
-    uint8_t* resultD,
-    double unitDecimal,
-    double accuracy);
-
-#ifdef __cplusplus
-}
-#endif
 
 // ESP32C3/S3 I2S is not supported yet due to significant changes to interface
 #if !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C3)
