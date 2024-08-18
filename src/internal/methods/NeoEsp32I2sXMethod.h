@@ -87,8 +87,8 @@ public:
 
         uint32_t* pDma = reinterpret_cast<uint32_t*>(dmaBuffer);
         const uint8_t* pEnd = data + sizeData;
-        const uint32_t OneBit = EncodedOneBit64 << muxId;
-        const uint32_t ZeroBit = EncodedZeroBit64 << muxId;
+        const uint32_t OneBit = EncodedOneBit << muxId;
+        const uint32_t ZeroBit = EncodedZeroBit << muxId;
 
         for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
         {
