@@ -50,7 +50,8 @@ extern "C"
 
 //
 // true size of mux channel, 8 bit
-// 3 step cadence
+// 3 step cadence, so pulses are 1/3 and 2/3 of pulse width
+//
 class NeoEspI2sMuxBusSize8Bit3Step
 {
 public:
@@ -78,14 +79,14 @@ public:
                 // first cadence step init to 1
                 *(pDma++) |= muxBit;
 
-                // second candence step set based on bit
+                // second cadence step set based on bit
                 if (value & 0x80)
                 {
                     *(pDma) |= muxBit;
                 }
                 pDma++;
 
-                // last candence step already init to 0, skip it
+                // last cadence step already init to 0, skip it
                 pDma++;
 
                 // Next
@@ -97,7 +98,8 @@ public:
 
 //
 // true size of mux channel, 16 bit
-// 3 step cadence
+// 3 step cadence, so pulses are 1/3 and 2/3 of pulse width
+//
 class NeoEspI2sMuxBusSize16Bit3Step
 {
 public:
@@ -125,14 +127,14 @@ public:
                 // first cadence step init to 1
                 *(pDma++) |= muxBit;
 
-                // second candence step set based on bit
+                // second cadence step set based on bit
                 if (value & 0x80)
                 {
                     *(pDma) |= muxBit;
                 }
                 pDma++;
 
-                // last candence step already init to 0, skip it
+                // last cadence step already init to 0, skip it
                 pDma++;
 
                 // Next
@@ -144,7 +146,8 @@ public:
 
 //
 // true size of mux channel, 8 bit
-// 4 step cadence
+// 4 step cadence, so pulses are 1/4 and 3/4 of pulse width
+//
 class NeoEspI2sMuxBusSize8Bit4Step
 {
 public:
@@ -202,7 +205,8 @@ public:
 
 //
 // true size of mux channel, 16 bit
-// 4 step cadence
+// 4 step cadence, so pulses are 1/4 and 3/4 of pulse width
+//
 class NeoEspI2sMuxBusSize16Bit4Step
 {
 public:
@@ -556,10 +560,6 @@ public:
     // but without it presence they get zeroed far too late
     NeoEspI2sDblBuffContext()
             //:
-            //I2sBufferSize(0),
-            //I2sBuffer(nullptr),
-            //I2sEditBuffer(nullptr),
-            //MuxMap()
     {
     }
 

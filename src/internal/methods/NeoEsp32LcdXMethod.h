@@ -43,6 +43,7 @@ extern "C"
 
 //
 // true size of mux channel, 8 bit
+// 3 step cadence, so pulses are 1/3 and 2/3 of pulse width
 //
 class NeoEspLcdMuxBusSize8Bit
 {
@@ -72,14 +73,14 @@ public:
                 // first cadence step init to 1
                 *(pDma++) |= muxBit;
 
-                // second candence step set based on bit
+                // second cadence step set based on bit
                 if (value & 0x80)
                 {
                     *(pDma) |= muxBit;
                 }
                 pDma++;
 
-                // last candence step already init to 0, skip it
+                // last cadence step already init to 0, skip it
                 pDma++;
 
                 // Next
@@ -91,6 +92,7 @@ public:
 
 //
 // true size of mux channel, 16 bit
+// 3 step cadence, so pulses are 1/3 and 2/3 of pulse width
 //
 class NeoEspLcdMuxBusSize16Bit
 {
@@ -119,14 +121,14 @@ public:
                 // first cadence step init to 1
                 *(pDma++) |= muxBit;
 
-                // second candence step set based on bit
+                // second cadence step set based on bit
                 if (value & 0x80) 
                 {
                     *(pDma) |= muxBit;
                 }
                 pDma++;
 
-                // last candence step already init to 0, skip it
+                // last cadence step already init to 0, skip it
                 pDma++;
 
                 // Next
@@ -251,7 +253,6 @@ static IRAM_ATTR bool dma_callback(gdma_channel_handle_t dma_chan,
 // Manages the underlying I2S details including the buffer
 // This creates only a actively sending back buffer, 
 // Note that the back buffer must be DMA memory, a limited resource
-// Assumes a 3 step candence, so pulses are 1/3 and 2/3 of pulse width
 // 
 // T_MUXMAP - NeoEspLcdMuxMap - tracking class for mux state
 //
