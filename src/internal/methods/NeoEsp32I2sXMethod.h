@@ -50,11 +50,105 @@ extern "C"
 
 //
 // true size of mux channel, 8 bit
-//
-class NeoEspI2sMuxBusSize8Bit
+// 3 step cadence
+class NeoEspI2sMuxBusSize8Bit3Step
 {
 public:
-    NeoEspI2sMuxBusSize8Bit() {};
+    NeoEspI2sMuxBusSize8Bit3Step() {};
+
+    const static size_t MuxBusDataSize = 1;
+    const static size_t DmaBitsPerPixelBit = 3; // 4 step cadence, matches endcoding
+
+    // by using a 3 step cadence, the dma data can't be updated with a single OR operation as
+    //    its value resides across a non-uint16_t aligned 3 element type, so it requires two seperate OR
+    //    operations to update a single pixel bit, the last element can be skipped as its always 0
+    static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
+    {
+        uint8_t* pDma = dmaBuffer;
+        const uint8_t* pValue = data;
+        const uint8_t* pEnd = pValue + sizeData;
+        const uint8_t muxBit = 0x1 << muxId;
+
+        while (pValue < pEnd)
+        {
+            uint8_t value = *(pValue++);
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                // first cadence step init to 1
+                *(pDma++) |= muxBit;
+
+                // second candence step set based on bit
+                if (value & 0x80)
+                {
+                    *(pDma) |= muxBit;
+                }
+                pDma++;
+
+                // last candence step already init to 0, skip it
+                pDma++;
+
+                // Next
+                value <<= 1;
+            }
+        }
+    }
+};
+
+//
+// true size of mux channel, 16 bit
+// 3 step cadence
+class NeoEspI2sMuxBusSize16Bit3Step
+{
+public:
+    NeoEspI2sMuxBusSize16Bit3Step() {};
+
+    const static size_t MuxBusDataSize = 2;
+    const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches endcoding
+
+    // by using a 3 step cadence, the dma data can't be updated with a single OR operation as
+    //    its value resides across a non-uint32_t aligned 3 element type, so it requires two seperate OR
+    //    operations to update a single pixel bit, the last element can be skipped as its always 0
+    static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
+    {
+        uint16_t* pDma = reinterpret_cast<uint16_t*>(dmaBuffer);
+        const uint8_t* pValue = data;
+        const uint8_t* pEnd = pValue + sizeData;
+        const uint16_t muxBit = 0x1 << muxId;
+
+        while (pValue < pEnd)
+        {
+            uint8_t value = *(pValue++);
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                // first cadence step init to 1
+                *(pDma++) |= muxBit;
+
+                // second candence step set based on bit
+                if (value & 0x80)
+                {
+                    *(pDma) |= muxBit;
+                }
+                pDma++;
+
+                // last candence step already init to 0, skip it
+                pDma++;
+
+                // Next
+                value <<= 1;
+            }
+        }
+    }
+};
+
+//
+// true size of mux channel, 8 bit
+// 4 step cadence
+class NeoEspI2sMuxBusSize8Bit4Step
+{
+public:
+    NeoEspI2sMuxBusSize8Bit4Step() {};
 
     const static size_t MuxBusDataSize = 1;
     const static size_t DmaBitsPerPixelBit = 4; // 4 step cadence, matches endcoding
@@ -108,11 +202,11 @@ public:
 
 //
 // true size of mux channel, 16 bit
-//
-class NeoEspI2sMuxBusSize16Bit
+// 4 step cadence
+class NeoEspI2sMuxBusSize16Bit4Step
 {
 public:
-    NeoEspI2sMuxBusSize16Bit() {};
+    NeoEspI2sMuxBusSize16Bit4Step() {};
 
     const static size_t MuxBusDataSize = 2;
     const static size_t DmaBitsPerPixelBit = 4; // 4 step cadence, matches endcoding
@@ -213,7 +307,7 @@ protected:
 // tracks mux channels used and if updated
 // 
 // T_FLAG - type used to store bit flags, UINT8_t for 8 channels, UINT16_t for 16
-// T_MUXSIZE - true size of mux channel = NeoEspI2sMuxBusSize8Bit or NeoEspI2sMuxBusSize16Bit
+// T_MUXSIZE - true size of mux channel = NeoEspI2sMuxBusSize8Bit4Step or NeoEspI2sMuxBusSize16Bit4Step
 //
 template<typename T_FLAG, typename T_MUXSIZE> 
 class NeoEspI2sMuxMap : public T_MUXSIZE
@@ -745,23 +839,23 @@ private:
 
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
 
-typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux8Bus;
-typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux16Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit3Step>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux8Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit3Step>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux16Bus;
 
-typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0DblMux8Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit3Step>>, NeoEsp32I2sBusZero> NeoEsp32I2s0DblMux8Bus;
 
 typedef NeoEsp32I2sXMethodBase<NeoEsp32I2sSpeedWs2812x, NeoEsp32I2s0DblMux8Bus, NeoEsp32I2sNotInverted> NeoEsp32I2s0X8DblWs2812xMethod;
 
 #else
 
-typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux8Bus;
-typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux16Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize16Bit3Step>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux8Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit3Step>>, NeoEsp32I2sBusZero> NeoEsp32I2s0Mux16Bus;
 
 
-typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux8Bus;
-typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux16Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit3Step>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux8Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sMonoBuffContext<NeoEspI2sMuxMap<uint16_t, NeoEspI2sMuxBusSize16Bit3Step>>, NeoEsp32I2sBusOne> NeoEsp32I2s1Mux16Bus;
 
-typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit>>, NeoEsp32I2sBusOne> NeoEsp32I2s1DblMux8Bus;
+typedef NeoEsp32I2sMuxBus<NeoEspI2sDblBuffContext<NeoEspI2sMuxMap<uint8_t, NeoEspI2sMuxBusSize8Bit3Step>>, NeoEsp32I2sBusOne> NeoEsp32I2s1DblMux8Bus;
 
 #endif
 
