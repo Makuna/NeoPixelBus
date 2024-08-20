@@ -591,9 +591,9 @@ template<typename T_BUSCONTEXT> T_BUSCONTEXT NeoEsp32LcdMuxBus<T_BUSCONTEXT>::s_
 //
 // wrapping layer of the lcd mux bus as a NeoMethod
 // 
-// T_SPEED - NeoEsp32LcdSpeed* (ex NeoEsp32LcdSpeedWs2812x) used to define output signal form
+// T_SPEED - NeoBitsSpeed* (ex NeoBitsSpeedWs2812x) used to define output signal form
 // T_BUS - NeoEsp32LcdMuxBus, the bus to use
-// T_INVERT - NeoEsp32LcdNotInverted or NeoEsp32LcdInverted, will invert output signal
+// T_INVERT - NeoBitsNotInverted or NeoBitsInverted, will invert output signal
 //
 template<typename T_SPEED, typename T_BUS, typename T_INVERT>
 class NeoEsp32LcdXMethodBase
@@ -606,7 +606,7 @@ public:
         _pin(pin),
         _bus()
     {
-        size_t numResetBytes = T_SPEED::ResetTimeUs / (T_SPEED::BitSendTimeNs*8/1000);
+        size_t numResetBytes = T_SPEED::ResetTimeUs / (T_SPEED::BitSendTimeNs * 8 / 1000);
         _bus.RegisterNewMuxBus(_sizeData + numResetBytes);        
     }
 
@@ -681,95 +681,18 @@ private:
 typedef NeoEsp32LcdMuxBus<NeoEspLcdMonoBuffContext<NeoEspLcdMuxMap<uint8_t, NeoEspLcdMuxBusSize8Bit>>> NeoEsp32LcdMux8Bus;
 typedef NeoEsp32LcdMuxBus<NeoEspLcdMonoBuffContext<NeoEspLcdMuxMap<uint16_t, NeoEspLcdMuxBusSize16Bit>>> NeoEsp32LcdMux16Bus;
 
-// --------------------------------------------------------
-class NeoEsp32LcdSpeedWs2812x
-{
-public:
-    const static uint16_t BitSendTimeNs = 1250;
-    const static uint16_t ResetTimeUs = 300;
-};
-
-class NeoEsp32LcdSpeeWs2805
-{
-public:
-    const static uint16_t BitSendTimeNs = 1125;
-    const static uint16_t ResetTimeUs = 300; // spec is 280, intentionally longer for compatiblity use
-};
-
-class NeoEsp32LcdSpeeSk6812
-{
-public:
-    const static uint16_t BitSendTimeNs = 1250;
-    const static uint16_t ResetTimeUs = 80;
-};
-
-class NeoEsp32LcdSpeeTm1814
-{
-public:
-    const static uint16_t BitSendTimeNs = 1250;
-    const static uint16_t ResetTimeUs = 200;
-};
-
-class NeoEsp32LcdSpeeTm1914
-{
-public:
-    const static uint16_t BitSendTimeNs = 1250;
-    const static uint16_t ResetTimeUs = 200;
-};
-
-class NeoEsp32LcdSpeeTm1829
-{
-public:
-    const static uint16_t BitSendTimeNs = 1250;
-    const static uint16_t ResetTimeUs = 200;
-};
-
-class NeoEsp32LcdSpee800Kbps
-{
-public:
-    const static uint16_t BitSendTimeNs = 1250;
-    const static uint16_t ResetTimeUs = 50;
-};
-
-class NeoEsp32LcdSpee400Kbps
-{
-public:
-    const static uint16_t BitSendTimeNs = 2500;
-    const static uint16_t ResetTimeUs = 50;
-};
-
-class NeoEsp32LcdSpeeApa106
-{
-public:
-    const static uint16_t BitSendTimeNs = 1710;
-    const static uint16_t ResetTimeUs = 50;
-};
-
-//---------------------------------------------------------
-class NeoEsp32LcdNotInverted
-{
-public:
-    const static bool Inverted = false;
-};
-
-class NeoEsp32LcdInverted
-{
-public:
-    const static bool Inverted = true;
-};
-
 
 //--------------------------------------------------------
 
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux8Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX8Ws2812xMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeWs2805,   NeoEsp32LcdMux8Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX8Ws2805Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeSk6812,   NeoEsp32LcdMux8Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX8Sk6812Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1814,   NeoEsp32LcdMux8Bus, NeoEsp32LcdInverted> NeoEsp32LcdX8Tm1814Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1914,   NeoEsp32LcdMux8Bus, NeoEsp32LcdInverted> NeoEsp32LcdX8Tm1829Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1829,   NeoEsp32LcdMux8Bus, NeoEsp32LcdInverted> NeoEsp32LcdX8Tm1914Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee800Kbps,  NeoEsp32LcdMux8Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX8800KbpsMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee400Kbps,  NeoEsp32LcdMux8Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX8400KbpsMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeApa106,   NeoEsp32LcdMux8Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX8Apa106Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2812x, NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8Ws2812xMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2805,   NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8Ws2805Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedSk6812,   NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8Sk6812Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1814,   NeoEsp32LcdMux8Bus, NeoBitsInverted> NeoEsp32LcdX8Tm1814Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1914,   NeoEsp32LcdMux8Bus, NeoBitsInverted> NeoEsp32LcdX8Tm1829Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1829,   NeoEsp32LcdMux8Bus, NeoBitsInverted> NeoEsp32LcdX8Tm1914Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeed800Kbps,  NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8800KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeed400Kbps,  NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8400KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedApa106,   NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8Apa106Method;
 
 typedef NeoEsp32LcdX8Ws2805Method NeoEsp32LcdX8Ws2814Method;
 typedef NeoEsp32LcdX8Ws2812xMethod NeoEsp32LcdX8Ws2813Method;
@@ -779,15 +702,15 @@ typedef NeoEsp32LcdX8Ws2812xMethod NeoEsp32LcdX8Ws2816Method;
 typedef NeoEsp32LcdX8800KbpsMethod NeoEsp32LcdX8Ws2812Method;
 typedef NeoEsp32LcdX8Sk6812Method  NeoEsp32LcdX8Lc8812Method;
 
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux16Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX16Ws2812xMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeWs2805,   NeoEsp32LcdMux16Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX16Ws2805Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeSk6812,   NeoEsp32LcdMux16Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX16Sk6812Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1814,   NeoEsp32LcdMux16Bus, NeoEsp32LcdInverted> NeoEsp32LcdX16Tm1814Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1914,   NeoEsp32LcdMux16Bus, NeoEsp32LcdInverted> NeoEsp32LcdX16Tm1829Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1829,   NeoEsp32LcdMux16Bus, NeoEsp32LcdInverted> NeoEsp32LcdX16Tm1914Method;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee800Kbps,  NeoEsp32LcdMux16Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX16800KbpsMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee400Kbps,  NeoEsp32LcdMux16Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX16400KbpsMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeApa106,   NeoEsp32LcdMux16Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX16Apa106Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeeddWs2812x, NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Ws2812xMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2805,   NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Ws2805Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedSk6812,   NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Sk6812Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1814,   NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Tm1814Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1914,   NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Tm1829Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1829,   NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Tm1914Method;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeed800Kbps,  NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16800KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeed400Kbps,  NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16400KbpsMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedApa106,   NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Apa106Method;
 
 typedef NeoEsp32LcdX16Ws2805Method NeoEsp32LcdX16Ws2814Method;
 typedef NeoEsp32LcdX16Ws2812xMethod NeoEsp32LcdX16Ws2813Method;
@@ -799,15 +722,15 @@ typedef NeoEsp32LcdX16Sk6812Method  NeoEsp32LcdX16Lc8812Method;
 
 
 //--------------------------------------------------------
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux8Bus, NeoEsp32LcdInverted>    NeoEsp32LcdX8Ws2812xInvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeWs2805,   NeoEsp32LcdMux8Bus, NeoEsp32LcdInverted>    NeoEsp32LcdX8Ws2805InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeSk6812,   NeoEsp32LcdMux8Bus, NeoEsp32LcdInverted>    NeoEsp32LcdX8Sk6812InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1814,   NeoEsp32LcdMux8Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX8Tm1814InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1914,   NeoEsp32LcdMux8Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX8Tm1829InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1829,   NeoEsp32LcdMux8Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX8Tm1914InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee800Kbps,  NeoEsp32LcdMux8Bus, NeoEsp32LcdInverted>    NeoEsp32LcdX8800KbpsInvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee400Kbps,  NeoEsp32LcdMux8Bus, NeoEsp32LcdInverted>    NeoEsp32LcdX8400KbpsInvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeApa106,   NeoEsp32LcdMux8Bus, NeoEsp32LcdInverted>    NeoEsp32LcdX8Apa106InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeeddWs2812x, NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8Ws2812xInvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2805,   NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8Ws2805InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedSk6812,   NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8Sk6812InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1814,   NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8Tm1814InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1914,   NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8Tm1829InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1829,   NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8Tm1914InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeed800Kbps,  NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8800KbpsInvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeed400Kbps,  NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8400KbpsInvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedApa106,   NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8Apa106InvertedMethod;
 
 typedef NeoEsp32LcdX8Ws2805InvertedMethod  NeoEsp32LcdX8Ws2814InvertedMethod;
 typedef NeoEsp32LcdX8Ws2812xInvertedMethod NeoEsp32LcdX8Ws2813InvertedMethod;
@@ -817,15 +740,15 @@ typedef NeoEsp32LcdX8Ws2812xInvertedMethod NeoEsp32LcdX8Ws2816InvertedMethod;
 typedef NeoEsp32LcdX8800KbpsInvertedMethod NeoEsp32LcdX8Ws2812InvertedMethod;
 typedef NeoEsp32LcdX8Sk6812InvertedMethod  NeoEsp32LcdX8Lc8812InvertedMethod;
 
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeedWs2812x, NeoEsp32LcdMux16Bus, NeoEsp32LcdInverted> NeoEsp32LcdX16Ws2812xInvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeWs2805,   NeoEsp32LcdMux16Bus, NeoEsp32LcdInverted> NeoEsp32LcdX16Ws2805InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeSk6812,   NeoEsp32LcdMux16Bus, NeoEsp32LcdInverted> NeoEsp32LcdX16Sk6812InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1814,   NeoEsp32LcdMux16Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX16Tm1814InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1914,   NeoEsp32LcdMux16Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX16Tm1829InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeTm1829,   NeoEsp32LcdMux16Bus, NeoEsp32LcdNotInverted> NeoEsp32LcdX16Tm1914InvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee800Kbps,  NeoEsp32LcdMux16Bus, NeoEsp32LcdInverted> NeoEsp32LcdX16800KbpsInvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpee400Kbps,  NeoEsp32LcdMux16Bus, NeoEsp32LcdInverted> NeoEsp32LcdX16400KbpsInvertedMethod;
-typedef NeoEsp32LcdXMethodBase<NeoEsp32LcdSpeeApa106,   NeoEsp32LcdMux16Bus, NeoEsp32LcdInverted> NeoEsp32LcdX16Apa106InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeeddWs2812x, NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Ws2812xInvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2805,   NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Ws2805InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedSk6812,   NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Sk6812InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1814,   NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Tm1814InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1914,   NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Tm1829InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1829,   NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Tm1914InvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeed800Kbps,  NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16800KbpsInvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeed400Kbps,  NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16400KbpsInvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedApa106,   NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Apa106InvertedMethod;
 
 typedef NeoEsp32LcdX16Ws2805InvertedMethod  NeoEsp32LcdX16Ws2814InvertedMethod;
 typedef NeoEsp32LcdX16Ws2812xInvertedMethod NeoEsp32LcdX16Ws2813InvertedMethod;

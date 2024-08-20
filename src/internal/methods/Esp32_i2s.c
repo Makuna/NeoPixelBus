@@ -67,7 +67,11 @@
 #include "esp32-hal.h"
 
 esp_err_t i2sSetClock(uint8_t bus_num, uint8_t div_num, uint8_t div_b, uint8_t div_a, uint8_t bck, uint8_t bits_per_sample);
-esp_err_t i2sSetSampleRate(uint8_t bus_num, uint32_t sample_rate, bool parallel_mode, size_t bytes_per_sample);
+esp_err_t i2sSetSampleRate(uint8_t bus_num,
+    uint16_t dmaBitPerDataBit,
+    uint16_t nsBitSendTime,
+    bool parallel_mode,
+    size_t bytes_per_sample);
 
 #define MATRIX_DETACH_OUT_SIG 0x100
 
@@ -144,14 +148,22 @@ inline void dmaItemInit(lldesc_t* item, uint8_t* posData, size_t sizeData, lldes
     item->qe.stqe_next = itemNext;
 }
 
-bool i2sInitDmaItems(uint8_t bus_num, uint8_t* data, size_t dataSize, bool parallel_mode, size_t bytes_per_sample)
+bool i2sInitDmaItems(uint8_t bus_num, 
+    uint8_t* data, 
+    size_t dataSize, 
+    bool parallel_mode, 
+    size_t bytes_per_sample)
 {
     if (bus_num >= NEO_I2S_COUNT) 
     {
         return false;
     }
 
-    size_t silenceSize = parallel_mode ? I2S_DMA_SILENCE_SIZE * 8 * bytes_per_sample : I2S_DMA_SILENCE_SIZE;
+    // silenceSize is minimum data size to loop i2s for reset
+    // it is not the actual reset time, but parallel mode needs
+    // a bit more time since the data is x8/x16
+    size_t silenceSize = parallel_mode ? 
+        I2S_DMA_SILENCE_SIZE * 8 * bytes_per_sample : I2S_DMA_SILENCE_SIZE;
     size_t dmaCount = I2S[bus_num].dma_count;
 
     if (I2S[bus_num].dma_items == NULL) 
@@ -240,13 +252,14 @@ esp_err_t i2sSetClock(uint8_t bus_num,
         return ESP_FAIL;
     }
 
-    //log_i("i2sSetClock bus %u, clkm_div_num %u, clk_div_a %u, clk_div_b %u, bck_div_num %u, bits_mod %u",
-    //    bus_num,
-    //    div_num,
-    //    div_a,
-    //    div_b,
-    //    bck,
-    //    bits);
+    log_i("i2sSetClock bus %u, clkm_div_num %u, clk_div_a %u, clk_div_b %u, bck_div_num %u, bits_mod %u, i2sClkBase %u",
+        bus_num,
+        div_num,
+        div_a,
+        div_b,
+        bck,
+        bits,
+        I2S_BASE_CLK);
 
     i2s_dev_t* i2s = I2S[bus_num].bus;
 
@@ -414,7 +427,8 @@ bool i2sWriteDone(uint8_t bus_num)
 void i2sInit(uint8_t bus_num, 
         bool parallel_mode,
         size_t bytes_per_sample, 
-        uint32_t sample_rate, 
+        uint16_t dmaBitPerDataBit,
+        uint16_t nsBitSendTime,
         i2s_tx_chan_mod_t chan_mod, 
         i2s_tx_fifo_mod_t fifo_mod, 
         size_t dma_count, 
@@ -479,7 +493,7 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf2) conf2;
         conf2.val = 0;
         conf2.lcd_en = parallel_mode;
-        conf2.lcd_tx_wrx2_en = 0; // parallel_mode; // ((parallel_mode) && (bytes_per_sample == 2));
+        conf2.lcd_tx_wrx2_en = ((parallel_mode) && (bytes_per_sample == 2)); // parallel_mode; // ((parallel_mode) && (bytes_per_sample == 2));
         i2s->conf2.val = conf2.val;
     }
 
@@ -535,7 +549,9 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf) conf;
         conf.val = 0;
         conf.tx_msb_shift = !parallel_mode; // 0:DAC/PCM, 1:I2S
-        conf.tx_right_first = 0; // parallel_mode?;
+        conf.tx_right_first = 0; // parallel_mode? but no?
+ //       conf.tx_msb_right = 1;
+
         i2s->conf.val = conf.val;
     }
 
@@ -547,7 +563,11 @@ void i2sInit(uint8_t bus_num,
 #endif
    
     
-    i2sSetSampleRate(bus_num, sample_rate, parallel_mode, bytes_per_sample);
+    i2sSetSampleRate(bus_num, 
+            dmaBitPerDataBit,
+            nsBitSendTime, 
+            parallel_mode, 
+            bytes_per_sample);
 
     /* */
     //Reset FIFO/DMA -> needed? Doesn't dma_reset/fifo_reset do this?
@@ -602,10 +622,14 @@ void i2sDeinit(uint8_t bus_num)
 }
 
 esp_err_t i2sSetSampleRate(uint8_t bus_num, 
-        uint32_t rate, 
+        uint16_t dmaBitPerDataBit,
+        uint16_t nsBitSendTime,
         bool parallel_mode, 
         size_t bytes_per_sample)
 {
+    const double I2sClkMhz = (double)I2S_BASE_CLK / 1000000; // 160000000 = 160.0
+    const size_t bits_per_sample = bytes_per_sample * 8;
+
     if (bus_num >= NEO_I2S_COUNT) 
     {
         return ESP_FAIL;
@@ -617,13 +641,13 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
     //
     if (parallel_mode)
     {
-        rate *= bytes_per_sample;
-#if defined(CONFIG_IDF_TARGET_ESP32S2)
+//        dmaBitPerDataBit *= bits_per_sample;
+//#if defined(CONFIG_IDF_TARGET_ESP32S2)
         bck *= bytes_per_sample;
-#endif
+//#endif
     }
 
-    double clkmdiv = (double)I2S_BASE_CLK / (rate * 256.0);
+    double clkmdiv = (double)nsBitSendTime / dmaBitPerDataBit / bck / 1000.0 * I2sClkMhz;
 
     if (clkmdiv > 256.0) 
     {
@@ -634,7 +658,7 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
     {
         log_e("rate is too fast, clkmdiv = %f (%u, %u, %u)",
             clkmdiv,
-            rate,
+            nsBitSendTime,
             parallel_mode,
             bytes_per_sample);
         return ESP_FAIL;
@@ -654,7 +678,7 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
         divB,
         divA,
         bck, 
-        bytes_per_sample * 8);
+        bits_per_sample);
 
     return ESP_OK;
 }
