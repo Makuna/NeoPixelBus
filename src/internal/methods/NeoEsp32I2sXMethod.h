@@ -58,7 +58,7 @@ public:
     NeoEspI2sMuxBusSize8Bit3Step() {};
 
     const static size_t MuxBusDataSize = 1;
-    const static size_t DmaBitsPerPixelBit = 3; // 4 step cadence, matches endcoding
+    const static size_t DmaBitsPerPixelBit = 3; // 4 step cadence, matches encoding
 
     // by using a 3 step cadence, the dma data can't be updated with a single OR operation as
     //    its value resides across a non-uint16_t aligned 3 element type, so it requires two seperate OR
@@ -117,7 +117,7 @@ public:
     NeoEspI2sMuxBusSize16Bit3Step() {};
 
     const static size_t MuxBusDataSize = 2;
-    const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches endcoding
+    const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches encoding
 
     // by using a 3 step cadence, the dma data can't be updated with a single OR operation as
     //    its value resides across a non-uint32_t aligned 3 element type, so it requires two seperate OR
@@ -178,7 +178,7 @@ public:
     NeoEspI2sMuxBusSize8Bit4Step() {};
 
     const static size_t MuxBusDataSize = 1;
-    const static size_t DmaBitsPerPixelBit = 4; // 4 step cadence, matches endcoding
+    const static size_t DmaBitsPerPixelBit = 4; // 4 step cadence, matches encoding
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
@@ -237,7 +237,7 @@ public:
     NeoEspI2sMuxBusSize16Bit4Step() {};
 
     const static size_t MuxBusDataSize = 2;
-    const static size_t DmaBitsPerPixelBit = 4; // 4 step cadence, matches endcoding
+    const static size_t DmaBitsPerPixelBit = 4; // 4 step cadence, matches encoding
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
