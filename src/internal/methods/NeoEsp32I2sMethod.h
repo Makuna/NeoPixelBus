@@ -96,6 +96,8 @@ public:
     }
 };
 
+// fedc ba98 7654 3210
+// 0000 0000 0000 0000
 
 // 3 step cadence, so pulses are 1/3 and 2/3 of pulse width
 //
@@ -110,7 +112,7 @@ public:
         const uint8_t ZeroBit = 0b0000100;
 
         uint16_t* pDma = reinterpret_cast<uint16_t*>(dmaBuffer);
-        uint8_t bitsLeft = 16;
+        uint8_t bitsLeft = 15;
 
         const uint8_t* pSrc = data;
         const uint8_t* pEnd = pSrc + sizeData;
@@ -131,7 +133,7 @@ public:
                     uint8_t bitSplit = (3 - bitsLeft);
                     *(pDma) |= ((value & 0x80) ? OneBit : ZeroBit) >> bitSplit;
                     pDma++;
-                    bitsLeft = 16 + bitSplit;
+                    bitsLeft = 15 + bitSplit;
                 }
                 // Next
                 value <<= 1;
