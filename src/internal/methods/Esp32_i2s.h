@@ -47,11 +47,13 @@ void i2sSetPins(uint8_t bus_num,
         int8_t parallel, 
         int8_t busSampleSize,
         bool invert);
+/*
 void i2sSetClkWsPins(uint8_t bus_num,
     int8_t outClk,
     bool invertClk,
     int8_t outWs,
     bool invertWs);
+    */
 bool i2sWrite(uint8_t bus_num);
 bool i2sWriteDone(uint8_t bus_num);
 #ifdef NEOPIXELBUS_I2S_DEBUG

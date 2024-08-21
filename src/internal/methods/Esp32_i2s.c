@@ -252,7 +252,7 @@ esp_err_t i2sSetClock(uint8_t bus_num,
         return ESP_FAIL;
     }
 
-    log_i("i2sSetClock bus %u, clkm_div_num %u, clk_div_a %u, clk_div_b %u, bck_div_num %u, bits_mod %u, i2sClkBase %u",
+    log_i("i2sSetClock bus %u,/n clkm_div_num %u,/n clk_div_a %u,/n clk_div_b %u,/n bck_div_num %u,/n bits_mod %u,/n i2sClkBase %u",
         bus_num,
         div_num,
         div_a,
@@ -377,7 +377,7 @@ void i2sSetPins(uint8_t bus_num,
         gpio_matrix_out(out, i2sSignal, invert, false);
     } 
 }
-
+/*
 void i2sSetClkWsPins(uint8_t bus_num,
     int8_t outClk,
     bool invertClk,
@@ -413,6 +413,7 @@ void i2sSetClkWsPins(uint8_t bus_num,
         gpio_matrix_out(outWs, i2sSignalWs, invertWs, false);
     }
 }
+*/
 
 bool i2sWriteDone(uint8_t bus_num) 
 {
@@ -635,19 +636,19 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
         return ESP_FAIL;
     }
 
-    uint8_t bck = 8;
+    uint8_t bck = bytes_per_sample;
 
     // parallel mode needs a higher sample rate
     //
     if (parallel_mode)
     {
-//        dmaBitPerDataBit *= bits_per_sample;
+//        dmaBitPerDataBit *= bytes_per_sample;
 //#if defined(CONFIG_IDF_TARGET_ESP32S2)
-        bck *= bytes_per_sample;
+//        bck = bytes_per_sample;
 //#endif
     }
 
-    double clkmdiv = (double)nsBitSendTime / dmaBitPerDataBit / bck / 1000.0 * I2sClkMhz;
+    double clkmdiv = (double)nsBitSendTime / bytes_per_sample / dmaBitPerDataBit / bck / 1000.0 * I2sClkMhz;
 
     if (clkmdiv > 256.0) 
     {

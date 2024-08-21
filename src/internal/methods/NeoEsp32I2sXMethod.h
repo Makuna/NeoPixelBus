@@ -128,8 +128,7 @@ public:
         const uint8_t* pValue = data;
         const uint8_t* pEnd = pValue + sizeData;
         const uint16_t muxBit = 0x1 << ((muxId + 8) % 16); // swap bytes
-//        const uint16_t muxBit = 0x1 << muxId; 
-        const uint8_t offsetMap[] = { 2, 3, 0, 1 };
+        const uint8_t offsetMap[] = { 1, 0, 3, 2 }; // i2s sample is two 16bit values
         uint8_t offset = 0;
 
         while (pValue < pEnd)
@@ -152,8 +151,10 @@ public:
                 {
                     pDma[offsetMap[offset]] |= muxBit;
                 }
-                // last cadence step already init to 0, skip it
-                offset += 2;
+                offset++;
+
+                // last cadence step already 0, skip it
+                offset++;
                 if (offset > 3)
                 {
                     offset %= 4;
@@ -265,10 +266,17 @@ public:
         //  0123 4567 89ab cdef - order of bytes in literal constant
         //  efcd ab89 6745 2301 - order of memory on ESP32 due to Endianness
         //  6745 2301 efcd ab89 - 32bit dest means only map using 32bits so swap upper and lower
-        //
+        // 
+        //  3333 4444 1111 2222 - output sub-bits in order within 64 bits words
+        //  LoHi LoHi LoHi LoHi - output sub-bits channel group within 64 bit words
+        // 
+        //  2222 1111 4444 3333 - output bits in order within 8 bit words 
+        //  HiLo HiLo HiLo HiLo - output sub-bits channel group within 8 bit words
+        // 
         // Due to final bit locations, can't shift encoded one bit
         // either left more than 7 or right more than 7 so we have to
         // split the updates and use different encodings
+        //
         if (muxId < 8)
         {
             // endian + dest swap               0000000000000001 
@@ -298,7 +306,7 @@ public:
             Fillx16(dmaBuffer,
                 data,
                 sizeData,
-                muxId - 8, // preshifted
+                muxId - 8, // preshifted constants
                 EncodedZeroBit64,
                 EncodedOneBit64);
         }
@@ -314,13 +322,14 @@ protected:
         const uint64_t EncodedOneBit64)
     {
         uint64_t* pDma64 = reinterpret_cast<uint64_t*>(dmaBuffer);
-        const uint8_t* pEnd = data + sizeData;
+        const uint8_t* pSrc = data;
+        const uint8_t* pEnd = pSrc + sizeData;
         const uint64_t OneBit = EncodedOneBit64 << muxShift;
         const uint64_t ZeroBit = EncodedZeroBit64 << muxShift;
-
-        for (const uint8_t* pPixel = data; pPixel < pEnd; pPixel++)
+        
+        while (pSrc < pEnd)
         {
-            uint8_t value = *pPixel;
+            uint8_t value = *(pSrc++);
 
             for (uint8_t bit = 0; bit < 8; bit++)
             {
@@ -529,11 +538,13 @@ public:
     {
         if (MuxMap.IsAllMuxBusesUpdated())
         {
+#if defined(NEO_DEBUG_DUMP_I2S_BUFFER)
             // dump the is2buffer
             uint8_t* pDma = I2sBuffer;
             uint8_t* pEnd = pDma + I2sBufferSize;
             size_t index = 0;
 
+            Serial.println();
             Serial.println("NeoEspI2sMonoBuffContext - i2sBufferDump: ");
             while (pDma < pEnd)
             {
@@ -556,7 +567,8 @@ public:
 
             }
             Serial.println();
-            // dump the is2buffer
+
+#endif // NEO_DEBUG_DUMP_I2S_BUFFER
 
             MuxMap.ResetMuxBusesUpdated();
             i2sWrite(i2sBusNumber);
@@ -579,7 +591,7 @@ public:
         // so the buffer must be cleared first
         if (MuxMap.IsNoMuxBusesUpdate())
         {
-            // clear all the data in preperation for each mux channel to add
+            // clear all the data in preparation for each mux channel to add
             memset(I2sBuffer, 0x00, I2sBufferSize);
         }
 
@@ -701,7 +713,6 @@ public:
     {
         if (MuxMap.IsAllMuxBusesUpdated())
         {
-            Serial.println("NeoEspI2sDblBuffContext - i2sBufferDump: ");
             MuxMap.ResetMuxBusesUpdated();
 
             // wait for not actively sending data
