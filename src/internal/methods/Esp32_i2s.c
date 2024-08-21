@@ -71,7 +71,7 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
     uint16_t dmaBitPerDataBit,
     uint16_t nsBitSendTime,
     bool parallel_mode,
-    size_t bytes_per_sample);
+    size_t bytesPerSample);
 
 #define MATRIX_DETACH_OUT_SIG 0x100
 
@@ -152,7 +152,7 @@ bool i2sInitDmaItems(uint8_t bus_num,
     uint8_t* data, 
     size_t dataSize, 
     bool parallel_mode, 
-    size_t bytes_per_sample)
+    size_t bytesPerSample)
 {
     if (bus_num >= NEO_I2S_COUNT) 
     {
@@ -163,7 +163,7 @@ bool i2sInitDmaItems(uint8_t bus_num,
     // it is not the actual reset time, but parallel mode needs
     // a bit more time since the data is x8/x16
     size_t silenceSize = parallel_mode ? 
-        I2S_DMA_SILENCE_SIZE * 8 * bytes_per_sample : I2S_DMA_SILENCE_SIZE;
+        I2S_DMA_SILENCE_SIZE * 8 * bytesPerSample : I2S_DMA_SILENCE_SIZE;
     size_t dmaCount = I2S[bus_num].dma_count;
 
     if (I2S[bus_num].dma_items == NULL) 
@@ -252,7 +252,7 @@ esp_err_t i2sSetClock(uint8_t bus_num,
         return ESP_FAIL;
     }
 
-    log_i("i2sSetClock bus %u,/n clkm_div_num %u,/n clk_div_a %u,/n clk_div_b %u,/n bck_div_num %u,/n bits_mod %u,/n i2sClkBase %u",
+    log_i("i2sSetClock bus %u,\n clkm_div_num %u,\n clk_div_a %u,\n clk_div_b %u,\n bck_div_num %u,\n bits_mod %u,\n i2sClkBase %u",
         bus_num,
         div_num,
         div_a,
@@ -427,7 +427,7 @@ bool i2sWriteDone(uint8_t bus_num)
 
 void i2sInit(uint8_t bus_num, 
         bool parallel_mode,
-        size_t bytes_per_sample, 
+        size_t bytesPerSample, 
         uint16_t dmaBitPerDataBit,
         uint16_t nsBitSendTime,
         i2s_tx_chan_mod_t chan_mod, 
@@ -445,7 +445,7 @@ void i2sInit(uint8_t bus_num,
             I2S_DMA_SILENCE_BLOCK_COUNT_FRONT +
             I2S_DMA_SILENCE_BLOCK_COUNT_BACK;
 
-    if (!i2sInitDmaItems(bus_num, data, dataSize, parallel_mode, bytes_per_sample))
+    if (!i2sInitDmaItems(bus_num, data, dataSize, parallel_mode, bytesPerSample))
     {
         return;
     }
@@ -494,7 +494,7 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf2) conf2;
         conf2.val = 0;
         conf2.lcd_en = parallel_mode;
-        conf2.lcd_tx_wrx2_en = ((parallel_mode) && (bytes_per_sample == 2)); // parallel_mode; // ((parallel_mode) && (bytes_per_sample == 2));
+        conf2.lcd_tx_wrx2_en = 0; // ((parallel_mode) && (bytesPerSample == 2)); // parallel_mode; // ((parallel_mode) && (bytesPerSample == 2));
         i2s->conf2.val = conf2.val;
     }
 
@@ -568,7 +568,7 @@ void i2sInit(uint8_t bus_num,
             dmaBitPerDataBit,
             nsBitSendTime, 
             parallel_mode, 
-            bytes_per_sample);
+            bytesPerSample);
 
     /* */
     //Reset FIFO/DMA -> needed? Doesn't dma_reset/fifo_reset do this?
@@ -626,29 +626,36 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
         uint16_t dmaBitPerDataBit,
         uint16_t nsBitSendTime,
         bool parallel_mode, 
-        size_t bytes_per_sample)
+        size_t bytesPerSample)
 {
     const double I2sClkMhz = (double)I2S_BASE_CLK / 1000000; // 160000000 = 160.0
-    const size_t bits_per_sample = bytes_per_sample * 8;
+    const size_t bits_per_sample = bytesPerSample * 8;
 
     if (bus_num >= NEO_I2S_COUNT) 
     {
         return ESP_FAIL;
     }
 
-    uint8_t bck = bytes_per_sample;
+    uint8_t bck = 4;
+    uint8_t clkSample = 1;
 
     // parallel mode needs a higher sample rate
     //
     if (parallel_mode)
     {
-//        dmaBitPerDataBit *= bytes_per_sample;
+//        dmaBitPerDataBit *= bytesPerSample;
 //#if defined(CONFIG_IDF_TARGET_ESP32S2)
-//        bck = bytes_per_sample;
+//        bck = bytesPerSample;
 //#endif
     }
+    else
+    {
+        // non-parrallel seems to run at a faster speed
+        clkSample = 2;
+    }
 
-    double clkmdiv = (double)nsBitSendTime / bytes_per_sample / dmaBitPerDataBit / bck / 1000.0 * I2sClkMhz;
+
+    double clkmdiv = (double)nsBitSendTime / bytesPerSample / dmaBitPerDataBit / bck / 1000.0 * I2sClkMhz * clkSample;
 
     if (clkmdiv > 256.0) 
     {
@@ -661,7 +668,7 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
             clkmdiv,
             nsBitSendTime,
             parallel_mode,
-            bytes_per_sample);
+            bytesPerSample);
         return ESP_FAIL;
     }
 

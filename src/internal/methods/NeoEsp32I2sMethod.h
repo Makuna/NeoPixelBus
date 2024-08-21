@@ -66,8 +66,9 @@ public:
     const uint8_t I2sBusNumber;
 };
 
-//
-// true size of mux channel, 8 bit
+// --------------------------------------------------------
+
+
 // 4 step cadence, so pulses are 1/4 and 3/4 of pulse width
 //
 class NeoEsp32I2sCadence4Step
@@ -91,6 +92,50 @@ public:
         {
             *(pDma++) = bitpatterns[((*pSrc) & 0x0f)];
             *(pDma++) = bitpatterns[((*pSrc) >> 4) & 0x0f];
+        }
+    }
+};
+
+
+// 3 step cadence, so pulses are 1/3 and 2/3 of pulse width
+//
+class NeoEsp32I2sCadence3Step
+{
+public:
+    const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches encoding
+
+    static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData)
+    {
+        const uint8_t OneBit = 0b0000110;
+        const uint8_t ZeroBit = 0b0000100;
+
+        uint16_t* pDma = reinterpret_cast<uint16_t*>(dmaBuffer);
+        uint8_t bitsLeft = 16;
+
+        const uint8_t* pSrc = data;
+        const uint8_t* pEnd = pSrc + sizeData;
+
+        while (pSrc < pEnd)
+        {
+            uint8_t value = *(pSrc++);
+
+            for (uint8_t bit = 0; bit < 8; bit++)
+            {
+                if (bitsLeft > 3)
+                {
+                    bitsLeft -= 3;
+                    *(pDma) |= ((value & 0x80) ? OneBit : ZeroBit) << bitsLeft;
+                }
+                else if (bitsLeft <= 3)
+                {
+                    uint8_t bitSplit = (3 - bitsLeft);
+                    *(pDma) |= ((value & 0x80) ? OneBit : ZeroBit) >> bitSplit;
+                    pDma++;
+                    bitsLeft = 16 + bitSplit;
+                }
+                // Next
+                value <<= 1;
+            }
         }
     }
 };
@@ -225,7 +270,7 @@ typedef NeoEsp32I2sCadence4Step NeoEsp32I2sCadence;
 
 #else
 
-typedef NeoEsp32I2sCadenceStep NeoEsp32I2sCadence;
+typedef NeoEsp32I2sCadence3Step NeoEsp32I2sCadence;
 
 #endif
 
