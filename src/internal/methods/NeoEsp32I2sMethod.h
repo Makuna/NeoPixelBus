@@ -54,6 +54,15 @@ void printBin(uint16_t value)
     }
 }
 
+void printBin(uint32_t value)
+{
+    for (uint8_t bit = 0; bit < 32; bit++)
+    {
+        Serial.print((value & 0x80000000) ? "1" : "0");
+        value <<= 1;
+    }
+}
+
 // --------------------------------------------------------
 class NeoEsp32I2sBusZero
 {
@@ -126,11 +135,14 @@ public:
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData)
     {
-        const uint16_t OneBit =  0b00000110;
-        const uint16_t ZeroBit = 0b00000100;
+        const uint32_t OneBit =  0b00000110;
+        const uint32_t ZeroBit = 0b00000100;
+        const uint8_t SrcBitMask = 0x80;
+        
+        uint32_t* pDma = reinterpret_cast<uint32_t*>(dmaBuffer);
+        const size_t BitsInSample = sizeof(*pDma) * 8;
 
-        uint16_t* pDma = reinterpret_cast<uint16_t*>(dmaBuffer);
-        uint8_t destBitsLeft = 16;
+        uint8_t destBitsLeft = BitsInSample;
 
         const uint8_t* pSrc = data;
         const uint8_t* pEnd = pSrc + sizeData;
@@ -141,10 +153,12 @@ public:
 
             for (uint8_t bitSrc = 0; bitSrc < 8; bitSrc++)
             {
+                const uint32_t Bit = ((value & SrcBitMask) ? OneBit : ZeroBit);
+
                 if (destBitsLeft > 3)
                 {
                     destBitsLeft -= 3;
-                    *(pDma) |= ((value & 0x8000) ? OneBit : ZeroBit) << destBitsLeft;
+                    *(pDma) |= Bit << destBitsLeft;
 
                     printBin(*(pDma));
                     Serial.print(" < ");
@@ -153,15 +167,23 @@ public:
                 else if (destBitsLeft <= 3)
                 {
                     uint8_t bitSplit = (3 - destBitsLeft);
-                    *(pDma) |= ((value & 0x8000) ? OneBit : ZeroBit) >> bitSplit;
+                    *(pDma) |= Bit >> bitSplit;
 
                     printBin(*(pDma));
                     Serial.print(" > ");
                     Serial.println(bitSplit);
 
                     pDma++;
-                    destBitsLeft = 16 - bitSplit;
+                    destBitsLeft = BitsInSample - bitSplit;
+                    if (bitSplit)
+                    {
+                        *(pDma) |= Bit << destBitsLeft;
+                    }
+                    printBin(*(pDma));
+                    Serial.print(" v ");
+                    Serial.println(bitSplit);
                 }
+                
                 // Next
                 value <<= 1;
             }
@@ -251,7 +273,7 @@ public:
             uint8_t value = *pDma;
 
             // a single bit pulse of data
-            if ((index % 2) == 0)
+            if ((index % 4) == 0)
             {
                 Serial.println();
             }
