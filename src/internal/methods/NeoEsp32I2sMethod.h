@@ -36,6 +36,24 @@ extern "C"
 #include "Esp32_i2s.h"
 }
 
+void printBin(uint8_t value)
+{
+    for (uint8_t bit = 0; bit < 8; bit++)
+    {
+        Serial.print((value & 0x80) ? "1" : "0");
+        value <<= 1;
+    }
+}
+
+void printBin(uint16_t value)
+{
+    for (uint8_t bit = 0; bit < 16; bit++)
+    {
+        Serial.print((value & 0x8000) ? "1" : "0");
+        value <<= 1;
+    }
+}
+
 // --------------------------------------------------------
 class NeoEsp32I2sBusZero
 {
@@ -98,7 +116,7 @@ public:
 
 // fedc ba98 7654 3210
 // 0000 0000 0000 0000
-
+//                 111
 // 3 step cadence, so pulses are 1/3 and 2/3 of pulse width
 //
 class NeoEsp32I2sCadence3Step
@@ -108,11 +126,11 @@ public:
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData)
     {
-        const uint8_t OneBit = 0b0000110;
-        const uint8_t ZeroBit = 0b0000100;
+        const uint16_t OneBit =  0b00000110;
+        const uint16_t ZeroBit = 0b00000100;
 
         uint16_t* pDma = reinterpret_cast<uint16_t*>(dmaBuffer);
-        uint8_t bitsLeft = 15;
+        uint8_t destBitsLeft = 16;
 
         const uint8_t* pSrc = data;
         const uint8_t* pEnd = pSrc + sizeData;
@@ -121,19 +139,28 @@ public:
         {
             uint8_t value = *(pSrc++);
 
-            for (uint8_t bit = 0; bit < 8; bit++)
+            for (uint8_t bitSrc = 0; bitSrc < 8; bitSrc++)
             {
-                if (bitsLeft > 3)
+                if (destBitsLeft > 3)
                 {
-                    bitsLeft -= 3;
-                    *(pDma) |= ((value & 0x80) ? OneBit : ZeroBit) << bitsLeft;
+                    destBitsLeft -= 3;
+                    *(pDma) |= ((value & 0x8000) ? OneBit : ZeroBit) << destBitsLeft;
+
+                    printBin(*(pDma));
+                    Serial.print(" < ");
+                    Serial.println(destBitsLeft);
                 }
-                else if (bitsLeft <= 3)
+                else if (destBitsLeft <= 3)
                 {
-                    uint8_t bitSplit = (3 - bitsLeft);
-                    *(pDma) |= ((value & 0x80) ? OneBit : ZeroBit) >> bitSplit;
+                    uint8_t bitSplit = (3 - destBitsLeft);
+                    *(pDma) |= ((value & 0x8000) ? OneBit : ZeroBit) >> bitSplit;
+
+                    printBin(*(pDma));
+                    Serial.print(" > ");
+                    Serial.println(bitSplit);
+
                     pDma++;
-                    bitsLeft = 15 + bitSplit;
+                    destBitsLeft = 16 - bitSplit;
                 }
                 // Next
                 value <<= 1;
@@ -211,6 +238,35 @@ public:
 
         T_CADENCE::EncodeIntoDma(_i2sBuffer, _data, _sizeData);
 
+#if defined(NEO_DEBUG_DUMP_I2S_BUFFER)
+        // dump the is2buffer
+        uint8_t* pDma = _i2sBuffer;
+        uint8_t* pEnd = pDma + _i2sBufferSize;
+        size_t index = 0;
+
+        Serial.println();
+        Serial.println("NeoEspI2sMethod - i2sBufferDump: ");
+        while (pDma < pEnd)
+        {
+            uint8_t value = *pDma;
+
+            // a single bit pulse of data
+            if ((index % 2) == 0)
+            {
+                Serial.println();
+            }
+
+            printBin(value);
+
+            Serial.print(" ");
+            pDma++;
+            index++;
+
+        }
+        Serial.println();
+
+#endif // NEO_DEBUG_DUMP_I2S_BUFFER
+
         i2sWrite(_bus.I2sBusNumber);
     }
 
@@ -264,6 +320,8 @@ private:
         // "reset" bits that don't latter get overwritten we just clear it all
         memset(_i2sBuffer, 0x00, _i2sBufferSize);
     }
+
+
 };
 
 #if defined(NPB_CONF_4STEP_CADENCE)
