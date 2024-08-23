@@ -241,7 +241,6 @@ public:
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
-#if defined(CONFIG_IDF_TARGET_ESP32S2)
         // 1234 5678 - order
         // 3412 7856 = actual due to endianness
         // not swap                         0000000000000001 
@@ -255,62 +254,6 @@ public:
             muxId,
             EncodedZeroBit64,
             EncodedOneBit64);
-#else
-
-        // 16 channel bits layout for DMA 64bit value
-        // note, right to left, destination is 32bit chunks
-        // due to indianness between peripheral and cpu, 
-        // bytes within the words are swapped and words within dwords
-        // in the literal constants
-        //  {       } {       }
-        //  0123 4567 89ab cdef - order of bytes in literal constant
-        //  efcd ab89 6745 2301 - order of memory on ESP32 due to Endianness
-        //  6745 2301 efcd ab89 - 32bit dest means only map using 32bits so swap upper and lower
-        // 
-        //  3333 4444 1111 2222 - output sub-bits in order within 64 bits words
-        //  LoHi LoHi LoHi LoHi - output sub-bits channel group within 64 bit words
-        // 
-        //  2222 1111 4444 3333 - output bits in order within 8 bit words 
-        //  HiLo HiLo HiLo HiLo - output sub-bits channel group within 8 bit words
-        // 
-        // Due to final bit locations, can't shift encoded one bit
-        // either left more than 7 or right more than 7 so we have to
-        // split the updates and use different encodings
-        //
-        if (muxId < 8)
-        {
-            // endian + dest swap               0000000000000001 
-            //                                  |   |   |   |
-            const uint64_t EncodedZeroBit64 = 0x0000000001000000;
-            //  endian + dest swap             0000000100010001 
-            //                                 |   |   |   |
-            const uint64_t EncodedOneBit64 = 0x0100000001000100; 
-            // cant be shifted by 8!
-            Fillx16(dmaBuffer,
-                data,
-                sizeData,
-                muxId,
-                EncodedZeroBit64,
-                EncodedOneBit64);
-        }
-        else
-        {
-            // endian + dest swap               0000000000000001 
-            // then pre shift by 8              0000000000000100
-            //                                  |   |   |   |
-            const uint64_t EncodedZeroBit64 = 0x0000000000010000;
-            //  endian + dest swap             0000000100010001 
-            // then pre shift by 8             0000010001000100
-            //                                 |   |   |   |
-            const uint64_t EncodedOneBit64 = 0x0001000000010001;
-            Fillx16(dmaBuffer,
-                data,
-                sizeData,
-                muxId - 8, // preshifted constants
-                EncodedZeroBit64,
-                EncodedOneBit64);
-        }
-#endif
     }
 
 protected:
@@ -326,7 +269,30 @@ protected:
         const uint8_t* pEnd = pSrc + sizeData;
         const uint64_t OneBit = EncodedOneBit64 << muxShift;
         const uint64_t ZeroBit = EncodedZeroBit64 << muxShift;
-        
+ 
+             
+        /* test 
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0x0000000000000000;
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0x00000000000000ff; // 0-7
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0x000000000000ff00; // 8+
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0x0000000000ff0000; //
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0x00000000ff000000; //
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0x000000ff00000000; // 0-7
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0x0000ff0000000000; // 8+
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0x00ff000000000000; //
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0xff00000000000000; //
+        *(pDma64++) = 0xffffffffffffffff;
+        *(pDma64++) = 0x0000000000000000;
+        */
         while (pSrc < pEnd)
         {
             uint8_t value = *(pSrc++);
@@ -340,6 +306,7 @@ protected:
                 value <<= 1;
             }
         }
+       
     }
 };
 
@@ -509,6 +476,7 @@ public:
 // but they won't work on ESP32 in parallel mode, but these will
                 I2S_CHAN_RIGHT_TO_LEFT,
                 I2S_FIFO_16BIT_SINGLE,
+                // (T_MUXMAP::MuxBusDataSize == 1) ? I2S_FIFO_16BIT_SINGLE : I2S_FIFO_16BIT_DUAL,
 #endif
                 dmaBlockCount,
                 I2sBuffer,

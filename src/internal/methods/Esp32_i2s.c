@@ -283,9 +283,9 @@ esp_err_t i2sSetClock(uint8_t bus_num,
     typeof(i2s->sample_rate_conf) sample_rate_conf;
     sample_rate_conf.val = 0;
     sample_rate_conf.tx_bck_div_num = bck;
-    sample_rate_conf.rx_bck_div_num = bck;
+//    sample_rate_conf.rx_bck_div_num = 4;
     sample_rate_conf.tx_bits_mod = bits;
-    sample_rate_conf.rx_bits_mod = bits;
+//    sample_rate_conf.rx_bits_mod = bits;
     i2s->sample_rate_conf.val = sample_rate_conf.val;
 
     return ESP_OK;
@@ -344,6 +344,15 @@ void i2sSetPins(uint8_t bus_num,
             {
                 i2sSignal = I2S0O_DATA_OUT23_IDX;
             }
+            else if (busSampleSize <= 2)
+            {
+                i2sSignal = I2S0O_DATA_OUT8_IDX + parallel;
+            }
+            else
+            {
+                i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
+            }
+            /*
             else if (parallel < 8)
             {
                 i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;
@@ -356,12 +365,17 @@ void i2sSetPins(uint8_t bus_num,
             {
                 i2sSignal = I2S0O_DATA_OUT0_IDX + parallel - 16;
             }
+            */
         }
         else
         {
             if (parallel == -1)
             {
                 i2sSignal = I2S1O_DATA_OUT23_IDX;
+            }
+            else if (busSampleSize == 2)
+            {
+                i2sSignal = I2S1O_DATA_OUT8_IDX + parallel;
             }
             else
             {
@@ -377,7 +391,8 @@ void i2sSetPins(uint8_t bus_num,
         gpio_matrix_out(out, i2sSignal, invert, false);
     } 
 }
-/*
+
+/* not used, but left around for reference
 void i2sSetClkWsPins(uint8_t bus_num,
     int8_t outClk,
     bool invertClk,
@@ -494,7 +509,12 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf2) conf2;
         conf2.val = 0;
         conf2.lcd_en = parallel_mode;
-        conf2.lcd_tx_wrx2_en = 0; // ((parallel_mode) && (bytesPerSample == 2)); // parallel_mode; // ((parallel_mode) && (bytesPerSample == 2));
+        if ((parallel_mode) && (bytesPerSample == 1))
+        {
+            conf2.lcd_tx_wrx2_en = 1;
+            conf2.lcd_tx_sdx2_en = 0;
+        }
+     
         i2s->conf2.val = conf2.val;
     }
 
@@ -516,11 +536,11 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->fifo_conf) fifo_conf;
 
         fifo_conf.val = 0;
-        fifo_conf.rx_fifo_mod_force_en = 0;
+//        fifo_conf.rx_fifo_mod_force_en = 1; //?
         fifo_conf.tx_fifo_mod_force_en = 1;
         fifo_conf.tx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
-        fifo_conf.rx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
-        fifo_conf.rx_data_num = 32; //Thresholds.
+ //       fifo_conf.rx_fifo_mod = fifo_mod; //  0-right&left channel;1-one channel
+ //       fifo_conf.rx_data_num = 32; //Thresholds.
         fifo_conf.tx_data_num = 32;
 
         i2s->fifo_conf.val = fifo_conf.val;
@@ -530,8 +550,8 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf1) conf1;
         conf1.val = 0;
 
-        conf1.tx_pcm_conf = 1;
-        conf1.rx_pcm_bypass = 1;
+//        conf1.tx_pcm_conf = 1;
+//        conf1.rx_pcm_bypass = 1;
 
         conf1.tx_stop_en = 0;
         conf1.tx_pcm_bypass = 1;
@@ -542,7 +562,7 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf_chan) conf_chan;
         conf_chan.val = 0;
         conf_chan.tx_chan_mod = chan_mod; //  0-two channel;1-right;2-left;3-righ;4-left
-        conf_chan.rx_chan_mod = chan_mod; //  0-two channel;1-right;2-left;3-righ;4-left
+//        conf_chan.rx_chan_mod = chan_mod; //  0-two channel;1-right;2-left;3-righ;4-left
         i2s->conf_chan.val = conf_chan.val;
     }
 
@@ -550,7 +570,8 @@ void i2sInit(uint8_t bus_num,
         typeof(i2s->conf) conf;
         conf.val = 0;
         conf.tx_msb_shift = !parallel_mode; // 0:DAC/PCM, 1:I2S
-        conf.tx_right_first = 0; // parallel_mode? but no?
+        conf.tx_right_first = 1; // parallel_mode? but no?
+        conf.tx_short_sync = 0;
  //       conf.tx_msb_right = 1;
 
         i2s->conf.val = conf.val;
@@ -636,8 +657,8 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
         return ESP_FAIL;
     }
 
-    uint8_t bck = 4;
-    uint8_t clkSample = 1;
+    uint8_t bck = 2;
+    uint8_t clkSampleAdj = 1;
 
     // parallel mode needs a higher sample rate
     //
@@ -650,12 +671,14 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
     }
     else
     {
-        // non-parrallel seems to run at a faster speed
-        clkSample = 2;
+        // non-parrallel uses two values in the sample
+        // so the clock calcs need to adjust for this
+        // as it makes output faster
+        clkSampleAdj = 2;
     }
 
 
-    double clkmdiv = (double)nsBitSendTime / bytesPerSample / dmaBitPerDataBit / bck / 1000.0 * I2sClkMhz * clkSample;
+    double clkmdiv = (double)nsBitSendTime / bytesPerSample / dmaBitPerDataBit / bck / 1000.0 * I2sClkMhz * clkSampleAdj;
 
     if (clkmdiv > 256.0) 
     {

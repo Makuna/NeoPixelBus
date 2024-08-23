@@ -36,33 +36,6 @@ extern "C"
 #include "Esp32_i2s.h"
 }
 
-void printBin(uint8_t value)
-{
-    for (uint8_t bit = 0; bit < 8; bit++)
-    {
-        Serial.print((value & 0x80) ? "1" : "0");
-        value <<= 1;
-    }
-}
-
-void printBin(uint16_t value)
-{
-    for (uint8_t bit = 0; bit < 16; bit++)
-    {
-        Serial.print((value & 0x8000) ? "1" : "0");
-        value <<= 1;
-    }
-}
-
-void printBin(uint32_t value)
-{
-    for (uint8_t bit = 0; bit < 32; bit++)
-    {
-        Serial.print((value & 0x80000000) ? "1" : "0");
-        value <<= 1;
-    }
-}
-
 // --------------------------------------------------------
 class NeoEsp32I2sBusZero
 {
@@ -138,10 +111,10 @@ public:
         const uint32_t OneBit =  0b00000110;
         const uint32_t ZeroBit = 0b00000100;
         const uint8_t SrcBitMask = 0x80;
-        
-        uint32_t* pDma = reinterpret_cast<uint32_t*>(dmaBuffer);
-        const size_t BitsInSample = sizeof(*pDma) * 8;
+        const size_t BitsInSample = sizeof(uint32_t) * 8;
 
+        uint32_t* pDma = reinterpret_cast<uint32_t*>(dmaBuffer);
+        uint32_t dmaValue = 0;
         uint8_t destBitsLeft = BitsInSample;
 
         const uint8_t* pSrc = data;
@@ -158,36 +131,47 @@ public:
                 if (destBitsLeft > 3)
                 {
                     destBitsLeft -= 3;
-                    *(pDma) |= Bit << destBitsLeft;
+                    dmaValue |= Bit << destBitsLeft;
 
-                    printBin(*(pDma));
+#if defined(NEO_DEBUG_DUMP_I2S_BUFFER)
+                    NeoUtil::PrintBin<uint32_t>(dmaValue);
                     Serial.print(" < ");
                     Serial.println(destBitsLeft);
+#endif
                 }
                 else if (destBitsLeft <= 3)
                 {
                     uint8_t bitSplit = (3 - destBitsLeft);
-                    *(pDma) |= Bit >> bitSplit;
+                    dmaValue |= Bit >> bitSplit;
 
-                    printBin(*(pDma));
+#if defined(NEO_DEBUG_DUMP_I2S_BUFFER)
+                    NeoUtil::PrintBin<uint32_t>(dmaValue);
                     Serial.print(" > ");
                     Serial.println(bitSplit);
-
-                    pDma++;
+#endif
+                    // next dma value, store and reset
+                    *(pDma++) = dmaValue; 
+                    dmaValue = 0;
+                    
                     destBitsLeft = BitsInSample - bitSplit;
                     if (bitSplit)
                     {
-                        *(pDma) |= Bit << destBitsLeft;
+                        dmaValue |= Bit << destBitsLeft;
                     }
-                    printBin(*(pDma));
+
+#if defined(NEO_DEBUG_DUMP_I2S_BUFFER)
+                    NeoUtil::PrintBin<uint32_t>(dmaValue);
                     Serial.print(" v ");
                     Serial.println(bitSplit);
+#endif
                 }
                 
                 // Next
                 value <<= 1;
             }
         }
+        // store the remaining bits
+        *pDma++ = dmaValue;
     }
 };
 
@@ -278,7 +262,7 @@ public:
                 Serial.println();
             }
 
-            printBin(value);
+            NeoUtil::PrintBin<uint8_t>(value);
 
             Serial.print(" ");
             pDma++;
