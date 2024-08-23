@@ -48,8 +48,7 @@ extern "C"
 //   0123456789abcdef
 //   efcdab8967452301
 
-//
-// true size of mux channel, 8 bit
+
 // 3 step cadence, so pulses are 1/3 and 2/3 of pulse width
 //
 class NeoEspI2sMuxBusSize8Bit3Step
@@ -58,10 +57,10 @@ public:
     NeoEspI2sMuxBusSize8Bit3Step() {};
 
     const static size_t MuxBusDataSize = 1;
-    const static size_t DmaBitsPerPixelBit = 3; // 4 step cadence, matches encoding
+    const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches encoding
 
     // by using a 3 step cadence, the dma data can't be updated with a single OR operation as
-    //    its value resides across a non-uint16_t aligned 3 element type, so it requires two seperate OR
+    //    its value resides across a non-uint16_t aligned 3 element type, so it requires two separate OR
     //    operations to update a single pixel bit, the last element can be skipped as its always 0
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
@@ -107,8 +106,7 @@ public:
     }
 };
 
-//
-// true size of mux channel, 16 bit
+
 // 3 step cadence, so pulses are 1/3 and 2/3 of pulse width
 //
 class NeoEspI2sMuxBusSize16Bit3Step
@@ -168,8 +166,7 @@ public:
     }
 };
 
-//
-// true size of mux channel, 8 bit
+
 // 4 step cadence, so pulses are 1/4 and 3/4 of pulse width
 //
 class NeoEspI2sMuxBusSize8Bit4Step
@@ -227,8 +224,6 @@ public:
     }
 };
 
-//
-// true size of mux channel, 16 bit
 // 4 step cadence, so pulses are 1/4 and 3/4 of pulse width
 //
 class NeoEspI2sMuxBusSize16Bit4Step
@@ -476,7 +471,6 @@ public:
 // but they won't work on ESP32 in parallel mode, but these will
                 I2S_CHAN_RIGHT_TO_LEFT,
                 I2S_FIFO_16BIT_SINGLE,
-                // (T_MUXMAP::MuxBusDataSize == 1) ? I2S_FIFO_16BIT_SINGLE : I2S_FIFO_16BIT_DUAL,
 #endif
                 dmaBlockCount,
                 I2sBuffer,

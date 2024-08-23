@@ -90,8 +90,8 @@ public:
         const uint8_t* pEnd = data + sizeData;
         for (const uint8_t* pSrc = data; pSrc < pEnd; pSrc++)
         {
-            *(pDma++) = bitpatterns[((*pSrc) & 0x0f)];
             *(pDma++) = bitpatterns[((*pSrc) >> 4) & 0x0f];
+            *(pDma++) = bitpatterns[((*pSrc) & 0x0f)];
         }
     }
 };
@@ -108,13 +108,13 @@ public:
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData)
     {
-        const uint32_t OneBit =  0b00000110;
-        const uint32_t ZeroBit = 0b00000100;
+        const uint16_t OneBit =  0b00000110;
+        const uint16_t ZeroBit = 0b00000100;
         const uint8_t SrcBitMask = 0x80;
-        const size_t BitsInSample = sizeof(uint32_t) * 8;
+        const size_t BitsInSample = sizeof(uint16_t) * 8;
 
-        uint32_t* pDma = reinterpret_cast<uint32_t*>(dmaBuffer);
-        uint32_t dmaValue = 0;
+        uint16_t* pDma = reinterpret_cast<uint16_t*>(dmaBuffer);
+        uint16_t dmaValue = 0;
         uint8_t destBitsLeft = BitsInSample;
 
         const uint8_t* pSrc = data;
@@ -126,7 +126,7 @@ public:
 
             for (uint8_t bitSrc = 0; bitSrc < 8; bitSrc++)
             {
-                const uint32_t Bit = ((value & SrcBitMask) ? OneBit : ZeroBit);
+                const uint16_t Bit = ((value & SrcBitMask) ? OneBit : ZeroBit);
 
                 if (destBitsLeft > 3)
                 {
