@@ -304,18 +304,9 @@ void i2sSetPins(uint8_t bus_num,
 
     if (out >= 0) 
     {
-        uint32_t i2sSignal;
+        uint32_t i2sSignal = I2S0O_DATA_OUT0_IDX;
 
         pinMode(out, OUTPUT);
-
-        if (bus_num == 0)
-        {
-            i2sSignal = I2S0O_DATA_OUT0_IDX;
-        }
-        else
-        {
-            i2sSignal = I2S1O_DATA_OUT0_IDX;
-        }
 
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
 
@@ -343,6 +334,10 @@ void i2sSetPins(uint8_t bus_num,
         }
 
 #else
+        if (bus_num == 1)
+        {
+            i2sSignal = I2S1O_DATA_OUT0_IDX;
+        }
 
         if (parallel == -1)
         {
