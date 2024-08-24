@@ -125,7 +125,7 @@ public:
         uint16_t* pDma = reinterpret_cast<uint16_t*>(dmaBuffer);
         const uint8_t* pValue = data;
         const uint8_t* pEnd = pValue + sizeData;
-        const uint16_t muxBit = 0x1 << ((muxId + 8) % 16); // swap bytes
+        const uint16_t muxBit = 0x1 << muxId;
         const uint8_t offsetMap[] = { 1, 0, 3, 2 }; // i2s sample is two 16bit values
         uint8_t offset = 0;
 

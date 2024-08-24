@@ -308,6 +308,15 @@ void i2sSetPins(uint8_t bus_num,
 
         pinMode(out, OUTPUT);
 
+        if (bus_num == 0)
+        {
+            i2sSignal = I2S0O_DATA_OUT0_IDX;
+        }
+        else
+        {
+            i2sSignal = I2S1O_DATA_OUT0_IDX;
+        }
+
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
 
         // S2 only has one bus
@@ -334,54 +343,20 @@ void i2sSetPins(uint8_t bus_num,
         }
 
 #else
-        if (bus_num == 0)
+
+        if (parallel == -1)
         {
-            //  in parallel mode
-            //  0-7 bits   : I2S0O_DATA_OUT16_IDX ~I2S0O_DATA_OUT23_IDX
-            //  8-15 bits  : I2S0O_DATA_OUT8_IDX ~I2S0O_DATA_OUT23_IDX
-            //  16-23 bits : I2S0O_DATA_OUT0_IDX ~I2S0O_DATA_OUT23_IDX
-            if (parallel == -1)
-            {
-                i2sSignal = I2S0O_DATA_OUT23_IDX;
-            }
-            else if (busSampleSize <= 2)
-            {
-                i2sSignal = I2S0O_DATA_OUT8_IDX + parallel;
-            }
-            else
-            {
-                i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
-            }
-            /*
-            else if (parallel < 8)
-            {
-                i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;
-            }
-            else if (parallel < 16)
-            {
-                i2sSignal = I2S0O_DATA_OUT8_IDX + parallel - 8;
-            }
-            else
-            {
-                i2sSignal = I2S0O_DATA_OUT0_IDX + parallel - 16;
-            }
-            */
+            i2sSignal += 23; // yup, single channel is on 23
         }
         else
         {
-            if (parallel == -1)
+            if (busSampleSize == 2)
             {
-                i2sSignal = I2S1O_DATA_OUT23_IDX;
+                i2sSignal += 8;  // yup, 16 bits starts at 8
             }
-            else if (busSampleSize == 2)
-            {
-                i2sSignal = I2S1O_DATA_OUT8_IDX + parallel;
-            }
-            else
-            {
-                i2sSignal = I2S1O_DATA_OUT0_IDX + parallel;
-            }
+            i2sSignal += parallel; // add the parallel channel index
         }
+
 #endif
         //log_i("i2sSetPins bus %u, i2sSignal %u, pin %u, mux %u",
         //    bus_num,
