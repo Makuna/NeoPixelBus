@@ -68,7 +68,14 @@ public:
         const uint8_t* pValue = data;
         const uint8_t* pEnd = pValue + sizeData;
         const uint8_t muxBit = 0x1 << muxId;
-        uint8_t offsetMap[] = { 2,3,0,1 };
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+        const uint8_t offsetMap[] = { 0, 1, 2, 3 }; // i2s sample is two 16bit values
+
+#else
+        const uint8_t offsetMap[] = { 2,3,0,1 }; // i2s sample is two 16bit values
+
+#endif
+
         uint8_t offset = 0;
 
         while (pValue < pEnd)
@@ -126,7 +133,11 @@ public:
         const uint8_t* pValue = data;
         const uint8_t* pEnd = pValue + sizeData;
         const uint16_t muxBit = 0x1 << muxId;
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+        const uint8_t offsetMap[] = { 0, 1, 2, 3 }; // i2s sample is two 16bit values
+#else
         const uint8_t offsetMap[] = { 1, 0, 3, 2 }; // i2s sample is two 16bit values
+#endif
         uint8_t offset = 0;
 
         while (pValue < pEnd)
@@ -180,12 +191,10 @@ public:
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
-        // 1234  - order
-        // 3412  = actual due to endianness
-        //                                00000001
-        const uint32_t EncodedZeroBit = 0x00000100;
-        //                                00010101
-        const uint32_t EncodedOneBit =  0x01000101;
+
+        const uint32_t EncodedZeroBit = 0x00000001;
+        const uint32_t EncodedOneBit = 0x00010101;
+
 #else
         //  8 channel bits layout for DMA 32bit value
         //  note, right to left
@@ -236,13 +245,20 @@ public:
 
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData, uint8_t muxId)
     {
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+        const uint64_t EncodedZeroBit64 = 0x0000000000000001;
+        const uint64_t EncodedOneBit64 = 0x0000000100010001;
+
+#else
         // 1234 5678 - order
         // 3412 7856 = actual due to endianness
         // not swap                         0000000000000001 
         const uint64_t EncodedZeroBit64 = 0x0000000000010000;
         //  no swap                         0000000100010001 
         const uint64_t EncodedOneBit64 =  0x0001000000010001; 
-        // can be shifted by 8!
+
+#endif
+        
         Fillx16(dmaBuffer,
             data,
             sizeData,
@@ -265,29 +281,6 @@ protected:
         const uint64_t OneBit = EncodedOneBit64 << muxShift;
         const uint64_t ZeroBit = EncodedZeroBit64 << muxShift;
  
-             
-        /* test 
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0x0000000000000000;
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0x00000000000000ff; // 0-7
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0x000000000000ff00; // 8+
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0x0000000000ff0000; //
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0x00000000ff000000; //
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0x000000ff00000000; // 0-7
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0x0000ff0000000000; // 8+
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0x00ff000000000000; //
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0xff00000000000000; //
-        *(pDma64++) = 0xffffffffffffffff;
-        *(pDma64++) = 0x0000000000000000;
-        */
         while (pSrc < pEnd)
         {
             uint8_t value = *(pSrc++);
@@ -465,8 +458,8 @@ public:
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
 // using these modes on ESP32S2 actually allows it to function
 // in both x8 and x16
-                I2S_CHAN_STEREO,
-                I2S_FIFO_16BIT_DUAL,
+                I2S_CHAN_RIGHT_TO_LEFT,
+                I2S_FIFO_16BIT_SINGLE, // I2S_FIFO_32BIT_SINGLE
 #else
 // but they won't work on ESP32 in parallel mode, but these will
                 I2S_CHAN_RIGHT_TO_LEFT,
@@ -638,8 +631,8 @@ public:
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
                 // using these modes on ESP32S2 actually allows it to function
                 // in both x8 and x16
-                I2S_CHAN_STEREO,
-                I2S_FIFO_16BIT_DUAL,
+                I2S_CHAN_RIGHT_TO_LEFT,
+                I2S_FIFO_16BIT_SINGLE,
 #else
                 // but they won't work on ESP32 in parallel mode, but these will
                 I2S_CHAN_RIGHT_TO_LEFT,

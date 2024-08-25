@@ -304,36 +304,28 @@ void i2sSetPins(uint8_t bus_num,
 
     if (out >= 0) 
     {
-        uint32_t i2sSignal = I2S0O_DATA_OUT0_IDX;
+        uint32_t i2sSignal;
 
         pinMode(out, OUTPUT);
 
 #if defined(CONFIG_IDF_TARGET_ESP32S2)
 
         // S2 only has one bus
-        // 
+        //  single output I2S0O_DATA_OUT23_IDX
         //  in parallel mode
         //  8bit mode   : I2S0O_DATA_OUT16_IDX ~I2S0O_DATA_OUT23_IDX
         //  16bit mode  : I2S0O_DATA_OUT8_IDX ~I2S0O_DATA_OUT23_IDX
         //  24bit mode  : I2S0O_DATA_OUT0_IDX ~I2S0O_DATA_OUT23_IDX
-        if (parallel == -1)
+        i2sSignal = I2S0O_DATA_OUT23_IDX;
+        if (parallel != -1)
         {
-            i2sSignal = I2S0O_DATA_OUT23_IDX;
-        }
-        else if (busSampleSize == 1)
-        {
-            i2sSignal = I2S0O_DATA_OUT16_IDX + parallel;
-        }
-        else if (busSampleSize == 2)
-        {
-            i2sSignal = I2S0O_DATA_OUT8_IDX + parallel;
-        }
-        else
-        {
-            i2sSignal = I2S0O_DATA_OUT0_IDX + parallel;
+            i2sSignal -= ((busSampleSize * 8) - 1);
+            i2sSignal += parallel;
         }
 
 #else
+        i2sSignal = I2S0O_DATA_OUT0_IDX;
+
         if (bus_num == 1)
         {
             i2sSignal = I2S1O_DATA_OUT0_IDX;
@@ -543,14 +535,16 @@ void i2sInit(uint8_t bus_num,
         conf.tx_right_first = 1; // parallel_mode? but no?
         conf.tx_short_sync = 0;
  //       conf.tx_msb_right = 1;
-
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+        conf.tx_dma_equal = parallel_mode;
+#endif
         i2s->conf.val = conf.val;
     }
 
     i2s->timing.val = 0;
 
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-    i2s->pdm_conf.rx_pdm_en = 0;
+//    i2s->pdm_conf.rx_pdm_en = 0;
     i2s->pdm_conf.tx_pdm_en = 0;
 #endif
    
@@ -627,28 +621,21 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
         return ESP_FAIL;
     }
 
-    uint8_t bck = 2;
-    uint8_t clkSampleAdj = 1;
+    uint8_t bck = 4; // must be 2+ due to ESP32S2 adjustment below
+    double clkSampleAdj = 1.0;
 
     // parallel mode needs a higher sample rate
     //
-    if (parallel_mode)
+    if (!parallel_mode)
     {
-//        dmaBitPerDataBit *= bytesPerSample;
-//#if defined(CONFIG_IDF_TARGET_ESP32S2)
-//        bck = bytesPerSample;
-//#endif
-    }
-    else
-    {
-        // non-parrallel uses two values in the sample
+        // non-parallel uses two values in the sample
         // so the clock calcs need to adjust for this
         // as it makes output faster
-        clkSampleAdj = 2;
+        clkSampleAdj *= 2.0;
     }
 
-
     double clkmdiv = (double)nsBitSendTime / bytesPerSample / dmaBitPerDataBit / bck / 1000.0 * I2sClkMhz * clkSampleAdj;
+
 
     if (clkmdiv > 256.0) 
     {
@@ -664,6 +651,14 @@ esp_err_t i2sSetSampleRate(uint8_t bus_num,
             bytesPerSample);
         return ESP_FAIL;
     }
+
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+    // ESP32S2 is just different 
+    if (parallel_mode && bytesPerSample == 1)
+    {
+        bck /= 2;
+    }
+#endif
 
     // calc integer and franctional for more precise timing
     // 
