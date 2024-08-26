@@ -112,4 +112,17 @@ public:
         return (b * 0x0202020202ULL & 0x010884422010ULL) % 1023;
     }
     */
+
+    template<typename T_TYPE> static void PrintBin(T_TYPE value)
+    {
+        const size_t CountBits = sizeof(value) * 8;
+        const T_TYPE BitMask = 1 << (CountBits - 1);
+
+        for (uint8_t bit = 0; bit < CountBits; bit++)
+        {
+            Serial.print((value & BitMask) ? "1" : "0");
+            value <<= 1;
+        }
+    }
+
 };

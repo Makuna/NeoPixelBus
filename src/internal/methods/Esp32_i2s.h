@@ -34,7 +34,8 @@ typedef enum {
 void i2sInit(uint8_t bus_num, 
     bool parallel_mode,
     size_t bytes_per_sample,
-    uint32_t sample_rate, 
+    uint16_t dmaBitPerDataBit,
+    uint16_t nsBitSendTime,
     i2s_tx_chan_mod_t chan_mod, 
     i2s_tx_fifo_mod_t fifo_mod, 
     size_t dma_count, 
@@ -46,11 +47,13 @@ void i2sSetPins(uint8_t bus_num,
         int8_t parallel, 
         int8_t busSampleSize,
         bool invert);
+/*
 void i2sSetClkWsPins(uint8_t bus_num,
     int8_t outClk,
     bool invertClk,
     int8_t outWs,
     bool invertWs);
+    */
 bool i2sWrite(uint8_t bus_num);
 bool i2sWriteDone(uint8_t bus_num);
 #ifdef NEOPIXELBUS_I2S_DEBUG

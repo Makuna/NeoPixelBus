@@ -26,16 +26,18 @@ License along with NeoPixel.  If not, see
 
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "stdlib.h"
+
 
 // UnitDecimalToFractionClks
 // Given unit decimal (floating point value less than 1.0), 
-// return a fraction numerator and denomenator that closesly matches that 
+// return a fraction numerator and denominator that closely matches that 
 //
 // resultN - the address of the variable to place the numerator result
-// resultD - the address of the variable to place the denomenator result
-// unitDecimal - the decimal value that is less than 1.0 and greater than/eaual 0.0
-// accuracy - the accuracy needed to match for a fractionals (0.000001 is a good start)
+// resultD - the address of the variable to place the denominator result
+// unitDecimal - the decimal value that is less than 1.0 and greater than/equal 0.0
+// accuracy - the accuracy needed to match for a fractional (0.000001 is a good start)
 //
 void UnitDecimalToFractionClks(uint8_t* resultN,
     uint8_t* resultD,

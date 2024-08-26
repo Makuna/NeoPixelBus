@@ -26,6 +26,9 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 #pragma once
 
+// helper constants for method speeds and invert
+#include "methods/NeoBits.h"
+
 // Generic Two Wire (clk and data) methods
 //
 #include "methods/DotStarGenericMethod.h"
