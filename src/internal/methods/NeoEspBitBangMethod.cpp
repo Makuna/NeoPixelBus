@@ -101,8 +101,8 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     uint32_t tLatch,
     bool invert)
 {
-    uint32_t setValue = _BV(pin);
-    uint32_t clearValue = _BV(pin);
+    uint32_t setValue = _BV(pin % 32);
+    uint32_t clearValue = _BV(pin % 32);
     uint8_t mask = 0x80;
     uint8_t subpix = *pixels++;
     uint8_t element = 0;
@@ -110,16 +110,35 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     uint32_t cyclesNext = 0;
 
 #if defined(ARDUINO_ARCH_ESP32)
+
+    volatile uint32_t* setRegister;
+    volatile uint32_t* clearRegister;
+
 #if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
-    volatile uint32_t* setRegister = &GPIO.out_w1ts.val;
-    volatile uint32_t* clearRegister = &GPIO.out_w1tc.val;
-    setValue = _BV(pin); 
-    clearValue = _BV(pin); 
-#else
-    volatile uint32_t* setRegister = &GPIO.out_w1ts;
-    volatile uint32_t* clearRegister = &GPIO.out_w1tc;
+    if (pin < 32)
+    {
+        setRegister = &GPIO.out_w1ts.val;
+        clearRegister = &GPIO.out_w1tc.val;
+    }
+    else
+    {
+        setRegister = &GPIO.out1_w1ts.val;
+        clearRegister = &GPIO.out1_w1tc.val;
+    }
+#else // just ESP32, ESP32S2
+    if (pin < 32)
+    {
+        setRegister = &GPIO.out_w1ts;
+        clearRegister = &GPIO.out_w1tc;
+    }
+    else
+    {
+        setRegister = &GPIO.out1_w1ts.val;
+        clearRegister = &GPIO.out1_w1tc.val;
+    }
 #endif // defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
-#else
+
+#else // just ESP8266
     uint32_t setRegister = PERIPHS_GPIO_BASEADDR + GPIO_OUT_W1TS_ADDRESS;
     uint32_t clearRegister = PERIPHS_GPIO_BASEADDR + GPIO_OUT_W1TC_ADDRESS;
     if (pin == 16)
