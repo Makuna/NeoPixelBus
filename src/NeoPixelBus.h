@@ -41,7 +41,7 @@ const uint16_t PixelIndex_OutOfBounds = 0xffff;
 #include "internal/NeoBuffers.h"
 #include "internal/NeoBusChannel.h"
 #include "internal/NeoMethods.h"
-
+#include "internal/XMethods.h"
 
 template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBus
 {

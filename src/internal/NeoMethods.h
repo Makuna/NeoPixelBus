@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
 NeoMethods includes all the classes that describe pulse/data sending methods using
-bitbang, SPI, or other platform specific hardware peripherl support.  
+bitbang, SPI, or other platform specific hardware peripheral support.  
 
 Written by Michael C. Miller.
 
