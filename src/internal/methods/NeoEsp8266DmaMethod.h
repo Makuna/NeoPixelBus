@@ -8,7 +8,7 @@ Thanks to github/cnlohr for the original work on DMA support, which opend
 all our minds to a better way (located at https://github.com/cnlohr/esp8266ws2812i2s).
 
 I invest time and resources providing this open source code,
-please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+please support me by donating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
@@ -249,16 +249,6 @@ public:
             &i2sBaseClockDivisor, 
             T_SPEED::BitSendTimeNs,
             T_ENCODER::DmaBitsPerPixelBit);
-
-        //Serial.print("I2S Speed clkDiv=");
-        //Serial.print(T_ENCODER::I2sClockDivisor);
-        //Serial.print(", clkBaseDiv=");
-        //Serial.println(T_ENCODER::I2sBaseClockDivisor);
-
-        //Serial.print("I2S Calc clkDiv=");
-        //Serial.print(i2sClockDivisor);
-        //Serial.print(", clkBaseDiv=");
-        //Serial.println(i2sBaseClockDivisor);
 
         InitializeI2s(i2sClockDivisor, i2sBaseClockDivisor);
     }
