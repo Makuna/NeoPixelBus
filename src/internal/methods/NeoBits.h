@@ -5,7 +5,7 @@ NeoPixel library helper functions for Methods.
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
-please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+please support me by donating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
@@ -25,64 +25,73 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
+class NeoBitsSpeedBase
+{
+public:
+    static uint16_t ByteSendTimeUs(uint16_t bitSendTimeNs)
+    {
+        return (bitSendTimeNs * 8) / 1000;
+    }
+};
+
 // --------------------------------------------------------
-class NeoBitsSpeedWs2812x
+class NeoBitsSpeedWs2812x : public NeoBitsSpeedBase
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 300;
 };
 
-class NeoBitsSpeedWs2805
+class NeoBitsSpeedWs2805 : public NeoBitsSpeedBase
 {
 public:
     const static uint16_t BitSendTimeNs = 1125;
     const static uint16_t ResetTimeUs = 300; // spec is 280, intentionally longer for compatiblity use
 };
 
-class NeoBitsSpeedSk6812
+class NeoBitsSpeedSk6812 : public NeoBitsSpeedBase
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 80;
 };
 
-class NeoBitsSpeedTm1814
+class NeoBitsSpeedTm1814 : public NeoBitsSpeedBase
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 200;
 };
 
-class NeoBitsSpeedTm1914
+class NeoBitsSpeedTm1914 : public NeoBitsSpeedBase
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 200;
 };
 
-class NeoBitsSpeedTm1829
+class NeoBitsSpeedTm1829 : public NeoBitsSpeedBase
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 200;
 };
 
-class NeoBitsSpeed800Kbps
+class NeoBitsSpeed800Kbps : public NeoBitsSpeedBase
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 50;
 };
 
-class NeoBitsSpeed400Kbps
+class NeoBitsSpeed400Kbps : public NeoBitsSpeedBase
 {
 public:
     const static uint16_t BitSendTimeNs = 2500;
     const static uint16_t ResetTimeUs = 50;
 };
 
-class NeoBitsSpeedApa106
+class NeoBitsSpeedApa106 : public NeoBitsSpeedBase
 {
 public:
     const static uint16_t BitSendTimeNs = 1710;

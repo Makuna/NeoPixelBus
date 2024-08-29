@@ -4,7 +4,7 @@ NeoPixel library
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
-please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+please support me by donating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
@@ -41,7 +41,7 @@ const uint16_t PixelIndex_OutOfBounds = 0xffff;
 #include "internal/NeoBuffers.h"
 #include "internal/NeoBusChannel.h"
 #include "internal/NeoMethods.h"
-
+#include "internal/XMethods.h"
 
 template<typename T_COLOR_FEATURE, typename T_METHOD> class NeoPixelBus
 {

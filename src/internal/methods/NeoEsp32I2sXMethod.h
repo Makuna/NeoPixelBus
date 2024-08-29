@@ -6,7 +6,7 @@ NeoPixel library helper functions for Esp32.
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
-please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+please support me by donating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
@@ -795,7 +795,7 @@ public:
         _pin(pin),
         _bus()
     {
-        _bus.RegisterNewMuxBus(_sizeData + T_SPEED::ResetTimeUs / (T_SPEED::BitSendTimeNs * 8 / 1000));
+        _bus.RegisterNewMuxBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs));
     }
 
     ~NeoEsp32I2sXMethodBase()

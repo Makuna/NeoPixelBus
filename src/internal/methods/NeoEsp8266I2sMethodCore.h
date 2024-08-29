@@ -4,7 +4,7 @@ NeoPixel library helper functions for Esp8266.
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
-please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+please support me by donating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
@@ -207,6 +207,38 @@ protected:
         item->next_link_ptr = itemNext;
     }
 
+    static void FindBestClockDivisors(uint8_t* i2sClockDivisor,
+        uint8_t* i2sBaseClockDivisor,
+        uint32_t nsBitSendTime,
+        uint32_t i2sBitsPerDataBits)
+    {
+        const float nsHz = 1000000000.0f;
+        const float rate = nsHz / nsBitSendTime * i2sBitsPerDataBits;
+        const float frequency = static_cast<float>(I2SBASEFREQ);
+
+        // search for the slowest or equal frequency to our needed rate
+        //
+        float minDelta = -frequency;
+
+        *i2sBaseClockDivisor = 1;
+        *i2sClockDivisor = 1;
+        for (uint8_t bclkDiv = 1; bclkDiv < 64; bclkDiv++) 
+        {
+            for (uint8_t clkDiv = bclkDiv; clkDiv < 64; clkDiv++) 
+            {
+                float testDelta = (frequency / bclkDiv / clkDiv) - rate;
+
+                // not the closest, the closet below or equal
+                if (testDelta <= 0 && testDelta >= minDelta)
+                {
+                    minDelta = testDelta;
+                    *i2sBaseClockDivisor = bclkDiv;
+                    *i2sClockDivisor = clkDiv;
+                }
+            }
+        }
+    }
+
     void InitializeI2s(const uint32_t i2sClockDivisor, const uint32_t i2sBaseClockDivisor)
     {
         StopI2s();
@@ -357,6 +389,8 @@ protected:
 
         pinMode(c_I2sPin, INPUT);
     }
+
+
 };
 
 #endif // ARDUINO_ARCH_ESP8266

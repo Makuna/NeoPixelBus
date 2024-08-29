@@ -4,7 +4,7 @@ NeoPixel library helper functions for Esp8266 UART hardware
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
-please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+please support me by donating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
@@ -212,7 +212,7 @@ protected:
 //
 // This UART controller uses two buffers that are swapped in every call to
 // NeoPixelBus.Show(). One buffer contains the data that is being sent
-// asynchronosly and another buffer contains the data that will be send
+// asynchronously and another buffer contains the data that will be send
 // in the next call to NeoPixelBus.Show().
 //
 // Therefore, the result of NeoPixelBus.Pixels() is invalidated after
@@ -360,7 +360,7 @@ public:
     const static bool Inverted = true;
 };
 
-// NeoEsp8266UartMethodBase is a light shell arround NeoEsp8266Uart or NeoEsp8266AsyncUart that
+// NeoEsp8266UartMethodBase is a light shell around NeoEsp8266Uart or NeoEsp8266AsyncUart that
 // implements the methods needed to operate as a NeoPixelBus method.
 //
 // T_SPEED - (NeoEsp8266UartSpeed*)

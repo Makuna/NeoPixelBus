@@ -6,7 +6,7 @@ NeoPixel library helper functions for Esp32.
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
-please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+please support me by donating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
@@ -606,7 +606,7 @@ public:
         _pin(pin),
         _bus()
     {
-        size_t numResetBytes = T_SPEED::ResetTimeUs / (T_SPEED::BitSendTimeNs * 8 / 1000);
+        size_t numResetBytes = T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs);
         _bus.RegisterNewMuxBus(_sizeData + numResetBytes);        
     }
 
@@ -702,7 +702,7 @@ typedef NeoEsp32LcdX8Ws2812xMethod NeoEsp32LcdX8Ws2816Method;
 typedef NeoEsp32LcdX8800KbpsMethod NeoEsp32LcdX8Ws2812Method;
 typedef NeoEsp32LcdX8Sk6812Method  NeoEsp32LcdX8Lc8812Method;
 
-typedef NeoEsp32LcdXMethodBase<NeoBitsSpeeddWs2812x, NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Ws2812xMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2812x, NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Ws2812xMethod;
 typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2805,   NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Ws2805Method;
 typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedSk6812,   NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Sk6812Method;
 typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1814,   NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Tm1814Method;
@@ -722,7 +722,7 @@ typedef NeoEsp32LcdX16Sk6812Method  NeoEsp32LcdX16Lc8812Method;
 
 
 //--------------------------------------------------------
-typedef NeoEsp32LcdXMethodBase<NeoBitsSpeeddWs2812x, NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8Ws2812xInvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2812x, NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8Ws2812xInvertedMethod;
 typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2805,   NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8Ws2805InvertedMethod;
 typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedSk6812,   NeoEsp32LcdMux8Bus, NeoBitsInverted>    NeoEsp32LcdX8Sk6812InvertedMethod;
 typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1814,   NeoEsp32LcdMux8Bus, NeoBitsNotInverted> NeoEsp32LcdX8Tm1814InvertedMethod;
@@ -740,7 +740,7 @@ typedef NeoEsp32LcdX8Ws2812xInvertedMethod NeoEsp32LcdX8Ws2816InvertedMethod;
 typedef NeoEsp32LcdX8800KbpsInvertedMethod NeoEsp32LcdX8Ws2812InvertedMethod;
 typedef NeoEsp32LcdX8Sk6812InvertedMethod  NeoEsp32LcdX8Lc8812InvertedMethod;
 
-typedef NeoEsp32LcdXMethodBase<NeoBitsSpeeddWs2812x, NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Ws2812xInvertedMethod;
+typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2812x, NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Ws2812xInvertedMethod;
 typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedWs2805,   NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Ws2805InvertedMethod;
 typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedSk6812,   NeoEsp32LcdMux16Bus, NeoBitsInverted> NeoEsp32LcdX16Sk6812InvertedMethod;
 typedef NeoEsp32LcdXMethodBase<NeoBitsSpeedTm1814,   NeoEsp32LcdMux16Bus, NeoBitsNotInverted> NeoEsp32LcdX16Tm1814InvertedMethod;
