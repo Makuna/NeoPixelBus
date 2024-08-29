@@ -606,7 +606,7 @@ public:
         _pin(pin),
         _bus()
     {
-        size_t numResetBytes = T_SPEED::ResetTimeUs / (T_SPEED::BitSendTimeNs * 8 / 1000);
+        size_t numResetBytes = T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs);
         _bus.RegisterNewMuxBus(_sizeData + numResetBytes);        
     }
 

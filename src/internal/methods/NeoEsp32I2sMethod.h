@@ -316,7 +316,7 @@ private:
         // it also needs to 4 byte aligned
         size_t dmaSettingsSize = T_CADENCE::DmaBitsPerPixelBit * settingsSize;
         size_t dmaPixelSize = T_CADENCE::DmaBitsPerPixelBit * pixelSize;
-        size_t resetSize = NeoUtil::RoundUp(T_CADENCE::DmaBitsPerPixelBit * T_SPEED::ResetTimeUs / (T_SPEED::BitSendTimeNs * 8 / 1000), 4);
+        size_t resetSize = NeoUtil::RoundUp(T_CADENCE::DmaBitsPerPixelBit * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs), 4);
 
         _i2sBufferSize = NeoUtil::RoundUp(pixelCount * dmaPixelSize + dmaSettingsSize, 4) +
                 resetSize;

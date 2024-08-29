@@ -795,7 +795,7 @@ public:
         _pin(pin),
         _bus()
     {
-        _bus.RegisterNewMuxBus(_sizeData + T_SPEED::ResetTimeUs / (T_SPEED::BitSendTimeNs * 8 / 1000));
+        _bus.RegisterNewMuxBus(_sizeData + T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs));
     }
 
     ~NeoEsp32I2sXMethodBase()
