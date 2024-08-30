@@ -29,6 +29,8 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
+#if ESP_IDF_VERSION_MAJOR < 5
+
 #if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 
 #include "../NeoSettings.h"
@@ -40,7 +42,7 @@ License along with NeoPixel.  If not, see
 // which would be 32x larger than the primary buffer
 //
 // NOTE:  This was moved from the template below to here to workaround a GCC bug
-//  That bug is that the IRAM_ATTR attribute (any attributes) is lost on template classes.  
+//  That bug is that the IRAM_ATTR attribute (any attributes) is lost on template classes.
 //
 //  Further, it was removed from the header to support current Esp32 release
 //  which will need to be removed when the latest GitHub branchis released
@@ -372,5 +374,7 @@ void NeoEsp32RmtInvertedSpeedGs1903::Translate(const void* src,
     _translate(src, dest, src_size, wanted_num, translated_size, item_num,
         RmtBit0, RmtBit1, RmtDurationReset);
 }
+
+#endif
 
 #endif
