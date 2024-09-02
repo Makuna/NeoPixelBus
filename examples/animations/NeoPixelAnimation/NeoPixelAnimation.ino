@@ -180,7 +180,7 @@ void SetupAnimationSet()
         //
         // we use this progress value to define how we want to animate in this case
         // we call RgbColor::LinearBlend which will return a color blended between
-        // the values given, by the amount passed, hich is also a float value from 0.0-1.0.
+        // the values given, by the amount passed, which is also a float value from 0.0-1.0.
         // then we set the color.
         //
         // There is no need for the MyAnimationState struct as the compiler takes care
