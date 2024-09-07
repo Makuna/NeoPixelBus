@@ -59,7 +59,15 @@ License along with NeoPixel.  If not, see
 
 #if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "methods/NeoEsp32I2sMethod.h"
+#if ESP_IDF_VERSION_MAJOR < 5
 #include "methods/NeoEsp32RmtMethod.h"
+#else
+#if !defined(CONFIG_IDF_TARGET_ESP32C2)
+#include "methods/NeoEsp32RmtMethod_idf5.h" // every other SOC
+#else //CONFIG_IDF_TARGET_ESP32C2
+#include "methods/NeoEsp32SpiMethod_idf5.h" // ESP32C2
+#endif //CONFIG_IDF_TARGET_ESP32C2
+#endif // ESP_IDF_VERSION_MAJOR
 #include "methods/DotStarEsp32DmaSpiMethod.h"
 #include "methods/NeoEsp32I2sXMethod.h"
 #include "methods/NeoEsp32LcdXMethod.h"

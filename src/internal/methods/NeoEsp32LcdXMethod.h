@@ -30,7 +30,11 @@ License along with NeoPixel.  If not, see
 
 extern "C"
 {
+#if ESP_IDF_VERSION_MAJOR < 5
 #include <driver/periph_ctrl.h>
+#else
+#include <esp_private/periph_ctrl.h>
+#endif
 #include <esp_private/gdma.h>
 #include <esp_rom_gpio.h>
 //#include <esp_rom_lldesc.h>
