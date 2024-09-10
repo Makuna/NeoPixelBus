@@ -78,7 +78,7 @@ public:
 
     void Update(bool)
     {
-        const uint8_t startFrame[4] = { 0x00 };
+        const uint8_t startFrame[16] = { 0x00 };
         const uint8_t endFrame[4] = { 0xff };
         
         _wire.beginTransaction();
