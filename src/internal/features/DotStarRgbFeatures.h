@@ -74,4 +74,11 @@ class DotStarBgr48Feature :
 {
 };
 
+class DotStarRgb48Feature :
+    public DotStarX4WordFeature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
+
 typedef DotStarBgr48Feature Hd108BgrFeature;
+typedef DotStarRgb48Feature Hd108RgbFeature;
