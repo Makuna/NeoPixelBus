@@ -161,14 +161,20 @@ private:
 
 };
 
-class Tlc59711RgbFeature :
+class Tlc59711RgbFeature : // RGB only
     public Neo3WordFeature<ColorIndexR, ColorIndexG, ColorIndexB>,
     public Tlc59711ElementsSettings
 {
 };
 
-class Tlc59711RgbwFeature :
+class Tlc59711RgbwFeature : // RGB + warmer white
     public Neo4WordFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexW>,
+    public Tlc59711ElementsSettings
+{
+};
+
+class Tlc59711RgbwcFeature : // RGB + warmer white + cooler white in that order
+    public Neo5WordFeature<ColorIndexR, ColorIndexG, ColorIndexB, ColorIndexWW, ColorIndexCW>,
     public Tlc59711ElementsSettings
 {
 };
