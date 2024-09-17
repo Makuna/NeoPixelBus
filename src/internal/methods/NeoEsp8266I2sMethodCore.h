@@ -291,7 +291,7 @@ protected:
         // the last item will loop to the first item
         _i2sBufDesc[indexDesc - 1].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[0]));
 
-        // the last state block will loop to the first state block by defualt
+        // the last state block will loop to the first state block by default
         _i2sBufDesc[c_StateBlockCount - 1].next_link_ptr = reinterpret_cast<struct slc_queue_item*>(&(_i2sBufDesc[0]));
 
         // setup the rest of i2s DMA

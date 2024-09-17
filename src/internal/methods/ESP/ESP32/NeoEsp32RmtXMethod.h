@@ -295,12 +295,11 @@ public:
 
 private:
     const size_t  _sizeData;      // Size of '_data*' buffers 
-    const uint8_t _pin;            // output pin number
+    const uint8_t _pin;           // output pin number
 
     rmt_transmit_config_t _tx_config = {};
     rmt_encoder_handle_t _led_encoder = nullptr;
-    rmt_channel_handle_t _channel = nullptr; // holds instance for multi channel support
-
+    rmt_channel_handle_t _channel = nullptr; // holds dynamic instance for multi channel support
 
     // Holds data stream which include LED color values and other settings as needed
     uint8_t* _dataEditing;   // exposed for get and set
@@ -353,7 +352,7 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps> NeoEsp32RmtX400Kb
 
 // Normally I2s method is the default, defining NEOPIXEL_ESP32_RMT_DEFAULT 
 // will switch to use RMT as the default method
-// The ESP32S2 & ESP32C3 will always defualt to RMT
+// The ESP32S2 & ESP32C3 will always default to RMT
 
 typedef NeoEsp32RmtXWs2812xMethod NeoWs2813Method;
 typedef NeoEsp32RmtXWs2812xMethod NeoWs2812xMethod;
