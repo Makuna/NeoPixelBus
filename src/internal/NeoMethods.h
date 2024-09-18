@@ -63,7 +63,7 @@ License along with NeoPixel.  If not, see
 #include "methods/ESP/ESP32/Core_2_x/NeoEsp32RmtMethod.h"
 #else
 #if !defined(CONFIG_IDF_TARGET_ESP32C2)
-#include "methods/ESP/ESP32/NeoEsp32RmtMethod.h" // every other SOC
+#include "methods/ESP/ESP32/NeoEsp32RmtXMethod.h" // every other SOC
 #else //CONFIG_IDF_TARGET_ESP32C2
 #include "methods/ESP/ESP32/NeoEsp32SpiMethod.h" // ESP32C2
 #endif //CONFIG_IDF_TARGET_ESP32C2

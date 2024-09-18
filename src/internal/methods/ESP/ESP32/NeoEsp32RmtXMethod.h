@@ -28,18 +28,6 @@ License along with NeoPixel.  If not, see
 
 #if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C2)
 
-/*  General Reference documentation for the APIs used in this implementation
-LOW LEVEL:  (what is actually used)
-DOCS: https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/peripherals/rmt.html
-EXAMPLE: https://github.com/espressif/esp-idf/blob/826ff7186ae07dc81e960a8ea09ebfc5304bfb3b/examples/peripherals/rmt_tx/main/rmt_tx_main.c
-
-HIGHER LEVEL:
-NO TRANSLATE SUPPORT so this was not used
-NOTE: https://github.com/espressif/arduino-esp32/commit/50d142950d229b8fabca9b749dc4a5f2533bc426
-Esp32-hal-rmt.h
-Esp32-hal-rmt.c
-*/
-
 #include <Arduino.h>
 #include "NeoEsp32RmtSpeed.h"
 
@@ -52,8 +40,6 @@ extern "C"
 #include "driver/rmt_encoder.h"
 #include "esp_check.h"
 }
-
-#define RMT_LED_STRIP_RESOLUTION_HZ 40000000 // 40MHz resolution - setting of the "old" driver
 
 struct led_strip_encoder_config_t
 {
@@ -192,7 +178,7 @@ template<typename T_SPEED> class NeoEsp32RmtMethodBase
 public:
     typedef NeoNoSettings SettingsObject;
 
-    NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel = 0) :
+    NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel = NeoBusChannel_0) :
         _sizeData(pixelCount* elementSize + settingsSize),
         _pin(pin),
         _channel(NULL)
@@ -228,14 +214,14 @@ public:
         config.clk_src = RMT_CLK_SRC_DEFAULT;
         config.gpio_num = static_cast<gpio_num_t>(_pin);
         config.mem_block_symbols = 192;         // memory block size, 64 * 4 = 256 Bytes
-        config.resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
+        config.resolution_hz = T_SPEED::RmtTicksPerSecond; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
         config.trans_queue_depth = 4;           // set the number of transactions that can pend in the background
-        config.flags.invert_out = false;        // do not invert output signal
+        config.flags.invert_out = T_SPEED::Inverted;  // do not invert output signal
         config.flags.with_dma = false;          // do not need DMA backend
 
         ret += rmt_new_tx_channel(&config, &_channel);
         led_strip_encoder_config_t encoder_config = {};
-        encoder_config.resolution = RMT_LED_STRIP_RESOLUTION_HZ;
+        encoder_config.resolution = T_SPEED::RmtTicksPerSecond;
 
         _tx_config.loop_count = 0; //no loop
 
@@ -259,7 +245,8 @@ public:
         {
             // AddLog(2,"__ %u", _sizeData);
             // now start the RMT transmit with the editing buffer before we swap
-            esp_err_t ret = rmt_transmit(_channel, _led_encoder, _dataEditing, _sizeData, &_tx_config); // 3 for _sizeData
+            // esp_err_t ret = 
+            rmt_transmit(_channel, _led_encoder, _dataEditing, _sizeData, &_tx_config); // 3 for _sizeData
             // AddLog(2,"rmt_transmit: %u", ret);
             if (maintainBufferConsistency)
             {
@@ -317,6 +304,13 @@ private:
     }
 };
 
+// NOTE:  While these are multi-instance auto channel selecting, there are limits
+// to the number of times based on the specific ESP32 model it is compiled for
+// ESP32 - 8x (beyond 4x may experience issues)
+// ESP32S2 - 4x
+// ESP32C3 - 2x
+// ESP32S3 - 4x
+
 // normal
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2811> NeoEsp32RmtXWs2811Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2812x> NeoEsp32RmtXWs2812xMethod;
@@ -329,8 +323,6 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTx1812> NeoEsp32RmtXTx1812Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps> NeoEsp32RmtX800KbpsMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps> NeoEsp32RmtX400KbpsMethod;
 
-#endif // !defined(CONFIG_IDF_TARGET_ESP32S2) 
-#endif // !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32C3)
 
 // inverted
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2811> NeoEsp32RmtXWs2811InvertedMethod;
@@ -343,9 +335,6 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedApa106> NeoEsp32RmtXApa106
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTx1812> NeoEsp32RmtXTx1812InvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed800Kbps> NeoEsp32RmtX800KbpsInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps> NeoEsp32RmtX400KbpsInvertedMethod;
-
-#endif // !defined(CONFIG_IDF_TARGET_ESP32S2) 
-#endif // !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32C6)
 
 
 #if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32S3)

@@ -29,46 +29,40 @@ License along with NeoPixel.  If not, see
 class NeoEsp32RmtSpeed
 {
 public:
-    // next section is probably not needed anymore for IDF 5.1
+    // 
     // ClkDiv of 2 provides for good resolution and plenty of reset resolution; but
     // a ClkDiv of 1 will provide enough space for the longest reset and does show
     // little better pulse accuracy
     const static uint8_t RmtClockDivider = 2;
+    const static uint32_t RmtCpu = 80000000L; // 80 mhz RMT clock
+    const static uint32_t NsPerSecond = 1000000000L;
+    const static uint32_t RmtTicksPerSecond = (RmtCpu / RmtClockDivider);
+    const static uint32_t NsPerRmtTick = (NsPerSecond / RmtTicksPerSecond); // about 25 
 
     inline constexpr static uint32_t FromNs(uint32_t ns)
     {
         return ns / NsPerRmtTick;
     }
-
-protected:
-    const static uint32_t RmtCpu = 80000000L; // 80 mhz RMT clock
-    const static uint32_t NsPerSecond = 1000000000L;
-    const static uint32_t RmtTicksPerSecond = (RmtCpu / RmtClockDivider);
-    const static uint32_t NsPerRmtTick = (NsPerSecond / RmtTicksPerSecond); // about 25 
-    // end of deprecated section
-
-};
-
-class NeoEsp32RmtSpeedBase : public NeoEsp32RmtSpeed
-{
-public:
     // this is used rather than the rmt_symbol_word_t as you can't correctly initialize
     // it as a static constexpr within the template
     inline constexpr static uint32_t Item32Val(uint16_t nsHigh, uint16_t nsLow)
     {
         return (FromNs(nsLow) << 16) | (1 << 15) | (FromNs(nsHigh));
     }
+
+
+};
+
+class NeoEsp32RmtSpeedBase : public NeoEsp32RmtSpeed
+{
+public:
+    const static bool Inverted = false;
 };
 
 class NeoEsp32RmtInvertedSpeedBase : public NeoEsp32RmtSpeed
 {
 public:
-    // this is used rather than the rmt_symbol_word_t as you can't correctly initialize
-    // it as a static constexpr within the template
-    inline constexpr static uint32_t Item32Val(uint16_t nsHigh, uint16_t nsLow)
-    {
-        return (FromNs(nsLow) << 16) | (1 << 31) | (FromNs(nsHigh));
-    }
+    const static bool Inverted = true;
 };
 
 class NeoEsp32RmtSpeedWs2811 : public NeoEsp32RmtSpeedBase
@@ -237,4 +231,3 @@ public:
     const static uint16_t RmtDurationReset = FromNs(80000); // 80us
 };
 
-#endif
