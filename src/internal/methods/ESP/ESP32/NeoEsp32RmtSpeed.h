@@ -26,7 +26,7 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-class NeoEsp32RmtSpeed
+class NeoEsp32RmtSpeedBase
 {
 public:
     // 
@@ -49,21 +49,8 @@ public:
     {
         return (FromNs(nsLow) << 16) | (1 << 15) | (FromNs(nsHigh));
     }
-
-
 };
 
-class NeoEsp32RmtSpeedBase : public NeoEsp32RmtSpeed
-{
-public:
-    const static bool Inverted = false;
-};
-
-class NeoEsp32RmtInvertedSpeedBase : public NeoEsp32RmtSpeed
-{
-public:
-    const static bool Inverted = true;
-};
 
 class NeoEsp32RmtSpeedWs2811 : public NeoEsp32RmtSpeedBase
 {
@@ -81,6 +68,14 @@ public:
     const static uint16_t RmtDurationReset = FromNs(300000); // 300us
 };
 
+class NeoEsp32RmtSpeedWs2805 : public NeoEsp32RmtSpeedBase
+{
+public:
+    const static uint32_t RmtBit0 = Item32Val(300, 790);
+    const static uint32_t RmtBit1 = Item32Val(790, 300);
+    const static uint16_t RmtDurationReset = FromNs(300000); // spec is 280, intentionally longer for compatiblity use
+};
+
 class NeoEsp32RmtSpeedSk6812 : public NeoEsp32RmtSpeedBase
 {
 public:
@@ -90,7 +85,7 @@ public:
 };
 
 // normal is inverted signal
-class NeoEsp32RmtSpeedTm1814 : public NeoEsp32RmtInvertedSpeedBase
+class NeoEsp32RmtSpeedTm1814 : public NeoEsp32RmtSpeedBase
 {
 public:
     const static uint32_t RmtBit0 = Item32Val(360, 890);
@@ -99,7 +94,7 @@ public:
 };
 
 // normal is inverted signal
-class NeoEsp32RmtSpeedTm1829 : public NeoEsp32RmtInvertedSpeedBase
+class NeoEsp32RmtSpeedTm1829 : public NeoEsp32RmtSpeedBase
 {
 public:
     const static uint32_t RmtBit0 = Item32Val(300, 900);
@@ -108,7 +103,7 @@ public:
 };
 
 // normal is inverted signal
-class NeoEsp32RmtSpeedTm1914 : public NeoEsp32RmtInvertedSpeedBase
+class NeoEsp32RmtSpeedTm1914 : public NeoEsp32RmtSpeedBase
 {
 public:
     const static uint32_t RmtBit0 = Item32Val(360, 890);
@@ -148,86 +143,23 @@ public:
     const static uint16_t RmtDurationReset = FromNs(80000); // 80us
 };
 
-class NeoEsp32RmtInvertedSpeedWs2811 : public NeoEsp32RmtInvertedSpeedBase
-{
-public:
-    const static uint32_t RmtBit0 = Item32Val(300, 950);
-    const static uint32_t RmtBit1 = Item32Val(900, 350);
-    const static uint16_t RmtDurationReset = FromNs(300000); // 300us
-};
-
-class NeoEsp32RmtInvertedSpeedWs2812x : public NeoEsp32RmtInvertedSpeedBase
-{
-public:
-    const static uint32_t RmtBit0 = Item32Val(400, 850);
-    const static uint32_t RmtBit1 = Item32Val(800, 450);
-    const static uint16_t RmtDurationReset = FromNs(300000); // 300us
-};
-
-class NeoEsp32RmtInvertedSpeedSk6812 : public NeoEsp32RmtInvertedSpeedBase
-{
-public:
-    const static uint32_t RmtBit0 = Item32Val(400, 850);
-    const static uint32_t RmtBit1 = Item32Val(800, 450);
-    const static uint16_t RmtDurationReset = FromNs(80000); // 80us
-};
-
-// normal is inverted signal
-class NeoEsp32RmtInvertedSpeedTm1814 : public NeoEsp32RmtSpeedBase
-{
-public:
-    const static uint32_t RmtBit0 = Item32Val(360, 890);
-    const static uint32_t RmtBit1 = Item32Val(720, 530);
-    const static uint16_t RmtDurationReset = FromNs(200000); // 200us
-};
-
-// normal is inverted signal
-class NeoEsp32RmtInvertedSpeedTm1829 : public NeoEsp32RmtSpeedBase
+class NeoEsp32RmtSpeedGs1903 : public NeoEsp32RmtSpeedBase
 {
 public:
     const static uint32_t RmtBit0 = Item32Val(300, 900);
-    const static uint32_t RmtBit1 = Item32Val(800, 400);
-    const static uint16_t RmtDurationReset = FromNs(200000); // 200us
+    const static uint32_t RmtBit1 = Item32Val(900, 300);
+    const static uint16_t RmtDurationReset = FromNs(40000); // 40us
 };
 
-// normal is inverted signal
-class NeoEsp32RmtInvertedSpeedTm1914 : public NeoEsp32RmtSpeedBase
+
+class NeoEsp32RmtNotInverted
 {
 public:
-    const static uint32_t RmtBit0 = Item32Val(360, 890);
-    const static uint32_t RmtBit1 = Item32Val(720, 530);
-    const static uint16_t RmtDurationReset = FromNs(200000); // 200us
+    const static bool Inverted = false;
 };
 
-class NeoEsp32RmtInvertedSpeed800Kbps : public NeoEsp32RmtInvertedSpeedBase
+class NeoEsp32RmtInverted
 {
 public:
-    const static uint32_t RmtBit0 = Item32Val(400, 850);
-    const static uint32_t RmtBit1 = Item32Val(800, 450);
-    const static uint16_t RmtDurationReset = FromNs(50000); // 50us
+    const static bool Inverted = true;
 };
-
-class NeoEsp32RmtInvertedSpeed400Kbps : public NeoEsp32RmtInvertedSpeedBase
-{
-public:
-    const static uint32_t RmtBit0 = Item32Val(800, 1700);
-    const static uint32_t RmtBit1 = Item32Val(1600, 900);
-    const static uint16_t RmtDurationReset = FromNs(50000); // 50us
-};
-
-class NeoEsp32RmtInvertedSpeedApa106 : public NeoEsp32RmtInvertedSpeedBase
-{
-public:
-    const static uint32_t RmtBit0 = Item32Val(350, 1350);
-    const static uint32_t RmtBit1 = Item32Val(1350, 350);
-    const static uint16_t RmtDurationReset = FromNs(50000); // 50us
-};
-
-class NeoEsp32RmtInvertedSpeedTx1812 : public NeoEsp32RmtInvertedSpeedBase
-{
-public:
-    const static uint32_t RmtBit0 = Item32Val(300, 600);
-    const static uint32_t RmtBit1 = Item32Val(600, 300);
-    const static uint16_t RmtDurationReset = FromNs(80000); // 80us
-};
-

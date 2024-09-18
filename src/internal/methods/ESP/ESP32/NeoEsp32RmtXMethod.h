@@ -173,7 +173,7 @@ err:
 #define NEOPIXELBUS_RMT_INT_FLAGS (ESP_INTR_FLAG_LOWMED)
 
 
-template<typename T_SPEED> class NeoEsp32RmtMethodBase
+template<typename T_SPEED, typename T_INVERTED = NeoEsp32RmtNotInverted> class NeoEsp32RmtMethodBase
 {
 public:
     typedef NeoNoSettings SettingsObject;
@@ -216,7 +216,7 @@ public:
         config.mem_block_symbols = 192;         // memory block size, 64 * 4 = 256 Bytes
         config.resolution_hz = T_SPEED::RmtTicksPerSecond; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
         config.trans_queue_depth = 4;           // set the number of transactions that can pend in the background
-        config.flags.invert_out = T_SPEED::Inverted;  // do not invert output signal
+        config.flags.invert_out = T_INVERTED::Inverted;  // do not invert output signal
         config.flags.with_dma = false;          // do not need DMA backend
 
         ret += rmt_new_tx_channel(&config, &_channel);
@@ -314,28 +314,37 @@ private:
 // normal
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2811> NeoEsp32RmtXWs2811Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2812x> NeoEsp32RmtXWs2812xMethod;
+typedef NeoEsp32RmtXWs2812xMethod NeoEsp32RmtXWs2816Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2805> NeoEsp32RmtXWs2805Method;
+typedef NeoEsp32RmtXWs2805Method NeoEsp32RmtXWs2814Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedSk6812> NeoEsp32RmtXSk6812Method;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1814> NeoEsp32RmtXTm1814Method;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1829> NeoEsp32RmtXTm1829Method;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1914> NeoEsp32RmtXTm1914Method;
+typedef NeoEsp32RmtXSk6812Method NeoEsp32RmtXLc8812Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1814, NeoEsp32RmtInverted> NeoEsp32RmtXTm1814Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1829, NeoEsp32RmtInverted> NeoEsp32RmtXTm1829Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1914, NeoEsp32RmtInverted> NeoEsp32RmtXTm1914Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedApa106> NeoEsp32RmtXApa106Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTx1812> NeoEsp32RmtXTx1812Method;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedGs1903> NeoEsp32RmtXGs1903Method;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps> NeoEsp32RmtX800KbpsMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps> NeoEsp32RmtX400KbpsMethod;
 
 
 // inverted
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2811> NeoEsp32RmtXWs2811InvertedMethod;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedWs2812x> NeoEsp32RmtXWs2812xInvertedMethod;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedSk6812> NeoEsp32RmtXSk6812InvertedMethod;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTm1814> NeoEsp32RmtXTm1814InvertedMethod;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTm1829> NeoEsp32RmtXTm1829InvertedMethod;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTm1914> NeoEsp32RmtXTm1914InvertedMethod;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedApa106> NeoEsp32RmtXApa106InvertedMethod;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeedTx1812> NeoEsp32RmtXTx1812InvertedMethod;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed800Kbps> NeoEsp32RmtX800KbpsInvertedMethod;
-typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps> NeoEsp32RmtX400KbpsInvertedMethod;
-
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2811, NeoEsp32RmtInverted> NeoEsp32RmtXWs2811InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2812x, NeoEsp32RmtInverted> NeoEsp32RmtXWs2812xInvertedMethod;
+typedef NeoEsp32RmtXWs2812xInvertedMethod NeoEsp32RmtXWs2816InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedWs2805, NeoEsp32RmtInverted> NeoEsp32RmtXWs2805InvertedMethod;
+typedef NeoEsp32RmtXWs2805InvertedMethod NeoEsp32RmtXWs2814InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedSk6812, NeoEsp32RmtInverted> NeoEsp32RmtXSk6812InvertedMethod;
+typedef NeoEsp32RmtXSk6812InvertedMethod NeoEsp32RmtXLc8812InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1814> NeoEsp32RmtXTm1814InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1829> NeoEsp32RmtXTm1829InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTm1914> NeoEsp32RmtXTm1914InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedApa106, NeoEsp32RmtInverted> NeoEsp32RmtXApa106InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedTx1812, NeoEsp32RmtInverted> NeoEsp32RmtXTx1812InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedGs1903, NeoEsp32RmtInverted> NeoEsp32RmtXGs1903InvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps, NeoEsp32RmtInverted> NeoEsp32RmtX800KbpsInvertedMethod;
+typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtInverted> NeoEsp32RmtX400KbpsInvertedMethod;
 
 #if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32S3)
 
@@ -343,33 +352,31 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtInvertedSpeed400Kbps> NeoEsp32RmtX400Kb
 // will switch to use RMT as the default method
 // The ESP32S2 & ESP32C3 will always default to RMT
 
-typedef NeoEsp32RmtXWs2812xMethod NeoWs2813Method;
+typedef NeoEsp32RmtXWs2805Method NeoWs2805Method;
+typedef NeoEsp32RmtXWs2811Method NeoWs2811Method;
 typedef NeoEsp32RmtXWs2812xMethod NeoWs2812xMethod;
-typedef NeoEsp32RmtX800KbpsMethod NeoWs2812Method;
-typedef NeoEsp32RmtXWs2812xMethod NeoWs2811Method;
+typedef NeoEsp32RmtXWs2816Method NeoWs2816Method;
 typedef NeoEsp32RmtXSk6812Method NeoSk6812Method;
+typedef NeoEsp32RmtXLc8812Method NeoLc8812Method;
 typedef NeoEsp32RmtXTm1814Method NeoTm1814Method;
 typedef NeoEsp32RmtXTm1829Method NeoTm1829Method;
 typedef NeoEsp32RmtXTm1914Method NeoTm1914Method;
-typedef NeoEsp32RmtXSk6812Method NeoLc8812Method;
 typedef NeoEsp32RmtXApa106Method NeoApa106Method;
 typedef NeoEsp32RmtXTx1812Method NeoTx1812Method;
-
 typedef NeoEsp32RmtXWs2812xMethod Neo800KbpsMethod;
 typedef NeoEsp32RmtX400KbpsMethod Neo400KbpsMethod;
 
-typedef NeoEsp32RmtXWs2812xInvertedMethod NeoWs2813InvertedMethod;
+typedef NeoEsp32RmtXWs2805InvertedMethod NeoWs2805InvertedMethod;
+typedef NeoEsp32RmtXWs2811InvertedMethod NeoWs2811InvertedMethod;
 typedef NeoEsp32RmtXWs2812xInvertedMethod NeoWs2812xInvertedMethod;
-typedef NeoEsp32RmtXWs2812xInvertedMethod NeoWs2811InvertedMethod;
-typedef NeoEsp32RmtX800KbpsInvertedMethod NeoWs2812InvertedMethod;
+typedef NeoEsp32RmtXWs2816InvertedMethod NeoWs2816InvertedMethod;
 typedef NeoEsp32RmtXSk6812InvertedMethod NeoSk6812InvertedMethod;
+typedef NeoEsp32RmtXLc8812InvertedMethod NeoLc8812InvertedMethod;
 typedef NeoEsp32RmtXTm1814InvertedMethod NeoTm1814InvertedMethod;
 typedef NeoEsp32RmtXTm1829InvertedMethod NeoTm1829InvertedMethod;
 typedef NeoEsp32RmtXTm1914InvertedMethod NeoTm1914InvertedMethod;
-typedef NeoEsp32RmtXSk6812InvertedMethod NeoLc8812InvertedMethod;
 typedef NeoEsp32RmtXApa106InvertedMethod NeoApa106InvertedMethod;
 typedef NeoEsp32RmtXTx1812InvertedMethod NeoTx1812InvertedMethod;
-
 typedef NeoEsp32RmtXWs2812xInvertedMethod Neo800KbpsInvertedMethod;
 typedef NeoEsp32RmtX400KbpsInvertedMethod Neo400KbpsInvertedMethod;
 
