@@ -209,7 +209,7 @@ typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeedHz>> Tlc59711Esp32VspiHzMetho
 
 typedef Tlc59711MethodBase<TwoWireSpiImple<SpiSpeed3600Khz>> Tlc59711Esp32VspiMethod;
 
-#include "TwoWireHspiImple.h"
+#include "ESP/ESP32/TwoWireHspiImple.h"
 typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed40Mhz>> Tlc59711Esp32Hspi40MhzMethod;
 typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed20Mhz>> Tlc59711Esp32Hspi20MhzMethod;
 typedef Tlc59711MethodBase<TwoWireHspiImple<SpiSpeed10Mhz>> Tlc59711Esp32Hspi10MhzMethod;

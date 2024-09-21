@@ -192,7 +192,7 @@ typedef Mbi6033MethodBase<TwoWireSpiImple<SpiSpeedHz>> Mbi6033Esp32VspiHzMethod;
 
 typedef Mbi6033Spi10MhzMethod Mbi6033Esp32VspiMethod;
 
-#include "TwoWireHspiImple.h"
+#include "ESP/ESP32/TwoWireHspiImple.h"
 typedef Mbi6033MethodBase<TwoWireHspiImple<SpiSpeed40Mhz>> Mbi6033Esp32Hspi40MhzMethod;
 typedef Mbi6033MethodBase<TwoWireHspiImple<SpiSpeed20Mhz>> Mbi6033Esp32Hspi20MhzMethod;
 typedef Mbi6033MethodBase<TwoWireHspiImple<SpiSpeed10Mhz>> Mbi6033Esp32Hspi10MhzMethod;

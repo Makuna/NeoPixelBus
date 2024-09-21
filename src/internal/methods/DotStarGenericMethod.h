@@ -162,7 +162,7 @@ typedef DotStarMethodBase<TwoWireSpiImple<SpiSpeedHz>> DotStarEsp32VspiHzMethod;
 
 typedef DotStarSpi10MhzMethod DotStarEsp32VspiMethod;
 
-#include "TwoWireHspiImple.h"
+#include "ESP/ESP32/TwoWireHspiImple.h"
 typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed40Mhz>> DotStarEsp32Hspi40MhzMethod;
 typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed20Mhz>> DotStarEsp32Hspi20MhzMethod;
 typedef DotStarMethodBase<TwoWireHspiImple<SpiSpeed10Mhz>> DotStarEsp32Hspi10MhzMethod;

@@ -50,15 +50,15 @@ License along with NeoPixel.  If not, see
 //
 #if defined(ARDUINO_ARCH_ESP8266)
 
-#include "methods/NeoEsp8266DmaMethod.h"
-#include "methods/NeoEsp8266I2sDmx512Method.h"
-#include "methods/NeoEsp8266UartMethod.h"
-#include "methods/NeoEspBitBangMethod.h"
+#include "methods/ESP/ESP8266/NeoEsp8266DmaMethod.h"
+#include "methods/ESP/ESP8266/NeoEsp8266I2sDmx512Method.h"
+#include "methods/ESP/ESP8266/NeoEsp8266UartMethod.h"
+#include "methods/ESP/NeoEspBitBangMethod.h"
 
 #elif defined(ARDUINO_ARCH_ESP32)
 
 #if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
-#include "methods/NeoEsp32I2sMethod.h"
+#include "methods/ESP/ESP32/Core_2_x/NeoEsp32I2sMethod.h"
 #if ESP_IDF_VERSION_MAJOR < 5
 #include "methods/ESP/ESP32/Core_2_x/NeoEsp32RmtMethod.h"
 #else
@@ -68,29 +68,28 @@ License along with NeoPixel.  If not, see
 #include "methods/ESP/ESP32/NeoEsp32SpiMethod.h" // ESP32C2
 #endif //CONFIG_IDF_TARGET_ESP32C2
 #endif // ESP_IDF_VERSION_MAJOR
-#include "methods/DotStarEsp32DmaSpiMethod.h"
-#include "methods/NeoEsp32I2sXMethod.h"
-#include "methods/NeoEsp32LcdXMethod.h"
-
-
+#include "methods/ESP/ESP32/DotStarEsp32DmaSpiMethod.h"
+#include "methods/ESP/ESP32/Core_2_x/NeoEsp32I2sXMethod.h"
+#include "methods/ESP/ESP32/NeoEsp32LcdXMethod.h"
 #endif
-#include "methods/NeoEspBitBangMethod.h"
+
+#include "methods/ESP/NeoEspBitBangMethod.h"
 
 #elif defined(ARDUINO_ARCH_NRF52840) // must be before __arm__
 
-#include "methods/NeoNrf52xMethod.h"
+#include "methods/ARM/NeoNrf52xMethod.h"
 
 #elif defined(ARDUINO_ARCH_RP2040) // must be before __arm__
 
-#include "methods/Rp2040/NeoRp2040x4Method.h"
+#include "methods/RP2040/NeoRp2040x4Method.h"
 
 #elif defined(__arm__) // must be before ARDUINO_ARCH_AVR due to Teensy incorrectly having it set
 
-#include "methods/NeoArmMethod.h"
+#include "methods/ARM/NeoArmMethod.h"
 
 #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_MEGAAVR)
 
-#include "methods/NeoAvrMethod.h"
+#include "methods/AVR/NeoAvrMethod.h"
 
 #else
 #error "Platform Currently Not Supported, please add an Issue at Github/Makuna/NeoPixelBus"

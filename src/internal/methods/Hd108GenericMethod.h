@@ -152,7 +152,7 @@ typedef Hd108MethodBase<TwoWireSpiImple<SpiSpeedHz>> Hd108Esp32VspiHzMethod;
 
 typedef Hd108Spi10MhzMethod Hd108Esp32VspiMethod;
 
-#include "TwoWireHspiImple.h"
+#include "ESP/ESP32/TwoWireHspiImple.h"
 typedef Hd108MethodBase<TwoWireHspiImple<SpiSpeed40Mhz>> Hd108Esp32Hspi40MhzMethod;
 typedef Hd108MethodBase<TwoWireHspiImple<SpiSpeed20Mhz>> Hd108Esp32Hspi20MhzMethod;
 typedef Hd108MethodBase<TwoWireHspiImple<SpiSpeed10Mhz>> Hd108Esp32Hspi10MhzMethod;
