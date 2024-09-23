@@ -205,6 +205,11 @@ protected:
             ptr = const_cast<uint8_t*>(T_UARTCONTEXT::FillUartFifo(T_UARTFEATURE::Index, ptr, end));
         }
     }
+
+    bool SwapUartBuffers()
+    {
+        return false;
+    }
 };
 
 // this template method class is used to glue uart feature and context for
@@ -272,6 +277,12 @@ protected:
 
         // swap so the user can modify without affecting the async operation
         std::swap(_dataSending, _data);
+    }
+
+    bool SwapUartBuffers()
+    {
+        std::swap(_dataSending, _data);
+        return true;
     }
 
 private:
@@ -418,6 +429,11 @@ public:
     {
         // this method requires update to be called only if changes to buffer
         return false;
+    }
+
+    bool SwapBuffers()
+    {
+        return this->SwapUartBuffers();
     }
 
     uint8_t* getData() const
