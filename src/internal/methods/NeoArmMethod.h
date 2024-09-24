@@ -208,7 +208,7 @@ public:
         volatile auto clr = portClearRegister(pin);
 
         uint32_t cyc;
-#if defined(KINETIS)
+#if defined(KINETIS) || defined(KINETISL)
         uint8_t msk = 1;
 #else
         uint32_t msk = digitalPinToBitMask(pin);
