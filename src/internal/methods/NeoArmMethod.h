@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
 NeoPixel library helper functions for ARM MCUs.
-Teensy 3.0, 3.1, LC, Arduino Due
+Teensy 3.0, 3.1, 3.5, 3.6, 4.0, 4.1, LC, Arduino Due
 
 Written by Michael C. Miller.
 Some work taken from the Adafruit NeoPixel library.
@@ -124,8 +124,8 @@ private:
     uint8_t _pin;            // output pin number
 };
 
-// Teensy 3.0 or 3.1 (3.2) or 3.5 or 3.6
-#if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) 
+// Teensy
+#if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) || defined (__IMXRT1062__) || defined (__IMXRT1052__)
 
 class NeoArmMk20dxSpeedProps800KbpsBase
 {
@@ -204,10 +204,15 @@ public:
         uint8_t pix;
         uint8_t mask;
 
-        volatile uint8_t* set = portSetRegister(pin);
-        volatile uint8_t* clr = portClearRegister(pin);
+        volatile auto set = portSetRegister(pin);
+        volatile auto clr = portClearRegister(pin);
 
         uint32_t cyc;
+#if defined(KINETIS) || defined(KINETISL)
+        uint8_t msk = 1;
+#else
+        uint32_t msk = digitalPinToBitMask(pin);
+#endif
 
         ARM_DEMCR |= ARM_DEMCR_TRCENA;
         ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
@@ -221,7 +226,7 @@ public:
                 while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::Cycles);
 
                 cyc = ARM_DWT_CYCCNT;
-                *set = 1;
+                *set = msk;
                 if (pix & mask)
                 {
                     while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::CyclesT1h);
@@ -230,7 +235,7 @@ public:
                 {
                     while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::CyclesT0h);
                 }
-                *clr = 1;
+                *clr = msk;
             }
         }
     }
