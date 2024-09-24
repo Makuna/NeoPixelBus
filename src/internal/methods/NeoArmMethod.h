@@ -124,7 +124,7 @@ private:
     uint8_t _pin;            // output pin number
 };
 
-// Teensy 3.0 or 3.1 (3.2) or 3.5 or 3.6
+// Teensy
 #if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) || defined (__IMXRT1062__)
 
 class NeoArmMk20dxSpeedProps800KbpsBase
