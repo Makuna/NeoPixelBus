@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
 NeoPixel library helper functions for ARM MCUs.
-Teensy 3.0, 3.1, LC, Arduino Due
+Teensy 3.0, 3.1, 3.5, 3.6, 4.0, 4.1, LC, Arduino Due
 
 Written by Michael C. Miller.
 Some work taken from the Adafruit NeoPixel library.
@@ -208,6 +208,9 @@ public:
         volatile auto clr = portClearRegister(pin);
 
         uint32_t cyc;
+        #if !defined(KINETIS)
+        uint32_t msk = digitalPinToBitMask(pin);
+        #endif
 
         ARM_DEMCR |= ARM_DEMCR_TRCENA;
         ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
@@ -221,7 +224,13 @@ public:
                 while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::Cycles);
 
                 cyc = ARM_DWT_CYCCNT;
+
+                #if defined(KINETIS)
                 *set = 1;
+                #else
+                *set = msk;
+                #endif
+
                 if (pix & mask)
                 {
                     while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::CyclesT1h);
@@ -230,7 +239,12 @@ public:
                 {
                     while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::CyclesT0h);
                 }
+
+                #if defined(KINETIS)
                 *clr = 1;
+                #else
+                *clr = msk;
+                #endif                
             }
         }
     }
