@@ -210,7 +210,7 @@ public:
         uint32_t cyc;
         #if defined(KINETIS)
         uint8_t msk = 1;
-        #if !defined(KINETIS)
+        #else
         uint32_t msk = digitalPinToBitMask(pin);
         #endif
 
