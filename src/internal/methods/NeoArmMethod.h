@@ -208,6 +208,8 @@ public:
         volatile auto clr = portClearRegister(pin);
 
         uint32_t cyc;
+        #if defined(KINETIS)
+        uint8_t msk = 1;
         #if !defined(KINETIS)
         uint32_t msk = digitalPinToBitMask(pin);
         #endif
@@ -224,13 +226,7 @@ public:
                 while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::Cycles);
 
                 cyc = ARM_DWT_CYCCNT;
-
-                #if defined(KINETIS)
-                *set = 1;
-                #else
                 *set = msk;
-                #endif
-
                 if (pix & mask)
                 {
                     while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::CyclesT1h);
@@ -239,12 +235,7 @@ public:
                 {
                     while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::CyclesT0h);
                 }
-
-                #if defined(KINETIS)
-                *clr = 1;
-                #else
                 *clr = msk;
-                #endif                
             }
         }
     }
