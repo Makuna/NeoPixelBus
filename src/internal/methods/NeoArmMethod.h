@@ -125,7 +125,7 @@ private:
 };
 
 // Teensy
-#if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) || defined (__IMXRT1062__)
+#if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) || defined (__IMXRT1062__) || defined (__IMXRT1052__)
 
 class NeoArmMk20dxSpeedProps800KbpsBase
 {
@@ -208,11 +208,11 @@ public:
         volatile auto clr = portClearRegister(pin);
 
         uint32_t cyc;
-        #if defined(KINETIS)
+#if defined(KINETIS)
         uint8_t msk = 1;
-        #else
+#else
         uint32_t msk = digitalPinToBitMask(pin);
-        #endif
+#endif
 
         ARM_DEMCR |= ARM_DEMCR_TRCENA;
         ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
