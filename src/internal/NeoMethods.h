@@ -57,17 +57,13 @@ License along with NeoPixel.  If not, see
 
 #elif defined(ARDUINO_ARCH_ESP32)
 
-// once we have a core3 i2s, then fix this
-#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
-#include "methods/ESP/ESP32/Core_2_x/NeoEsp32I2sMethod.h"
-#include "methods/ESP/ESP32/Core_2_x/NeoEsp32I2sXMethod.h"
-#endif
-
 #if ESP_IDF_VERSION_MAJOR < 5
 
 #include "methods/ESP/ESP32/Core_2_x/NeoEsp32RmtMethod.h"
 
-#else // ! ESP_IDF_VERSION_MAJOR < 5
+#else // ESP_IDF_VERSION_MAJOR < 5
+
+#define NEOPIXEL_ESP32_RMT_DEFAULT  // core3 will have RMT default, maybe change after an updated i2s
 
 #if !defined(CONFIG_IDF_TARGET_ESP32C2)
 #include "methods/ESP/ESP32/NeoEsp32RmtXMethod.h" // every other SOC
@@ -76,6 +72,12 @@ License along with NeoPixel.  If not, see
 #endif //CONFIG_IDF_TARGET_ESP32C2
 
 #endif // ESP_IDF_VERSION_MAJOR < 5
+
+// once we have a core3 i2s, then fix this
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
+#include "methods/ESP/ESP32/Core_2_x/NeoEsp32I2sMethod.h"
+#include "methods/ESP/ESP32/Core_2_x/NeoEsp32I2sXMethod.h"
+#endif
 
 #include "methods/ESP/ESP32/DotStarEsp32DmaSpiMethod.h"
 #include "methods/ESP/ESP32/NeoEsp32LcdXMethod.h"
