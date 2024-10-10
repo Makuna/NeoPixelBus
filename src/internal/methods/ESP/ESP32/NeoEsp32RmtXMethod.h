@@ -4,7 +4,7 @@ NeoPixel library helper functions for Esp32.
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
-please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+please support me by donating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
@@ -282,7 +282,7 @@ public:
 
 private:
     const size_t  _sizeData;      // Size of '_data*' buffers 
-    const uint8_t _pin;           // output pin number
+    const uint8_t _pin;           // output pin rmt_channel_handle_t
 
     rmt_transmit_config_t _tx_config = {};
     rmt_encoder_handle_t _led_encoder = nullptr;
@@ -350,7 +350,7 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtInverted> NeoE
 
 // Normally I2s method is the default, defining NEOPIXEL_ESP32_RMT_DEFAULT 
 // will switch to use RMT as the default method
-// The ESP32S2 & ESP32C3 will always default to RMT
+// The ESP32S2, ESP32S3, ESP32C3, ESP32C6 will allways default to RMT
 
 typedef NeoEsp32RmtXWs2805Method NeoWs2805Method;
 typedef NeoEsp32RmtXWs2811Method NeoWs2811Method;

@@ -42,7 +42,7 @@ extern "C"
 #include <hal/gpio_hal.h>
 #include <hal/lcd_ll.h>
 #include <soc/lcd_cam_struct.h>
-#include "FractionClk.h"
+#include "../../FractionClk.h"
 }
 
 //

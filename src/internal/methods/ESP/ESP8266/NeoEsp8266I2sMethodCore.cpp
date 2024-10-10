@@ -25,7 +25,7 @@ License along with NeoPixel.  If not, see
 -------------------------------------------------------------------------*/
 
 #include <Arduino.h>
-#include "../NeoUtil.h"
+#include "../../../NeoUtil.h"
 #include "NeoEsp8266I2sMethodCore.h"
 
 #ifdef ARDUINO_ARCH_ESP8266

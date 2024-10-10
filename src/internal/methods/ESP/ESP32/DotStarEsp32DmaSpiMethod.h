@@ -134,8 +134,8 @@ public:
     // If pins aren't specified, initialize bus with just the default SCK and MOSI pins for the SPI peripheral (no SS, no >1-bit pins)
     void Initialize()
     {
-#if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
-        if (T_SPIBUS::SpiHostDevice == VSPI_HOST)
+#if SOC_SPI_PERIPH_NUM > 2
+        if (T_SPIBUS::SpiHostDevice == SPI3_HOST)
         {
             Initialize(SCK, -1, MOSI, -1, -1, -1);
         }
@@ -304,19 +304,20 @@ typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi28BitBus> DotStarEsp
 
 
 // SPI3
-#if (defined(CONFIG_IDF_TARGET_ESP32) || defined(CONFIG_IDF_TARGET_ESP32S3))
+#if SOC_SPI_PERIPH_NUM > 2
+
 typedef Esp32SpiBus<SPI3_HOST, WIDTH1> Esp32Spi3Bus;
+typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi3Bus> DotStarEsp32DmaSpi3Method;
+
+#if !defined(CONFIG_IDF_TARGET_ESP32S2)
+
 typedef Esp32SpiBus<SPI3_HOST, WIDTH2> Esp32Spi32BitBus;
 typedef Esp32SpiBus<SPI3_HOST, WIDTH4> Esp32Spi34BitBus;
 
-typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi3Bus> DotStarEsp32DmaSpi3Method;
 typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi32BitBus> DotStarEsp32DmaSpi32BitMethod;
 typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi34BitBus> DotStarEsp32DmaSpi34BitMethod;
-#endif
 
-#if defined(CONFIG_IDF_TARGET_ESP32S2)
-typedef Esp32SpiBus<SPI3_HOST, WIDTH1> Esp32Spi3Bus;
-typedef DotStarEsp32DmaSpiMethodBase<SpiSpeed10Mhz, Esp32Spi3Bus> DotStarEsp32DmaSpi3Method;
+#endif
 #endif
 
 // Default SpiDma methods if we don't care about bus. It's nice that every single ESP32 out there

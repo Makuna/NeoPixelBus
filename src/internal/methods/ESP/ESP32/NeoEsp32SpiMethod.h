@@ -6,7 +6,7 @@ Adaption of Espressif's component library code by Christian Baars
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
-please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
+please support me by donating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is not yet part of the Makuna/NeoPixelBus library.
@@ -29,11 +29,6 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 #if defined(ARDUINO_ARCH_ESP32)
-
-#if (defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C2) || defined(CONFIG_IDF_TARGET_ESP32C6)) && !defined(HSPI_HOST)
-// HSPI_HOST depreciated in C3
-#define HSPI_HOST   SPI2_HOST
-#endif
 
 #include <Arduino.h>
 
