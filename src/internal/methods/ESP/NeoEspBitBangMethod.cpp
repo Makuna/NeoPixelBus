@@ -36,7 +36,7 @@ static inline uint32_t getCycleCount(void)
 {
     uint32_t ccount;
 
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2) || defined(CONFIG_IDF_TARGET_ESP32P4)
     __asm__ __volatile__("csrr %0,0x7e2":"=r" (ccount));
     //ccount = esp_cpu_get_ccount();
 #else
