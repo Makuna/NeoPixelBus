@@ -5,7 +5,7 @@ NeoPixel library helper functions for Methods.
 Written by Michael C. Miller.
 
 I invest time and resources providing this open source code,
-please support me by donating (see https://github.com/Makuna/NeoPixelBus)
+please support me by dontating (see https://github.com/Makuna/NeoPixelBus)
 
 -------------------------------------------------------------------------
 This file is part of the Makuna/NeoPixelBus library.
@@ -25,73 +25,71 @@ License along with NeoPixel.  If not, see
 <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------------------*/
 
-class NeoBitsSpeedBase
+// --------------------------------------------------------
+class NeoBitsSpeedDmx512
 {
 public:
-    static uint16_t ByteSendTimeUs(uint16_t bitSendTimeNs)
-    {
-        return (bitSendTimeNs * 8) / 1000;
-    }
+    const static uint16_t BitSendTimeNs = 4000; //5500;  //   4us, 250Kbps so 4000 * 11 / 8
+    const static uint16_t ResetTimeUs = 500; // 6 x 32us equals 3 Words.
 };
 
-// --------------------------------------------------------
-class NeoBitsSpeedWs2812x : public NeoBitsSpeedBase
+class NeoBitsSpeedWs2812x
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 300;
 };
 
-class NeoBitsSpeedWs2805 : public NeoBitsSpeedBase
+class NeoBitsSpeedWs2805
 {
 public:
     const static uint16_t BitSendTimeNs = 1125;
     const static uint16_t ResetTimeUs = 300; // spec is 280, intentionally longer for compatiblity use
 };
 
-class NeoBitsSpeedSk6812 : public NeoBitsSpeedBase
+class NeoBitsSpeedSk6812
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 80;
 };
 
-class NeoBitsSpeedTm1814 : public NeoBitsSpeedBase
+class NeoBitsSpeedTm1814
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 200;
 };
 
-class NeoBitsSpeedTm1914 : public NeoBitsSpeedBase
+class NeoBitsSpeedTm1914
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 200;
 };
 
-class NeoBitsSpeedTm1829 : public NeoBitsSpeedBase
+class NeoBitsSpeedTm1829
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 200;
 };
 
-class NeoBitsSpeed800Kbps : public NeoBitsSpeedBase
+class NeoBitsSpeed800Kbps
 {
 public:
     const static uint16_t BitSendTimeNs = 1250;
     const static uint16_t ResetTimeUs = 50;
 };
 
-class NeoBitsSpeed400Kbps : public NeoBitsSpeedBase
+class NeoBitsSpeed400Kbps
 {
 public:
     const static uint16_t BitSendTimeNs = 2500;
     const static uint16_t ResetTimeUs = 50;
 };
 
-class NeoBitsSpeedApa106 : public NeoBitsSpeedBase
+class NeoBitsSpeedApa106
 {
 public:
     const static uint16_t BitSendTimeNs = 1710;
