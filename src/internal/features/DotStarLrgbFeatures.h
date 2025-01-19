@@ -73,4 +73,11 @@ class DotStarLbgr64Feature :
 {
 };
 
+class DotStarLrgb64Feature :
+    public DotStarL4WordFeature<ColorIndexR, ColorIndexG, ColorIndexB>,
+    public NeoElementsNoSettings
+{
+};
+
 typedef DotStarLbgr64Feature Hd108LbgrFeature;
+typedef DotStarLrgb64Feature Hd108LrgbFeature;

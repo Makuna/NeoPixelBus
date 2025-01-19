@@ -109,6 +109,11 @@ public:
         return false;
     }
 
+    bool SwapBuffers()
+    {
+        return false;
+    }
+
     uint8_t* getData() const
     {
         return _data;

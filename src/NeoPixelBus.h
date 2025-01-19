@@ -330,6 +330,15 @@ public:
     void SetPixelSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
     {
         T_COLOR_FEATURE::applySettings(_method.getData(), _method.getDataSize(), settings);
+        if (_method.SwapBuffers())
+        {
+            // some methods have two internal buffers
+            // so need to swap so settings are stored in both copies
+            //
+            T_COLOR_FEATURE::applySettings(_method.getData(), _method.getDataSize(), settings);
+            // swap back to minimize inconsistencies
+            _method.SwapBuffers();
+        }
         Dirty();
     };
 

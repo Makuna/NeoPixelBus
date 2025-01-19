@@ -78,7 +78,7 @@ public:
 
     void Update(bool)
     {
-        const uint8_t startFrame[4] = { 0x00 };
+        const uint8_t startFrame[16] = { 0x00 };
         const uint8_t endFrame[4] = { 0xff };
         
         _wire.beginTransaction();
@@ -98,6 +98,11 @@ public:
     bool AlwaysUpdate()
     {
         // this method requires update to be called only if changes to buffer
+        return false;
+    }
+
+    bool SwapBuffers()
+    {
         return false;
     }
 

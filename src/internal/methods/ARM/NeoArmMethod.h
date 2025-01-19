@@ -1,6 +1,6 @@
 /*-------------------------------------------------------------------------
 NeoPixel library helper functions for ARM MCUs.
-Teensy 3.0, 3.1, LC, Arduino Due
+Teensy 3.0, 3.1, 3.5, 3.6, 4.0, 4.1, LC, Arduino Due
 
 Written by Michael C. Miller.
 Some work taken from the Adafruit NeoPixel library.
@@ -97,6 +97,11 @@ public:
         return false;
     }
 
+    bool SwapBuffers()
+    {
+        return false;
+    }
+
     uint8_t* getData() const
     {
         return _data;
@@ -119,8 +124,8 @@ private:
     uint8_t _pin;            // output pin number
 };
 
-// Teensy 3.0 or 3.1 (3.2) or 3.5 or 3.6
-#if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) 
+// Teensy
+#if defined(__MK20DX128__) || defined(__MK20DX256__) || defined(__MK64FX512__) || defined(__MK66FX1M0__) || defined (__IMXRT1062__) || defined (__IMXRT1052__)
 
 class NeoArmMk20dxSpeedProps800KbpsBase
 {
@@ -199,10 +204,15 @@ public:
         uint8_t pix;
         uint8_t mask;
 
-        volatile uint8_t* set = portSetRegister(pin);
-        volatile uint8_t* clr = portClearRegister(pin);
+        volatile auto set = portSetRegister(pin);
+        volatile auto clr = portClearRegister(pin);
 
         uint32_t cyc;
+#if defined(KINETISK) || defined(KINETISL)
+        uint8_t msk = 1;
+#else
+        uint32_t msk = digitalPinToBitMask(pin);
+#endif
 
         ARM_DEMCR |= ARM_DEMCR_TRCENA;
         ARM_DWT_CTRL |= ARM_DWT_CTRL_CYCCNTENA;
@@ -216,7 +226,7 @@ public:
                 while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::Cycles);
 
                 cyc = ARM_DWT_CYCCNT;
-                *set = 1;
+                *set = msk;
                 if (pix & mask)
                 {
                     while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::CyclesT1h);
@@ -225,7 +235,7 @@ public:
                 {
                     while (ARM_DWT_CYCCNT - cyc < T_SPEEDPROPS::CyclesT0h);
                 }
-                *clr = 1;
+                *clr = msk;
             }
         }
     }
@@ -550,7 +560,7 @@ typedef NeoArm400KbpsMethod NeoArmApa106Method;
 typedef NeoArmWs2805Method NeoArmWs2814Method;
 typedef NeoArmTm1814InvertedMethod NeoArmTm1914InvertedMethod;
 
-#elif defined(ARDUINO_STM32_FEATHER) || defined(ARDUINO_ARCH_STM32L4) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32F1)// FEATHER WICED (120MHz)
+#elif defined(ARDUINO_ARCH_STM32) || defined(ARDUINO_STM32_FEATHER) || defined(ARDUINO_ARCH_STM32L4) || defined(ARDUINO_ARCH_STM32F4) || defined(ARDUINO_ARCH_STM32F1)// FEATHER WICED (120MHz)
 
 class NeoArmStm32SpeedProps800KbpsBase
 {
@@ -695,7 +705,21 @@ public:
         volatile uint32_t* set = &(GPIO->BRR);
         volatile uint32_t* clr = &(GPIO->BSRR);
 
+#elif defined(STM32WLE5xx)
+        const unsigned long GPIO_BASE_ADDR = 0x48000000UL;
+        const unsigned long GPIO_BASE_OFFSET = 0x00000400UL;
+        const uint32_t GPIO_NUMBER = 16;
+
+        uint32_t pinMask = 1 << (pin % GPIO_NUMBER);
+
+        GPIO_TypeDef* GPIO = reinterpret_cast<GPIO_TypeDef*>(GPIO_BASE_ADDR + ((pin / GPIO_NUMBER) * GPIO_BASE_OFFSET));
+
+        volatile uint32_t* set = &(GPIO->BRR);
+        volatile uint32_t* clr = &(GPIO->BSRR);
+#else
+#error "SPECIFIC STM32 CHIP NOT ACCOUNTED FOR"
 #endif
+
         for (;;)
         {
             if (p & bitMask)
