@@ -27,7 +27,7 @@ License along with NeoPixel.  If not, see
 #pragma once
 
 
-#if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
+#if defined(ARDUINO_ARCH_ESP32)
 //----------------------------------------------------------
 
 #if defined(CONFIG_IDF_TARGET_ESP32S3)
@@ -68,26 +68,24 @@ typedef NeoEsp32LcdX16Ws2816Method    X16Ws2816Method;
 typedef NeoEsp32LcdX16Ws2812Method    X16Ws2812Method;
 typedef NeoEsp32LcdX16Lc8812Method    X16Lc8812Method;
 
-#elif defined(CONFIG_IDF_TARGET_ESP32C3)
+
+#elif defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2) || defined(CONFIG_IDF_TARGET_ESP32P4)
+
 //----------------------------------------------------------
-/* RMT doesnt have a X method yet
-typedef NeoEsp32Rmtx8Ws2812xMethod   X8Ws2812xMethod;
-typedef NeoEsp32Rmtx8Ws2805Method    X8Ws2805Method;
-typedef NeoEsp32Rmtx8Sk6812Method    X8Sk6812Method;
-typedef NeoEsp32Rmtx8Tm1814Method    X8Tm1814Method;
-typedef NeoEsp32Rmtx8Tm1829Method    X8Tm1829Method;
-typedef NeoEsp32Rmtx8Tm1914Method    X8Tm1914Method;
-typedef NeoEsp32Rmtx8800KbpsMethod   X8800KbpsMethod;
-typedef NeoEsp32Rmtx8400KbpsMethod   X8400KbpsMethod;
-typedef NeoEsp32Rmtx8Apa106Method    X8Apa106Method;
-typedef NeoEsp32Rmtx8Ws2814Method    X8Ws2814Method;
-typedef NeoEsp32Rmtx8Ws2813Method    X8Ws2813Method;
-typedef NeoEsp32Rmtx8Ws2812dMethod   X8Ws2812dMethod;
-typedef NeoEsp32Rmtx8Ws2811Method    X8Ws2811Method;
-typedef NeoEsp32Rmtx8Ws2816Method    X8Ws2816Method;
-typedef NeoEsp32Rmtx8Ws2812Method    X8Ws2812Method;
-typedef NeoEsp32Rmtx8Lc8812Method    X8Lc8812Method;
-*/
+typedef NeoEsp32RmtXWs2812xMethod   XWs2812xMethod;
+typedef NeoEsp32RmtXWs2805Method    XWs2805Method;
+typedef NeoEsp32RmtXSk6812Method    XSk6812Method;
+typedef NeoEsp32RmtXTm1814Method    XTm1814Method;
+typedef NeoEsp32RmtXTm1829Method    XTm1829Method;
+typedef NeoEsp32RmtXTm1914Method    XTm1914Method;
+typedef NeoEsp32RmtX800KbpsMethod   X800KbpsMethod;
+typedef NeoEsp32RmtX400KbpsMethod   X400KbpsMethod;
+typedef NeoEsp32RmtXApa106Method    XApa106Method;
+typedef NeoEsp32RmtXWs2814Method    XWs2814Method;
+typedef NeoEsp32RmtXWs2813Method    XWs2813Method;
+typedef NeoEsp32RmtXWs2811Method    XWs2811Method;
+typedef NeoEsp32RmtXWs2816Method    XWs2816Method;
+typedef NeoEsp32RmtXLc8812Method    XLc8812Method;
 
 #elif defined(CONFIG_IDF_TARGET_ESP32S2)
 //----------------------------------------------------------
@@ -126,6 +124,7 @@ typedef NeoEsp32I2s0X16Ws2811Method    X16Ws2811Method;
 typedef NeoEsp32I2s0X16Ws2816Method    X16Ws2816Method;
 typedef NeoEsp32I2s0X16Ws2812Method    X16Ws2812Method;
 typedef NeoEsp32I2s0X16Lc8812Method    X16Lc8812Method;
+
 
 #else // plain old ESP32
 //----------------------------------------------------------
@@ -192,7 +191,7 @@ typedef Rp2040x4Pio1Ws2812xMethod X4Ws2812xMethod;
 typedef Rp2040x4Pio1400KbpsMethod X4400KbpsMethod;
 #endif
 
-// some plafforms do not have a native x4, so alias it to x8
+// some platforms do not have a native x4, so alias it to x8
 //
 #if defined(NEO_X4_ALIAS)
 typedef X8Ws2812xMethod X4Ws2813Method;
