@@ -369,6 +369,18 @@ public:
         }
     }
 
+    bool AlwaysUpdate()
+    {
+        // this method requires update to be called only if changes to buffer
+        return false;
+    }
+
+    bool SwapBuffers()
+    {
+        std::swap(_dataSending, _dataEditing);
+        return true;
+    }
+
     uint8_t* getData() const
     {
         return _dataEditing;
