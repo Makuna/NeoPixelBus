@@ -76,6 +76,7 @@ public:
         // wait until the last send finishes before destructing everything
         // arbitrary time out of 10 seconds
 
+        ESP_ERROR_CHECK(rmt_disable(_channel)); // TroyHacks: added to disable the channel before deleting it
         ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_tx_wait_all_done(_channel, 10000 / portTICK_PERIOD_MS));
         ESP_ERROR_CHECK(rmt_del_channel(_channel));
 
