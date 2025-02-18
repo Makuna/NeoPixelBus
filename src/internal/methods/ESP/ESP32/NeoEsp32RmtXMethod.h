@@ -77,6 +77,7 @@ public:
         // arbitrary time out of 10 seconds
 
         ESP_ERROR_CHECK_WITHOUT_ABORT(rmt_tx_wait_all_done(_channel, 10000 / portTICK_PERIOD_MS));
+        ESP_ERROR_CHECK(rmt_disable(_channel)); 
         ESP_ERROR_CHECK(rmt_del_channel(_channel));
 
         gpio_matrix_out(_pin, 0x100, false, false);
