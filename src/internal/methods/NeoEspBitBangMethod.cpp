@@ -120,7 +120,7 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
         setRegister = &GPIO.out_w1ts.val;
         clearRegister = &GPIO.out_w1tc.val;
     }
-#if !defined(CONFIG_IDF_TARGET_ESP32C3)
+#if !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
     else
     {
         setRegister = &GPIO.out1_w1ts.val;
