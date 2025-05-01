@@ -69,6 +69,7 @@ License along with NeoPixel.  If not, see
 
 typedef NeoRgb48Feature NeoRgbUcs8903Feature;
 typedef NeoRgbw64Feature NeoRgbwUcs8904Feature;
+typedef NeoRgbwFeature NeoRgbwUcs2904Feature;
 typedef NeoGrb48Feature NeoGrbWs2816Feature;
 
 // DotStart Features
