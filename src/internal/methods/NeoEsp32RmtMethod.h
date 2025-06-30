@@ -73,6 +73,7 @@ protected:
     const static uint32_t NsPerSecond = 1000000000L;
     const static uint32_t RmtTicksPerSecond = (RmtCpu / RmtClockDivider);
     const static uint32_t NsPerRmtTick = (NsPerSecond / RmtTicksPerSecond); // about 25 
+    constexpr static uint32_t CyclesPerRmtTick = (RmtClockDivider * F_CPU / RmtCpu);
 
     static void IRAM_ATTR _translate(const void* src,
         rmt_item32_t* dest,
@@ -84,6 +85,10 @@ protected:
         const uint32_t rmtBit1,
         const uint16_t rmtDurationReset);
 
+public:
+    inline constexpr static uint32_t CyclesPerSample(uint32_t val) {
+        return ((val & 0x7FFF) + ((val>>16) & 0x7FFF)) * CyclesPerRmtTick; 
+    }
 };
 
 class NeoEsp32RmtSpeedBase : public NeoEsp32RmtSpeed

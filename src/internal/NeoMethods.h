@@ -60,6 +60,7 @@ License along with NeoPixel.  If not, see
 #if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "methods/NeoEsp32I2sMethod.h"
 #include "methods/NeoEsp32RmtMethod.h"
+#include "methods/NeoEsp32RmtHIMethod.h"
 #include "methods/DotStarEsp32DmaSpiMethod.h"
 #include "methods/NeoEsp32I2sXMethod.h"
 #include "methods/NeoEsp32LcdXMethod.h"
