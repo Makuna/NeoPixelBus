@@ -135,13 +135,13 @@ static void IRAM_ATTR RmtStartWrite(uint8_t channel, NeoEsp32RmtDriverState& sta
 
 
 extern "C" void IRAM_ATTR NeoEsp32RmtMethodIsr(void *arg) {
-   uint32_t isr_ccount = cpu_hal_get_cycle_count();
-
     // Tx threshold interrupt
+    uint32_t status_processed = 0;
     uint32_t status = rmt_ll_get_tx_thres_interrupt_status(&RMT);
     while (status) {
         uint8_t channel = __builtin_ffs(status) - 1;
-        if (driverState[channel]) {
+                
+        if (driverState[channel] && ((status_processed & (1<<channel)) == 0)) {            
             NeoEsp32RmtDriverState& state = *driverState[channel];
             uint32_t ccount = cpu_hal_get_cycle_count();
             if ((state.lastTxInterruptCycleCount == 0) || ((ccount - state.lastTxInterruptCycleCount) < state.txMaxCycles)) {
@@ -158,15 +158,20 @@ extern "C" void IRAM_ATTR NeoEsp32RmtMethodIsr(void *arg) {
                     ord.last = state.lastTxInterruptCycleCount;
                     ord.current = ccount;
                     ord.index = state.txDataCurrent - state.txDataStart;
-                    ord.isr = isr_ccount;
                 }
                 // Reset the context
                 state.txDataCurrent = state.txDataStart;
                 state.overruns++;
                 RmtStartWrite(channel, state);
-            }
-            rmt_ll_clear_tx_thres_interrupt(&RMT, channel);
+            }            
+            status_processed |= (1<<channel);
+        } else {
+            // Danger - either not our channel, or we've processed this channel without leaving the loop!
+            // Indicates 100% cpu load doing nothing but processing RMTs
+            // Stop.
+            rmt_ll_tx_stop(&RMT, channel);
         }
+        rmt_ll_clear_tx_thres_interrupt(&RMT, channel);
         status = rmt_ll_get_tx_thres_interrupt_status(&RMT);
     }
 };
@@ -251,17 +256,18 @@ esp_err_t  NeoEsp32RmtHiMethodDriver::Write(rmt_channel_t channel, const uint8_t
 
     NeoEsp32RmtDriverState& state = *driverState[channel];
     esp_err_t result = WaitForTxDone(channel, 10000 / portTICK_PERIOD_MS);
-    if (result == ESP_OK) {
-        if (state.overruns) {
-            Serial.printf("RMT %d handled overruns %d -- threshold %d\n", channel, state.overruns, state.txMaxCycles);
-            for(unsigned i = 0; i < state.overruns; ++i) {
-                if (i >= 32) break;
-                auto& ord = state.overrun_debug[i];
-                Serial.printf("RMT %d: %u - %u %u -> %u %u @= %d\n", channel, ord.last, ord.isr, ord.current, ord.current - ord.last, ord.current - ord.isr, ord.index);
-            }
-            state.overruns = 0;
-        }
 
+    if (state.overruns) {
+        Serial.printf("RMT %d handled overruns %d -- threshold %d\n", channel, state.overruns, state.txMaxCycles);
+        for(unsigned i = 0; i < state.overruns; ++i) {
+            if (i >= 32) break;
+            auto& ord = state.overrun_debug[i];
+            Serial.printf("RMT %d: %u - %u %u -> %u %u @= %d\n", channel, ord.last, ord.isr, ord.current, ord.current - ord.last, ord.current - ord.isr, ord.index);
+        }
+        state.overruns = 0;
+    }
+
+    if (result == ESP_OK) {
         state.txDataStart = src;
         state.txDataCurrent = src;
         state.txDataEnd = src + src_size;
@@ -279,12 +285,11 @@ esp_err_t NeoEsp32RmtHiMethodDriver::WaitForTxDone(rmt_channel_t channel, TickTy
     NeoEsp32RmtDriverState& state = *driverState[channel];
     // yield-wait until wait_time
     unsigned loop_count = 0;
-    uint32_t start_time = cpu_hal_get_cycle_count();
     esp_err_t rv = ESP_OK;
     uint32_t status;
     while(1) {
         status = rmt_ll_tx_get_channel_status(&RMT, channel);
-        if ((state.txDataCurrent == state.txDataEnd) && ((status & 0x07000000) == 0)) break;
+        if ((state.txDataCurrent == state.txDataEnd) && ((status & 0x07000000) == 0)) break; /* Stopped state while not at end could mean we caught it restarting on an error */
         if (wait_time == 0) { rv = ESP_ERR_TIMEOUT; break; };
 
         ++loop_count;
@@ -295,14 +300,7 @@ esp_err_t NeoEsp32RmtHiMethodDriver::WaitForTxDone(rmt_channel_t channel, TickTy
     };
 
     if (loop_count > 0) {
-        uint32_t end_time = cpu_hal_get_cycle_count();
-
-        Serial.printf("RMT %d wait %d:%d: %u, %d/%d sent, status %08X, overruns %d\n", channel, loop_count, end_time - start_time, rv, state.txDataCurrent - state.txDataStart, state.txDataEnd - state.txDataStart, status, state.overruns);
-        for(unsigned i = 0; i < state.overruns; ++i) {
-            if (i >= 32) break;
-            auto& ord = state.overrun_debug[i];
-            Serial.printf("RMT %d: %u - %u %u -> %u %u @= %d\n", channel, ord.last, ord.isr, ord.current, ord.current - ord.last, ord.current - ord.isr, ord.index);
-        }
+        Serial.printf("RMT %d wait %d: %u, %d/%d sent, status %08X, overruns %d\n", channel, loop_count, rv, state.txDataCurrent - state.txDataStart, state.txDataEnd - state.txDataStart, status, state.overruns);
     }
     return rv;
 }
