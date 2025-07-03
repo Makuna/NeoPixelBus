@@ -6,7 +6,8 @@
  */
 
 /* RISC-V CPUs not supported (yet?) */
-#if defined(__XTENSA__)
+/* If the Bluetooth driver has hooked the high-priority interrupt, we piggyback on it and don't need this. */
+#if defined(__XTENSA__) && !defined(CONFIG_BTDM_CTRL_HLI)
 
 #include <xtensa/coreasm.h>
 #include <xtensa/corebits.h>
@@ -24,17 +25,9 @@
 
 #if CONFIG_ESP_SYSTEM_CHECK_INT_LEVEL_5
 
-#if CONFIG_BTDM_CTRL_HLI
-/* Bluetooth is using vector 4.  Use NMI (!!) */
-#define RFI_X               XCHAL_NMILEVEL
-#define xt_highintx         xt_nmi
-
-#else /* !CONFIG_BTDM_CTRL_HLI */
 /* Use level 4 */
 #define RFI_X               4
 #define xt_highintx         xt_highint4
-
-#endif /* CONFIG_BTDM_CTRL_HLI */
 
 #else /* !CONFIG_ESP_SYSTEM_CHECK_INT_LEVEL_5 */
 
