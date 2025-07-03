@@ -7,7 +7,7 @@
 
 /* RISC-V CPUs not supported (yet?) */
 /* If the Bluetooth driver has hooked the high-priority interrupt, we piggyback on it and don't need this. */
-#if defined(__XTENSA__) && !defined(CONFIG_BTDM_CTRL_HLI)
+#if defined(__XTENSA__) && defined(ESP32)
 
 #include <xtensa/coreasm.h>
 #include <xtensa/corebits.h>
@@ -15,6 +15,8 @@
 #include "freertos/xtensa_context.h"
 #include "sdkconfig.h"
 #include "soc/soc.h"
+
+#ifndef CONFIG_BTDM_CTRL_HLI
 
 /*
    Select interrupt
@@ -90,12 +92,14 @@ xt_highintx:
     s32i    a2, a0, 4
     rsr     a2, SAR
     s32i    a2, a0, 8
+    #if XCHAL_HAVE_LOOPS
     rsr     a2, LBEG
     s32i    a2, a0, 12
     rsr     a2, LEND
     s32i    a2, a0, 16
     rsr     a2, LCOUNT
     s32i    a2, a0, 20
+    #endif
     rsr     a2, EPC1
     s32i    a2, a0, 24
 
@@ -185,12 +189,14 @@ _highint4_stack_switch:
     l32i    a2, a0, 8
     wsr     a2, SAR
     l32i    a2, a0, 12
+    #if XCHAL_HAVE_LOOPS
     wsr     a2, LBEG
     l32i    a2, a0, 16
     wsr     a2, LEND
     l32i    a2, a0, 20
     wsr     a2, LCOUNT
     l32i    a2, a0, 24
+    #endif
     wsr     a2, EPC1
 
     /* Restoring the physical registers.
@@ -261,4 +267,5 @@ _highint4_stack_switch:
 ld_include_hli_vectors_rmt:
 
 
-#endif
+#endif // CONFIG_BTDM_CTRL_HLI
+#endif // XTensa

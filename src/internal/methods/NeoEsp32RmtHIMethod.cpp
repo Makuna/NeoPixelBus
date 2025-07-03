@@ -37,10 +37,19 @@ License along with NeoPixel.  If not, see
 #include "hal/cpu_hal.h"
 #include "hal/rmt_ll.h"
 #include "hal/interrupt_controller_hal.h"
+#include "soc/soc.h"
+
 
 #if defined(CONFIG_BTDM_CTRL_HLI)
 // Espressif's bluetooth driver offers a helpful sharing layer
 extern "C" esp_err_t hli_intr_register(intr_handler_t handler, void* arg, uint32_t intr_reg, uint32_t intr_mask);
+#else /* !CONFIG_BTDM_CTRL_HLI*/
+
+// Link our high-priority ISR handler
+extern "C" int ld_include_hli_vectors_rmt[0];   // an object with an address, but no space
+
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#include "soc/periph_defs.h"
 #endif
 
 #if CONFIG_ESP_SYSTEM_CHECK_INT_LEVEL_5
@@ -48,6 +57,9 @@ extern "C" esp_err_t hli_intr_register(intr_handler_t handler, void* arg, uint32
 #else
 #define INT_LEVEL_FLAG ESP_INTR_FLAG_LEVEL5
 #endif
+
+#endif  /* CONFIG_BTDM_CTRL_HLI */
+
 
 // RMT driver implementation
 struct NeoEsp32RmtHIChannelState {
