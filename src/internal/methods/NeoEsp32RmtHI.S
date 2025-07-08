@@ -104,7 +104,7 @@ xt_highintx:
     s32i    a2, a0, 24
 
     /* disable exception mode, window overflow */
-    movi    a0, PS_INTLEVEL(RFI_X) | PS_EXCM
+    movi    a0, PS_INTLEVEL(RFI_X+1) | PS_EXCM
     wsr     a0, PS
     rsync
 
@@ -159,12 +159,12 @@ xt_highintx:
     sll     a3, a3
     wsr     a3, WINDOWSTART
 
-_highint4_stack_switch:
+_highint_stack_switch:
     movi    a0, 0
     movi    sp, _rmt_intr_stack + RMT_INTR_STACK_SIZE - 16
     s32e    a0, sp, -12         /* For GDB: set null SP */
     s32e    a0, sp, -16         /* For GDB: set null PC */
-    movi    a0, _highint4_stack_switch     /* For GDB: cosmetics, for the frame where stack switch happened */
+    movi    a0, _highint_stack_switch     /* For GDB: cosmetics, for the frame where stack switch happened */
 
     /* Set up PS for C, disable all interrupts except NMI and debug, and clear EXCM. */
     movi    a6, PS_INTLEVEL(RFI_X) | PS_UM | PS_WOE
@@ -178,7 +178,7 @@ _highint4_stack_switch:
     l32e    sp, sp, -12                     /* switch back to the original stack */
 
     /* Done with C handler; re-enable exception mode, disabling window overflow */
-    movi    a2, PS_INTLEVEL(RFI_X) | PS_EXCM    /* TOCHECK */
+    movi    a2, PS_INTLEVEL(RFI_X+1) | PS_EXCM    /* TOCHECK */
     wsr     a2, PS
     rsync
 
