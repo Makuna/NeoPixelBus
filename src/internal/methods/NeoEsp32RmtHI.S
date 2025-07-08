@@ -188,15 +188,15 @@ _highint_stack_switch:
     movi    a0, _rmt_save_ctx + SPECREG_OFFSET
     l32i    a2, a0, 8
     wsr     a2, SAR
-    l32i    a2, a0, 12
     #if XCHAL_HAVE_LOOPS
+    l32i    a2, a0, 12
     wsr     a2, LBEG
     l32i    a2, a0, 16
     wsr     a2, LEND
     l32i    a2, a0, 20
     wsr     a2, LCOUNT
-    l32i    a2, a0, 24
     #endif
+    l32i    a2, a0, 24
     wsr     a2, EPC1
 
     /* Restoring the physical registers.

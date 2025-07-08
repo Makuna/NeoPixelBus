@@ -326,7 +326,7 @@ esp_err_t NeoEsp32RmtHiMethodDriver::Install(rmt_channel_t channel, uint32_t rmt
         intr_cntrl_ll_enable_interrupts(1<<25);
 #elif ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)     // New IDF
         // Our custom ISR is bound by the linker; passing a pointer to an address that source file here guarantees that we link it in
-        err = esp_intr_alloc(ETS_RMT_INTR_SOURCE, INT_LEVEL_FLAG | ESP_INTR_FLAG_IRAM, nullptr, &ld_include_hli_vectors_rmt, &isrHandle);
+        err = esp_intr_alloc(ETS_RMT_INTR_SOURCE, INT_LEVEL_FLAG | ESP_INTR_FLAG_IRAM, nullptr, (void*) &ld_include_hli_vectors_rmt, &isrHandle);
 #else   // IDF 3
         // Old IDF doesn't allow us to register the interrupt; it's flagged as reserved.
         // Ensure all interruptss are cleared first
