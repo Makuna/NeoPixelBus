@@ -226,7 +226,7 @@ static void IRAM_ATTR RmtFillBuffer(uint8_t channel, const byte** src_ptr, const
     if (rmtToWrite > 0) {
         // Add end event
         rmt_item32_t bit0_val = {{.val = bit0 }};
-        *dest = rmt_item32_t {{{ .duration0 = 0, .level0 = bit0_val.level1, .duration1 = 0, .level1 = 0 }}};
+        *dest = rmt_item32_t {{{ .duration0 = 0, .level0 = bit0_val.level1, .duration1 = 0, .level1 = bit0_val.level1 }}};
     }
 }
 
@@ -237,8 +237,8 @@ static void IRAM_ATTR RmtStartWrite(uint8_t channel, NeoEsp32RmtHIChannelState& 
     // Fill the first part of the buffer with a reset event
     // FUTURE: we could do timing analysis with the last interrupt on this channel
     // Use 8 words to stay aligned with the buffer fill logic
-    uint32_t idle_lvl = (rmt_item32_t  {{.val = state.rmtBit0}}).level1;
-    rmt_item32_t fill = {{{ .duration0 = 1, .level0 = idle_lvl, .duration1 = 1, .level1 = idle_lvl }}};
+    rmt_item32_t bit0_val = {{.val = state.rmtBit0 }};
+    rmt_item32_t fill = {{{ .duration0 = 2, .level0 = bit0_val.level1, .duration1 = 2, .level1 = bit0_val.level1 }}};
     rmt_item32_t* dest = (rmt_item32_t*) &RMTMEM.chan[channel].data32[0];
     for (auto i = 0; i < 7; ++i) dest[i] = fill;
     fill.duration1 = state.resetDuration - 17;
