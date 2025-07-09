@@ -43,6 +43,22 @@ License along with NeoPixel.  If not, see
 /* Shims for older core; we can safely assume original ESP32 */
 #include "soc/rmt_struct.h"
 
+// Selected RMT API functions borrowed from ESP-IDF v4.4.8
+// components/hal/esp32/include/hal/rmt_ll.h
+// Copyright 2019 Espressif Systems (Shanghai) PTE LTD
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 __attribute__((always_inline))
 static inline void rmt_ll_tx_reset_pointer(rmt_dev_t *dev, uint32_t channel)
 {
