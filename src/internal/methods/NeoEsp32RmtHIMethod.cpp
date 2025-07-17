@@ -184,6 +184,12 @@ extern "C" void ld_include_hli_vectors_rmt();   // an object with an address, bu
 #define INT_LEVEL_FLAG ESP_INTR_FLAG_LEVEL5
 #endif
 
+// ESP-IDF v3 cannot enable high priority interrupts through the API at all;
+// and ESP-IDF v4 cannot enable Level 5 due to incorrect interrupt descriptor tables
+#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)) || ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)) && CONFIG_ESP_SYSTEM_CHECK_INT_LEVEL_5)
+#define NEOESP32_RMT_CAN_USE_INTR_ALLOC
+#endif
+
 #endif  /* CONFIG_BTDM_CTRL_HLI */
 
 
@@ -199,11 +205,10 @@ struct NeoEsp32RmtHIChannelState {
 };
 
 // Global variables
-#ifndef CONFIG_BTDM_CTRL_HLI
-#if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)     // New IDF
+#if defined(NEOESP32_RMT_CAN_USE_INTR_ALLOC)
 static intr_handle_t isrHandle = nullptr;
 #endif
-#endif /* CONFIG_BTDM_CTRL_HLI */
+
 static NeoEsp32RmtHIChannelState** driverState = nullptr;
 constexpr size_t rmtBatchSize =  RMT_MEM_ITEM_NUM / 2;
 static uint32_t isr_count = 0;
@@ -340,17 +345,18 @@ esp_err_t NeoEsp32RmtHiMethodDriver::Install(rmt_channel_t channel, uint32_t rmt
         // 25 is the magic number of the bluetooth ISR on ESP32 - see soc/soc.h.
         intr_matrix_set(cpu_hal_get_core_id(), ETS_RMT_INTR_SOURCE, 25);
         intr_cntrl_ll_enable_interrupts(1<<25);
-#elif ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)     // New IDF
+#elif defined(NEOESP32_RMT_CAN_USE_INTR_ALLOC)
         // Our custom ISR is bound by the linker; passing a pointer to an address that source file here guarantees that we link it in
         err = esp_intr_alloc(ETS_RMT_INTR_SOURCE, INT_LEVEL_FLAG | ESP_INTR_FLAG_IRAM, nullptr, (void*) &ld_include_hli_vectors_rmt, &isrHandle);
-#else   // IDF 3
-        // Old IDF doesn't allow us to register the interrupt; it's flagged as reserved.
+#else   
+        // Broken IDF API does not allow us to reserve the interrupt; do it manually
         // Ensure all interruptss are cleared first
         RMT.int_ena.val = 0;
         RMT.int_clr.val = 0xFFFFFFFF;
 
         static volatile const void*  __attribute__((used)) pleaseLinkAssembly = (void*) ld_include_hli_vectors_rmt;
 
+        // 26 is the interrupt id for the level 5 interrupt on Espressif XTensa cores
         intr_matrix_set(xPortGetCoreID(), ETS_RMT_INTR_SOURCE, 26);
         ESP_INTR_ENABLE(26);
 #endif
