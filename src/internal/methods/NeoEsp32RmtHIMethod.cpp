@@ -254,10 +254,10 @@ static void IRAM_ATTR RmtStartWrite(uint8_t channel, NeoEsp32RmtHIChannelState& 
     // FUTURE: we could do timing analysis with the last interrupt on this channel
     // Use 8 words to stay aligned with the buffer fill logic
     rmt_item32_t bit0_val = {{.val = state.rmtBit0 }};
-    rmt_item32_t fill = {{{ .duration0 = 2, .level0 = bit0_val.level1, .duration1 = 2, .level1 = bit0_val.level1 }}};
+    rmt_item32_t fill = {{{ .duration0 = 100, .level0 = bit0_val.level1, .duration1 = 100, .level1 = bit0_val.level1 }}};
     rmt_item32_t* dest = (rmt_item32_t*) &RMTMEM.chan[channel].data32[0];
     for (auto i = 0; i < 7; ++i) dest[i] = fill;
-    fill.duration1 = state.resetDuration - 17;
+    fill.duration1 = state.resetDuration > 1400 ? (state.resetDuration - 1400) : 100;
     dest[7] = fill;
 
     // Fill the remaining buffer with real data
