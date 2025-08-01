@@ -29,13 +29,17 @@ License along with NeoPixel.  If not, see
 
 #include <Arduino.h>
 
-#if defined(ARDUINO_ARCH_ESP32) && defined(__XTENSA__)
+#if defined(ARDUINO_ARCH_ESP32)
 
 #include "../NeoSettings.h"
 #include "../NeoBusChannel.h"
 #include "NeoEsp32RmtHIMethod.h"
 #include "soc/soc.h"
 #include "soc/rmt_reg.h"
+
+#ifdef __riscv
+#include "riscv/interrupt.h"
+#endif
 
 #if ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)
 #include "hal/rmt_ll.h"
@@ -174,7 +178,7 @@ extern "C" esp_err_t hli_intr_register(intr_handler_t handler, void* arg, uint32
 // Link our high-priority ISR handler
 extern "C" void ld_include_hli_vectors_rmt();   // an object with an address, but no space
 
-#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3)
 #include "soc/periph_defs.h"
 #endif
 
@@ -185,9 +189,17 @@ extern "C" void ld_include_hli_vectors_rmt();   // an object with an address, bu
 #endif
 
 // ESP-IDF v3 cannot enable high priority interrupts through the API at all;
-// and ESP-IDF v4 cannot enable Level 5 due to incorrect interrupt descriptor tables
-#if (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)) || ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0)) && CONFIG_ESP_SYSTEM_CHECK_INT_LEVEL_5)
+// and ESP-IDF v4 on XTensa cannot enable Level 5 due to incorrect interrupt descriptor tables
+#if !defined(__XTENSA__) || (ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(5, 0, 0)) || ((ESP_IDF_VERSION >= ESP_IDF_VERSION_VAL(4, 0, 0) && CONFIG_ESP_SYSTEM_CHECK_INT_LEVEL_5))
 #define NEOESP32_RMT_CAN_USE_INTR_ALLOC
+
+// XTensa cores require the assembly bridge
+#ifdef __XTENSA__
+#define HI_IRQ_HANDLER_ARG ld_include_hli_vectors_rmt
+#else
+#define HI_IRQ_HANDLER_ARG nullptr
+#endif
+
 #endif
 
 #endif  /* CONFIG_BTDM_CTRL_HLI */
@@ -337,6 +349,10 @@ esp_err_t NeoEsp32RmtHiMethodDriver::Install(rmt_channel_t channel, uint32_t rmt
         driverState = reinterpret_cast<NeoEsp32RmtHIChannelState**>(heap_caps_calloc(RMT_CHANNEL_MAX, sizeof(NeoEsp32RmtHIChannelState*), MALLOC_CAP_INTERNAL));
         if (!driverState) return ESP_ERR_NO_MEM;
         
+        // Ensure all interrupts are cleared before binding
+        RMT.int_ena.val = 0;
+        RMT.int_clr.val = 0xFFFFFFFF;
+
         // Bind interrupt handler
 #if defined(CONFIG_BTDM_CTRL_HLI)
         // Bluetooth driver has taken the empty high-priority interrupt.  Fortunately, it allows us to
@@ -346,14 +362,19 @@ esp_err_t NeoEsp32RmtHiMethodDriver::Install(rmt_channel_t channel, uint32_t rmt
         intr_matrix_set(cpu_hal_get_core_id(), ETS_RMT_INTR_SOURCE, 25);
         intr_cntrl_ll_enable_interrupts(1<<25);
 #elif defined(NEOESP32_RMT_CAN_USE_INTR_ALLOC)
-        // Our custom ISR is bound by the linker; passing a pointer to an address that source file here guarantees that we link it in
-        err = esp_intr_alloc(ETS_RMT_INTR_SOURCE, INT_LEVEL_FLAG | ESP_INTR_FLAG_IRAM, nullptr, (void*) &ld_include_hli_vectors_rmt, &isrHandle);
-#else   
-        // Broken IDF API does not allow us to reserve the interrupt; do it manually
-        // Ensure all interruptss are cleared first
-        RMT.int_ena.val = 0;
-        RMT.int_clr.val = 0xFFFFFFFF;
+        // Use the platform code to allocate the interrupt
+        // If we need the additional assembly bridge, we pass it as the "arg" to the IDF so it gets linked in
+        err = esp_intr_alloc(ETS_RMT_INTR_SOURCE, INT_LEVEL_FLAG | ESP_INTR_FLAG_IRAM, nullptr, (void*) HI_IRQ_HANDLER_ARG, &isrHandle);
+        //err = ESP_ERR_NOT_FINISHED;
 
+        #ifdef __riscv
+        if (err == ESP_OK) {
+            // We must bind the ISR to the CPU ourselves.  Go right through the HAL because of type errors
+            intr_handler_set(esp_intr_get_intno(isrHandle), NeoEsp32RmtMethodIsr, nullptr);
+        }
+        #endif
+#else
+        // Broken IDF API does not allow us to reserve the interrupt; do it manually
         static volatile const void*  __attribute__((used)) pleaseLinkAssembly = (void*) ld_include_hli_vectors_rmt;
 
         // 26 is the interrupt id for the level 5 interrupt on Espressif XTensa cores
@@ -454,7 +475,7 @@ esp_err_t NeoEsp32RmtHiMethodDriver::WaitForTxDone(rmt_channel_t channel, TickTy
         if (wait_time == 0) { rv = ESP_ERR_TIMEOUT; break; };
 
         //++loop_count;
-        TickType_t sleep = std::min(wait_time, 5U);
+        TickType_t sleep = std::min(wait_time, (TickType_t) 5);
         vTaskDelay(sleep);
         wait_time -= sleep;
     };

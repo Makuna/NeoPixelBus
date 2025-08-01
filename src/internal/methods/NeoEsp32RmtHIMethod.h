@@ -28,7 +28,7 @@ License along with NeoPixel.  If not, see
 
 #pragma once
 
-#if defined(ARDUINO_ARCH_ESP32) && defined(__XTENSA__)
+#if defined(ARDUINO_ARCH_ESP32)
 
 // Use the NeoEspRmtSpeed types from the driver-based implementation
 #include "NeoEsp32RmtMethod.h"
