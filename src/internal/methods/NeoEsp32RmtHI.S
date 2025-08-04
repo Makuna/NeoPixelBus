@@ -5,9 +5,7 @@
  *
  */
 
-/* RISC-V CPUs not supported (yet?) */
-/* If the Bluetooth driver has hooked the high-priority interrupt, we piggyback on it and don't need this. */
-#if defined(__XTENSA__) && defined(ESP32)
+#if defined(__XTENSA__) && defined(ESP32) && !defined(CONFIG_BTDM_CTRL_HLI)
 
 #include <xtensa/coreasm.h>
 #include <xtensa/corebits.h>
@@ -16,30 +14,27 @@
 #include "sdkconfig.h"
 #include "soc/soc.h"
 
+/* If the Bluetooth driver has hooked the high-priority interrupt, we piggyback on it and don't need this. */
 #ifndef CONFIG_BTDM_CTRL_HLI
 
 /*
-   Select interrupt
+   Select interrupt based on system check level
    - Base ESP32: could be 4 or 5, depends on platform config
    - S2: 5
    - S3: 5
 */
 
 #if CONFIG_ESP_SYSTEM_CHECK_INT_LEVEL_5
-
 /* Use level 4 */
 #define RFI_X               4
 #define xt_highintx         xt_highint4
-
 #else /* !CONFIG_ESP_SYSTEM_CHECK_INT_LEVEL_5 */
-
 /* Use level 5 */
 #define RFI_X               5
 #define xt_highintx         xt_highint5
-
 #endif /* CONFIG_ESP_SYSTEM_CHECK_INT_LEVEL_5 */
 
-// Other registers
+// Register map, based on interrupt level
 #define EPC_X               (EPC + RFI_X)
 #define EXCSAVE_X           (EXCSAVE + RFI_X)
 
