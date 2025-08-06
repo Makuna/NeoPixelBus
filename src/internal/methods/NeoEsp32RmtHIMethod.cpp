@@ -184,6 +184,9 @@ extern "C" esp_err_t hli_intr_register(intr_handler_t handler, void* arg, uint32
 
 #else /* !CONFIG_BTDM_CTRL_HLI*/
 
+// Declare the our high-priority ISR handler
+extern "C" void ld_include_hli_vectors_rmt();   // an object with an address, but no space
+
 #if defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3)
 #include "soc/periph_defs.h"
 #endif
@@ -201,8 +204,6 @@ extern "C" esp_err_t hli_intr_register(intr_handler_t handler, void* arg, uint32
 
 // XTensa cores require the assembly bridge
 #ifdef __XTENSA__
-// Link our high-priority ISR handler
-extern "C" void ld_include_hli_vectors_rmt();   // an object with an address, but no space
 #define HI_IRQ_HANDLER_ARG ld_include_hli_vectors_rmt
 #else
 #define HI_IRQ_HANDLER_ARG nullptr
@@ -457,7 +458,7 @@ esp_err_t  NeoEsp32RmtHiMethodDriver::Uninstall(rmt_channel_t channel) {
     }
 
 #if defined(NEOESP32_RMT_CAN_USE_INTR_ALLOC)
-    esp_intr_free(&isrHandle);
+    esp_intr_free(isrHandle);
 #else
     ESP_INTR_DISABLE(ESP32_LV5_IRQ_INDEX);
 #endif
