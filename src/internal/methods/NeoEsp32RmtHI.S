@@ -7,10 +7,7 @@
 
 #if defined(__XTENSA__) && defined(ESP32) && !defined(CONFIG_BTDM_CTRL_HLI)
 
-#include <xtensa/coreasm.h>
-#include <xtensa/corebits.h>
-#include <xtensa/config/system.h>
-#include "freertos/xtensa_context.h"
+#include <freertos/xtensa_context.h>
 #include "sdkconfig.h"
 #include "soc/soc.h"
 
