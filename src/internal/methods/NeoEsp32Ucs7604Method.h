@@ -47,14 +47,6 @@ class NeoEsp32Ucs7406Cadence3Step
 public:
     const static size_t DmaBitsPerPixelBit = 3; // 3 step cadence, matches encoding
 
-    static constexpr uint8_t header[15] = {
-        0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, //"work code"
-        0x03, 0x07,//Not sure what this does. The 12 bit controller used 0x02, 0x0b. Found this combination to work with 8 bit colors using trial and error
-        //   ^ there will be a gap here
-        0x0f, 0x0f, 0x0f, 0x0f,//probably  max current per channel
-        0x00, 0x00
-    };
-
     static void EncodeIntoDma(uint8_t* dmaBuffer, const uint8_t* data, size_t sizeData)
     {
         const uint16_t OneBit =  0b00000110;
@@ -68,6 +60,13 @@ public:
         uint8_t destBitsLeft = BitsInSample;
 
         // First the header
+        constexpr uint8_t header[15] = {
+            0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, //"work code"
+            0x03, 0x07,//Not sure what this does. The 12 bit controller used 0x02, 0x0b. Found this combination to work with 8 bit colors using trial and error
+            //   ^ there will be a gap here
+            0x0f, 0x0f, 0x0f, 0x0f,//probably  max current per channel
+            0x00, 0x00
+        };
         const uint8_t* hSrc   = header;
         const uint8_t* hEnd   = header + sizeof(header);
         const uint8_t* space  = header + 8;
