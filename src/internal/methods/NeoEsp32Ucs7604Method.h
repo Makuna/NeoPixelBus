@@ -62,7 +62,7 @@ public:
         // First the header
         constexpr uint8_t header[15] = {
             0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x00, //"work code"
-            0x03, 0x07,//Not sure what this does. The 12 bit controller used 0x02, 0x0b. Found this combination to work with 8 bit colors using trial and error
+            0x03, 0x07,//Not sure what this does. The 12 bit controller used 0x03, 0x0b. Found this combination to work with 8 bit colors using trial and error
             //   ^ there will be a gap here
             0x0f, 0x0f, 0x0f, 0x0f,//probably  max current per channel
             0x00, 0x00
