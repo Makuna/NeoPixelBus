@@ -21,6 +21,7 @@
     // If you set useSpiAlternatePins true, then these pins will be used instead.  Any output-capable GPIO can be used.
     const uint8_t DotClockPin = 18;
     const uint8_t DotDataPin = 23;  
+    const uint8_t MisoUnusedPin = -1;
     const int8_t DotChipSelectPin = -1; // -1 means the chip select signal won't be output, freeing up one pin compared to useSpiAlternatePins=false
 
     // for software bit bang (only use if neither SPI peripheral is available)
@@ -76,7 +77,7 @@ void setup()
 #if (USE_DEFAULT_SPI_PORT == 1)
     if (useSpiAlternatePins)
     {
-        strip.Begin(DotClockPin, DotDataPin, DotDataPin, DotChipSelectPin);
+        strip.Begin(DotClockPin, MisoUnusedPin, DotDataPin, DotChipSelectPin);
     }
     else
     {
@@ -90,7 +91,7 @@ void setup()
 #if (USE_ALTERNATE_SPI_PORT == 1)
     if (useSpiAlternatePins2)
     {
-        strip2.Begin(DotClockPin2, DotDataPin2, DotDataPin2, DotChipSelectPin2);
+        strip2.Begin(DotClockPin2, MisoUnusedPin, DotDataPin2, DotChipSelectPin2);
     }
     else
     {

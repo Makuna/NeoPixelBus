@@ -118,13 +118,13 @@ public:
         if (_sizeData % 4 == 0)
         {
             // data is 4 byte aligned in size,
-            // use a 32 bit fifo word for effeciency
+            // use a 32 bit fifo word for efficiency
             fifoWordBits = 32;
         }
         else if (_sizeData % 2 == 0)
         {
             // data is 2 byte aligned in size,
-            // use a 16 bit fifo word for effeciency
+            // use a 16 bit fifo word for efficiency
             fifoWordBits = 16;
         }
         
@@ -364,6 +364,23 @@ typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance1> R
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance1> Rp2040x4Pio1400KbpsMethod;
 typedef Rp2040x4Pio1Ws2805Method Rp2040x4Pio1Ws2814Method;
 
+#if NUM_PIOS == 3
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstance2> Rp2040x4Pio2Ws2811Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance2> Rp2040x4Pio2Ws2812xMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance2> Rp2040x4Pio2Ws2816Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2805, NeoRp2040PioInstance2> Rp2040x4Pio2Ws2805Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedSk6812, NeoRp2040PioInstance2> Rp2040x4Pio2Sk6812Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTm1814, NeoRp2040PioInstance2, true> Rp2040x4Pio2Tm1814Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTm1829, NeoRp2040PioInstance2, true> Rp2040x4Pio2Tm1829Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTm1914, NeoRp2040PioInstance2, true> Rp2040x4Pio2Tm1914Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedApa106, NeoRp2040PioInstance2> Rp2040x4Pio2Apa106Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstance2> Rp2040x4Pio2Tx1812Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance2> Rp2040x4Pio2Gs1903Method;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance2> Rp2040x4Pio2800KbpsMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance2> Rp2040x4Pio2400KbpsMethod;
+typedef Rp2040x4Pio2Ws2805Method Rp2040x4Pio2Ws2814Method;
+#endif
+
 // inverted
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstanceN, true> Rp2040x4NWs2811InvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstanceN, true> Rp2040x4NWs2812xInvertedMethod;
@@ -409,6 +426,23 @@ typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance1, tr
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance1, true> Rp2040x4Pio1800KbpsInvertedMethod;
 typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance1, true> Rp2040x4Pio1400KbpsInvertedMethod;
 typedef Rp2040x4Pio1Ws2805InvertedMethod Rp2040x4Pio1Ws2814InvertedMethod;
+
+#if NUM_PIOS == 3
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2811, NeoRp2040PioInstance2, true> Rp2040x4Pio2Ws2811InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance2, true> Rp2040x4Pio2Ws2812xInvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2812x, NeoRp2040PioInstance2, true> Rp2040x4Pio2Ws2816InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedWs2805, NeoRp2040PioInstance2, true> Rp2040x4Pio2Ws2805InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedSk6812, NeoRp2040PioInstance2, true> Rp2040x4Pio2Sk6812InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTm1814, NeoRp2040PioInstance2> Rp2040x4Pio2Tm1814InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTm1829, NeoRp2040PioInstance2> Rp2040x4Pio2Tm1829InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTm1914, NeoRp2040PioInstance2> Rp2040x4Pio2Tm1914InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedApa106, NeoRp2040PioInstance2, true> Rp2040x4Pio2Apa106InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedTx1812, NeoRp2040PioInstance2, true> Rp2040x4Pio2Tx1812InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeedGs1903, NeoRp2040PioInstance2, true> Rp2040x4Pio2Gs1903InvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed800Kbps, NeoRp2040PioInstance2, true> Rp2040x4Pio2800KbpsInvertedMethod;
+typedef NeoRp2040x4MethodBase<NeoRp2040PioSpeed400Kbps, NeoRp2040PioInstance2, true> Rp2040x4Pio2400KbpsInvertedMethod;
+typedef Rp2040x4Pio2Ws2805InvertedMethod Rp2040x4Pio2Ws2814InvertedMethod;
+#endif
 
 // PIO 1 method is the default method, and still x4 instances 
 typedef Rp2040x4Pio1Ws2812xMethod NeoWs2813Method;

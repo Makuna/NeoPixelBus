@@ -50,12 +50,28 @@ public:
     const PIO Instance;
 };
 
+#if NUM_PIOS == 3
+class NeoRp2040PioInstance2
+{
+public:
+    NeoRp2040PioInstance2() :
+        Instance(pio2)
+    {};
+
+    const PIO Instance;
+};
+#endif
+
 // dynamic channel support
 class NeoRp2040PioInstanceN
 {
 public:
     NeoRp2040PioInstanceN(NeoBusChannel channel) :
+#if NUM_PIOS == 2
         Instance(channel == NeoBusChannel_0 ? pio0 : pio1)
+#elif NUM_PIOS == 3
+        Instance(channel == NeoBusChannel_0 ? pio0 : (channel == NeoBusChannel_1 ? pio1 : pio2))
+#endif
     {
     }
     NeoRp2040PioInstanceN() = delete; // no default constructor
