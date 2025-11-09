@@ -437,7 +437,13 @@ public:
                 .sibling_chan = NULL,
                 .direction = GDMA_CHANNEL_DIRECTION_TX,
                 .flags = {.reserve_sibling = 0}};
+#if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
+            gdma_new_ahb_channel(&dma_chan_config, &_dmaChannel);
+#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
+            gdma_new_axi_channel(&dma_chan_config, &_dmaChannel);
+#else
             gdma_new_channel(&dma_chan_config, &_dmaChannel);
+#endif
             gdma_connect(_dmaChannel, GDMA_MAKE_TRIGGER(GDMA_TRIG_PERIPH_LCD, 0));
             gdma_strategy_config_t strategy_config = {.owner_check = false,
                                                         .auto_update_desc = false};
