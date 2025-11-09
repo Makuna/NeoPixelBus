@@ -546,7 +546,7 @@ public:
         
         uint8_t muxIdx = LCD_DATA_OUT0_IDX + _muxId;
         esp_rom_gpio_connect_out_signal(pin, muxIdx, invert, false);
-        gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[pin], PIN_FUNC_GPIO);
+        PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[pin], PIN_FUNC_GPIO);
         gpio_set_drive_capability((gpio_num_t)pin, (gpio_drive_cap_t)3);
     }
 
