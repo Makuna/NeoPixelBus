@@ -516,7 +516,9 @@ void i2sInit(uint8_t bus_num,
 //        conf1.rx_pcm_bypass = 1;
 
         conf1.tx_stop_en = 0;
+#if SOC_I2S_SUPPORTS_PCM_BYPASS
         conf1.tx_pcm_bypass = 1;
+#endif
         i2s->conf1.val = conf1.val;
     }
 
