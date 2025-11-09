@@ -41,6 +41,8 @@ extern "C"
 #include "esp_check.h"
 }
 
+static const char *TAG = "led_strip_rmt"; // TODO: Remove all TAG log stuff
+
 struct led_strip_encoder_config_t
 {
     uint32_t resolution; /*!< Encoder resolution, in Hz */
@@ -279,7 +281,7 @@ private:
         bytes_encoder_config.bit1.val = bit1;
 
         bytes_encoder_config.flags.msb_first = 1; // WS2812 transfer bit order: G7...G0R7...R0B7...B0 - TODO: more checks
-
+\
         ESP_GOTO_ON_ERROR(rmt_new_bytes_encoder(&bytes_encoder_config, &led_encoder->bytes_encoder), err, "TEST_RMT", "create bytes encoder failed");
         ESP_GOTO_ON_ERROR(rmt_new_copy_encoder(&copy_encoder_config, &led_encoder->copy_encoder), err, "TEST_RMT", "create copy encoder failed");
 
