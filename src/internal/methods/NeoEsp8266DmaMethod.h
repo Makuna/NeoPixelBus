@@ -150,8 +150,11 @@ public:
                 value <<= 1;
             }
         }
-        // store the remaining bits
-        *pDma++ = dmaValue;
+        // store the remaining bits if any are left
+        if (destBitsLeft != BitsInSample)
+        {
+            *pDma++ = dmaValue;
+        }
     }
 };
 
