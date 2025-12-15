@@ -241,7 +241,7 @@ private:
 
     // encodes the data with start and stop bits
     // input buffer is bytes
-    // output stream is uint31_t
+    // output stream is uint32_t
     static void Encoder(const uint8_t* pSrc, const uint8_t* pSrcEnd, 
             uint32_t* pOutput, const uint32_t* pOutputEnd)
     {
