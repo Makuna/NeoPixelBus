@@ -74,7 +74,7 @@ License along with NeoPixel.  If not, see
 #endif // ESP_IDF_VERSION_MAJOR < 5
 
 // once we have a core3 i2s, then fix this
-#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
+#if !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 #include "methods/ESP/ESP32/Core_2_x/NeoEsp32I2sMethod.h"
 #include "methods/ESP/ESP32/Core_2_x/NeoEsp32I2sXMethod.h"
 #endif

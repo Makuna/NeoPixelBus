@@ -357,7 +357,7 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedGs1903, NeoEsp32RmtInverted> NeoEs
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps, NeoEsp32RmtInverted> NeoEsp32RmtX800KbpsInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtInverted> NeoEsp32RmtX400KbpsInvertedMethod;
 
-#if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32S3)
 
 // Normally I2s method is the default, defining NEOPIXEL_ESP32_RMT_DEFAULT 
 // will switch to use RMT as the default method
@@ -392,6 +392,6 @@ typedef NeoEsp32RmtXWs2812xInvertedMethod Neo800KbpsInvertedMethod;
 typedef NeoEsp32RmtX400KbpsInvertedMethod Neo400KbpsInvertedMethod;
 
 
-#endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6)
+#endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5)
 
 #endif

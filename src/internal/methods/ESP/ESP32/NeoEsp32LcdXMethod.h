@@ -439,7 +439,7 @@ public:
                 .flags = {.reserve_sibling = 0}};
 #if CONFIG_IDF_TARGET_ESP32 || CONFIG_IDF_TARGET_ESP32S2 || CONFIG_IDF_TARGET_ESP32S3 || CONFIG_IDF_TARGET_ESP32C3
             gdma_new_ahb_channel(&dma_chan_config, &_dmaChannel);
-#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
+#elif CONFIG_IDF_TARGET_ESP32C6 || CONFIG_IDF_TARGET_ESP32C5 || CONFIG_IDF_TARGET_ESP32H2 || CONFIG_IDF_TARGET_ESP32P4
             gdma_new_axi_channel(&dma_chan_config, &_dmaChannel);
 #else
             gdma_new_channel(&dma_chan_config, &_dmaChannel);
