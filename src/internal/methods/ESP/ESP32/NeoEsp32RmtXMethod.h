@@ -41,6 +41,8 @@ extern "C"
 #include "esp_check.h"
 }
 
+static const char *TAG = "led_strip_rmt"; // TODO: Remove all TAG log stuff
+
 struct led_strip_encoder_config_t
 {
     uint32_t resolution; /*!< Encoder resolution, in Hz */
@@ -279,7 +281,7 @@ private:
         bytes_encoder_config.bit1.val = bit1;
 
         bytes_encoder_config.flags.msb_first = 1; // WS2812 transfer bit order: G7...G0R7...R0B7...B0 - TODO: more checks
-
+\
         ESP_GOTO_ON_ERROR(rmt_new_bytes_encoder(&bytes_encoder_config, &led_encoder->bytes_encoder), err, "TEST_RMT", "create bytes encoder failed");
         ESP_GOTO_ON_ERROR(rmt_new_copy_encoder(&copy_encoder_config, &led_encoder->copy_encoder), err, "TEST_RMT", "create copy encoder failed");
 
@@ -355,7 +357,7 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedGs1903, NeoEsp32RmtInverted> NeoEs
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps, NeoEsp32RmtInverted> NeoEsp32RmtX800KbpsInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtInverted> NeoEsp32RmtX400KbpsInvertedMethod;
 
-#if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32S3)
 
 // Normally I2s method is the default, defining NEOPIXEL_ESP32_RMT_DEFAULT 
 // will switch to use RMT as the default method
@@ -390,6 +392,6 @@ typedef NeoEsp32RmtXWs2812xInvertedMethod Neo800KbpsInvertedMethod;
 typedef NeoEsp32RmtX400KbpsInvertedMethod Neo400KbpsInvertedMethod;
 
 
-#endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6)
+#endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5)
 
 #endif

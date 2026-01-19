@@ -164,7 +164,12 @@ class NeoRp2040PioMonoProgram
 public:
     static inline uint add(PIO pio_instance)
     {
-        size_t index = (pio_instance == pio0) ? 0 : 1;
+        size_t index = 
+#if NUM_PIOS == 2
+                (pio_instance == pio0) ? 0 : 1;
+#elif NUM_PIOS == 3
+                (pio_instance == pio0) ? 0 : (pio_instance == pio1 ? 1 : 2);
+#endif
         if (s_loadedOffset[index] == c_ProgramNotLoaded)
         {
             assert(pio_can_add_program(pio_instance, &T_CADENCE::program));
@@ -203,10 +208,16 @@ public:
     }
 
 private:
-    static uint s_loadedOffset[2]; // singlet instance of loaded program, one for each PIO hardware unit
+    static uint s_loadedOffset[NUM_PIOS]; // singlet instance of loaded program, one for each PIO hardware unit
 };
 
 template<typename T_CADENCE>
-uint NeoRp2040PioMonoProgram<T_CADENCE>::s_loadedOffset[] = {c_ProgramNotLoaded, c_ProgramNotLoaded};
+uint NeoRp2040PioMonoProgram<T_CADENCE>::s_loadedOffset[] = 
+#if NUM_PIOS == 2
+        {c_ProgramNotLoaded, c_ProgramNotLoaded};
+#elif NUM_PIOS == 3
+        {c_ProgramNotLoaded, c_ProgramNotLoaded, c_ProgramNotLoaded};
+#endif
+
 
 #endif

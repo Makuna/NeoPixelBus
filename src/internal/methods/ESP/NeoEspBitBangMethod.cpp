@@ -36,7 +36,7 @@ static inline uint32_t getCycleCount(void)
 {
     uint32_t ccount;
 
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2) || defined(CONFIG_IDF_TARGET_ESP32P4)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32H2) || defined(CONFIG_IDF_TARGET_ESP32P4)
     __asm__ __volatile__("csrr %0,0x7e2":"=r" (ccount));
     //ccount = esp_cpu_get_ccount();
 #else
@@ -46,7 +46,8 @@ static inline uint32_t getCycleCount(void)
 }
 
 // Interrupt lock class, used for RAII interrupt disabling
-class InterruptLock {
+class InterruptLock
+{
 #if defined(ARDUINO_ARCH_ESP32)
     portMUX_TYPE updateMux;
 #endif
@@ -61,7 +62,7 @@ class InterruptLock {
     }
 
     inline void unlock()
-    {        
+    {
 #if defined(ARDUINO_ARCH_ESP32)
         portEXIT_CRITICAL(&updateMux);
 #else
@@ -76,12 +77,12 @@ public:
         unlock();
         lock();
     }
-    
+
     inline InterruptLock()
 #if defined(ARDUINO_ARCH_ESP32)
         : updateMux(portMUX_INITIALIZER_UNLOCKED)
 #endif    
-    { 
+    {
         lock();
     }
 
@@ -114,7 +115,7 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
     volatile uint32_t* setRegister;
     volatile uint32_t* clearRegister;
 
-#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2) || defined(CONFIG_IDF_TARGET_ESP32P4)
+#if defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32H2) || defined(CONFIG_IDF_TARGET_ESP32P4)
     if (pin < 32)
     {
         setRegister = &GPIO.out_w1ts.val;
@@ -138,7 +139,7 @@ bool IRAM_ATTR neoEspBitBangWriteSpacingPixels(const uint8_t* pixels,
         setRegister = &GPIO.out1_w1ts.val;
         clearRegister = &GPIO.out1_w1tc.val;
     }
-#endif // defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2)
+#endif // defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32H2)
 
 #else // just ESP8266
     uint32_t setRegister = PERIPHS_GPIO_BASEADDR + GPIO_OUT_W1TS_ADDRESS;
