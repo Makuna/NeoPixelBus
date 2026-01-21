@@ -233,7 +233,7 @@ protected:
     NeoEsp8266AsyncUart(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         NeoEsp8266UartBase(pixelCount, elementSize, settingsSize)
     {
-        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
+        _dataSending = static_cast<uint8_t*>(calloc(_sizeData, 1));
     }
 
     ~NeoEsp8266AsyncUart()

@@ -313,8 +313,8 @@ private:
         _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin() with a ClearTo(0)
 
-        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
-        // no need to initialize it, it gets overwritten on every send
+        _dataSending = static_cast<uint8_t*>(calloc(_sizeData, 1));
+        // cleared to 0s as user may choose inconsistent Show() calls
     }
 };
 
