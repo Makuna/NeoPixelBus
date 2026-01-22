@@ -148,7 +148,7 @@ protected:
     NeoEsp8266UartBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        _data = static_cast<uint8_t*>(calloc(_sizeData, 1));
         // data cleared later in Begin()
     }
 

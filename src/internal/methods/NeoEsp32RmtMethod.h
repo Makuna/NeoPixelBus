@@ -683,7 +683,7 @@ private:
 
     void construct()
     {
-        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
+        _dataEditing = static_cast<uint8_t*>(calloc(_sizeData, 1));
         // data cleared later in Begin()
 
         _dataSending = static_cast<uint8_t*>(calloc(_sizeData, 1));
