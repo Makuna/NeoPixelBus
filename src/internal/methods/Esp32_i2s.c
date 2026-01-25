@@ -721,6 +721,11 @@ bool i2sWrite(uint8_t bus_num)
     return true;
 }
 
+size_t i2sGetBufferSize(uint8_t bus_num)
+{
+    return I2S[bus_num].dma_count * sizeof(lldesc_t);
+}
+
 #ifdef NEOPIXELBUS_I2S_DEBUG
 void DumpI2sPrimary(const char* label, uint32_t val)
 {

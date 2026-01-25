@@ -56,6 +56,7 @@ void i2sSetClkWsPins(uint8_t bus_num,
     */
 bool i2sWrite(uint8_t bus_num);
 bool i2sWriteDone(uint8_t bus_num);
+size_t i2sGetBufferSize(uint8_t bus_num);
 #ifdef NEOPIXELBUS_I2S_DEBUG
 bool i2sDump(uint8_t bus_num);
 bool i2sGetClks(uint8_t bus_num, uint8_t* clkm_div_num, uint8_t* clkm_div_b, uint8_t* clkm_div_a );

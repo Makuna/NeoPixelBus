@@ -151,11 +151,7 @@ public:
         // protocol limits use of full block size to c_I2sByteBoundarySize
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / c_I2sByteBoundarySize) * c_I2sByteBoundarySize;
 
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // first "slot" cleared due to protocol requiring it to be zero
-        memset(_data, 0x00, 1);
-
-        AllocateI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_SPEED::MtbpLevel);
+        ConstructI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_SPEED::MtbpLevel);
     }
 
     NeoEsp8266I2sDmx512MethodBase([[maybe_unused]] uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 
@@ -190,9 +186,24 @@ public:
         return IsIdle();
     }
 
-    void Initialize()
+    bool Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
+
+        if (!AllocateI2s(T_SPEED::MtbpLevel))
+        {
+            free(_data);
+            return false;
+        }
+        // first "slot" cleared due to protocol requiring it to be zero
+        memset(_data, 0x00, 1);
+
         InitializeI2s(T_SPEED::I2sClockDivisor, T_SPEED::I2sBaseClockDivisor);
+        return true;
     }
 
     void IRAM_ATTR Update(bool)
@@ -227,6 +238,35 @@ public:
     {
         return _sizeData - T_SPEED::HeaderSize;
     }
+
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return dataSize + getI2sBuffersSize() + sizeof(NeoEsp8266I2sDmx512MethodBase<T_SPEED>) ;
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dmaPixelBits = I2sBitsPerPixelBytes * pixelSize;
+        size_t dmaSettingsBits = I2sBitsPerPixelBytes * (settingsSize + T_SPEED::HeaderSize);
+
+        // bits + half rounding byte of bits / bits per byte
+        size_t i2sBufferSize = (pixelCount * dmaPixelBits + dmaSettingsBits + 4) / 8;
+
+        i2sBufferSize = i2sBufferSize + T_SPEED::BreakMabSize;
+
+        // size is rounded up to nearest c_I2sByteBoundarySize
+        i2sBufferSize = NeoUtil::RoundUp(i2sBufferSize, c_I2sByteBoundarySize);
+        
+        // size of a looping silent space rounded up to nearest c_I2sByteBoundarySize
+        size_t i2sResetSize = NeoUtil::RoundUp(T_SPEED::MtbpSize, c_I2sByteBoundarySize);
+
+        // protocol limits use of full block size to c_I2sByteBoundarySize
+        size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / c_I2sByteBoundarySize) * c_I2sByteBoundarySize;
+
+        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        return dataSize + NeoEsp8266I2sMethodCore::getI2sBuffersSize(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize) + sizeof(NeoEsp8266I2sDmx512MethodBase<T_SPEED>) ;
+    };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {

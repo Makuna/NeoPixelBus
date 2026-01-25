@@ -363,7 +363,6 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        construct();
     }
 
     NeoNrf52xMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
@@ -371,7 +370,6 @@ public:
         _pin(pin),
         _bus(channel)
     {
-        construct();
     }
 
     ~NeoNrf52xMethodBase()
@@ -394,8 +392,13 @@ public:
         return (_bus.Pwm()->EVENTS_STOPPED);
     }
 
-    void Initialize()
+    bool Initialize()
     {
+        if (!construct())
+        {
+            return false;
+        }
+
         digitalWrite(_pin, T_SPEED::IdleLevel);
 
         dmaInit();
@@ -404,6 +407,7 @@ public:
         // you can't set it manually
         FillBuffer();
         dmaStart();
+        return true;
     }
 
     void Update(bool)
@@ -444,6 +448,18 @@ public:
         return _sizeData;
     };
 
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return dataSize + _dmaBufferSize + sizeof(NeoNrf52xMethodBase<T_SPEED, T_BUS>);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        return dataSize + _dmaBufferSize + sizeof(NeoNrf52xMethodBase<T_SPEED, T_BUS>);
+    };
+
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
     }
@@ -457,15 +473,26 @@ private:
     size_t   _dmaBufferSize; // total size of _dmaBuffer
     nrf_pwm_values_common_t* _dmaBuffer;     // Holds pixel data in native format for PWM hardware
 
-    void construct()
+    bool construct()
     {
         pinMode(_pin, OUTPUT);
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
+        if (!_data)
+        {
+            return false;
+        }
 
         _dmaBufferSize = c_dmaBytesPerDataByte * _sizeData + sizeof(nrf_pwm_values_common_t);
         _dmaBuffer = static_cast<nrf_pwm_values_common_t*>(malloc(_dmaBufferSize));
+        if (!_dmaBuffer)
+        {
+            free(_data);
+            _data = nullptr;
+            return false;
+        }
+        memset(_dmaBuffer, 0x00, _dmaBufferSize);
+        return true;
     }
 
     void dmaInit()

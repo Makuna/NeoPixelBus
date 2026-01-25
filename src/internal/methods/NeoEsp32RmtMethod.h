@@ -568,7 +568,6 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        construct();
     }
 
     NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
@@ -576,7 +575,6 @@ public:
         _pin(pin),
         _channel(channel)
     {
-        construct();
     }
 
     ~NeoEsp32RmtMethodBase()
@@ -599,8 +597,21 @@ public:
         return (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT_SILENT_TIMEOUT(rmt_wait_tx_done(_channel.RmtChannelNumber, 0)));
     }
 
-    void Initialize()
+    bool Initialize()
     {
+        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_dataEditing)
+        {
+            return false;
+        }
+
+        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_dataSending)
+        {
+            free(_dataEditing);
+            return false;
+        }
+
         rmt_config_t config = {};
 
         config.rmt_mode = RMT_MODE_TX;
@@ -620,6 +631,7 @@ public:
         ESP_ERROR_CHECK(rmt_config(&config));
         ESP_ERROR_CHECK(rmt_driver_install(_channel.RmtChannelNumber, 0, NEOPIXELBUS_RMT_INT_FLAGS));
         ESP_ERROR_CHECK(rmt_translator_init(_channel.RmtChannelNumber, T_SPEED::Translate));
+        return true;
     }
 
     void Update(bool maintainBufferConsistency)
@@ -667,6 +679,18 @@ public:
         return _sizeData;
     }
 
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return 2 * dataSize + sizeof(NeoEsp32RmtMethodBase<T_SPEED, T_CHANNEL>);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        return 2 * dataSize + sizeof(NeoEsp32RmtMethodBase<T_SPEED, T_CHANNEL>);
+    };
+
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
     }
@@ -679,16 +703,6 @@ private:
     // Holds data stream which include LED color values and other settings as needed
     uint8_t*  _dataEditing;   // exposed for get and set
     uint8_t*  _dataSending;   // used for async send using RMT
-
-
-    void construct()
-    {
-        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
-
-        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
-        // no need to initialize it, it gets overwritten on every send
-    }
 };
 
 // normal

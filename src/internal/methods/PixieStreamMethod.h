@@ -48,8 +48,6 @@ public:
         _stream(pixieStream),
         _usEndTime(0)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
     ~PixieStreamMethod()
@@ -63,9 +61,13 @@ public:
         return (micros() - _usEndTime) > 1000L; // ensure 1ms delay between calls
     }
 
-    void Initialize()
+    bool Initialize()
     {
-        // nothing to initialize, UART is managed outside this library
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data) {
+            return false;
+        }
+        return true;
     }
 
     void Update(bool)
@@ -99,6 +101,18 @@ public:
     size_t getDataSize() const
     {
         return _sizeData;
+    };
+
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return dataSize + sizeof(PixieStreamMethod);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        return dataSize + sizeof(PixieStreamMethod);
     };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)

@@ -220,8 +220,24 @@ public:
         return (i2sWriteDone(_bus.I2sBusNumber));
     }
 
-    void Initialize()
+    bool Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data) {
+            return false;
+        }
+
+        _i2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(_i2sBufferSize, MALLOC_CAP_DMA));
+        if (!_i2sBuffer)
+        {
+            free(_data);
+            return false;
+        }
+
+        // no need to initialize all of it, but since it contains
+        // "reset" bits that don't latter get overwritten we just clear it all
+        memset(_i2sBuffer, 0x00, _i2sBufferSize);
+
         size_t dmaBlockCount = (_i2sBufferSize + I2S_DMA_MAX_DATA_LEN - 1) / I2S_DMA_MAX_DATA_LEN;
 
         i2sInit(_bus.I2sBusNumber, 
@@ -235,6 +251,7 @@ public:
             _i2sBuffer,
             _i2sBufferSize);
         i2sSetPins(_bus.I2sBusNumber, _pin, -1, -1, T_INVERT::Inverted);
+        return true;
     }
 
     void Update(bool)
@@ -300,6 +317,20 @@ public:
         return _sizeData;
     }
 
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData + _i2sBufferSize + i2sGetBufferSize(_bus.I2sBusNumber);
+        return dataSize + sizeof(NeoEsp32I2sMethodBase<T_SPEED, T_BUS, T_INVERT, T_CADENCE>);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = pixelCount * pixelSize + settingsSize +
+                (NeoUtil::RoundUp(pixelCount * T_CADENCE::DmaBitsPerPixelBit * pixelSize + T_CADENCE::DmaBitsPerPixelBit * settingsSize, 4) +
+                 NeoUtil::RoundUp(T_CADENCE::DmaBitsPerPixelBit * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs), 4));
+        return dataSize + sizeof(NeoEsp32I2sMethodBase<T_SPEED, T_BUS, T_INVERT, T_CADENCE>);
+    };
+
     void applySettings([[maybe_unused]] const SettingsObject& settings)
     {
     }
@@ -316,9 +347,6 @@ private:
 
     void construct(uint16_t pixelCount, size_t pixelSize, size_t settingsSize) 
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
-
         // must have a 4 byte aligned buffer for i2s
         // since the reset/silence at the end is used for looping
         // it also needs to 4 byte aligned
@@ -326,13 +354,7 @@ private:
         size_t dmaPixelSize = T_CADENCE::DmaBitsPerPixelBit * pixelSize;
         size_t resetSize = NeoUtil::RoundUp(T_CADENCE::DmaBitsPerPixelBit * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs), 4);
 
-        _i2sBufferSize = NeoUtil::RoundUp(pixelCount * dmaPixelSize + dmaSettingsSize, 4) +
-                resetSize;
-
-        _i2sBuffer = static_cast<uint8_t*>(heap_caps_malloc(_i2sBufferSize, MALLOC_CAP_DMA));
-        // no need to initialize all of it, but since it contains
-        // "reset" bits that don't latter get overwritten we just clear it all
-        memset(_i2sBuffer, 0x00, _i2sBufferSize);
+        _i2sBufferSize = NeoUtil::RoundUp(pixelCount * dmaPixelSize + dmaSettingsSize, 4) + resetSize;
     }
 
 

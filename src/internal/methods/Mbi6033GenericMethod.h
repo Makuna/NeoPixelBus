@@ -45,8 +45,6 @@ public:
         _pinClock(pinClock),
         _wire(pinClock, pinData)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
@@ -67,16 +65,28 @@ public:
     }
 
 #if defined(ARDUINO_ARCH_ESP32)
-    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    bool Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
         _pinClock = sck;
         _wire.begin(sck, miso, mosi, ss);
+        return true;
     }
 #endif
 
-    void Initialize()
+    bool Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
         _wire.begin();
+        return true;
     }
 
     void Update(bool)
@@ -142,6 +152,18 @@ public:
     size_t getDataSize() const
     {
         return _sizeData;
+    };
+
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return dataSize + sizeof(Mbi6033MethodBase<T_TWOWIRE>);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        return dataSize + sizeof(Mbi6033MethodBase<T_TWOWIRE>);
     };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)

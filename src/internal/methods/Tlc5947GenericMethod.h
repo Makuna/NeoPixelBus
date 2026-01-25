@@ -92,7 +92,6 @@ public:
         _pinLatch(pinLatch),
         _pinOutputEnable(pinOutputEnable)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
         pinMode(pinLatch, OUTPUT);
         pinMode(pinOutputEnable, OUTPUT);
         digitalWrite(pinOutputEnable, HIGH);
@@ -128,16 +127,25 @@ public:
     }
 
 #if defined(ARDUINO_ARCH_ESP32)
-    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    bool Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data) {
+            return false;
+        }
         _wire.begin(sck, miso, mosi, ss);
+        return true;
     }
 #endif
 
-    void Initialize()
+    bool Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data) {
+            return false;
+        }
         _wire.begin();
-        memset(_data, 0, _sizeData);
+        return true;
     }
 
     void Update(bool)
@@ -183,6 +191,18 @@ public:
     size_t getDataSize() const
     {
         return _sizeData;
+    };
+
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return dataSize + sizeof(Tlc5947MethodBase<T_BITCONVERT, T_TWOWIRE>);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = ((pixelCount * pixelSize + TLC5947_MODULE_PWM_CHANNEL_COUNT - 1) / TLC5947_MODULE_PWM_CHANNEL_COUNT) * TLC5947_MODULE_PWM_CHANNEL_COUNT + settingsSize;
+        return dataSize + sizeof(Tlc5947MethodBase<T_BITCONVERT, T_TWOWIRE>);
     };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)

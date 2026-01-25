@@ -148,8 +148,6 @@ protected:
     NeoEsp8266UartBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
     ~NeoEsp8266UartBase()
@@ -157,6 +155,11 @@ protected:
         free(_data);
     }
 
+    bool Initialize()
+    {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        return _data != nullptr;
+    }
 };
 
 // this template method class is used to glue uart feature and context for
@@ -184,9 +187,15 @@ protected:
         }
     }
 
-    void InitializeUart(uint32_t uartBaud, bool invert)
+    bool InitializeUart(uint32_t uartBaud, bool invert)
     {
+        if (!Initialize())
+        {
+            return false;
+        }
+
         T_UARTFEATURE::Init(uartBaud, invert);
+        return true;
     }
 
     void UpdateUart(bool)
@@ -210,6 +219,20 @@ protected:
     {
         return false;
     }
+
+public:
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return dataSize + sizeof(NeoEsp8266Uart<T_UARTFEATURE, T_UARTCONTEXT>);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        return dataSize + sizeof(NeoEsp8266Uart<T_UARTFEATURE, T_UARTCONTEXT>);
+    };
+
 };
 
 // this template method class is used to glue uart feature and context for
@@ -233,7 +256,6 @@ protected:
     NeoEsp8266AsyncUart(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         NeoEsp8266UartBase(pixelCount, elementSize, settingsSize)
     {
-        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
     }
 
     ~NeoEsp8266AsyncUart()
@@ -249,12 +271,22 @@ protected:
         free(_dataSending);
     }
 
-    void IRAM_ATTR InitializeUart(uint32_t uartBaud, bool invert)
+    bool InitializeUart(uint32_t uartBaud, bool invert)
     {
+        if (!Initialize()) return false; // allocates _data on success
+
+        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_dataSending) {
+            free(_data);
+            _data = nullptr;
+            return false;
+        }
+
         T_UARTFEATURE::Init(uartBaud, invert);
      
         // attach the context, which will enable the ISR
         _context.Attach(T_UARTFEATURE::Index);
+        return true;
     }
 
     void UpdateUart(bool maintainBufferConsistency)
@@ -284,6 +316,19 @@ protected:
         std::swap(_dataSending, _data);
         return true;
     }
+
+public:
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return 2 * dataSize + sizeof(NeoEsp8266AsyncUart<T_UARTFEATURE, T_UARTCONTEXT>);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        return 2 * dataSize + sizeof(NeoEsp8266AsyncUart<T_UARTFEATURE, T_UARTCONTEXT>);
+    };
 
 private:
     T_UARTCONTEXT _context;
@@ -399,15 +444,17 @@ public:
         return delta >= getPixelTime() + T_SPEED::ResetTimeUs;
     }
 
-    void Initialize()
+    bool Initialize()
     {
-        this->InitializeUart(T_SPEED::UartBaud, T_INVERT::Inverted);
-
-        // Inverting logic levels can generate a phantom bit in the led strip bus
-        // We need to delay 50+ microseconds the output stream to force a data
-        // latch and discard this bit. Otherwise, that bit would be prepended to
-        // the first frame corrupting it.
-        this->_startTime = micros() - getPixelTime();
+        if (this->InitializeUart(T_SPEED::UartBaud, T_INVERT::Inverted)) {
+            // Inverting logic levels can generate a phantom bit in the led strip bus
+            // We need to delay 50+ microseconds the output stream to force a data
+            // latch and discard this bit. Otherwise, that bit would be prepended to
+            // the first frame corrupting it.
+            this->_startTime = micros() - getPixelTime();
+            return true;
+        }
+        return false;
     }
 
     void Update(bool maintainBufferConsistency)

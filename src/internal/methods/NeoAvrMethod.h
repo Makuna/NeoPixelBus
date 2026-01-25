@@ -185,9 +185,6 @@ public:
     {
         pinMode(pin, OUTPUT);
 
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
-
         _port = portOutputRegister(digitalPinToPort(pin));
         _pinMask = digitalPinToBitMask(pin);
     }
@@ -206,11 +203,18 @@ public:
         return (delta >= T_SPEED::ResetTimeUs);
     }
 
-    void Initialize()
+    bool Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
+
         digitalWrite(_pin, LOW);
 
         _endTime = micros();
+        return true;
     }
 
     void Update(bool)
@@ -257,6 +261,18 @@ public:
     size_t getDataSize() const
     {
         return _sizeData;
+    };
+
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return dataSize + sizeof(NeoAvrMethodBase<T_SPEED>);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        return dataSize + sizeof(NeoAvrMethodBase<T_SPEED>);
     };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)

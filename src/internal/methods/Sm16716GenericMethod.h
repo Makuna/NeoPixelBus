@@ -45,8 +45,6 @@ public:
         _sizeFrame(6), // 48 bits
         _wire(pinClock, pinData)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_data, 0, _sizeData);
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
@@ -68,15 +66,20 @@ public:
 
 #if defined(ARDUINO_ARCH_ESP32)
     // can't support hardware SPI due to weird extra bits
-    //void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    //bool Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     //{
     //    _wire.begin(sck, miso, mosi, ss);
     //}
 #endif
 
-    void Initialize()
+    bool Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data) {
+            return false;
+        }
         _wire.begin();
+        return true;
     }
 
     void Update(bool)
@@ -122,6 +125,18 @@ public:
     size_t getDataSize() const
     {
         return _sizeData;
+    };
+
+    size_t MemorySize() const
+    {
+        size_t dataSize = _sizeData;
+        return dataSize + sizeof(Sm16716MethodBase<T_TWOWIRE>);
+    };
+
+    static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
+    {
+        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        return dataSize + sizeof(Sm16716MethodBase<T_TWOWIRE>);
     };
 
     void applySettings([[maybe_unused]] const SettingsObject& settings)

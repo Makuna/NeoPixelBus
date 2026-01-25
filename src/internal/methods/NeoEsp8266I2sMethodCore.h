@@ -141,7 +141,7 @@ protected:
     NeoEsp8266I2sMethodCore() 
     { };
 
-    void AllocateI2s(const size_t i2sBufferSize, // expected multiples of c_I2sByteBoundarySize
+    void ConstructI2s(const size_t i2sBufferSize, // expected multiples of c_I2sByteBoundarySize
             const size_t i2sZeroesSize, // expected multiples of c_I2sByteBoundarySize
             const size_t is2BufMaxBlockSize,
             const uint8_t idleLevel)
@@ -163,18 +163,40 @@ protected:
         }
         _is2BufMaxBlockSize = is2BufMaxBlockSize;
 
-        _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
-        // no need to initialize it, it gets overwritten on every send
-        _i2sIdleData = static_cast<uint8_t*>(malloc(_i2sIdleDataSize));
-        memset(_i2sIdleData, idleLevel * 0xff, _i2sIdleDataSize);
-
         _i2sBufDescCount = (_i2sBufferSize / _is2BufMaxBlockSize) + 1 + 
                 countIdleQueueItems +
                 c_StateBlockCount; // need more for state/latch blocks
 
+    }
+
+    bool AllocateI2s(const uint8_t idleLevel)
+    {
+        _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
+        if (!_i2sBuffer)
+        {
+            return false;
+        }
+        _i2sIdleData = static_cast<uint8_t*>(malloc(_i2sIdleDataSize));
+        if (!_i2sIdleData)
+        {
+            free(_i2sBuffer);
+            _i2sBuffer = nullptr;
+            return false;
+        }
+        memset(_i2sIdleData, idleLevel * 0xff, _i2sIdleDataSize);
+
         _i2sBufDesc = (slc_queue_item*)malloc(_i2sBufDescCount * sizeof(slc_queue_item));
+        if (!_i2sBufDesc)
+        {
+            free(_i2sBuffer);
+            _i2sBuffer = nullptr;
+            free(_i2sIdleData);
+            _i2sIdleData = nullptr;
+            return false;
+        }
 
         s_this = this; // store this for the ISR
+        return true;
     }
 
     void FreeI2s()
@@ -390,7 +412,32 @@ protected:
         pinMode(c_I2sPin, INPUT);
     }
 
+    size_t getI2sBuffersSize() const
+    {
+        return GetSendSize() + (_i2sBufDescCount * sizeof(slc_queue_item)) + sizeof(NeoEsp8266I2sMethodCore);
+    };
 
+    static size_t getI2sBuffersSize(const size_t i2sBufferSize, // expected multiples of c_I2sByteBoundarySize
+        const size_t i2sZeroesSize, // expected multiples of c_I2sByteBoundarySize
+        const size_t is2BufMaxBlockSize)
+    {
+        size_t countIdleQueueItems = 1;
+        size_t i2sIdleDataSize = i2sZeroesSize;
+        if (i2sIdleDataSize > 256)
+        {
+            // reuse a single idle data buffer of 256 with multiple dma slc_queue_items
+            countIdleQueueItems = i2sIdleDataSize / 256 + 1;
+            i2sIdleDataSize = 256;
+        }
+        else
+        {
+            i2sIdleDataSize = NeoUtil::RoundUp(i2sIdleDataSize, c_I2sByteBoundarySize);
+        }
+        size_t i2sBufDescCount = (i2sBufferSize / is2BufMaxBlockSize) + 1 + 
+                countIdleQueueItems +
+                c_StateBlockCount; // need more for state/latch blocks
+        return i2sBufferSize + i2sIdleDataSize + (i2sBufDescCount * sizeof(slc_queue_item)) + sizeof(NeoEsp8266I2sMethodCore);
+    };
 };
 
 #endif // ARDUINO_ARCH_ESP8266
