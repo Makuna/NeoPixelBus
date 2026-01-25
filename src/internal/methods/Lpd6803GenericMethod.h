@@ -36,11 +36,17 @@ License along with NeoPixel.  If not, see
 
 template<typename T_TWOWIRE> class Lpd6803MethodBase
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
 public:
     typedef typename T_TWOWIRE::SettingsObject SettingsObject;
 
     Lpd6803MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize),
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize)),
 		_sizeFrame((pixelCount + 7) / 8), // bit for every pixel at least
 		_wire(pinClock, pinData)
     {
@@ -139,7 +145,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         return dataSize + sizeof(Lpd6803MethodBase<T_TWOWIRE>);
     };
 

@@ -630,11 +630,17 @@ template<typename T_BUSCONTEXT> T_BUSCONTEXT NeoEsp32LcdMuxBus<T_BUSCONTEXT>::s_
 template<typename T_SPEED, typename T_BUS, typename T_INVERT>
 class NeoEsp32LcdXMethodBase
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
 public:
     typedef NeoNoSettings SettingsObject;
 
     NeoEsp32LcdXMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize),
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize)),
         _pin(pin),
         _bus()
     {
@@ -714,7 +720,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         size_t numResetBytes = T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs);
         return dataSize + T_BUS::MemorySize(dataSize + numResetBytes) + sizeof(NeoEsp32LcdXMethodBase<T_SPEED, T_BUS, T_INVERT>);
     };

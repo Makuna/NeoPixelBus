@@ -36,12 +36,23 @@ License along with NeoPixel.  If not, see
 
 template<typename T_TWOWIRE> class Mbi6033MethodBase
 {
+private:
+    static size_t CountChips(size_t pixelCount, size_t elementSize)
+    {
+        return NeoUtil::RoundUp(pixelCount * elementSize, c_countBytesPerChip) / c_countBytesPerChip;
+    }
+
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
 public:
     typedef typename T_TWOWIRE::SettingsObject SettingsObject;
 
     Mbi6033MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _countChips(NeoUtil::RoundUp(pixelCount * elementSize, c_countBytesPerChip) / c_countBytesPerChip),
-        _sizeData(_countChips * c_countBytesPerChip + settingsSize),
+        _countChips(CountChips(pixelCount, elementSize)),
+        _sizeData(GetBufferSize(_countChips, c_countBytesPerChip, settingsSize)),
         _pinClock(pinClock),
         _wire(pinClock, pinData)
     {
@@ -162,7 +173,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = GetBufferSize(CountChips(pixelCount, pixelSize), c_countBytesPerChip, settingsSize);
         return dataSize + sizeof(Mbi6033MethodBase<T_TWOWIRE>);
     };
 

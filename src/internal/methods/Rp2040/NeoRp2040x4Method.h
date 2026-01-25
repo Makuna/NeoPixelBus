@@ -50,18 +50,24 @@ template<typename T_SPEED,
         uint V_IRQ_INDEX = 1> 
 class NeoRp2040x4MethodBase
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
 public:
     typedef NeoNoSettings SettingsObject;
 
     NeoRp2040x4MethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize)  :
-        _sizeData(pixelCount * elementSize + settingsSize),
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize)),
         _pin(pin),
         _mergedFifoCount((_pio.Instance->dbg_cfginfo & PIO_DBG_CFGINFO_FIFO_DEPTH_BITS) * 2) // merged TX / RX FIFO buffer in words
     {
     }
 
     NeoRp2040x4MethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(pixelCount* elementSize + settingsSize),
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize)),
         _pin(pin),
         _pio(channel),
         _mergedFifoCount((_pio.Instance->dbg_cfginfo& PIO_DBG_CFGINFO_FIFO_DEPTH_BITS) * 2) // merged TX / RX FIFO buffer in words
@@ -297,7 +303,7 @@ Serial.println();
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         return 2 * dataSize + sizeof(NeoRp2040x4MethodBase<T_SPEED, T_PIO_INSTANCE, V_INVERT, V_IRQ_INDEX>) + sizeof(NeoRp2040DmaState<V_IRQ_INDEX>);
     };
 

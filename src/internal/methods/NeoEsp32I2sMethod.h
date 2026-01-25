@@ -181,22 +181,39 @@ public:
 // --------------------------------------------------------
 template<typename T_SPEED, typename T_BUS, typename T_INVERT, typename T_CADENCE> class NeoEsp32I2sMethodBase
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
+    static size_t GetI2sBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        // must have a 4 byte aligned buffer for i2s
+        // since the reset/silence at the end is used for looping
+        // it also needs to 4 byte aligned
+        const size_t dmaSettingsSize = T_CADENCE::DmaBitsPerPixelBit * settingsSize;
+        const size_t dmaPixelSize = T_CADENCE::DmaBitsPerPixelBit * elementSize;
+        const size_t resetSize = NeoUtil::RoundUp(T_CADENCE::DmaBitsPerPixelBit * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs), 4);
+        return NeoUtil::RoundUp(pixelCount * dmaPixelSize + dmaSettingsSize, 4) + resetSize;
+    }
+
 public:
     typedef NeoNoSettings SettingsObject;
 
     NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t pixelSize, size_t settingsSize)  :
-        _sizeData(pixelCount * pixelSize + settingsSize),
-        _pin(pin)
+        _sizeData(GetBufferSize(pixelCount, pixelSize, settingsSize)),
+        _pin(pin),
+        _i2sBufferSize(GetI2sBufferSize(pixelCount, pixelSize, settingsSize))
     {
-        construct(pixelCount, pixelSize, settingsSize);
     }
 
     NeoEsp32I2sMethodBase(uint8_t pin, uint16_t pixelCount, size_t pixelSize, size_t settingsSize, NeoBusChannel channel) :
-        _sizeData(pixelCount * pixelSize + settingsSize),
+        _sizeData(GetBufferSize(pixelCount, pixelSize, settingsSize)),
         _pin(pin),
-        _bus(channel)
+        _bus(channel),
+        _i2sBufferSize(GetI2sBufferSize(pixelCount, pixelSize, settingsSize))
     {
-        construct(pixelCount, pixelSize, settingsSize);
     }
 
     ~NeoEsp32I2sMethodBase()
@@ -325,9 +342,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize +
-                (NeoUtil::RoundUp(pixelCount * T_CADENCE::DmaBitsPerPixelBit * pixelSize + T_CADENCE::DmaBitsPerPixelBit * settingsSize, 4) +
-                 NeoUtil::RoundUp(T_CADENCE::DmaBitsPerPixelBit * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs), 4));
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize) + GetI2sBufferSize(pixelCount, pixelSize, settingsSize);
         return dataSize + sizeof(NeoEsp32I2sMethodBase<T_SPEED, T_BUS, T_INVERT, T_CADENCE>);
     };
 
@@ -344,20 +359,6 @@ private:
 
     size_t _i2sBufferSize; // total size of _i2sBuffer
     uint8_t* _i2sBuffer;  // holds the DMA buffer that is referenced by _i2sBufDesc
-
-    void construct(uint16_t pixelCount, size_t pixelSize, size_t settingsSize) 
-    {
-        // must have a 4 byte aligned buffer for i2s
-        // since the reset/silence at the end is used for looping
-        // it also needs to 4 byte aligned
-        size_t dmaSettingsSize = T_CADENCE::DmaBitsPerPixelBit * settingsSize;
-        size_t dmaPixelSize = T_CADENCE::DmaBitsPerPixelBit * pixelSize;
-        size_t resetSize = NeoUtil::RoundUp(T_CADENCE::DmaBitsPerPixelBit * T_SPEED::ResetTimeUs / T_SPEED::ByteSendTimeUs(T_SPEED::BitSendTimeNs), 4);
-
-        _i2sBufferSize = NeoUtil::RoundUp(pixelCount * dmaPixelSize + dmaSettingsSize, 4) + resetSize;
-    }
-
-
 };
 
 #if defined(NPB_CONF_4STEP_CADENCE)

@@ -36,11 +36,17 @@ License along with NeoPixel.  If not, see
 
 template<typename T_TWOWIRE> class P9813MethodBase
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
 public:
     typedef typename T_TWOWIRE::SettingsObject SettingsObject;
 
     P9813MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize),
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize)),
         _sizeEndFrame((pixelCount + 15) / 16), // 16 = div 2 (bit for every two pixels) div 8 (bits to bytes)
         _wire(pinClock, pinData)
     {
@@ -133,7 +139,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         return dataSize + sizeof(P9813MethodBase<T_TWOWIRE>);
     };
 

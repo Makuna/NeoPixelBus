@@ -51,6 +51,12 @@ public:
 template <typename T_TWOWIRE> 
 class Tlc59711MethodBase
 {
+    private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return NeoUtil::RoundUp(pixelCount * elementSize, Tlc69711Settings::c_dataPerChipSize) + settingsSize;
+    }
+
 public:
     typedef typename T_TWOWIRE::SettingsObject SettingsObject;
 
@@ -59,7 +65,7 @@ public:
             uint16_t pixelCount, 
             size_t elementSize, 
             size_t settingsSize) :
-        _sizeData(NeoUtil::RoundUp(pixelCount * elementSize, Tlc69711Settings::c_dataPerChipSize) + settingsSize),
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize)),
         _wire(pinClock, pinData)
     {
     }
@@ -188,7 +194,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = NeoUtil::RoundUp(pixelCount * pixelSize, Tlc69711Settings::c_dataPerChipSize) + settingsSize;
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         return dataSize + sizeof(Tlc59711MethodBase<T_TWOWIRE>);
     };
 

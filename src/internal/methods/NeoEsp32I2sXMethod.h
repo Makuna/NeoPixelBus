@@ -831,11 +831,17 @@ template<typename T_BUSCONTEXT, typename T_BUS> T_BUSCONTEXT NeoEsp32I2sMuxBus<T
 template<typename T_SPEED, typename T_BUS, typename T_INVERT> 
 class NeoEsp32I2sXMethodBase
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
 public:
     typedef NeoNoSettings SettingsObject;
 
     NeoEsp32I2sXMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize),
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize)),
         _pin(pin),
         _bus()
     {
@@ -913,7 +919,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         return dataSize + T_BUS::MemorySize(dataSize) + sizeof(NeoEsp32I2sXMethodBase<T_SPEED, T_BUS, T_INVERT>);
     };
 

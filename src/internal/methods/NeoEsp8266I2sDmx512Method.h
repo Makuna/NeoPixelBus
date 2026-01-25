@@ -128,11 +128,17 @@ public:
 
 template<typename T_SPEED> class NeoEsp8266I2sDmx512MethodBase : NeoEsp8266I2sMethodCore
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize + T_SPEED::HeaderSize;
+    }
+
 public:
     typedef NeoNoSettings SettingsObject;
 
     NeoEsp8266I2sDmx512MethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize + T_SPEED::HeaderSize)
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize))
     {
         size_t dmaPixelBits = I2sBitsPerPixelBytes * elementSize;
         size_t dmaSettingsBits = I2sBitsPerPixelBytes * (settingsSize + T_SPEED::HeaderSize);
@@ -264,7 +270,7 @@ public:
         // protocol limits use of full block size to c_I2sByteBoundarySize
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / c_I2sByteBoundarySize) * c_I2sByteBoundarySize;
 
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         return dataSize + NeoEsp8266I2sMethodCore::getI2sBuffersSize(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize) + sizeof(NeoEsp8266I2sDmx512MethodBase<T_SPEED>) ;
     };
 

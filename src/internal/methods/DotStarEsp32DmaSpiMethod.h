@@ -34,6 +34,15 @@ License along with NeoPixel.  If not, see
 
 template<typename T_SPISPEED, typename T_SPIBUS> class DotStarEsp32DmaSpiMethodBase
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        size_t spiBufferSize = 4 * T_SPIBUS::ParallelBits + (pixelCount * elementSize + settingsSize) + ((pixelCount + 15) / 16 * T_SPIBUS::ParallelBits);
+        // must have a 4 byte aligned buffer for i2s
+        spiBufferSize = (spiBufferSize + 3) & ~3;
+        return spiBufferSize;
+    }
+
 public:
     typedef typename T_SPISPEED::SettingsObject SettingsObject;
 
@@ -42,14 +51,7 @@ public:
         _sizePixelData(pixelCount * elementSize + settingsSize),
         _sizeEndFrame((pixelCount + 15) / 16 * T_SPIBUS::ParallelBits) // 16 = div 2 (bit for every two pixels) div 8 (bits to bytes)
     {
-        _spiBufferSize = _sizeStartFrame + _sizePixelData + _sizeEndFrame;
-
-        // must have a 4 byte aligned buffer for i2s
-        uint32_t alignment = _spiBufferSize % 4;
-        if (alignment)
-        {
-            _spiBufferSize += 4 - alignment;
-        }
+        _spiBufferSize = GetBufferSize(pixelCount, elementSize, settingsSize);
     }
 
     // Support constructor specifying pins by ignoring pins
@@ -221,7 +223,7 @@ public:
 
     size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = (4 * T_SPIBUS::ParallelBits + pixelCount * pixelSize + settingsSize + ((pixelCount + 15) / 16 * T_SPIBUS::ParallelBits));
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         return 2 * dataSize + sizeof(DotStarEsp32DmaSpiMethodBase<T_SPISPEED, T_SPIBUS>); // data and dmadata buffers plus object size
     };
 

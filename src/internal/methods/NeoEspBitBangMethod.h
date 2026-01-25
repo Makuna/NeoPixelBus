@@ -190,12 +190,18 @@ public:
 
 template<typename T_SPEED, typename T_INVERTED, bool V_INTER_PIXEL_ISR> class NeoEspBitBangMethodBase
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
 public:
     typedef NeoNoSettings SettingsObject;
 
     NeoEspBitBangMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizePixel(elementSize),
-        _sizeData(pixelCount * elementSize + settingsSize),
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize)),
         _pin(pin)
     {
         pinMode(pin, OUTPUT);
@@ -288,7 +294,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         return dataSize + sizeof(NeoEspBitBangMethodBase<T_SPEED, T_INVERTED, V_INTER_PIXEL_ISR>);
     };
 

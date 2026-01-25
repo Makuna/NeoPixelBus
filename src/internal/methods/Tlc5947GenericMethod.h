@@ -79,6 +79,18 @@ public:
 
 template<typename T_BITCONVERT, typename T_TWOWIRE> class Tlc5947MethodBase
 {
+private:
+    static size_t CountModule(size_t pixelCount, size_t elementSize)
+    {
+        return (pixelCount * elementSize + TLC5947_MODULE_PWM_CHANNEL_COUNT - 1) / TLC5947_MODULE_PWM_CHANNEL_COUNT;
+    }
+
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        
+        return pixelCount * elementSize + settingsSize;
+    }
+
 public:
     typedef typename T_TWOWIRE::SettingsObject SettingsObject;
 
@@ -86,8 +98,8 @@ public:
     static const size_t sizeSendBuffer = 36;
 
     Tlc5947MethodBase(uint8_t pinClock, uint8_t pinData, uint8_t pinLatch, uint8_t pinOutputEnable, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _countModule((pixelCount * elementSize + TLC5947_MODULE_PWM_CHANNEL_COUNT - 1) / TLC5947_MODULE_PWM_CHANNEL_COUNT),
-        _sizeData(_countModule * TLC5947_MODULE_PWM_CHANNEL_COUNT + settingsSize),
+        _countModule(CountModule(pixelCount, elementSize)),
+        _sizeData(GetBufferSize(_countModule, TLC5947_MODULE_PWM_CHANNEL_COUNT, settingsSize)),
         _wire(pinClock, pinData),
         _pinLatch(pinLatch),
         _pinOutputEnable(pinOutputEnable)
@@ -201,7 +213,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = ((pixelCount * pixelSize + TLC5947_MODULE_PWM_CHANNEL_COUNT - 1) / TLC5947_MODULE_PWM_CHANNEL_COUNT) * TLC5947_MODULE_PWM_CHANNEL_COUNT + settingsSize;
+        size_t dataSize = GetBufferSize(CountModule(pixelCount, pixelSize), TLC5947_MODULE_PWM_CHANNEL_COUNT, settingsSize);
         return dataSize + sizeof(Tlc5947MethodBase<T_BITCONVERT, T_TWOWIRE>);
     };
 

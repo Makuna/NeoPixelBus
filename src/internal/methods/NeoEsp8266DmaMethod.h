@@ -185,12 +185,18 @@ public:
 
 template<typename T_ENCODER, typename T_SPEED> class NeoEsp8266DmaMethodBase : NeoEsp8266I2sMethodCore
 {
+private:
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
 public:
     typedef NeoNoSettings SettingsObject;
 
     NeoEsp8266DmaMethodBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizePixel(elementSize),
-        _sizeData(pixelCount * elementSize + settingsSize)
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize))
     {
         size_t dmaPixelSize = T_ENCODER::DmaBitsPerPixelBit * T_ENCODER::SpacingPixelSize(_sizePixel);
         size_t dmaSettingsSize = T_ENCODER::DmaBitsPerPixelBit * settingsSize;
@@ -320,7 +326,7 @@ public:
         i2sResetSize = NeoUtil::RoundUp(i2sResetSize, c_I2sByteBoundarySize);
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / dmaPixelSize) * dmaPixelSize;
 
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = GetBufferSize(pixelCount, pixelSize, settingsSize);
         return dataSize + NeoEsp8266I2sMethodCore::getI2sBuffersSize(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize) + sizeof(NeoEsp8266DmaMethodBase<T_ENCODER, T_SPEED>) ;
     };
 

@@ -145,8 +145,13 @@ protected:
     uint8_t* _data;        // Holds LED color values
     uint32_t _startTime;     // Microsecond count when last update started
 
+    static size_t GetBufferSize(uint16_t pixelCount, size_t elementSize, size_t settingsSize)
+    {
+        return pixelCount * elementSize + settingsSize;
+    }
+
     NeoEsp8266UartBase(uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
-        _sizeData(pixelCount * elementSize + settingsSize)
+        _sizeData(GetBufferSize(pixelCount, elementSize, settingsSize))
     {
     }
 
@@ -229,7 +234,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = NeoEsp8266UartBase::GetBufferSize(pixelCount, pixelSize, settingsSize);
         return dataSize + sizeof(NeoEsp8266Uart<T_UARTFEATURE, T_UARTCONTEXT>);
     };
 
@@ -326,7 +331,7 @@ public:
 
     static size_t MemorySize(size_t pixelCount, size_t pixelSize, size_t settingsSize = 0)
     {
-        size_t dataSize = pixelCount * pixelSize + settingsSize;
+        size_t dataSize = NeoEsp8266UartBase::GetBufferSize(pixelCount, pixelSize, settingsSize);
         return 2 * dataSize + sizeof(NeoEsp8266AsyncUart<T_UARTFEATURE, T_UARTCONTEXT>);
     };
 
