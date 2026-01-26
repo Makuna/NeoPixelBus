@@ -248,6 +248,7 @@ public:
         if (!_i2sBuffer)
         {
             free(_data);
+            _data = nullptr;
             return false;
         }
 

@@ -203,6 +203,7 @@ public:
         if (!AllocateI2s(T_SPEED::MtbpLevel))
         {
             free(_data);
+            _data = nullptr;
             return false;
         }
         // first "slot" cleared due to protocol requiring it to be zero

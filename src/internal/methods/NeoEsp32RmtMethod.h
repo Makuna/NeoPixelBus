@@ -615,6 +615,7 @@ public:
         if (!_dataSending)
         {
             free(_dataEditing);
+            _dataEditing = nullptr;
             return false;
         }
 

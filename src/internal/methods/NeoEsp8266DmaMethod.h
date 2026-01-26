@@ -257,6 +257,7 @@ public:
         if (!AllocateI2s(T_ENCODER::IdleLevel))
         {
             free(_data);
+            _data = nullptr;
             return false;
         }
 
