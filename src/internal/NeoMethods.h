@@ -63,9 +63,12 @@ License along with NeoPixel.  If not, see
 #include "methods/DotStarEsp32DmaSpiMethod.h"
 #include "methods/NeoEsp32I2sXMethod.h"
 #include "methods/NeoEsp32LcdXMethod.h"
-
-
 #endif
+
+#if defined(SOC_PARLIO_SUPPORTED)
+#include "methods/Hd108Esp32ParlioMethod.h"
+#endif
+
 #include "methods/NeoEspBitBangMethod.h"
 
 #elif defined(ARDUINO_ARCH_NRF52840) // must be before __arm__
