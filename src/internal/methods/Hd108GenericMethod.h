@@ -41,6 +41,7 @@ public:
 
     Hd108MethodBase(uint8_t pinClock, uint8_t pinData, uint16_t pixelCount, size_t elementSize, size_t settingsSize) :
         _sizeData(pixelCount * elementSize + settingsSize),
+        _sizeEndFrame((pixelCount + 7) / 8), // ceiling of pixel count divided by 8 (one clock per bit)
         _wire(pinClock, pinData)
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
@@ -77,20 +78,19 @@ public:
     }
 
     void Update(bool)
-    {
-        const uint8_t startFrame[16] = { 0x00 };
-        const uint8_t endFrame[4] = { 0xff };
-        
+    {        
         _wire.beginTransaction();
 
-        // start frame
-        _wire.transmitBytes(startFrame, sizeof(startFrame));
+        //start frame : 128bits (16bytes) with DIN = 0
+        for (int i = 0; i < 16; i++)
+            _wire.transmitByte(0x00);
         
         // data
         _wire.transmitBytes(_data, _sizeData);
 
-        // end frame
-        _wire.transmitBytes(endFrame, sizeof(endFrame));
+        //end frame : at least one bit per LED ; no less than 8 bytes
+        for (size_t i = 0; i < max(_sizeEndFrame,(size_t)8); i++)
+            _wire.transmitByte(0x00);
         
         _wire.endTransaction();
     }
@@ -123,6 +123,7 @@ public:
 
 private:
     const size_t   _sizeData;   // Size of '_data' buffer below
+    const size_t   _sizeEndFrame;
 
     T_TWOWIRE _wire;
     uint8_t* _data;       // Holds LED color values
