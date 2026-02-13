@@ -29,8 +29,18 @@ License along with NeoPixel.  If not, see
 
 // standard neo definitions
 // 
-const uint8_t NEO_DIRTY = 0x80; // a change was made to pixel data that requires a show
-const uint16_t PixelIndex_OutOfBounds = 0xffff;
+constexpr uint8_t NEO_VALID = 0x01; // bus is valid
+constexpr uint8_t NEO_DIRTY = 0x80; // a change was made to pixel data that requires a show
+constexpr uint16_t PixelIndex_OutOfBounds = 0xffff;
+
+typedef union {
+    uint8_t     flags;
+    struct {
+        bool    valid    : 1;   // LSB
+        uint8_t reserved : 6;
+        bool    dirty    : 1;   // MSB
+    };
+} neo_flags_t;
 
 #include "internal/NeoUtil.h"
 #include "internal/animations/NeoEase.h"
@@ -107,6 +117,7 @@ public:
         {
             return false;
         }
+        _state |= NEO_VALID;
         ClearTo(0);
 
         return true;
@@ -119,6 +130,7 @@ public:
         {
             return false;
         }
+        _state |= NEO_VALID;
         ClearTo(0);
 
         return true;
@@ -131,6 +143,7 @@ public:
         {
             return false;
         }
+        _state |= NEO_VALID;
         ClearTo(0);
 
         return true;
@@ -143,6 +156,7 @@ public:
         {
             return false;
         }
+        _state |= NEO_VALID;
         ClearTo(0);
 
         return true;
@@ -150,7 +164,7 @@ public:
 
     void Show(bool maintainBufferConsistency = true)
     {
-        if (!IsDirty() && !_method.AlwaysUpdate())
+        if (!IsValid() || (!IsDirty() && !_method.AlwaysUpdate()))
         {
             return;
         }
@@ -162,8 +176,13 @@ public:
 
     inline bool CanShow() const
     { 
-        return _method.IsReadyToUpdate();
+        return IsValid() && _method.IsReadyToUpdate();
     };
+
+    bool IsValid() const
+    {
+        return (_state & NEO_VALID);
+    }
 
     bool IsDirty() const
     {
@@ -182,11 +201,13 @@ public:
 
     uint8_t* Pixels() 
     {
+        if (!IsValid()) return nullptr;
         return _pixels();
     };
 
     size_t PixelsSize() const
     {
+        if (!IsValid()) return 0;
         return _method.getDataSize() - T_COLOR_FEATURE::SettingsSize;
     };
 
@@ -197,12 +218,13 @@ public:
 
     uint16_t PixelCount() const
     {
+        if (!IsValid()) return 0;
         return _countPixels;
     };
 
     void SetPixelColor(uint16_t indexPixel, typename T_COLOR_FEATURE::ColorObject color)
     {
-        if (indexPixel < _countPixels)
+        if (IsValid() && indexPixel < _countPixels)
         {
             T_COLOR_FEATURE::applyPixelColor(_pixels(), indexPixel, color);
             Dirty();
@@ -211,7 +233,7 @@ public:
 
     typename T_COLOR_FEATURE::ColorObject GetPixelColor(uint16_t indexPixel) const
     {
-        if (indexPixel < _countPixels)
+        if (IsValid() && indexPixel < _countPixels)
         {
             return T_COLOR_FEATURE::retrievePixelColor(_pixels(), indexPixel);
         }
@@ -230,6 +252,8 @@ public:
 
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
     {
+        if (!IsValid()) return;
+
         uint8_t temp[T_COLOR_FEATURE::PixelSize]; 
         uint8_t* pixels = _pixels();
 
@@ -242,6 +266,8 @@ public:
 
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color, uint16_t first, uint16_t last)
     {
+        if (!IsValid()) return;
+
         if (first < _countPixels &&
             last < _countPixels &&
             first <= last)
@@ -260,6 +286,8 @@ public:
 
     void RotateLeft(uint16_t rotationCount)
     {
+        if (!IsValid()) return;
+
         if ((_countPixels - 1) >= rotationCount)
         {
             _rotateLeft(rotationCount, 0, _countPixels - 1);
@@ -268,6 +296,8 @@ public:
 
     void RotateLeft(uint16_t rotationCount, uint16_t first, uint16_t last)
     {
+        if (!IsValid()) return;
+
         if (first < _countPixels &&
             last < _countPixels &&
             first < last &&
@@ -279,6 +309,8 @@ public:
 
     void ShiftLeft(uint16_t shiftCount)
     {
+        if (!IsValid()) return;
+
         if ((_countPixels - 1) >= shiftCount)
         {
             _shiftLeft(shiftCount, 0, _countPixels - 1);
@@ -288,6 +320,8 @@ public:
 
     void ShiftLeft(uint16_t shiftCount, uint16_t first, uint16_t last)
     {
+        if (!IsValid()) return;
+
         if (first < _countPixels && 
             last < _countPixels && 
             first < last &&
@@ -300,6 +334,8 @@ public:
 
     void RotateRight(uint16_t rotationCount)
     {
+        if (!IsValid()) return;
+
         if ((_countPixels - 1) >= rotationCount)
         {
             _rotateRight(rotationCount, 0, _countPixels - 1);
@@ -308,6 +344,8 @@ public:
 
     void RotateRight(uint16_t rotationCount, uint16_t first, uint16_t last)
     {
+        if (!IsValid()) return;
+
         if (first < _countPixels &&
             last < _countPixels &&
             first < last &&
@@ -319,6 +357,8 @@ public:
 
     void ShiftRight(uint16_t shiftCount)
     {
+        if (!IsValid()) return;
+
         if ((_countPixels - 1) >= shiftCount)
         {
             _shiftRight(shiftCount, 0, _countPixels - 1);
@@ -328,6 +368,8 @@ public:
 
     void ShiftRight(uint16_t shiftCount, uint16_t first, uint16_t last)
     {
+        if (!IsValid()) return;
+
         if (first < _countPixels &&
             last < _countPixels &&
             first < last &&
@@ -340,6 +382,8 @@ public:
     
     void SwapPixelColor(uint16_t indexPixelOne, uint16_t indexPixelTwo)
     {
+        if (!IsValid()) return;
+
         auto colorOne = GetPixelColor(indexPixelOne);
         auto colorTwo = GetPixelColor(indexPixelTwo);
 
@@ -349,6 +393,8 @@ public:
 
     void SetPixelSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
     {
+        if (!IsValid()) return;
+
         T_COLOR_FEATURE::applySettings(_method.getData(), _method.getDataSize(), settings);
         if (_method.SwapBuffers())
         {
@@ -364,12 +410,16 @@ public:
 
     void SetMethodSettings(const typename T_METHOD::SettingsObject& settings)
     {
+        if (!IsValid()) return;
+
         _method.applySettings(settings);
         Dirty();
     };
  
     uint32_t CalcTotalMilliAmpere(const typename T_COLOR_FEATURE::ColorObject::SettingsObject& settings)
     {
+        if (!IsValid()) return 0;
+
         uint32_t total = 0; // in 1/10th milliamps
 
         for (uint16_t index = 0; index < _countPixels; index++)
@@ -384,7 +434,7 @@ public:
 protected:
     const uint16_t _countPixels; // Number of RGB LEDs in strip
 
-    uint8_t _state;     // internal state
+    uint8_t _state;     // internal state (should use neo_flags_t for clarity)
     T_METHOD _method;
 
     uint8_t* _pixels()
