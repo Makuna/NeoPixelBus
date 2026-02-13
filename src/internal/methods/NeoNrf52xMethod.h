@@ -363,7 +363,6 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        construct();
     }
 
     NeoNrf52xMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
@@ -371,7 +370,6 @@ public:
         _pin(pin),
         _bus(channel)
     {
-        construct();
     }
 
     ~NeoNrf52xMethodBase()
@@ -396,6 +394,8 @@ public:
 
     void Initialize()
     {
+        construct();
+
         digitalWrite(_pin, T_SPEED::IdleLevel);
 
         dmaInit();
@@ -466,6 +466,7 @@ private:
 
         _dmaBufferSize = c_dmaBytesPerDataByte * _sizeData + sizeof(nrf_pwm_values_common_t);
         _dmaBuffer = static_cast<nrf_pwm_values_common_t*>(malloc(_dmaBufferSize));
+        memset(_dmaBuffer, 0x00, _dmaBufferSize);
     }
 
     void dmaInit()

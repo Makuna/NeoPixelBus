@@ -45,8 +45,6 @@ public:
         _sizeFrame(6), // 48 bits
         _wire(pinClock, pinData)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        memset(_data, 0, _sizeData);
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
@@ -76,6 +74,7 @@ public:
 
     void Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
         _wire.begin();
     }
 

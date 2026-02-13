@@ -92,7 +92,6 @@ public:
         _pinLatch(pinLatch),
         _pinOutputEnable(pinOutputEnable)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
         pinMode(pinLatch, OUTPUT);
         pinMode(pinOutputEnable, OUTPUT);
         digitalWrite(pinOutputEnable, HIGH);
@@ -130,14 +129,15 @@ public:
 #if defined(ARDUINO_ARCH_ESP32)
     void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
         _wire.begin(sck, miso, mosi, ss);
     }
 #endif
 
     void Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
         _wire.begin();
-        memset(_data, 0, _sizeData);
     }
 
     void Update(bool)

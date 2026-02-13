@@ -199,9 +199,6 @@ public:
         _pin(pin)
     {
         pinMode(pin, OUTPUT);
-
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
     ~NeoEspBitBangMethodBase()
@@ -221,6 +218,8 @@ public:
     void Initialize()
     {
         digitalWrite(_pin, T_INVERTED::IdleLevel);
+
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
 
         _endTime = micros();
     }

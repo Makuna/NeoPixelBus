@@ -45,8 +45,6 @@ public:
         _pinClock(pinClock),
         _wire(pinClock, pinData)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
@@ -69,6 +67,7 @@ public:
 #if defined(ARDUINO_ARCH_ESP32)
     void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
         _pinClock = sck;
         _wire.begin(sck, miso, mosi, ss);
     }
@@ -76,6 +75,7 @@ public:
 
     void Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
         _wire.begin();
     }
 

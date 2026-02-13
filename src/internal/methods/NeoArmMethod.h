@@ -42,9 +42,6 @@ public:
         _pin(pin)
     {
         pinMode(pin, OUTPUT);
-
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
     ~NeoArmMethodBase()
@@ -63,6 +60,8 @@ public:
 
     void Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+
         digitalWrite(_pin, LOW);
 
         _endTime = micros();

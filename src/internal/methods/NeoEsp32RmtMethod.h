@@ -568,7 +568,6 @@ public:
         _sizeData(pixelCount * elementSize + settingsSize),
         _pin(pin)
     {
-        construct();
     }
 
     NeoEsp32RmtMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel channel) :
@@ -576,7 +575,6 @@ public:
         _pin(pin),
         _channel(channel)
     {
-        construct();
     }
 
     ~NeoEsp32RmtMethodBase()
@@ -601,6 +599,9 @@ public:
 
     void Initialize()
     {
+        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
+        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
+ 
         rmt_config_t config = {};
 
         config.rmt_mode = RMT_MODE_TX;
@@ -679,16 +680,6 @@ private:
     // Holds data stream which include LED color values and other settings as needed
     uint8_t*  _dataEditing;   // exposed for get and set
     uint8_t*  _dataSending;   // used for async send using RMT
-
-
-    void construct()
-    {
-        _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
-
-        _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
-        // no need to initialize it, it gets overwritten on every send
-    }
 };
 
 // normal

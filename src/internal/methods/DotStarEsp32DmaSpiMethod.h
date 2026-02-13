@@ -50,11 +50,6 @@ public:
         {
             _spiBufferSize += 4 - alignment;
         }
-
-        _data = static_cast<uint8_t*>(malloc(_spiBufferSize));
-        _dmadata = static_cast<uint8_t*>(heap_caps_malloc(_spiBufferSize, MALLOC_CAP_DMA));
-
-        // data cleared later in NeoPixelBus::Begin()
     }
 
     // Support constructor specifying pins by ignoring pins
@@ -90,6 +85,10 @@ public:
 
     void Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
     {
+        _data = static_cast<uint8_t*>(malloc(_spiBufferSize));
+        _dmadata = static_cast<uint8_t*>(heap_caps_malloc(_spiBufferSize, MALLOC_CAP_DMA));
+
+        // this is odd construct
         memset(_data, 0x00, _sizeStartFrame);
         memset(_data + _sizeStartFrame + _sizePixelData, 0x00, _spiBufferSize - (_sizeStartFrame + _sizePixelData));
 

@@ -151,11 +151,7 @@ public:
         // protocol limits use of full block size to c_I2sByteBoundarySize
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / c_I2sByteBoundarySize) * c_I2sByteBoundarySize;
 
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // first "slot" cleared due to protocol requiring it to be zero
-        memset(_data, 0x00, 1);
-
-        AllocateI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_SPEED::MtbpLevel);
+        ConstructI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_SPEED::MtbpLevel);
     }
 
     NeoEsp8266I2sDmx512MethodBase([[maybe_unused]] uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 
@@ -192,6 +188,11 @@ public:
 
     void Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        // first "slot" cleared due to protocol requiring it to be zero
+        memset(_data, 0x00, 1);
+
+        AllocateI2s();
         InitializeI2s(T_SPEED::I2sClockDivisor, T_SPEED::I2sBaseClockDivisor);
     }
 
