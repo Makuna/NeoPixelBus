@@ -148,6 +148,7 @@ private:
                 _dataPin
             },
             .clk_out_gpio_num = _clockPin,          // Clock pin
+            .valid_gpio_num = (gpio_num_t)-1,       // Don't use valid signal
             .trans_queue_depth = 8,                 // Transaction queue depth (max count of pending transactions)
             .max_transfer_size = _bufferSize,       // Maximum transfer size (number of bytes per transaction)
             .sample_edge = PARLIO_SAMPLE_EDGE_POS,  // Sample data on the rising edge of the clock
