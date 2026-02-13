@@ -61,9 +61,13 @@ public:
         return (micros() - _usEndTime) > 1000L; // ensure 1ms delay between calls
     }
 
-    void Initialize()
+    bool Initialize()
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data) {
+            return false;
+        }
+        return true;
     }
 
     void Update(bool)

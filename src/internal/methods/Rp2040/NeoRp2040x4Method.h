@@ -104,9 +104,9 @@ public:
         return _dmaState.IsReadyToSend(T_SPEED::ResetTimeUs + _fifoCacheEmptyDelta);
     }
 
-    void Initialize()
+    bool Initialize()
     {
-        construct();
+        if (!construct()) return false;
 
         // Select the largest FIFO fetch size that aligns with our data size
         // BUT, since RP2040 is little endian, if the source element size is
@@ -236,6 +236,8 @@ Serial.println();
             false);
 
         dma_irqn_set_channel_enabled(V_IRQ_INDEX, _dmaChannel, true);
+
+        return true;
     }
 
     void Update(bool maintainBufferConsistency)
@@ -308,13 +310,20 @@ private:
     int _sm;
     int _dmaChannel;
 
-    void construct()
+    bool construct()
     {
         _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin() with a ClearTo(0)
-
+        if (!_dataEditing) {
+            return false;
+        }
         _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin() with a ClearTo(0)
+        if (!_dataSending) {
+            free(_dataEditing);
+            _dataEditing = nullptr;
+            return false;
+        }
+        return true;
     }
 };
 

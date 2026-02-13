@@ -220,8 +220,12 @@ public:
         digitalWrite(_pin, T_INVERTED::IdleLevel);
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data) {
+            return false;
+        }       
 
         _endTime = micros();
+        return true;
     }
 
     void Update(bool)

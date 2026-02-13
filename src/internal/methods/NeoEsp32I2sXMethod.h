@@ -423,7 +423,7 @@ public:
     {
     }
 
-    void Construct(const uint8_t busNumber, uint16_t nsBitSendTime)
+    bool Construct(const uint8_t busNumber, uint16_t nsBitSendTime)
     {
         // construct only once on first time called
         if (I2sBuffer == nullptr)
@@ -447,6 +447,7 @@ public:
             {
                 log_e("send buffer memory allocation failure (size %u)",
                     I2sBufferSize);
+                return false;
             }
             memset(I2sBuffer, 0x00, I2sBufferSize);
 
@@ -469,6 +470,7 @@ public:
                 I2sBuffer,
                 I2sBufferSize);
         }
+        return true;
     }
 
     void Destruct(const uint8_t busNumber)
@@ -587,7 +589,7 @@ public:
     {
     }
 
-    void Construct(const uint8_t busNumber, uint16_t nsBitSendTime)
+    bool Construct(const uint8_t busNumber, uint16_t nsBitSendTime)
     {
         // construct only once on first time called
         if (I2sBuffer == nullptr)
@@ -612,6 +614,7 @@ public:
             {
                 log_e("send buffer memory allocation failure (size %u)",
                     I2sBufferSize);
+                return false;
             }
             memset(I2sBuffer, 0x00, I2sBufferSize);
 
@@ -620,6 +623,9 @@ public:
             {
                 log_e("edit buffer memory allocation failure (size %u)",
                     I2sBufferSize);
+                heap_caps_free(I2sBuffer);
+                I2sBuffer = nullptr;
+                return false;
             }
             memset(I2sEditBuffer, 0x00, I2sBufferSize);
 
@@ -642,6 +648,7 @@ public:
                 I2sBuffer,
                 I2sBufferSize);
         }
+        return true;
     }
 
     void Destruct(const uint8_t busNumber)
@@ -730,10 +737,15 @@ public:
         _muxId = s_context.MuxMap.RegisterNewMuxBus(dataSize);
     }
 
-    void Initialize(uint8_t pin, uint16_t nsBitSendTime, bool invert)
+    bool Initialize(uint8_t pin, uint16_t nsBitSendTime, bool invert)
     {
-        s_context.Construct(T_BUS::I2sBusNumber, nsBitSendTime);
+        if (!s_context.Construct(T_BUS::I2sBusNumber, nsBitSendTime))
+        {
+            return false;
+        }
+
         i2sSetPins(T_BUS::I2sBusNumber, pin, _muxId, s_context.MuxMap.MuxBusDataSize, invert);
+        return true;
     }
 
     void DeregisterMuxBus(uint8_t pin)
@@ -815,16 +827,21 @@ public:
         return _bus.IsWriteDone();
     }
 
-    void Initialize()
+    bool Initialize()
     {
-        _bus.Initialize(_pin, T_SPEED::BitSendTimeNs, T_INVERT::Inverted);
+        if (!_bus.Initialize(_pin, T_SPEED::BitSendTimeNs, T_INVERT::Inverted))
+        {
+            return false;
+        }
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         if (_data == nullptr)
         {
             log_e("front buffer memory allocation failure");
+            _bus.Destruct();
+            return false;
         }
-        // data cleared later in Begin()
+        return true;
     }
 
     void Update(bool)

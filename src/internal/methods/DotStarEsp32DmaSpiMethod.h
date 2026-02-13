@@ -83,10 +83,20 @@ public:
         return (ret == ESP_OK || (ret == ESP_ERR_TIMEOUT && 0 == _spiTransaction.length));
     }
 
-    void Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
+    bool Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
     {
         _data = static_cast<uint8_t*>(malloc(_spiBufferSize));
+        if (!_data)
+        {
+            return false;
+        }
         _dmadata = static_cast<uint8_t*>(heap_caps_malloc(_spiBufferSize, MALLOC_CAP_DMA));
+        if (!_dmadata)
+        {
+            free(_data);
+            _data = nullptr;
+            return false;
+        }
 
         // this is odd construct
         memset(_data, 0x00, _sizeStartFrame);
@@ -118,32 +128,33 @@ public:
 
         _spiTransaction = { 0 };
         initSpiDevice();
+        return true;
     }
 
-    void Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
+    bool Initialize(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
     {
-        Initialize(sck, dat0, dat1, dat2, dat3, -1, -1, -1, -1, ss);
+        return Initialize(sck, dat0, dat1, dat2, dat3, -1, -1, -1, -1, ss);
     }
 
-    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    bool Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
-        Initialize(sck, mosi, miso, -1, -1, ss);
+        return Initialize(sck, mosi, miso, -1, -1, ss);
     }
 
     // If pins aren't specified, initialize bus with just the default SCK and MOSI pins for the SPI peripheral (no SS, no >1-bit pins)
-    void Initialize()
+    bool Initialize()
     {
 #if !defined(CONFIG_IDF_TARGET_ESP32S2) && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3)
         if (T_SPIBUS::SpiHostDevice == VSPI_HOST)
         {
-            Initialize(SCK, -1, MOSI, -1, -1, -1);
+            return Initialize(SCK, -1, MOSI, -1, -1, -1);
         }
         else
         {
-            Initialize(14, -1, 13, -1, -1, -1);
+            return Initialize(14, -1, 13, -1, -1, -1);
         }
 #else
-        Initialize(SCK, -1, MOSI, -1, -1, -1);
+        return Initialize(SCK, -1, MOSI, -1, -1, -1);
 #endif
     }
 

@@ -101,31 +101,51 @@ public:
         return NeoBufferContext<T_COLOR_FEATURE>(_pixels(), PixelsSize());
     }
 
-    void Begin()
+    bool Begin()
     {
-        _method.Initialize();
+        if (!_method.Initialize())
+        {
+            return false;
+        }
         ClearTo(0);
+
+        return true;
     }
 
     // used by DotStarSpiMethod/DotStarEsp32DmaSpiMethod if pins can be configured
-    void Begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    bool Begin(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
-        _method.Initialize(sck, miso, mosi, ss);
+        if (!_method.Initialize(sck, miso, mosi, ss))
+        {
+            return false;
+        }
         ClearTo(0);
+
+        return true;
     }
 
     // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting quad SPI
-    void Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
+    bool Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t ss)
     {
-        _method.Initialize(sck, dat0, dat1, dat2, dat3, ss);
+        if (!_method.Initialize(sck, dat0, dat1, dat2, dat3, ss))
+        {
+            return false;
+        }
         ClearTo(0);
+
+        return true;
     }
 
     // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting oct SPI
-    void Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
+    bool Begin(int8_t sck, int8_t dat0, int8_t dat1, int8_t dat2, int8_t dat3, int8_t dat4, int8_t dat5, int8_t dat6, int8_t dat7, int8_t ss)
     {
-        _method.Initialize(sck, dat0, dat1, dat2, dat3, dat4, dat5, dat6, dat7, ss);
+        if (!_method.Initialize(sck, dat0, dat1, dat2, dat3, dat4, dat5, dat6, dat7, ss))
+        {
+            return false;
+        }
         ClearTo(0);
+
+        return true;
     }
 
     void Show(bool maintainBufferConsistency = true)

@@ -597,11 +597,22 @@ public:
         return (ESP_OK == ESP_ERROR_CHECK_WITHOUT_ABORT_SILENT_TIMEOUT(rmt_wait_tx_done(_channel.RmtChannelNumber, 0)));
     }
 
-    void Initialize()
+    bool Initialize()
     {
         _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_dataEditing)
+        {
+            return false;
+        }
+
         _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
- 
+        if (!_dataSending)
+        {
+            free(_dataEditing);
+            _dataEditing = nullptr;
+            return false;
+        }
+
         rmt_config_t config = {};
 
         config.rmt_mode = RMT_MODE_TX;
@@ -621,6 +632,7 @@ public:
         ESP_ERROR_CHECK(rmt_config(&config));
         ESP_ERROR_CHECK(rmt_driver_install(_channel.RmtChannelNumber, 0, NEOPIXELBUS_RMT_INT_FLAGS));
         ESP_ERROR_CHECK(rmt_translator_init(_channel.RmtChannelNumber, T_SPEED::Translate));
+        return true;
     }
 
     void Update(bool maintainBufferConsistency)

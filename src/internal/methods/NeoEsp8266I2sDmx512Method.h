@@ -186,14 +186,25 @@ public:
         return IsIdle();
     }
 
-    void Initialize()
+    bool Initialize()
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
+
+        if (!AllocateI2s())
+        {
+            free(_data);
+            _data = nullptr;
+            return false;
+        }
         // first "slot" cleared due to protocol requiring it to be zero
         memset(_data, 0x00, 1);
 
-        AllocateI2s();
         InitializeI2s(T_SPEED::I2sClockDivisor, T_SPEED::I2sBaseClockDivisor);
+        return true;
     }
 
     void IRAM_ATTR Update(bool)

@@ -240,11 +240,20 @@ public:
         return IsIdle();
     }
 
-    void Initialize()
+    bool Initialize()
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
 
-        AllocateI2s();
+        if (!AllocateI2s())
+        {
+            free(_data);
+            _data = nullptr;
+            return false;
+        }
 
         uint8_t i2sBaseClockDivisor;
         uint8_t i2sClockDivisor;
@@ -255,6 +264,7 @@ public:
             T_ENCODER::DmaBitsPerPixelBit);
 
         InitializeI2s(i2sClockDivisor, i2sBaseClockDivisor);
+        return true;
     }
 
     void IRAM_ATTR Update(bool)
