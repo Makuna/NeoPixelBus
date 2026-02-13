@@ -105,7 +105,10 @@ public:
     {
         _method.Initialize();
         ClearTo(0);
-        if (_method.SwapBuffers()) ClearTo(0);
+        if (_method.SwapBuffers())
+        {
+            ClearTo(0);
+        }
     }
 
     // used by DotStarSpiMethod/DotStarEsp32DmaSpiMethod if pins can be configured
@@ -113,7 +116,10 @@ public:
     {
         _method.Initialize(sck, miso, mosi, ss);
         ClearTo(0);
-        if (_method.SwapBuffers()) ClearTo(0);
+        if (_method.SwapBuffers())
+        {
+            ClearTo(0);
+        }
     }
 
     // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting quad SPI
@@ -121,7 +127,10 @@ public:
     {
         _method.Initialize(sck, dat0, dat1, dat2, dat3, ss);
         ClearTo(0);
-        if (_method.SwapBuffers()) ClearTo(0);
+        if (_method.SwapBuffers())
+        {
+            ClearTo(0);
+        }
     }
 
     // used by DotStarEsp32DmaSpiMethod if pins can be configured - reordered and extended version supporting oct SPI
@@ -129,7 +138,10 @@ public:
     {
         _method.Initialize(sck, dat0, dat1, dat2, dat3, dat4, dat5, dat6, dat7, ss);
         ClearTo(0);
-        if (_method.SwapBuffers()) ClearTo(0);
+        if (_method.SwapBuffers())
+        {
+            ClearTo(0);
+        }
     }
 
     void Show(bool maintainBufferConsistency = true)
