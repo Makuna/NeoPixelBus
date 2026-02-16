@@ -215,7 +215,7 @@ public:
         return (delta >= T_SPEED::ResetTimeUs);
     }
 
-    void Initialize()
+    bool Initialize()
     {
         digitalWrite(_pin, T_INVERTED::IdleLevel);
 
