@@ -119,6 +119,10 @@ public:
         }
         _state |= NEO_VALID;
         ClearTo(0);
+        if (_method.SwapBuffers())
+        {
+            ClearTo(0);
+        }
 
         return true;
     }
@@ -132,6 +136,10 @@ public:
         }
         _state |= NEO_VALID;
         ClearTo(0);
+        if (_method.SwapBuffers())
+        {
+            ClearTo(0);
+        }
 
         return true;
     }
@@ -145,6 +153,10 @@ public:
         }
         _state |= NEO_VALID;
         ClearTo(0);
+        if (_method.SwapBuffers())
+        {
+            ClearTo(0);
+        }
 
         return true;
     }
@@ -158,6 +170,10 @@ public:
         }
         _state |= NEO_VALID;
         ClearTo(0);
+        if (_method.SwapBuffers())
+        {
+            ClearTo(0);
+        }
 
         return true;
     }
