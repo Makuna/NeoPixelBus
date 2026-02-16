@@ -838,7 +838,6 @@ public:
         if (_data == nullptr)
         {
             log_e("front buffer memory allocation failure");
-            _bus.Destruct();
             return false;
         }
         return true;
