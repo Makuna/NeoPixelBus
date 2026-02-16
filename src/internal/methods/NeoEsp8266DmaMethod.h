@@ -205,10 +205,7 @@ public:
         i2sResetSize = NeoUtil::RoundUp(i2sResetSize, c_I2sByteBoundarySize);
         size_t is2BufMaxBlockSize = (c_maxDmaBlockSize / dmaPixelSize) * dmaPixelSize;
 
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
-
-        AllocateI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_ENCODER::IdleLevel);
+        ConstructI2s(i2sBufferSize, i2sResetSize, is2BufMaxBlockSize, T_ENCODER::IdleLevel);
     }
 
     NeoEsp8266DmaMethodBase([[maybe_unused]] uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize) : 
@@ -243,9 +240,22 @@ public:
         return IsIdle();
     }
 
-    void Initialize()
+    bool Initialize()
     {
-        uint8_t i2sBaseClockDivisor; 
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
+
+        if (!AllocateI2s())
+        {
+            free(_data);
+            _data = nullptr;
+            return false;
+        }
+
+        uint8_t i2sBaseClockDivisor;
         uint8_t i2sClockDivisor;
 
         FindBestClockDivisors(&i2sClockDivisor, 
@@ -254,6 +264,7 @@ public:
             T_ENCODER::DmaBitsPerPixelBit);
 
         InitializeI2s(i2sClockDivisor, i2sBaseClockDivisor);
+        return true;
     }
 
     void IRAM_ATTR Update(bool)

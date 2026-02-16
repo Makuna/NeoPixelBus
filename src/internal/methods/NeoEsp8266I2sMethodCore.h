@@ -141,7 +141,7 @@ protected:
     NeoEsp8266I2sMethodCore() 
     { };
 
-    void AllocateI2s(const size_t i2sBufferSize, // expected multiples of c_I2sByteBoundarySize
+    void ConstructI2s(const size_t i2sBufferSize, // expected multiples of c_I2sByteBoundarySize
             const size_t i2sZeroesSize, // expected multiples of c_I2sByteBoundarySize
             const size_t is2BufMaxBlockSize,
             const uint8_t idleLevel)
@@ -163,14 +163,18 @@ protected:
         }
         _is2BufMaxBlockSize = is2BufMaxBlockSize;
 
+        _i2sBufDescCount = (_i2sBufferSize / _is2BufMaxBlockSize) + 1 + 
+                countIdleQueueItems +
+                c_StateBlockCount; // need more for state/latch blocks
+
+    }
+
+    void AllocateI2s()
+    {
         _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
         // no need to initialize it, it gets overwritten on every send
         _i2sIdleData = static_cast<uint8_t*>(malloc(_i2sIdleDataSize));
         memset(_i2sIdleData, idleLevel * 0xff, _i2sIdleDataSize);
-
-        _i2sBufDescCount = (_i2sBufferSize / _is2BufMaxBlockSize) + 1 + 
-                countIdleQueueItems +
-                c_StateBlockCount; // need more for state/latch blocks
 
         _i2sBufDesc = (slc_queue_item*)malloc(_i2sBufDescCount * sizeof(slc_queue_item));
 

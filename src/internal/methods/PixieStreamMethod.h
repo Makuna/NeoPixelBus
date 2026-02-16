@@ -48,8 +48,6 @@ public:
         _stream(pixieStream),
         _usEndTime(0)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
     ~PixieStreamMethod()
@@ -63,9 +61,14 @@ public:
         return (micros() - _usEndTime) > 1000L; // ensure 1ms delay between calls
     }
 
-    void Initialize()
+    bool Initialize()
     {
-        // nothing to initialize, UART is managed outside this library
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
+        return true;
     }
 
     void Update(bool)

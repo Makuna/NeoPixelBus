@@ -44,8 +44,6 @@ public:
         _sizeEndFrame((pixelCount + 15) / 16), // 16 = div 2 (bit for every two pixels) div 8 (bits to bytes)
         _wire(pinClock, pinData)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
@@ -66,15 +64,27 @@ public:
     }
 
 #if defined(ARDUINO_ARCH_ESP32)
-    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    bool Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
         _wire.begin(sck, miso, mosi, ss);
+        return true;
     }
 #endif
 
-    void Initialize()
+    bool Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
         _wire.begin();
+        return true;
     }
 
     void Update(bool)

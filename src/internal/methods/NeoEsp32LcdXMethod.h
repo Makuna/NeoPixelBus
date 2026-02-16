@@ -277,7 +277,7 @@ public:
     {
     }
 
-    void Construct(uint16_t nsBitSendTime)
+    bool Construct(uint16_t nsBitSendTime)
     {
         // construct only once on first time called
         if (_dmaItems == nullptr)
@@ -304,6 +304,7 @@ public:
             {
                 log_e("LCD Dma Table memory allocation failure (size %u)",
                     dmaBlockSize);
+                return false;
             }
             // required to init to zero as settings these below only resets some fields
             memset(_dmaItems, 0x00, dmaBlockSize); 
@@ -313,6 +314,9 @@ public:
             {
                 log_e("LCD Dma Buffer memory allocation failure (size %u)",
                     LcdBufferSize);
+                heap_caps_free(_dmaItems);
+                _dmaItems = nullptr;
+                return false;
             }
             memset(LcdBuffer, 0x00, LcdBufferSize);
 
@@ -376,14 +380,16 @@ public:
             if (clkm_div > LCD_LL_CLK_FRAC_DIV_N_MAX)
             {
                 log_e("rate is too low");
-                return;
+                Destruct();
+                return false;
             }
             else if (clkm_div < 2.0)
             {
                 log_e("rate is too fast, clkmdiv = %f (%u)",
                     clkm_div,
                     nsBitSendTime);
-                return;
+                Destruct();
+                return false;
             }
 
             // calc integer and franctional for more precise timing
@@ -443,6 +449,7 @@ public:
             gdma_tx_event_callbacks_t tx_cbs = {.on_trans_eof = dma_callback};
             gdma_register_tx_event_callbacks(_dmaChannel, &tx_cbs, NULL);
         }
+        return true;
     }
 
     void Destruct()
@@ -536,14 +543,18 @@ public:
         _muxId = s_context.MuxMap.RegisterNewMuxBus(dataSize);
     }
 
-    void Initialize(uint8_t pin, uint16_t nsBitSendTime, bool invert)
+    bool Initialize(uint8_t pin, uint16_t nsBitSendTime, bool invert)
     {
-        s_context.Construct(nsBitSendTime);
+        if (!s_context.Construct(nsBitSendTime))
+        {
+            return false;
+        }
         
         uint8_t muxIdx = LCD_DATA_OUT0_IDX + _muxId;
         esp_rom_gpio_connect_out_signal(pin, muxIdx, invert, false);
         gpio_hal_iomux_func_sel(GPIO_PIN_MUX_REG[pin], PIN_FUNC_GPIO);
         gpio_set_drive_capability((gpio_num_t)pin, (gpio_drive_cap_t)3);
+        return true;
     }
 
     void DeregisterMuxBus(uint8_t pin)
@@ -627,16 +638,21 @@ public:
         return _bus.IsWriteDone();
     }
 
-    void Initialize()
+    bool Initialize()
     {
-        _bus.Initialize(_pin, T_SPEED::BitSendTimeNs, T_INVERT::Inverted);
+        if (!_bus.Initialize(_pin, T_SPEED::BitSendTimeNs, T_INVERT::Inverted))
+        {
+            return false;
+        }
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         if (_data == nullptr)
         {
             log_e("front buffer memory allocation failure");
+            _bus.Destruct()
+            return false;
         }
-        // data cleared later in Begin()
+        return true;
     }
 
     void Update(bool)

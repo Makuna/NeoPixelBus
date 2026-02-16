@@ -62,8 +62,6 @@ public:
         _sizeData(NeoUtil::RoundUp(pixelCount * elementSize, Tlc69711Settings::c_dataPerChipSize) + settingsSize),
         _wire(pinClock, pinData)
     {
-        _data = static_cast<uint8_t*>(malloc(_sizeData));
-        // data cleared later in Begin()
     }
 
 #if !defined(__AVR_ATtiny85__) && !defined(ARDUINO_attiny)
@@ -92,19 +90,31 @@ public:
     }
 
 #if defined(ARDUINO_ARCH_ESP32)
-    void Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
+    bool Initialize(int8_t sck, int8_t miso, int8_t mosi, int8_t ss)
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
         _wire.begin(sck, miso, mosi, ss);
 
         _endTime = micros();
+        return true;
     }
 #endif
 
-    void Initialize()
+    bool Initialize()
     {
+        _data = static_cast<uint8_t*>(malloc(_sizeData));
+        if (!_data)
+        {
+            return false;
+        }
         _wire.begin();
 
         _endTime = micros();
+        return true;
     }
 
     void Update(bool)
