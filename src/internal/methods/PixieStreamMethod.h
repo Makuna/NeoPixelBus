@@ -64,7 +64,8 @@ public:
     bool Initialize()
     {
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-        if (!_data) {
+        if (!_data)
+        {
             return false;
         }
         return true;

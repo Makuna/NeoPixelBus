@@ -316,12 +316,14 @@ private:
     bool construct()
     {
         _dataEditing = static_cast<uint8_t*>(malloc(_sizeData));
-        if (!_dataEditing) {
+        if (!_dataEditing)
+        {
             return false;
         }
         _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin() with a ClearTo(0)
-        if (!_dataSending) {
+        if (!_dataSending)
+        {
             free(_dataEditing);
             _dataEditing = nullptr;
             return false;

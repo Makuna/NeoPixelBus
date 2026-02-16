@@ -220,7 +220,8 @@ public:
         digitalWrite(_pin, T_INVERTED::IdleLevel);
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
-        if (!_data) {
+        if (!_data)
+        {
             return false;
         }       
 
