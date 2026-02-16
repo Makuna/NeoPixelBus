@@ -259,7 +259,10 @@ protected:
 
     bool InitializeUart(uint32_t uartBaud, bool invert)
     {
-        if (!Initialize()) return false; // allocates _data on success
+        if (!Initialize()) // allocates _data on success
+        {
+          return false;
+        }
 
         _dataSending = static_cast<uint8_t*>(malloc(_sizeData));
         if (!_dataSending) {

@@ -106,7 +106,10 @@ public:
 
     bool Initialize()
     {
-        if (!construct()) return false;
+        if (!construct())
+        {
+          return false;
+        }
 
         // Select the largest FIFO fetch size that aligns with our data size
         // BUT, since RP2040 is little endian, if the source element size is

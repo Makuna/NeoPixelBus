@@ -201,13 +201,19 @@ public:
 
     uint8_t* Pixels() 
     {
-        if (!IsValid()) return nullptr;
+        if (!IsValid())
+        {
+          return nullptr;
+        }
         return _pixels();
     };
 
     size_t PixelsSize() const
     {
-        if (!IsValid()) return 0;
+        if (!IsValid())
+        {
+          return 0;
+        }
         return _method.getDataSize() - T_COLOR_FEATURE::SettingsSize;
     };
 
@@ -218,7 +224,10 @@ public:
 
     uint16_t PixelCount() const
     {
-        if (!IsValid()) return 0;
+        if (!IsValid())
+        {
+          return 0;
+        }
         return _countPixels;
     };
 
@@ -252,7 +261,10 @@ public:
 
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         uint8_t temp[T_COLOR_FEATURE::PixelSize]; 
         uint8_t* pixels = _pixels();
@@ -266,7 +278,10 @@ public:
 
     void ClearTo(typename T_COLOR_FEATURE::ColorObject color, uint16_t first, uint16_t last)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         if (first < _countPixels &&
             last < _countPixels &&
@@ -286,7 +301,10 @@ public:
 
     void RotateLeft(uint16_t rotationCount)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         if ((_countPixels - 1) >= rotationCount)
         {
@@ -296,7 +314,10 @@ public:
 
     void RotateLeft(uint16_t rotationCount, uint16_t first, uint16_t last)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         if (first < _countPixels &&
             last < _countPixels &&
@@ -309,7 +330,10 @@ public:
 
     void ShiftLeft(uint16_t shiftCount)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         if ((_countPixels - 1) >= shiftCount)
         {
@@ -320,7 +344,10 @@ public:
 
     void ShiftLeft(uint16_t shiftCount, uint16_t first, uint16_t last)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         if (first < _countPixels && 
             last < _countPixels && 
@@ -334,7 +361,10 @@ public:
 
     void RotateRight(uint16_t rotationCount)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         if ((_countPixels - 1) >= rotationCount)
         {
@@ -344,7 +374,10 @@ public:
 
     void RotateRight(uint16_t rotationCount, uint16_t first, uint16_t last)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         if (first < _countPixels &&
             last < _countPixels &&
@@ -357,7 +390,10 @@ public:
 
     void ShiftRight(uint16_t shiftCount)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         if ((_countPixels - 1) >= shiftCount)
         {
@@ -368,7 +404,10 @@ public:
 
     void ShiftRight(uint16_t shiftCount, uint16_t first, uint16_t last)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         if (first < _countPixels &&
             last < _countPixels &&
@@ -382,7 +421,10 @@ public:
     
     void SwapPixelColor(uint16_t indexPixelOne, uint16_t indexPixelTwo)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         auto colorOne = GetPixelColor(indexPixelOne);
         auto colorTwo = GetPixelColor(indexPixelTwo);
@@ -393,7 +435,10 @@ public:
 
     void SetPixelSettings(const typename T_COLOR_FEATURE::SettingsObject& settings)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         T_COLOR_FEATURE::applySettings(_method.getData(), _method.getDataSize(), settings);
         if (_method.SwapBuffers())
@@ -410,7 +455,10 @@ public:
 
     void SetMethodSettings(const typename T_METHOD::SettingsObject& settings)
     {
-        if (!IsValid()) return;
+        if (!IsValid())
+        {
+          return;
+        }
 
         _method.applySettings(settings);
         Dirty();
@@ -418,7 +466,10 @@ public:
  
     uint32_t CalcTotalMilliAmpere(const typename T_COLOR_FEATURE::ColorObject::SettingsObject& settings)
     {
-        if (!IsValid()) return 0;
+        if (!IsValid())
+        {
+          return 0;
+        }
 
         uint32_t total = 0; // in 1/10th milliamps
 
