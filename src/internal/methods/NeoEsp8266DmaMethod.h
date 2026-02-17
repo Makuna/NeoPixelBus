@@ -248,7 +248,7 @@ public:
             return false;
         }
 
-        if (!AllocateI2s())
+        if (!AllocateI2s(T_ENCODER::IdleLevel))
         {
             free(_data);
             _data = nullptr;
