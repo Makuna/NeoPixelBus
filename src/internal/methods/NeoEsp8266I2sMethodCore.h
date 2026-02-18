@@ -169,16 +169,34 @@ protected:
 
     }
 
-    void AllocateI2s()
+    bool AllocateI2s(const uint8_t idleLevel)
     {
         _i2sBuffer = static_cast<uint8_t*>(malloc(_i2sBufferSize));
-        // no need to initialize it, it gets overwritten on every send
+        if (!_i2sBuffer)
+        {
+            return false;
+        }
         _i2sIdleData = static_cast<uint8_t*>(malloc(_i2sIdleDataSize));
+        if (!_i2sIdleData)
+        {
+            free(_i2sBuffer);
+            _i2sBuffer = nullptr;
+            return false;
+        }
         memset(_i2sIdleData, idleLevel * 0xff, _i2sIdleDataSize);
 
         _i2sBufDesc = (slc_queue_item*)malloc(_i2sBufDescCount * sizeof(slc_queue_item));
+        if (!_i2sBufDesc)
+        {
+            free(_i2sBuffer);
+            free(_i2sIdleData);
+            _i2sBuffer = nullptr;
+            _i2sIdleData = nullptr;
+            return false;
+        }
 
         s_this = this; // store this for the ISR
+        return true;
     }
 
     void FreeI2s()
