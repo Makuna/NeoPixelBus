@@ -57,9 +57,6 @@ struct rmt_led_strip_encoder_t
     rmt_symbol_word_t reset_code;
 };
 
-#define NEOPIXELBUS_RMT_INT_FLAGS (ESP_INTR_FLAG_LOWMED)
-
-
 template<typename T_SPEED, typename T_INVERTED = NeoEsp32RmtNotInverted> class NeoEsp32RmtMethodBase
 {
 public:
@@ -101,11 +98,19 @@ public:
         rmt_tx_channel_config_t config = {};
         config.clk_src = RMT_CLK_SRC_DEFAULT;
         config.gpio_num = static_cast<gpio_num_t>(_pin);
-        config.mem_block_symbols = 192;         // memory block size, 64 * 4 = 256 Bytes
+#if SOC_RMT_SUPPORT_DMA
+        config.mem_block_symbols = 512;         // DMA decouples the buffer from RMT memory, so this is just a sane DMA buffer size
+#else
+        config.mem_block_symbols = SOC_RMT_TX_CANDIDATES_PER_GROUP * SOC_RMT_MEM_WORDS_PER_CHANNEL; // max symbols a single TX channel can borrow from all TX-capable channels in its group: 512 on original ESP32 (8x64), 96 on ESP32-C3 (2x48). Requesting more than this fails rmt_new_tx_channel with "no free tx channels" since there is no contiguous free memory to satisfy it. A bigger half-buffer gives the RMT ISR more slack against BLE-induced preemption before the WS2811/WS2812x 300 µs reset threshold is hit, so we ask for the most each chip can give.
+#endif
         config.resolution_hz = T_SPEED::RmtTicksPerSecond; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
         config.trans_queue_depth = 4;           // set the number of transactions that can pend in the background
         config.flags.invert_out = T_INVERTED::Inverted;  // do not invert output signal
-        config.flags.with_dma = false;          // do not need DMA backend
+#if SOC_RMT_SUPPORT_DMA
+        config.flags.with_dma = true;           // chips with small per-channel RMT memory (e.g. ESP32-S3: 48 words/channel) can't fit a large static block; DMA decouples the buffer from RMT memory and from ISR refill timing entirely
+#else
+        config.flags.with_dma = false;          // chips without DMA support (original ESP32, ESP32-C3) use the static block sized above
+#endif
 
         ret += rmt_new_tx_channel(&config, &_channel);
         led_strip_encoder_config_t encoder_config = {};
