@@ -101,7 +101,12 @@ public:
         rmt_tx_channel_config_t config = {};
         config.clk_src = RMT_CLK_SRC_DEFAULT;
         config.gpio_num = static_cast<gpio_num_t>(_pin);
-        config.mem_block_symbols = 192;         // memory block size, 64 * 4 = 256 Bytes
+        // PARLA PATCH: was 192 — that's the ENTIRE RMT symbol pool on ESP32-C3/C6
+        // (SOC_RMT_CHANNELS_PER_GROUP=4 * SOC_RMT_MEM_WORDS_PER_CHANNEL=48 = 192 total),
+        // so a single bus starved every other bus of memory and rmt_new_tx_channel()
+        // silently failed for the 2nd pin. 48 = one channel's native block (2 pixels
+        // of buffer before a refill IRQ), leaving room for a 2nd TX channel (48+48=96/192).
+        config.mem_block_symbols = 48;
         config.resolution_hz = T_SPEED::RmtTicksPerSecond; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
         config.trans_queue_depth = 4;           // set the number of transactions that can pend in the background
         config.flags.invert_out = T_INVERTED::Inverted;  // do not invert output signal
@@ -117,9 +122,11 @@ public:
 
         // ESP_LOGI(TAG, "Enable RMT TX channel");
         ret += rmt_enable(_channel);
-        // if (ret) {
-        //     AddLog(2,"RMT: initialized with error code: %u on pin: %u",ret, _pin);
-        // }
+        // PARLA PATCH: this used to be silently swallowed — make failures visible on Serial
+        // instead of the bus just not lighting up / misbehaving with no explanation.
+        if (ret != ESP_OK) {
+            Serial.printf("RMT init FAILED (err=%d) on pin %u\n", (int)ret, (unsigned)_pin);
+        }
     }
 
     void Update(bool maintainBufferConsistency)
