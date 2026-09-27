@@ -28,6 +28,10 @@ License along with NeoPixel.  If not, see
 
 #if defined(ARDUINO_ARCH_ESP32) && !defined(CONFIG_IDF_TARGET_ESP32C2)
 
+// Needed for ESP_* macros that take a log_tag
+#include "esp_log.h"
+static const char* TAG = "NeoEsp32RmtX";
+
 #include <Arduino.h>
 #include "NeoEsp32RmtSpeed.h"
 
@@ -40,8 +44,6 @@ extern "C"
 #include "driver/rmt_encoder.h"
 #include "esp_check.h"
 }
-
-static const char *TAG = "led_strip_rmt"; // TODO: Remove all TAG log stuff
 
 struct led_strip_encoder_config_t
 {
@@ -56,9 +58,6 @@ struct rmt_led_strip_encoder_t
     int state;
     rmt_symbol_word_t reset_code;
 };
-
-#define NEOPIXELBUS_RMT_INT_FLAGS (ESP_INTR_FLAG_LOWMED)
-
 
 template<typename T_SPEED, typename T_INVERTED = NeoEsp32RmtNotInverted> class NeoEsp32RmtMethodBase
 {
@@ -82,7 +81,11 @@ public:
         ESP_ERROR_CHECK(rmt_disable(_channel)); 
         ESP_ERROR_CHECK(rmt_del_channel(_channel));
 
+#if ESP_IDF_VERSION_MAJOR >= 6
+        esp_rom_gpio_connect_out_signal(_pin, 0x100, false, false);
+#else
         gpio_matrix_out(_pin, 0x100, false, false);
+#endif
         pinMode(_pin, INPUT);
 
         free(_dataEditing);
@@ -101,13 +104,46 @@ public:
         rmt_tx_channel_config_t config = {};
         config.clk_src = RMT_CLK_SRC_DEFAULT;
         config.gpio_num = static_cast<gpio_num_t>(_pin);
-        config.mem_block_symbols = 192;         // memory block size, 64 * 4 = 256 Bytes
+#if SOC_RMT_SUPPORT_DMA
+        config.mem_block_symbols = 512;         // DMA decouples the buffer from RMT memory, so this is just a sane DMA buffer size
+#elif ESP_IDF_VERSION_MAJOR >= 6
+        config.mem_block_symbols = SOC_RMT_MEM_WORDS_PER_CHANNEL; // Overridden below while trying each available block count.
+#else
+        config.mem_block_symbols = SOC_RMT_TX_CANDIDATES_PER_GROUP * SOC_RMT_MEM_WORDS_PER_CHANNEL; // max symbols a single TX channel can borrow from all TX-capable channels in its group: 512 on original ESP32 (8x64), 96 on ESP32-C3 (2x48). Requesting more than this fails rmt_new_tx_channel with "no free tx channels" since there is no contiguous free memory to satisfy it. A bigger half-buffer gives the RMT ISR more slack against BLE-induced preemption before the WS2811/WS2812x 300 µs reset threshold is hit, so we ask for the most each chip can give.
+#endif
         config.resolution_hz = T_SPEED::RmtTicksPerSecond; // 1 MHz tick resolution, i.e., 1 tick = 1 µs
         config.trans_queue_depth = 4;           // set the number of transactions that can pend in the background
         config.flags.invert_out = T_INVERTED::Inverted;  // do not invert output signal
-        config.flags.with_dma = false;          // do not need DMA backend
+#if SOC_RMT_SUPPORT_DMA
+        config.flags.with_dma = true;           // chips with small per-channel RMT memory (e.g. ESP32-S3: 48 words/channel) can't fit a large static block; DMA decouples the buffer from RMT memory and from ISR refill timing entirely
+#else
+        config.flags.with_dma = false;          // chips without DMA support (original ESP32, ESP32-C3) use the static block sized above
+#endif
 
-        ret += rmt_new_tx_channel(&config, &_channel);
+#if ESP_IDF_VERSION_MAJOR >= 6 && !SOC_RMT_SUPPORT_DMA
+#if defined(CONFIG_IDF_TARGET_ESP32)
+        constexpr uint8_t maxRmtBlocks = 8;
+#elif defined(CONFIG_IDF_TARGET_ESP32S2)
+        constexpr uint8_t maxRmtBlocks = 4;
+#elif defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32C6)
+        constexpr uint8_t maxRmtBlocks = 2;
+#else
+        constexpr uint8_t maxRmtBlocks = 1;
+#endif
+        // Reserve as much RMT memory as possible for this TX channel. If a block
+        // is already in use, retry with fewer blocks down to the hardware minimum.
+        for (uint8_t blocks = maxRmtBlocks; blocks > 0; --blocks)
+        {
+            config.mem_block_symbols = blocks * SOC_RMT_MEM_WORDS_PER_CHANNEL;
+            ret = rmt_new_tx_channel(&config, &_channel);
+            if (ret == ESP_OK)
+            {
+                break;
+            }
+        }
+#else
+        ret = rmt_new_tx_channel(&config, &_channel);
+#endif
         led_strip_encoder_config_t encoder_config = {};
         encoder_config.resolution = T_SPEED::RmtTicksPerSecond;
 
@@ -281,7 +317,7 @@ private:
         bytes_encoder_config.bit1.val = bit1;
 
         bytes_encoder_config.flags.msb_first = 1; // WS2812 transfer bit order: G7...G0R7...R0B7...B0 - TODO: more checks
-\
+
         ESP_GOTO_ON_ERROR(rmt_new_bytes_encoder(&bytes_encoder_config, &led_encoder->bytes_encoder), err, "TEST_RMT", "create bytes encoder failed");
         ESP_GOTO_ON_ERROR(rmt_new_copy_encoder(&copy_encoder_config, &led_encoder->copy_encoder), err, "TEST_RMT", "create copy encoder failed");
 
@@ -357,7 +393,7 @@ typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeedGs1903, NeoEsp32RmtInverted> NeoEs
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed800Kbps, NeoEsp32RmtInverted> NeoEsp32RmtX800KbpsInvertedMethod;
 typedef NeoEsp32RmtMethodBase<NeoEsp32RmtSpeed400Kbps, NeoEsp32RmtInverted> NeoEsp32RmtX400KbpsInvertedMethod;
 
-#if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32S3)
+#if defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32S3)
 
 // Normally I2s method is the default, defining NEOPIXEL_ESP32_RMT_DEFAULT 
 // will switch to use RMT as the default method
@@ -392,6 +428,6 @@ typedef NeoEsp32RmtXWs2812xInvertedMethod Neo800KbpsInvertedMethod;
 typedef NeoEsp32RmtX400KbpsInvertedMethod Neo400KbpsInvertedMethod;
 
 
-#endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5)
+#endif // defined(NEOPIXEL_ESP32_RMT_DEFAULT) || defined(CONFIG_IDF_TARGET_ESP32S2) || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6)
 
 #endif

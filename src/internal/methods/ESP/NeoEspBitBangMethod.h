@@ -28,6 +28,8 @@ License along with NeoPixel.  If not, see
 
 #if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_ESP32)
 
+#include "../../NeoBusChannel.h" // for NeoBusChannel enum (used by channel-aware constructor overload)
+
 #if defined(ARDUINO_ARCH_ESP8266)
 #include <eagle_soc.h>
 #endif
@@ -202,6 +204,12 @@ public:
 
         _data = static_cast<uint8_t*>(malloc(_sizeData));
         // data cleared later in Begin()
+    }
+
+    // overload: accept and ignore channel parameter (for RMT-to-BitBang substitution)
+    NeoEspBitBangMethodBase(uint8_t pin, uint16_t pixelCount, size_t elementSize, size_t settingsSize, NeoBusChannel) :
+        NeoEspBitBangMethodBase(pin, pixelCount, elementSize, settingsSize)
+    {
     }
 
     ~NeoEspBitBangMethodBase()

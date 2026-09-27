@@ -17,13 +17,14 @@
 #if defined(ARDUINO_ARCH_ESP32)
 
 #include "sdkconfig.h" // this sets useful config symbols, like CONFIG_IDF_TARGET_ESP32C3
+#include "esp_idf_version.h"
 
 #include <string.h>
 #include <stdio.h>
 #include "stdlib.h"
 
-// ESP32 C3, S3, C6, H2, and P4 I2S is not supported yet due to significant changes to interface
-#if !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4)
+// ESP32 C3, S3, C5, C6, H2, and P4 I2S is not supported yet due to significant changes to interface
+#if ESP_IDF_VERSION_MAJOR < 6 && !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2) && !defined(CONFIG_IDF_TARGET_ESP32P4)
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -516,7 +517,9 @@ void i2sInit(uint8_t bus_num,
 //        conf1.rx_pcm_bypass = 1;
 
         conf1.tx_stop_en = 0;
-#if SOC_I2S_SUPPORTS_PCM_BYPASS
+#if defined(CONFIG_IDF_TARGET_ESP32S2)
+        conf1.reserved0 = 0;
+#else
         conf1.tx_pcm_bypass = 1;
 #endif
         i2s->conf1.val = conf1.val;
@@ -952,6 +955,6 @@ bool i2sGetClks(uint8_t bus_num,
 }
 #endif
 
-#endif //  !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32C5) && !defined(CONFIG_IDF_TARGET_ESP32H2)
+#endif //  !defined(CONFIG_IDF_TARGET_ESP32C3) && !defined(CONFIG_IDF_TARGET_ESP32S3) && !defined(CONFIG_IDF_TARGET_ESP32C6) && !defined(CONFIG_IDF_TARGET_ESP32H2)
 
 #endif // defined(ARDUINO_ARCH_ESP32)

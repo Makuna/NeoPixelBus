@@ -69,7 +69,7 @@ typedef NeoEsp32LcdX16Ws2812Method    X16Ws2812Method;
 typedef NeoEsp32LcdX16Lc8812Method    X16Lc8812Method;
 
 
-#elif defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32C5) || defined(CONFIG_IDF_TARGET_ESP32H2) || defined(CONFIG_IDF_TARGET_ESP32P4)
+#elif ESP_IDF_VERSION_MAJOR >= 6 || defined(CONFIG_IDF_TARGET_ESP32C3) || defined(CONFIG_IDF_TARGET_ESP32C6) || defined(CONFIG_IDF_TARGET_ESP32H2) || defined(CONFIG_IDF_TARGET_ESP32P4)
 
 //----------------------------------------------------------
 typedef NeoEsp32RmtXWs2812xMethod   XWs2812xMethod;
