@@ -99,7 +99,8 @@ public:
 
         memcpy(_dmadata, _data, _bufferSize);
 
-        parlio_transmit_config_t transmit_config = {
+        parlio_transmit_config_t transmit_config = 
+        {
             .idle_value = 0x00, // All data lines are low in idle state
         };
         ESP_ERROR_CHECK(parlio_tx_unit_transmit(_parlio_tx_handle, _dmadata, _bufferSize * 8, &transmit_config));
@@ -139,12 +140,14 @@ public:
 private:
     void initParlio()
     {
-        parlio_tx_unit_config_t config = {
+        parlio_tx_unit_config_t config = 
+        {
             .clk_src = PARLIO_CLK_SRC_DEFAULT,      // Select the default clock source
             .clk_in_gpio_num = (gpio_num_t)-1,      // Don't use external clock source
             .output_clk_freq_hz = _speed.Clock,     // Output clock frequency
             .data_width = 1,                        // Data width is 1 bit (single data pin)
-            .data_gpio_nums = {
+            .data_gpio_nums = 
+            {
                 _dataPin
             },
             .clk_out_gpio_num = _clockPin,          // Clock pin
@@ -153,7 +156,8 @@ private:
             .max_transfer_size = _bufferSize,       // Maximum transfer size (number of bytes per transaction)
             .sample_edge = PARLIO_SAMPLE_EDGE_POS,  // Sample data on the rising edge of the clock
             .bit_pack_order = PARLIO_BIT_PACK_ORDER_MSB, //Data endianness : MSB first
-            .flags = { 
+            .flags = 
+            { 
                 //.clk_gate_en = 1,                   // NOT SUPPORTED ON C6 - Disable clock when not transmitting
             }, 
         };

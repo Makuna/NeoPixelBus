@@ -83,14 +83,18 @@ public:
 
         //start frame : 128bits (16bytes) with DIN = 0
         for (int i = 0; i < 16; i++)
+        {
             _wire.transmitByte(0x00);
+        }
         
         // data
         _wire.transmitBytes(_data, _sizeData);
 
         //end frame : at least one bit per LED ; no less than 8 bytes
         for (size_t i = 0; i < max(_sizeEndFrame,(size_t)8); i++)
+        {
             _wire.transmitByte(0x00);
+        }
         
         _wire.endTransaction();
     }
